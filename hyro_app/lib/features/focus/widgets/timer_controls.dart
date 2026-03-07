@@ -30,33 +30,35 @@ class TimerControls extends StatelessWidget {
         // Reset
         _ControlButton(
           icon: Icons.replay,
-          size: 44,
+          size: 48,
           onTap: onReset,
           backgroundColor: AppColors.surfaceLight,
         ),
-        const SizedBox(width: 20),
+        const SizedBox(width: 24),
         // Play / Pause
         _ControlButton(
-          icon: isRunning
-              ? Icons.pause
-              : isPaused
+          icon:
+              isRunning
+                  ? Icons.pause
+                  : isPaused
                   ? Icons.play_arrow
                   : Icons.play_arrow,
-          size: 60,
-          onTap: isRunning
-              ? onPause
-              : isPaused
+          size: 72,
+          onTap:
+              isRunning
+                  ? onPause
+                  : isPaused
                   ? onResume
                   : onStart,
           backgroundColor: AppColors.primary,
           iconColor: Colors.white,
           elevation: true,
         ),
-        const SizedBox(width: 20),
+        const SizedBox(width: 24),
         // Stop
         _ControlButton(
           icon: Icons.stop,
-          size: 44,
+          size: 48,
           onTap: onStop,
           backgroundColor: AppColors.surfaceLight,
         ),
@@ -98,9 +100,10 @@ class _ControlButtonState extends State<_ControlButton>
       vsync: this,
       duration: const Duration(milliseconds: 100),
     );
-    _scaleAnimation = Tween<double>(begin: 1.0, end: 0.92).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
-    );
+    _scaleAnimation = Tween<double>(
+      begin: 1.0,
+      end: 0.92,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
   }
 
   @override
@@ -121,10 +124,7 @@ class _ControlButtonState extends State<_ControlButton>
       child: AnimatedBuilder(
         animation: _scaleAnimation,
         builder: (context, child) {
-          return Transform.scale(
-            scale: _scaleAnimation.value,
-            child: child,
-          );
+          return Transform.scale(scale: _scaleAnimation.value, child: child);
         },
         child: Container(
           width: widget.size,
@@ -132,9 +132,10 @@ class _ControlButtonState extends State<_ControlButton>
           decoration: BoxDecoration(
             color: widget.backgroundColor,
             shape: BoxShape.circle,
-            boxShadow: widget.elevation
-                ? AppColors.glowShadow(AppColors.primary, blur: 24)
-                : null,
+            boxShadow:
+                widget.elevation
+                    ? AppColors.glowShadow(AppColors.primary, blur: 24)
+                    : null,
             border: Border.all(
               color: AppColors.cardBorder,
               width: widget.elevation ? 0 : 1,

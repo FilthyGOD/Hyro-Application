@@ -37,74 +37,64 @@ class _MainLayoutState extends State<MainLayout> {
 
     return Scaffold(
       key: _scaffoldKey,
-      appBar: _buildAppBar(isMobile),
-      body: Column(
-        children: [
-          Expanded(
-            child: LayoutBuilder(
-              builder: (context, constraints) {
-                final sidebarWidth = isTablet ? 72.0 : 220.0;
-                return Stack(
-                  children: [
-                    // Main Content Region
-                    AnimatedPositioned(
-                      duration: const Duration(milliseconds: 300),
-                      curve: Curves.easeInOut,
-                      left: _isDesktopSidebarVisible ? sidebarWidth : 0,
-                      right: 0,
-                      top: 0,
-                      bottom: 0,
-                      child: widget.child,
-                    ),
-                    // Sliding Sidebar
-                    AnimatedPositioned(
-                      duration: const Duration(milliseconds: 300),
-                      curve: Curves.easeInOut,
-                      left: _isDesktopSidebarVisible ? 0 : -sidebarWidth,
-                      top: 0,
-                      bottom: 0,
-                      width: sidebarWidth,
-                      child: Sidebar(
-                        selectedIndex: widget.selectedIndex,
-                        onItemSelected: widget.onNavigate,
-                        collapsed: isTablet,
-                      ),
-                    ),
-                  ],
-                );
-              },
-            ),
-          ),
-          const FocusRadioBar(),
-        ],
-      ),
-    );
-  }
-
-  PreferredSizeWidget _buildAppBar(bool isMobile) {
-    return AppBar(
-      backgroundColor: Colors.transparent,
-      elevation: 0,
-      leading: IconButton(
-        icon: const Icon(Icons.menu),
-        onPressed: () {
-          if (isMobile) {
-            _scaffoldKey.currentState?.openDrawer();
-          } else {
-            setState(() {
-              _isDesktopSidebarVisible = !_isDesktopSidebarVisible;
-            });
-          }
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          final sidebarWidth = isTablet ? 72.0 : 220.0;
+          return Stack(
+            children: [
+              // Main Content Region
+              Positioned.fill(child: widget.child),
+              // Floating Focus Radio Bar
+              const Positioned(
+                bottom: 24,
+                left: 0,
+                right: 0,
+                child: FocusRadioBar(),
+              ),
+              // Optional backdrop for a nicer effect
+              if (_isDesktopSidebarVisible)
+                Positioned.fill(
+                  child: GestureDetector(
+                    onTap: () {
+                      setState(() {
+                        _isDesktopSidebarVisible = false;
+                      });
+                    },
+                    child: Container(color: Colors.black.withOpacity(0.3)),
+                  ),
+                ),
+              // Floating Menu Button (Appears only when Sidebar is closed)
+              if (!_isDesktopSidebarVisible)
+                Positioned(
+                  top: 16,
+                  left: 16,
+                  child: IconButton(
+                    icon: const Icon(Icons.menu, color: Colors.white, size: 28),
+                    onPressed: () {
+                      setState(() {
+                        _isDesktopSidebarVisible = true;
+                      });
+                    },
+                  ),
+                ),
+              // Sliding Sidebar
+              AnimatedPositioned(
+                duration: const Duration(milliseconds: 300),
+                curve: Curves.easeInOut,
+                left: _isDesktopSidebarVisible ? 0 : -sidebarWidth,
+                top: 0,
+                bottom: 0,
+                width: sidebarWidth,
+                child: Sidebar(
+                  selectedIndex: widget.selectedIndex,
+                  onItemSelected: widget.onNavigate,
+                  collapsed: isTablet,
+                ),
+              ),
+            ],
+          );
         },
       ),
-      title: const Text('Hyro'),
-      actions: [
-        IconButton(icon: const Icon(Icons.dark_mode), onPressed: () {}),
-        IconButton(
-          icon: const Icon(Icons.notifications_outlined),
-          onPressed: () {},
-        ),
-      ],
     );
   }
 
@@ -121,9 +111,16 @@ class _MainLayoutState extends State<MainLayout> {
           },
         ),
       ),
-      appBar: _buildAppBar(true),
-      body: Column(
-        children: [Expanded(child: widget.child), const FocusRadioBar()],
+      body: Stack(
+        children: [
+          Positioned.fill(child: widget.child),
+          const Positioned(
+            bottom: 16,
+            left: 0,
+            right: 0,
+            child: FocusRadioBar(),
+          ),
+        ],
       ),
     );
   }

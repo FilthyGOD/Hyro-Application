@@ -172,7 +172,7 @@ class _DesktopLayout extends StatelessWidget {
       case TimerMode.shortBreak:
         return 'SHORT BREAK';
       case TimerMode.longBreak:
-        return 'LONG BREAK';
+        return 'OJO BREAK';
     }
   }
 }

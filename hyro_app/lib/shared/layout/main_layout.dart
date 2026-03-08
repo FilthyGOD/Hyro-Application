@@ -63,11 +63,10 @@ class _MainLayoutState extends State<MainLayout> {
                     child: Container(color: Colors.black.withOpacity(0.3)),
                   ),
                 ),
-              // Floating Menu Button (Appears only when Sidebar is closed)
               if (!_isDesktopSidebarVisible)
                 Positioned(
-                  top: 16,
-                  left: 16,
+                  top: 24,
+                  left: 24,
                   child: IconButton(
                     icon: const Icon(Icons.menu, color: Colors.white, size: 28),
                     onPressed: () {
@@ -119,6 +118,19 @@ class _MainLayoutState extends State<MainLayout> {
             left: 0,
             right: 0,
             child: FocusRadioBar(),
+          ),
+          Positioned(
+            top: 24,
+            left: 16,
+            child: Builder(
+              builder:
+                  (ctx) => IconButton(
+                    icon: const Icon(Icons.menu, color: Colors.white, size: 28),
+                    onPressed: () {
+                      Scaffold.of(ctx).openDrawer();
+                    },
+                  ),
+            ),
           ),
         ],
       ),

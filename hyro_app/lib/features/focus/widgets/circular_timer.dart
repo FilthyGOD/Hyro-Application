@@ -39,19 +39,22 @@ class CircularTimer extends StatelessWidget {
             ),
           ),
           // ── Time display ──
-          Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                FormatTime.mmss(remainingSeconds),
-                style: AppTypography.timerDisplay,
+          Padding(
+            padding: EdgeInsets.all(size * 0.15),
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    FormatTime.mmss(remainingSeconds),
+                    style: AppTypography.timerDisplay,
+                  ),
+                  const SizedBox(height: 4),
+                  Text(label, style: AppTypography.timerLabel),
+                ],
               ),
-              const SizedBox(height: 4),
-              Text(
-                label,
-                style: AppTypography.timerLabel,
-              ),
-            ],
+            ),
           ),
         ],
       ),
@@ -82,21 +85,23 @@ class _TimerRingPainter extends CustomPainter {
     final sweepAngle = 2 * pi * progress;
 
     // Track
-    final trackPaint = Paint()
-      ..color = trackColor
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = strokeWidth
-      ..strokeCap = StrokeCap.round;
+    final trackPaint =
+        Paint()
+          ..color = trackColor
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = strokeWidth
+          ..strokeCap = StrokeCap.round;
 
     canvas.drawCircle(center, radius, trackPaint);
 
     // Progress arc
     if (progress > 0) {
-      final progressPaint = Paint()
-        ..color = progressColor
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = strokeWidth
-        ..strokeCap = StrokeCap.round;
+      final progressPaint =
+          Paint()
+            ..color = progressColor
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = strokeWidth
+            ..strokeCap = StrokeCap.round;
 
       canvas.drawArc(
         Rect.fromCircle(center: center, radius: radius),
@@ -107,12 +112,13 @@ class _TimerRingPainter extends CustomPainter {
       );
 
       // Glow effect
-      final glowPaint = Paint()
-        ..color = glowColor
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = strokeWidth + 12
-        ..strokeCap = StrokeCap.round
-        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 12);
+      final glowPaint =
+          Paint()
+            ..color = glowColor
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = strokeWidth + 12
+            ..strokeCap = StrokeCap.round
+            ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 12);
 
       canvas.drawArc(
         Rect.fromCircle(center: center, radius: radius),

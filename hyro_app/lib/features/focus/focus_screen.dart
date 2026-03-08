@@ -42,7 +42,7 @@ class _DesktopLayout extends StatelessWidget {
     final cubit = context.read<TimerCubit>();
 
     return Padding(
-      padding: const EdgeInsets.all(32),
+      padding: const EdgeInsets.only(left: 72, top: 32, right: 32, bottom: 32),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -108,8 +108,29 @@ class _DesktopLayout extends StatelessWidget {
 
   Widget _buildHeader(BuildContext context) {
     final now = DateTime.now();
-    final dayNames = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
-    final monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    final dayNames = [
+      'Monday',
+      'Tuesday',
+      'Wednesday',
+      'Thursday',
+      'Friday',
+      'Saturday',
+      'Sunday',
+    ];
+    final monthNames = [
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
+    ];
 
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -133,7 +154,10 @@ class _DesktopLayout extends StatelessWidget {
             ),
             IconButton(
               onPressed: () {},
-              icon: const Icon(Icons.notifications_outlined, color: AppColors.textSecondary),
+              icon: const Icon(
+                Icons.notifications_outlined,
+                color: AppColors.textSecondary,
+              ),
             ),
           ],
         ),
@@ -148,7 +172,7 @@ class _DesktopLayout extends StatelessWidget {
       case TimerMode.shortBreak:
         return 'SHORT BREAK';
       case TimerMode.longBreak:
-        return 'LONG BREAK';
+        return 'OJO BREAK';
     }
   }
 }
@@ -163,16 +187,13 @@ class _MobileLayout extends StatelessWidget {
     final cubit = context.read<TimerCubit>();
 
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.only(top: 64, left: 20, right: 20, bottom: 20),
       child: Column(
         children: [
           // Header
           Text('Deep Work Session', style: AppTypography.h2),
           const SizedBox(height: 4),
-          Text(
-            'Focus Streak: 5 days 🔥',
-            style: AppTypography.bodySmall,
-          ),
+          Text('Focus Streak: 5 days 🔥', style: AppTypography.bodySmall),
           const SizedBox(height: 24),
           // Session info
           SessionInfoCard(
@@ -200,10 +221,7 @@ class _MobileLayout extends StatelessWidget {
           ),
           const SizedBox(height: 20),
           // Mode selector
-          ModeSelector(
-            currentMode: state.mode,
-            onModeChanged: cubit.setMode,
-          ),
+          ModeSelector(currentMode: state.mode, onModeChanged: cubit.setMode),
           const SizedBox(height: 24),
           const MascotCard(),
           const SizedBox(height: 16),

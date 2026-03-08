@@ -23,6 +23,9 @@ class MainLayout extends StatefulWidget {
 class _MainLayoutState extends State<MainLayout> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
+  // State to control sidebar visibility on desktop/tablet
+  bool _isDesktopSidebarVisible = true;
+
   @override
   Widget build(BuildContext context) {
     final isMobile = Responsive.isMobile(context);
@@ -34,22 +37,62 @@ class _MainLayoutState extends State<MainLayout> {
 
     return Scaffold(
       key: _scaffoldKey,
-      body: Column(
-        children: [
-          Expanded(
-            child: Row(
-              children: [
-                Sidebar(
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          final sidebarWidth = isTablet ? 72.0 : 220.0;
+          return Stack(
+            children: [
+              // Main Content Region
+              Positioned.fill(child: widget.child),
+              // Floating Focus Radio Bar
+              const Positioned(
+                bottom: 24,
+                left: 0,
+                right: 0,
+                child: FocusRadioBar(),
+              ),
+              // Optional backdrop for a nicer effect
+              if (_isDesktopSidebarVisible)
+                Positioned.fill(
+                  child: GestureDetector(
+                    onTap: () {
+                      setState(() {
+                        _isDesktopSidebarVisible = false;
+                      });
+                    },
+                    child: Container(color: Colors.black.withOpacity(0.3)),
+                  ),
+                ),
+              if (!_isDesktopSidebarVisible)
+                Positioned(
+                  top: 24,
+                  left: 24,
+                  child: IconButton(
+                    icon: const Icon(Icons.menu, color: Colors.white, size: 28),
+                    onPressed: () {
+                      setState(() {
+                        _isDesktopSidebarVisible = true;
+                      });
+                    },
+                  ),
+                ),
+              // Sliding Sidebar
+              AnimatedPositioned(
+                duration: const Duration(milliseconds: 300),
+                curve: Curves.easeInOut,
+                left: _isDesktopSidebarVisible ? 0 : -sidebarWidth,
+                top: 0,
+                bottom: 0,
+                width: sidebarWidth,
+                child: Sidebar(
                   selectedIndex: widget.selectedIndex,
                   onItemSelected: widget.onNavigate,
                   collapsed: isTablet,
                 ),
-                Expanded(child: widget.child),
-              ],
-            ),
-          ),
-          const FocusRadioBar(),
-        ],
+              ),
+            ],
+          );
+        },
       ),
     );
   }
@@ -67,23 +110,28 @@ class _MainLayoutState extends State<MainLayout> {
           },
         ),
       ),
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.menu),
-          onPressed: () => _scaffoldKey.currentState?.openDrawer(),
-        ),
-        title: const Text('Hyro'),
-        actions: [
-          IconButton(icon: const Icon(Icons.dark_mode), onPressed: () {}),
-          IconButton(icon: const Icon(Icons.notifications_outlined), onPressed: () {}),
-        ],
-      ),
-      body: Column(
+      body: Stack(
         children: [
-          Expanded(child: widget.child),
-          const FocusRadioBar(),
+          Positioned.fill(child: widget.child),
+          const Positioned(
+            bottom: 16,
+            left: 0,
+            right: 0,
+            child: FocusRadioBar(),
+          ),
+          Positioned(
+            top: 24,
+            left: 16,
+            child: Builder(
+              builder:
+                  (ctx) => IconButton(
+                    icon: const Icon(Icons.menu, color: Colors.white, size: 28),
+                    onPressed: () {
+                      Scaffold.of(ctx).openDrawer();
+                    },
+                  ),
+            ),
+          ),
         ],
       ),
     );

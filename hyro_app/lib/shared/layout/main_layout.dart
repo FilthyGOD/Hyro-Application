@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import '../../core/utils/responsive.dart';
 import '../widgets/sidebar.dart';
-import '../widgets/focus_radio_bar.dart';
+import '../widgets/spotify_bottom_bar.dart';
+import '../../core/services/spotify/spotify_auth_service.dart';
+import '../../core/services/spotify/spotify_player_service.dart';
 
 /// Main layout scaffold with responsive sidebar + content + radio bar.
 class MainLayout extends StatefulWidget {
@@ -26,6 +28,25 @@ class _MainLayoutState extends State<MainLayout> {
   // State to control sidebar visibility on desktop/tablet
   bool _isDesktopSidebarVisible = true;
 
+  late final SpotifyAuthService _spotifyAuthService;
+  late final SpotifyPlayerService _spotifyPlayerService;
+
+  @override
+  void initState() {
+    super.initState();
+    _spotifyAuthService = SpotifyAuthService();
+    _spotifyPlayerService = SpotifyPlayerService(
+      authService: _spotifyAuthService,
+    );
+  }
+
+  @override
+  void dispose() {
+    _spotifyPlayerService.dispose();
+    _spotifyAuthService.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     final isMobile = Responsive.isMobile(context);
@@ -44,12 +65,15 @@ class _MainLayoutState extends State<MainLayout> {
             children: [
               // Main Content Region
               Positioned.fill(child: widget.child),
-              // Floating Focus Radio Bar
-              const Positioned(
+              // Floating Spotify Base
+              Positioned(
                 bottom: 24,
                 left: 0,
                 right: 0,
-                child: FocusRadioBar(),
+                child: SpotifyBottomBar(
+                  authService: _spotifyAuthService,
+                  playerService: _spotifyPlayerService,
+                ),
               ),
               // Optional backdrop for a nicer effect
               if (_isDesktopSidebarVisible)
@@ -113,11 +137,14 @@ class _MainLayoutState extends State<MainLayout> {
       body: Stack(
         children: [
           Positioned.fill(child: widget.child),
-          const Positioned(
+          Positioned(
             bottom: 16,
             left: 0,
             right: 0,
-            child: FocusRadioBar(),
+            child: SpotifyBottomBar(
+              authService: _spotifyAuthService,
+              playerService: _spotifyPlayerService,
+            ),
           ),
           Positioned(
             top: 24,

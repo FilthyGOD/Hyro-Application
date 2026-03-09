@@ -43,62 +43,77 @@ class _DesktopLayout extends StatelessWidget {
 
     return Padding(
       padding: const EdgeInsets.only(left: 72, top: 32, right: 32, bottom: 32),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // ── Left column: header + timer ──
+          _buildHeader(context),
+          const SizedBox(height: 32),
           Expanded(
-            flex: 3,
-            child: Column(
+            child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _buildHeader(context),
-                const SizedBox(height: 32),
-                Center(
-                  child: CircularTimer(
-                    remainingSeconds: state.remainingSeconds,
-                    progress: state.progress,
-                    label: _getTimerLabel(state.mode),
-                    size: 320,
+                // ── Left column: timer ──
+                Expanded(
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      // Un pequeño espaciador extra a la izquierda para empujar el reloj y centrarlo respecto a toda la pantalla
+                      const Spacer(flex: 3),
+                      SingleChildScrollView(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            CircularTimer(
+                              remainingSeconds: state.remainingSeconds,
+                              progress: state.progress,
+                              label: _getTimerLabel(state.mode),
+                              size: 460, // Increased size to take up more space
+                            ),
+                            const SizedBox(height: 48),
+                            TimerControls(
+                              isRunning: state.isRunning,
+                              isPaused: state.isPaused,
+                              onStart: cubit.start,
+                              onPause: cubit.pause,
+                              onResume: cubit.resume,
+                              onReset: cubit.reset,
+                              onStop: cubit.stop,
+                            ),
+                            const SizedBox(height: 32),
+                            ModeSelector(
+                              currentMode: state.mode,
+                              onModeChanged: cubit.setMode,
+                            ),
+                          ],
+                        ),
+                      ),
+                      const Spacer(flex: 2),
+                    ],
                   ),
                 ),
-                const SizedBox(height: 28),
-                TimerControls(
-                  isRunning: state.isRunning,
-                  isPaused: state.isPaused,
-                  onStart: cubit.start,
-                  onPause: cubit.pause,
-                  onResume: cubit.resume,
-                  onReset: cubit.reset,
-                  onStop: cubit.stop,
-                ),
-                const SizedBox(height: 24),
-                ModeSelector(
-                  currentMode: state.mode,
-                  onModeChanged: cubit.setMode,
+                const SizedBox(width: 48),
+                // ── Right column: info cards ──
+                SizedBox(
+                  width: 320, // Fixed width so data cards aren't stretched
+                  child: SingleChildScrollView(
+                    child: Column(
+                      children: [
+                        SessionInfoCard(
+                          completedSessions: state.completedSessions,
+                          totalFocusMinutes: state.totalFocusMinutes,
+                        ),
+                        const SizedBox(height: 16),
+                        const MascotCard(),
+                        const SizedBox(height: 16),
+                        const MiniTaskList(),
+                        const SizedBox(height: 16),
+                        const ActivityChart(),
+                        const SizedBox(height: 32),
+                      ],
+                    ),
+                  ),
                 ),
               ],
-            ),
-          ),
-          const SizedBox(width: 24),
-          // ── Right column: info cards ──
-          Expanded(
-            flex: 2,
-            child: SingleChildScrollView(
-              child: Column(
-                children: [
-                  SessionInfoCard(
-                    completedSessions: state.completedSessions,
-                    totalFocusMinutes: state.totalFocusMinutes,
-                  ),
-                  const SizedBox(height: 16),
-                  const MascotCard(),
-                  const SizedBox(height: 16),
-                  const MiniTaskList(),
-                  const SizedBox(height: 16),
-                  const ActivityChart(),
-                ],
-              ),
             ),
           ),
         ],

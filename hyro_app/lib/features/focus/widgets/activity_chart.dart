@@ -11,10 +11,15 @@ class ActivityChart extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Fixed labels for current week (Monday to Sunday)
-    final List<String> labels = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
+    // Generate labels for the last 7 days, ending today at index 6
+    final List<String> labels = [];
     final now = DateTime.now();
-    final todayIndex = now.weekday - 1;
+    for (int i = 6; i >= 0; i--) {
+      final String weekdayStr = _getWeekdayLabel(
+        now.subtract(Duration(days: i)).weekday,
+      );
+      labels.add(weekdayStr);
+    }
 
     final data = context.watch<StatsProvider>().weeklyActivityData;
 
@@ -34,7 +39,9 @@ class ActivityChart extends StatelessWidget {
                 return _ActivityBar(
                   value: data[i],
                   label: labels[i],
-                  isToday: i == todayIndex,
+                  isToday:
+                      i ==
+                      6, // Index 6 is today because we generated 6 to 0 days ago
                 );
               }),
             ),
@@ -42,6 +49,27 @@ class ActivityChart extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  String _getWeekdayLabel(int weekday) {
+    switch (weekday) {
+      case DateTime.monday:
+        return 'M';
+      case DateTime.tuesday:
+        return 'T';
+      case DateTime.wednesday:
+        return 'W';
+      case DateTime.thursday:
+        return 'T';
+      case DateTime.friday:
+        return 'F';
+      case DateTime.saturday:
+        return 'S';
+      case DateTime.sunday:
+        return 'S';
+      default:
+        return '';
+    }
   }
 }
 

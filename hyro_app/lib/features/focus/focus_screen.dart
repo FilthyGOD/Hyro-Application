@@ -274,11 +274,18 @@ class _MobileLayout extends StatelessWidget {
           ),
           const SizedBox(height: 24),
           // Timer
-          CircularTimer(
-            remainingSeconds: state.remainingSeconds,
-            progress: state.progress,
-            label: _getTimerLabel(state.mode),
-            size: 260,
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final availableWidth = constraints.maxWidth;
+              // Make timer responsive: max 260, but scales down if screen is narrow
+              final size = (availableWidth * 0.75).clamp(160.0, 260.0);
+              return CircularTimer(
+                remainingSeconds: state.remainingSeconds,
+                progress: state.progress,
+                label: _getTimerLabel(state.mode),
+                size: size,
+              );
+            },
           ),
           const SizedBox(height: 24),
           // Controls

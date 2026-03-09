@@ -62,27 +62,49 @@ class _StatsScreenState extends State<StatsScreen> {
               _buildCurrentStreakCard(streak),
               const SizedBox(height: 24),
 
-              // ── Bottom Row: Calendar & Milestones ──
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(
-                    flex: 3,
-                    child: StreakCalendar(
-                      displayMonth: _displayMonth,
-                      monthStats: monthStats,
-                      onPreviousMonth: _previousMonth,
-                      onNextMonth: _nextMonth,
-                    ),
-                  ),
-                  const SizedBox(width: 24),
-                  Expanded(
-                    flex: 2,
-                    child: _buildRecentMilestones(
-                      statsProvider.totalFocusHours,
-                    ),
-                  ),
-                ],
+              // ── Bottom Row/Column: Calendar & Milestones ──
+              LayoutBuilder(
+                builder: (context, constraints) {
+                  final isWide = constraints.maxWidth > 800;
+
+                  if (isWide) {
+                    return Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(
+                          flex: 3,
+                          child: StreakCalendar(
+                            displayMonth: _displayMonth,
+                            monthStats: monthStats,
+                            onPreviousMonth: _previousMonth,
+                            onNextMonth: _nextMonth,
+                          ),
+                        ),
+                        const SizedBox(width: 24),
+                        Expanded(
+                          flex: 2,
+                          child: _buildRecentMilestones(
+                            statsProvider.totalFocusHours,
+                          ),
+                        ),
+                      ],
+                    );
+                  } else {
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        StreakCalendar(
+                          displayMonth: _displayMonth,
+                          monthStats: monthStats,
+                          onPreviousMonth: _previousMonth,
+                          onNextMonth: _nextMonth,
+                        ),
+                        const SizedBox(height: 24),
+                        _buildRecentMilestones(statsProvider.totalFocusHours),
+                      ],
+                    );
+                  }
+                },
               ),
             ],
           ),

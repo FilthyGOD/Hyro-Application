@@ -16,8 +16,10 @@ class ModeSelector extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
+    return Wrap(
+      alignment: WrapAlignment.center,
+      spacing: 10,
+      runSpacing: 10,
       children: [
         _ModeChip(
           label: 'Pomodoro',
@@ -25,14 +27,12 @@ class ModeSelector extends StatelessWidget {
           activeColor: AppColors.primary,
           onTap: () => onModeChanged(TimerMode.pomodoro),
         ),
-        const SizedBox(width: 10),
         _ModeChip(
           label: 'Short Break',
           isActive: currentMode == TimerMode.shortBreak,
           activeColor: AppColors.primary,
           onTap: () => onModeChanged(TimerMode.shortBreak),
         ),
-        const SizedBox(width: 10),
         _ModeChip(
           label: 'Long Break',
           isActive: currentMode == TimerMode.longBreak,

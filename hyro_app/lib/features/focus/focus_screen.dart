@@ -52,39 +52,62 @@ class _DesktopLayout extends StatelessWidget {
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // ── Left column: timer ──
+                // ── Left column: timer (SCROLLABLE IF NEEDED) ──
                 Expanded(
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      // Un pequeño espaciador extra a la izquierda para empujar el reloj y centrarlo respecto a toda la pantalla
                       const Spacer(flex: 3),
-                      SingleChildScrollView(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            CircularTimer(
-                              remainingSeconds: state.remainingSeconds,
-                              progress: state.progress,
-                              label: _getTimerLabel(state.mode),
-                              size: 460, // Increased size to take up more space
-                            ),
-                            const SizedBox(height: 48),
-                            TimerControls(
-                              isRunning: state.isRunning,
-                              isPaused: state.isPaused,
-                              onStart: cubit.start,
-                              onPause: cubit.pause,
-                              onResume: cubit.resume,
-                              onReset: cubit.reset,
-                              onStop: cubit.stop,
-                            ),
-                            const SizedBox(height: 32),
-                            ModeSelector(
-                              currentMode: state.mode,
-                              onModeChanged: cubit.setMode,
-                            ),
-                          ],
+                      Expanded(
+                        flex: 10,
+                        child: LayoutBuilder(
+                          builder: (context, constraints) {
+                            // Calculate a dynamic size based on available height,
+                            // ensuring it leaves room for controls and spacing.
+                            // Max size 460, Min size 160 (to force it to fit without scroll).
+                            final availableHeight = constraints.maxHeight;
+                            final desiredTimerSize =
+                                availableHeight -
+                                240; // 240px reserved for controls and padding
+                            final timerSize = desiredTimerSize.clamp(
+                              160.0,
+                              460.0,
+                            );
+
+                            return Column(
+                              children: [
+                                // Top spacer to push content down
+                                const Spacer(flex: 1),
+
+                                // The content (Timer, Controls, Scroller)
+                                CircularTimer(
+                                  remainingSeconds: state.remainingSeconds,
+                                  progress: state.progress,
+                                  label: _getTimerLabel(state.mode),
+                                  size: timerSize,
+                                ),
+                                const SizedBox(height: 32),
+                                TimerControls(
+                                  isRunning: state.isRunning,
+                                  isPaused: state.isPaused,
+                                  onStart: cubit.start,
+                                  onPause: cubit.pause,
+                                  onResume: cubit.resume,
+                                  onReset: cubit.reset,
+                                  onStop: cubit.stop,
+                                ),
+                                const SizedBox(height: 24),
+                                ModeSelector(
+                                  currentMode: state.mode,
+                                  onModeChanged: cubit.setMode,
+                                ),
+
+                                // Bottom spacer (flex: 2) to push content higher up
+                                // compensating for the space the music player takes later.
+                                const Spacer(flex: 3),
+                              ],
+                            );
+                          },
                         ),
                       ),
                       const Spacer(flex: 2),
@@ -92,25 +115,24 @@ class _DesktopLayout extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(width: 48),
-                // ── Right column: info cards ──
+                // ── Right column: info cards (SCROLLABLE) ──
                 SizedBox(
                   width: 320, // Fixed width so data cards aren't stretched
-                  child: SingleChildScrollView(
-                    child: Column(
-                      children: [
-                        SessionInfoCard(
-                          completedSessions: state.completedSessions,
-                          totalFocusMinutes: state.totalFocusMinutes,
-                        ),
-                        const SizedBox(height: 16),
-                        const MascotCard(),
-                        const SizedBox(height: 16),
-                        const MiniTaskList(),
-                        const SizedBox(height: 16),
-                        const ActivityChart(),
-                        const SizedBox(height: 32),
-                      ],
-                    ),
+                  child: ListView(
+                    // ListView instead of SingleChildScrollView+Column for better scroll behavior
+                    children: [
+                      SessionInfoCard(
+                        completedSessions: state.completedSessions,
+                        totalFocusMinutes: state.totalFocusMinutes,
+                      ),
+                      const SizedBox(height: 16),
+                      const MascotCard(),
+                      const SizedBox(height: 16),
+                      const MiniTaskList(),
+                      const SizedBox(height: 16),
+                      const ActivityChart(),
+                      const SizedBox(height: 32), // Bottom padding
+                    ],
                   ),
                 ),
               ],

@@ -1,13 +1,15 @@
 import 'dart:async';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../core/constants/pomodoro_constants.dart';
+import '../../stats/stats_provider.dart';
 import 'timer_state.dart';
 
 /// Cubit that manages the Pomodoro timer logic.
 class TimerCubit extends Cubit<TimerState> {
   Timer? _timer;
+  final StatsProvider? statsProvider;
 
-  TimerCubit() : super(const TimerState());
+  TimerCubit({this.statsProvider}) : super(const TimerState());
 
   /// Start the timer.
   void start() {
@@ -34,36 +36,42 @@ class TimerCubit extends Cubit<TimerState> {
   void reset() {
     _timer?.cancel();
     final totalSec = _durationForMode(state.mode) * 60;
-    emit(state.copyWith(
-      status: TimerStatus.idle,
-      remainingSeconds: totalSec,
-      totalSeconds: totalSec,
-    ));
+    emit(
+      state.copyWith(
+        status: TimerStatus.idle,
+        remainingSeconds: totalSec,
+        totalSeconds: totalSec,
+      ),
+    );
   }
 
   /// Stop the timer completely and go back to idle pomodoro.
   void stop() {
     _timer?.cancel();
     final totalSec = PomodoroConstants.pomodoroDuration * 60;
-    emit(TimerState(
-      completedSessions: state.completedSessions,
-      totalFocusMinutes: state.totalFocusMinutes,
-      remainingSeconds: totalSec,
-      totalSeconds: totalSec,
-    ));
+    emit(
+      TimerState(
+        completedSessions: state.completedSessions,
+        totalFocusMinutes: state.totalFocusMinutes,
+        remainingSeconds: totalSec,
+        totalSeconds: totalSec,
+      ),
+    );
   }
 
   /// Switch timer mode (Pomodoro, Short Break, Long Break).
   void setMode(TimerMode mode) {
     _timer?.cancel();
     final totalSec = _durationForMode(mode) * 60;
-    emit(TimerState(
-      mode: mode,
-      remainingSeconds: totalSec,
-      totalSeconds: totalSec,
-      completedSessions: state.completedSessions,
-      totalFocusMinutes: state.totalFocusMinutes,
-    ));
+    emit(
+      TimerState(
+        mode: mode,
+        remainingSeconds: totalSec,
+        totalSeconds: totalSec,
+        completedSessions: state.completedSessions,
+        totalFocusMinutes: state.totalFocusMinutes,
+      ),
+    );
   }
 
   void _tick() {
@@ -81,29 +89,37 @@ class TimerCubit extends Cubit<TimerState> {
       final newFocusMinutes =
           state.totalFocusMinutes + (state.totalSeconds ~/ 60);
 
+      // Tell stats provider to record this session
+      statsProvider?.addFocusSession(state.totalSeconds ~/ 60);
+
       // Auto-transition: after 4 pomodoros → long break, else short break
-      final nextMode = newSessions % PomodoroConstants.pomodorosBeforeLongBreak == 0
-          ? TimerMode.longBreak
-          : TimerMode.shortBreak;
+      final nextMode =
+          newSessions % PomodoroConstants.pomodorosBeforeLongBreak == 0
+              ? TimerMode.longBreak
+              : TimerMode.shortBreak;
       final nextDuration = _durationForMode(nextMode) * 60;
 
-      emit(TimerState(
-        status: TimerStatus.finished,
-        mode: nextMode,
-        remainingSeconds: nextDuration,
-        totalSeconds: nextDuration,
-        completedSessions: newSessions,
-        totalFocusMinutes: newFocusMinutes,
-      ));
+      emit(
+        TimerState(
+          status: TimerStatus.finished,
+          mode: nextMode,
+          remainingSeconds: nextDuration,
+          totalSeconds: nextDuration,
+          completedSessions: newSessions,
+          totalFocusMinutes: newFocusMinutes,
+        ),
+      );
     } else {
       // Break finished → go back to pomodoro
       final nextDuration = PomodoroConstants.pomodoroDuration * 60;
-      emit(state.copyWith(
-        status: TimerStatus.finished,
-        mode: TimerMode.pomodoro,
-        remainingSeconds: nextDuration,
-        totalSeconds: nextDuration,
-      ));
+      emit(
+        state.copyWith(
+          status: TimerStatus.finished,
+          mode: TimerMode.pomodoro,
+          remainingSeconds: nextDuration,
+          totalSeconds: nextDuration,
+        ),
+      );
     }
   }
 

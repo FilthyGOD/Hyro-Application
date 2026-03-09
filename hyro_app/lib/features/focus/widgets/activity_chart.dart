@@ -2,17 +2,22 @@ import 'package:flutter/material.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../shared/widgets/glass_card.dart';
+import 'package:provider/provider.dart';
+import '../../stats/stats_provider.dart';
 
 /// Activity chart card showing daily focus sessions as vertical bars.
 class ActivityChart extends StatelessWidget {
   const ActivityChart({super.key});
 
-  // Sample data — would come from session repository in production
-  static const _data = [0.4, 0.7, 0.5, 0.9, 0.3, 0.6, 0.8];
-  static const _labels = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
-
   @override
   Widget build(BuildContext context) {
+    // Fixed labels for current week (Monday to Sunday)
+    final List<String> labels = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
+    final now = DateTime.now();
+    final todayIndex = now.weekday - 1;
+
+    final data = context.watch<StatsProvider>().weeklyActivityData;
+
     return GlassCard(
       padding: const EdgeInsets.all(16),
       child: Column(
@@ -25,11 +30,11 @@ class ActivityChart extends StatelessWidget {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               crossAxisAlignment: CrossAxisAlignment.end,
-              children: List.generate(_data.length, (i) {
+              children: List.generate(data.length, (i) {
                 return _ActivityBar(
-                  value: _data[i],
-                  label: _labels[i],
-                  isToday: i == 4, // Friday
+                  value: data[i],
+                  label: labels[i],
+                  isToday: i == todayIndex,
                 );
               }),
             ),
@@ -64,11 +69,15 @@ class _ActivityBar extends StatelessWidget {
               child: Container(
                 width: 8,
                 decoration: BoxDecoration(
-                  color: isToday ? AppColors.primary : AppColors.primary.withAlpha(100),
+                  color:
+                      isToday
+                          ? AppColors.primary
+                          : AppColors.primary.withAlpha(100),
                   borderRadius: BorderRadius.circular(4),
-                  boxShadow: isToday
-                      ? AppColors.glowShadow(AppColors.primary, blur: 8)
-                      : null,
+                  boxShadow:
+                      isToday
+                          ? AppColors.glowShadow(AppColors.primary, blur: 8)
+                          : null,
                 ),
               ),
             ),

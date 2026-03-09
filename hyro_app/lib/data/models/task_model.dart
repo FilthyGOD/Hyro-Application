@@ -1,6 +1,6 @@
 import 'package:hive/hive.dart';
 
-// part 'task_model.g.dart'; // TODO: uncomment after running build_runner
+part 'task_model.g.dart';
 
 @HiveType(typeId: 0)
 class TaskModel extends HiveObject {
@@ -31,6 +31,12 @@ class TaskModel extends HiveObject {
   @HiveField(8)
   DateTime? completedAt;
 
+  @HiveField(9)
+  String priority;
+
+  @HiveField(10)
+  int priorityColorValue;
+
   TaskModel({
     required this.id,
     required this.title,
@@ -39,6 +45,8 @@ class TaskModel extends HiveObject {
     this.isCompleted = false,
     this.pomodorosCompleted = 0,
     this.pomodorosTarget = 1,
+    this.priority = 'MEDIUM',
+    this.priorityColorValue = 0xFFF59E0B, // Default orange
     DateTime? createdAt,
     this.completedAt,
   }) : createdAt = createdAt ?? DateTime.now();
@@ -50,6 +58,8 @@ class TaskModel extends HiveObject {
     bool? isCompleted,
     int? pomodorosCompleted,
     int? pomodorosTarget,
+    String? priority,
+    int? priorityColorValue,
     DateTime? completedAt,
   }) {
     return TaskModel(
@@ -60,6 +70,8 @@ class TaskModel extends HiveObject {
       isCompleted: isCompleted ?? this.isCompleted,
       pomodorosCompleted: pomodorosCompleted ?? this.pomodorosCompleted,
       pomodorosTarget: pomodorosTarget ?? this.pomodorosTarget,
+      priority: priority ?? this.priority,
+      priorityColorValue: priorityColorValue ?? this.priorityColorValue,
       createdAt: createdAt,
       completedAt: completedAt ?? this.completedAt,
     );

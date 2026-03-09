@@ -3,8 +3,11 @@ import 'dart:math' as math;
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_typography.dart';
 import '../../shared/widgets/glass_card.dart';
+import 'package:provider/provider.dart';
+import 'package:uuid/uuid.dart';
+import '../../data/models/task_model.dart';
+import 'tasks_provider.dart';
 
-/// Tasks screen — full task management view.
 class TasksScreen extends StatefulWidget {
   const TasksScreen({super.key});
 
@@ -16,36 +19,7 @@ class _TasksScreenState extends State<TasksScreen> {
   int _selectedFilter = 0; // 0=All, 1=Pending, 2=Completed
 
   // ── Demo data ──
-  final List<_DemoTask> _tasks = [
-    _DemoTask(
-      title: 'Complete Research Paper',
-      subtitle: 'Due Today, 5:00 PM',
-      priority: 'HIGH PRIORITY',
-      priorityColor: const Color(0xFFEF4444),
-      pomodoros: 4,
-    ),
-    _DemoTask(
-      title: 'Design System Update',
-      subtitle: 'Tomorrow, 10:00 AM',
-      priority: 'MEDIUM',
-      priorityColor: const Color(0xFFF59E0B),
-      pomodoros: 2,
-    ),
-    _DemoTask(
-      title: 'Weekly Grocery Shopping',
-      subtitle: 'Sat, 2:00 PM',
-      priority: 'LOW',
-      priorityColor: const Color(0xFF22C55E),
-      pomodoros: 1,
-    ),
-    _DemoTask(
-      title: 'Calculus Review',
-      subtitle: 'Mon, 9:00 AM',
-      priority: 'HIGH PRIORITY',
-      priorityColor: const Color(0xFFEF4444),
-      pomodoros: 3,
-    ),
-  ];
+  // ── Demo data ──
 
   final List<_CategoryData> _categories = [
     _CategoryData(
@@ -124,7 +98,7 @@ class _TasksScreenState extends State<TasksScreen> {
         _buildTodaysFocusHeader(),
         const SizedBox(height: 16),
         // ── Task List ──
-        ..._buildTaskList(),
+        _buildTaskList(),
       ],
     );
   }
@@ -273,8 +247,41 @@ class _TasksScreenState extends State<TasksScreen> {
     );
   }
 
-  List<Widget> _buildTaskList() {
-    return _tasks.map((task) => _TaskTile(task: task)).toList();
+  Widget _buildTaskList() {
+    return Consumer<TaskProvider>(
+      builder: (context, provider, child) {
+        if (provider.isLoading) {
+          return const Center(child: CircularProgressIndicator());
+        }
+
+        var tasks = provider.tasks;
+
+        // Apply filter
+        if (_selectedFilter == 1) {
+          tasks = tasks.where((t) => !t.isCompleted).toList();
+        } else if (_selectedFilter == 2) {
+          tasks = tasks.where((t) => t.isCompleted).toList();
+        }
+
+        if (tasks.isEmpty) {
+          return Padding(
+            padding: const EdgeInsets.symmetric(vertical: 32),
+            child: Center(
+              child: Text(
+                'No tasks found for this filter.',
+                style: AppTypography.bodyLarge.copyWith(
+                  color: AppColors.textSecondary,
+                ),
+              ),
+            ),
+          );
+        }
+
+        return Column(
+          children: tasks.map((task) => _TaskTile(task: task)).toList(),
+        );
+      },
+    );
   }
 
   // ═══════════════════════════════════════════════
@@ -439,42 +446,142 @@ class _TasksScreenState extends State<TasksScreen> {
 
   // ── Dialog ──
   void _showAddTaskDialog() {
+    final titleController = TextEditingController();
+    final descriptionController = TextEditingController();
+    String selectedPriority = 'MEDIUM';
+    int pomodorosTarget = 1;
+    String? selectedCategory = 'University';
+
     showDialog(
       context: context,
-      builder:
-          (ctx) => AlertDialog(
-            backgroundColor: AppColors.surface,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
-            ),
-            title: Text('New Task', style: AppTypography.h3),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextField(
-                  decoration: const InputDecoration(hintText: 'Task title'),
-                  style: AppTypography.bodyLarge,
+      builder: (ctx) {
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            return AlertDialog(
+              backgroundColor: AppColors.surface,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+              title: Text('New Task', style: AppTypography.h3),
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    TextField(
+                      controller: titleController,
+                      decoration: const InputDecoration(hintText: 'Task title'),
+                      style: AppTypography.bodyLarge,
+                    ),
+                    const SizedBox(height: 12),
+                    TextField(
+                      controller: descriptionController,
+                      decoration: const InputDecoration(
+                        hintText: 'Description (optional)',
+                      ),
+                      style: AppTypography.bodyLarge,
+                    ),
+                    const SizedBox(height: 20),
+                    Text('Priority', style: AppTypography.bodySmall),
+                    const SizedBox(height: 8),
+                    DropdownButtonFormField<String>(
+                      value: selectedPriority,
+                      dropdownColor: AppColors.surfaceLight,
+                      items:
+                          ['HIGH PRIORITY', 'MEDIUM', 'LOW'].map((p) {
+                            return DropdownMenuItem(value: p, child: Text(p));
+                          }).toList(),
+                      onChanged: (val) {
+                        if (val != null)
+                          setDialogState(() => selectedPriority = val);
+                      },
+                    ),
+                    const SizedBox(height: 20),
+                    Text('Category', style: AppTypography.bodySmall),
+                    const SizedBox(height: 8),
+                    DropdownButtonFormField<String>(
+                      value: selectedCategory,
+                      dropdownColor: AppColors.surfaceLight,
+                      items:
+                          ['University', 'Personal', 'Work'].map((c) {
+                            return DropdownMenuItem(value: c, child: Text(c));
+                          }).toList(),
+                      onChanged: (val) {
+                        if (val != null)
+                          setDialogState(() => selectedCategory = val);
+                      },
+                    ),
+                    const SizedBox(height: 20),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'Pomodoros required:',
+                          style: AppTypography.bodySmall,
+                        ),
+                        Row(
+                          children: [
+                            IconButton(
+                              icon: const Icon(Icons.remove_circle_outline),
+                              onPressed: () {
+                                if (pomodorosTarget > 1) {
+                                  setDialogState(() => pomodorosTarget--);
+                                }
+                              },
+                            ),
+                            Text(
+                              '$pomodorosTarget',
+                              style: AppTypography.bodyLarge,
+                            ),
+                            IconButton(
+                              icon: const Icon(Icons.add_circle_outline),
+                              onPressed: () {
+                                setDialogState(() => pomodorosTarget++);
+                              },
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 12),
-                TextField(
-                  decoration: const InputDecoration(
-                    hintText: 'Description (optional)',
-                  ),
-                  style: AppTypography.bodyLarge,
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(ctx),
+                  child: const Text('Cancel'),
+                ),
+                ElevatedButton(
+                  onPressed: () {
+                    final title = titleController.text.trim();
+                    if (title.isEmpty) return;
+
+                    int colorValue = 0xFFF59E0B; // orange
+                    if (selectedPriority == 'HIGH PRIORITY')
+                      colorValue = 0xFFEF4444; // red
+                    if (selectedPriority == 'LOW')
+                      colorValue = 0xFF22C55E; // green
+
+                    final task = TaskModel(
+                      id: const Uuid().v4(),
+                      title: title,
+                      description: descriptionController.text.trim(),
+                      category: selectedCategory,
+                      priority: selectedPriority,
+                      priorityColorValue: colorValue,
+                      pomodorosTarget: pomodorosTarget,
+                    );
+
+                    context.read<TaskProvider>().addTask(task);
+                    Navigator.pop(ctx);
+                  },
+                  child: const Text('Add Task'),
                 ),
               ],
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(ctx),
-                child: const Text('Cancel'),
-              ),
-              ElevatedButton(
-                onPressed: () => Navigator.pop(ctx),
-                child: const Text('Add'),
-              ),
-            ],
-          ),
+            );
+          },
+        );
+      },
     );
   }
 }
@@ -539,7 +646,7 @@ class _CategoryCard extends StatelessWidget {
 
 // ── Task Tile ──
 class _TaskTile extends StatelessWidget {
-  final _DemoTask task;
+  final TaskModel task;
   const _TaskTile({required this.task});
 
   @override
@@ -552,11 +659,36 @@ class _TaskTile extends StatelessWidget {
           children: [
             // Checkbox circle
             Container(
-              width: 28,
-              height: 28,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                border: Border.all(color: AppColors.textTertiary, width: 2),
+              child: GestureDetector(
+                onTap: () {
+                  context.read<TaskProvider>().toggleTaskCompletion(task.id);
+                },
+                child: Container(
+                  width: 28,
+                  height: 28,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color:
+                        task.isCompleted
+                            ? AppColors.primary
+                            : Colors.transparent,
+                    border: Border.all(
+                      color:
+                          task.isCompleted
+                              ? AppColors.primary
+                              : AppColors.textTertiary,
+                      width: 2,
+                    ),
+                  ),
+                  child:
+                      task.isCompleted
+                          ? const Icon(
+                            Icons.check,
+                            size: 18,
+                            color: Colors.white,
+                          )
+                          : null,
+                ),
               ),
             ),
             const SizedBox(width: 16),
@@ -567,20 +699,33 @@ class _TaskTile extends StatelessWidget {
                 children: [
                   Text(
                     task.title,
-                    style: AppTypography.labelLarge.copyWith(fontSize: 14),
+                    style: AppTypography.labelLarge.copyWith(
+                      fontSize: 14,
+                      decoration:
+                          task.isCompleted ? TextDecoration.lineThrough : null,
+                      color: task.isCompleted ? AppColors.textTertiary : null,
+                    ),
                   ),
                   const SizedBox(height: 4),
-                  Row(
-                    children: [
-                      Icon(
-                        Icons.access_time_rounded,
-                        size: 12,
-                        color: AppColors.textTertiary,
-                      ),
-                      const SizedBox(width: 4),
-                      Text(task.subtitle, style: AppTypography.bodySmall),
-                    ],
-                  ),
+                  if (task.description != null && task.description!.isNotEmpty)
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.notes_rounded,
+                          size: 14,
+                          color: AppColors.textTertiary,
+                        ),
+                        const SizedBox(width: 4),
+                        Expanded(
+                          child: Text(
+                            task.description!,
+                            style: AppTypography.bodySmall,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
                 ],
               ),
             ),
@@ -588,14 +733,16 @@ class _TaskTile extends StatelessWidget {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
               decoration: BoxDecoration(
-                color: task.priorityColor.withAlpha(25),
+                color: Color(task.priorityColorValue).withAlpha(25),
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: task.priorityColor.withAlpha(120)),
+                border: Border.all(
+                  color: Color(task.priorityColorValue).withAlpha(120),
+                ),
               ),
               child: Text(
                 task.priority,
                 style: AppTypography.bodySmall.copyWith(
-                  color: task.priorityColor,
+                  color: Color(task.priorityColorValue),
                   fontWeight: FontWeight.w700,
                   fontSize: 10,
                   letterSpacing: 0.5,
@@ -610,7 +757,7 @@ class _TaskTile extends StatelessWidget {
                 Icon(Icons.circle, size: 8, color: AppColors.primary),
                 const SizedBox(width: 4),
                 Text(
-                  '${task.pomodoros} Pomodoro${task.pomodoros > 1 ? 's' : ''}',
+                  '${task.pomodorosTarget} Pomodoro${task.pomodorosTarget > 1 ? 's' : ''}',
                   style: AppTypography.bodySmall.copyWith(
                     color: AppColors.primary,
                     fontWeight: FontWeight.w600,
@@ -731,23 +878,6 @@ class _DonutChartPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
-}
-
-// ── Data Models ──
-class _DemoTask {
-  final String title;
-  final String subtitle;
-  final String priority;
-  final Color priorityColor;
-  final int pomodoros;
-
-  _DemoTask({
-    required this.title,
-    required this.subtitle,
-    required this.priority,
-    required this.priorityColor,
-    required this.pomodoros,
-  });
 }
 
 class _CategoryData {

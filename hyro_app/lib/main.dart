@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'app.dart';
+import 'data/models/task_model.dart';
+import 'data/models/daily_stats.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -10,6 +13,14 @@ void main() async {
     anonKey:
         'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJpdXl0dHRzcWxldnZydGJ5d3h0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI3MzUxODYsImV4cCI6MjA4ODMxMTE4Nn0.HT523GGYw1vUR5Ip0LMcKslNFxQK3nVBoHW8WcOmPw8',
   );
+
+  await Hive.initFlutter();
+  Hive.registerAdapter(TaskModelAdapter());
+  Hive.registerAdapter(DailyStatsAdapter());
+
+  // Pre-open the box to avoid async issues later if wanted, or let repository handle it.
+  await Hive.openBox<TaskModel>('tasksBox');
+  await Hive.openBox<DailyStats>('statsBox');
 
   runApp(const HyroApp());
 }

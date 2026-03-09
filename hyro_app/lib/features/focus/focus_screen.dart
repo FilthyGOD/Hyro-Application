@@ -12,6 +12,7 @@ import 'widgets/session_info_card.dart';
 import 'widgets/mascot_card.dart';
 import 'widgets/mini_task_list.dart';
 import 'widgets/activity_chart.dart';
+import '../stats/stats_provider.dart';
 
 /// The main Focus screen with the Pomodoro timer and sidebar widgets.
 class FocusScreen extends StatelessWidget {
@@ -23,10 +24,26 @@ class FocusScreen extends StatelessWidget {
 
     return BlocBuilder<TimerCubit, TimerState>(
       builder: (context, state) {
+        final statsProvider = context.watch<StatsProvider>();
+        final streak = statsProvider.currentStreak;
+        final todaysStats = statsProvider.todaysStats;
+        final sessionsToday = todaysStats?.focusSessions ?? 0;
+        final minutesToday = todaysStats?.focusMinutes ?? 0;
+
         if (isDesktop) {
-          return _DesktopLayout(state: state);
+          return _DesktopLayout(
+            state: state,
+            streak: streak,
+            sessionsToday: sessionsToday,
+            minutesToday: minutesToday,
+          );
         }
-        return _MobileLayout(state: state);
+        return _MobileLayout(
+          state: state,
+          streak: streak,
+          sessionsToday: sessionsToday,
+          minutesToday: minutesToday,
+        );
       },
     );
   }
@@ -35,7 +52,16 @@ class FocusScreen extends StatelessWidget {
 // ── Desktop: two-column layout ──
 class _DesktopLayout extends StatelessWidget {
   final TimerState state;
-  const _DesktopLayout({required this.state});
+  final int streak;
+  final int sessionsToday;
+  final int minutesToday;
+
+  const _DesktopLayout({
+    required this.state,
+    required this.streak,
+    required this.sessionsToday,
+    required this.minutesToday,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -46,7 +72,7 @@ class _DesktopLayout extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          _buildHeader(context),
+          _buildHeader(context, streak),
           const SizedBox(height: 32),
           Expanded(
             child: Row(
@@ -122,8 +148,8 @@ class _DesktopLayout extends StatelessWidget {
                     // ListView instead of SingleChildScrollView+Column for better scroll behavior
                     children: [
                       SessionInfoCard(
-                        completedSessions: state.completedSessions,
-                        totalFocusMinutes: state.totalFocusMinutes,
+                        completedSessions: sessionsToday,
+                        totalFocusMinutes: minutesToday,
                       ),
                       const SizedBox(height: 16),
                       const MascotCard(),
@@ -143,7 +169,7 @@ class _DesktopLayout extends StatelessWidget {
     );
   }
 
-  Widget _buildHeader(BuildContext context) {
+  Widget _buildHeader(BuildContext context, int streak) {
     final now = DateTime.now();
     final dayNames = [
       'Monday',
@@ -178,7 +204,7 @@ class _DesktopLayout extends StatelessWidget {
             Text('Deep Work Session', style: AppTypography.h1),
             const SizedBox(height: 4),
             Text(
-              '${dayNames[now.weekday - 1]}, ${monthNames[now.month - 1]} ${now.day} • Focus Streak: 5 days 🔥',
+              '${dayNames[now.weekday - 1]}, ${monthNames[now.month - 1]} ${now.day} • Focus Streak: $streak days 🔥',
               style: AppTypography.bodyMedium,
             ),
           ],
@@ -217,7 +243,16 @@ class _DesktopLayout extends StatelessWidget {
 // ── Mobile: single-column scrollable layout ──
 class _MobileLayout extends StatelessWidget {
   final TimerState state;
-  const _MobileLayout({required this.state});
+  final int streak;
+  final int sessionsToday;
+  final int minutesToday;
+
+  const _MobileLayout({
+    required this.state,
+    required this.streak,
+    required this.sessionsToday,
+    required this.minutesToday,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -230,12 +265,12 @@ class _MobileLayout extends StatelessWidget {
           // Header
           Text('Deep Work Session', style: AppTypography.h2),
           const SizedBox(height: 4),
-          Text('Focus Streak: 5 days 🔥', style: AppTypography.bodySmall),
+          Text('Focus Streak: $streak days 🔥', style: AppTypography.bodySmall),
           const SizedBox(height: 24),
           // Session info
           SessionInfoCard(
-            completedSessions: state.completedSessions,
-            totalFocusMinutes: state.totalFocusMinutes,
+            completedSessions: sessionsToday,
+            totalFocusMinutes: minutesToday,
           ),
           const SizedBox(height: 24),
           // Timer

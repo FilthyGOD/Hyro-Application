@@ -12,6 +12,7 @@ import 'widgets/session_info_card.dart';
 import 'widgets/mascot_card.dart';
 import 'widgets/mini_task_list.dart';
 import 'widgets/activity_chart.dart';
+import '../../core/widgets/animated_breathing_background.dart';
 
 /// The main Focus screen with the Pomodoro timer and sidebar widgets.
 class FocusScreen extends StatelessWidget {
@@ -21,13 +22,20 @@ class FocusScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final isDesktop = Responsive.isDesktop(context);
 
-    return BlocBuilder<TimerCubit, TimerState>(
-      builder: (context, state) {
-        if (isDesktop) {
-          return _DesktopLayout(state: state);
-        }
-        return _MobileLayout(state: state);
-      },
+    return Scaffold(
+      backgroundColor:
+          Colors
+              .transparent, // Let the AnimatedBreathingBackground provide the background color
+      body: AnimatedBreathingBackground(
+        child: BlocBuilder<TimerCubit, TimerState>(
+          builder: (context, state) {
+            if (isDesktop) {
+              return _DesktopLayout(state: state);
+            }
+            return _MobileLayout(state: state);
+          },
+        ),
+      ),
     );
   }
 }
@@ -108,8 +116,29 @@ class _DesktopLayout extends StatelessWidget {
 
   Widget _buildHeader(BuildContext context) {
     final now = DateTime.now();
-    final dayNames = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
-    final monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    final dayNames = [
+      'Monday',
+      'Tuesday',
+      'Wednesday',
+      'Thursday',
+      'Friday',
+      'Saturday',
+      'Sunday',
+    ];
+    final monthNames = [
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
+    ];
 
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -133,7 +162,10 @@ class _DesktopLayout extends StatelessWidget {
             ),
             IconButton(
               onPressed: () {},
-              icon: const Icon(Icons.notifications_outlined, color: AppColors.textSecondary),
+              icon: const Icon(
+                Icons.notifications_outlined,
+                color: AppColors.textSecondary,
+              ),
             ),
           ],
         ),
@@ -169,10 +201,7 @@ class _MobileLayout extends StatelessWidget {
           // Header
           Text('Deep Work Session', style: AppTypography.h2),
           const SizedBox(height: 4),
-          Text(
-            'Focus Streak: 5 days 🔥',
-            style: AppTypography.bodySmall,
-          ),
+          Text('Focus Streak: 5 days 🔥', style: AppTypography.bodySmall),
           const SizedBox(height: 24),
           // Session info
           SessionInfoCard(
@@ -200,10 +229,7 @@ class _MobileLayout extends StatelessWidget {
           ),
           const SizedBox(height: 20),
           // Mode selector
-          ModeSelector(
-            currentMode: state.mode,
-            onModeChanged: cubit.setMode,
-          ),
+          ModeSelector(currentMode: state.mode, onModeChanged: cubit.setMode),
           const SizedBox(height: 24),
           const MascotCard(),
           const SizedBox(height: 16),

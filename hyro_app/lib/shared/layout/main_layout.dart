@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../core/utils/responsive.dart';
 import '../widgets/sidebar.dart';
 import '../widgets/focus_radio_bar.dart';
+import '../widgets/breathing_background.dart';
 
 /// Main layout scaffold with responsive sidebar + content + radio bar.
 class MainLayout extends StatefulWidget {
@@ -34,21 +35,26 @@ class _MainLayoutState extends State<MainLayout> {
 
     return Scaffold(
       key: _scaffoldKey,
-      body: Column(
+      body: Stack(
         children: [
-          Expanded(
-            child: Row(
-              children: [
-                Sidebar(
-                  selectedIndex: widget.selectedIndex,
-                  onItemSelected: widget.onNavigate,
-                  collapsed: isTablet,
+          const Positioned.fill(child: BreathingBackground()),
+          Column(
+            children: [
+              Expanded(
+                child: Row(
+                  children: [
+                    Sidebar(
+                      selectedIndex: widget.selectedIndex,
+                      onItemSelected: widget.onNavigate,
+                      collapsed: isTablet,
+                    ),
+                    Expanded(child: widget.child),
+                  ],
                 ),
-                Expanded(child: widget.child),
-              ],
-            ),
+              ),
+              const FocusRadioBar(),
+            ],
           ),
-          const FocusRadioBar(),
         ],
       ),
     );
@@ -77,13 +83,18 @@ class _MainLayoutState extends State<MainLayout> {
         title: const Text('Hyro'),
         actions: [
           IconButton(icon: const Icon(Icons.dark_mode), onPressed: () {}),
-          IconButton(icon: const Icon(Icons.notifications_outlined), onPressed: () {}),
+          IconButton(
+            icon: const Icon(Icons.notifications_outlined),
+            onPressed: () {},
+          ),
         ],
       ),
-      body: Column(
+      body: Stack(
         children: [
-          Expanded(child: widget.child),
-          const FocusRadioBar(),
+          const Positioned.fill(child: BreathingBackground()),
+          Column(
+            children: [Expanded(child: widget.child), const FocusRadioBar()],
+          ),
         ],
       ),
     );

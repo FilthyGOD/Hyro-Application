@@ -48,18 +48,11 @@ class AppColors {
   static const LinearGradient cardGradient = LinearGradient(
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
-    colors: [
-      Color(0xFF182040),
-      Color(0xFF131829),
-    ],
+    colors: [Color(0xFF182040), Color(0xFF131829)],
   );
 
   // ── Shadows ──
   static List<BoxShadow> glowShadow(Color color, {double blur = 20}) => [
-        BoxShadow(
-          color: color.withAlpha(60),
-          blurRadius: blur,
-          spreadRadius: 0,
-        ),
-      ];
+    BoxShadow(color: color.withAlpha(60), blurRadius: blur, spreadRadius: 0),
+  ];
 }

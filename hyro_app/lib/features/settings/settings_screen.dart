@@ -27,7 +27,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
         children: [
           Text('Settings', style: AppTypography.h1),
           const SizedBox(height: 8),
-          Text('Customize your focus experience', style: AppTypography.bodyMedium),
+          Text(
+            'Customize your focus experience',
+            style: AppTypography.bodyMedium,
+          ),
           const SizedBox(height: 32),
           // ── Timer settings ──
           GlassCard(
@@ -108,8 +111,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text('Connect Spotify', style: AppTypography.labelLarge),
-                          Text('Listen to focus playlists', style: AppTypography.bodySmall),
+                          Text(
+                            'Connect Spotify',
+                            style: AppTypography.labelLarge,
+                          ),
+                          Text(
+                            'Listen to focus playlists',
+                            style: AppTypography.bodySmall,
+                          ),
                         ],
                       ),
                     ),
@@ -157,7 +166,12 @@ class _SliderSetting extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(label, style: AppTypography.labelLarge),
-            Text('${value.toInt()} $suffix', style: AppTypography.bodyMedium.copyWith(color: AppColors.primary)),
+            Text(
+              '${value.toInt()} $suffix',
+              style: AppTypography.bodyMedium.copyWith(
+                color: AppColors.primary,
+              ),
+            ),
           ],
         ),
         SliderTheme(
@@ -210,7 +224,7 @@ class _ToggleSetting extends StatelessWidget {
         Switch(
           value: value,
           onChanged: onChanged,
-          activeColor: AppColors.primary,
+          activeThumbColor: AppColors.primary,
         ),
       ],
     );

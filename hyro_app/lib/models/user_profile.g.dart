@@ -1,0 +1,1137 @@
+// GENERATED CODE - DO NOT MODIFY BY HAND
+
+part of 'user_profile.dart';
+
+// **************************************************************************
+// IsarCollectionGenerator
+// **************************************************************************
+
+// coverage:ignore-file
+// ignore_for_file: duplicate_ignore, non_constant_identifier_names, constant_identifier_names, invalid_use_of_protected_member, unnecessary_cast, prefer_const_constructors, lines_longer_than_80_chars, require_trailing_commas, inference_failure_on_function_invocation, unnecessary_parenthesis, unnecessary_raw_strings, unnecessary_null_checks, join_return_with_assignment, prefer_final_locals, avoid_js_rounded_ints, avoid_positional_boolean_parameters, always_specify_types
+
+extension GetUserProfileCollection on Isar {
+  IsarCollection<UserProfile> get userProfiles => this.collection();
+}
+
+const UserProfileSchema = CollectionSchema(
+  name: r'UserProfile',
+  id: 4738427352541298891,
+  properties: {
+    r'isActivelyLoggedIn': PropertySchema(
+      id: 0,
+      name: r'isActivelyLoggedIn',
+      type: IsarType.bool,
+    ),
+    r'name': PropertySchema(
+      id: 1,
+      name: r'name',
+      type: IsarType.string,
+    ),
+    r'schoolCode': PropertySchema(
+      id: 2,
+      name: r'schoolCode',
+      type: IsarType.string,
+    ),
+    r'type': PropertySchema(
+      id: 3,
+      name: r'type',
+      type: IsarType.byte,
+      enumMap: _UserProfiletypeEnumValueMap,
+    ),
+    r'usernameOrEmail': PropertySchema(
+      id: 4,
+      name: r'usernameOrEmail',
+      type: IsarType.string,
+    )
+  },
+  estimateSize: _userProfileEstimateSize,
+  serialize: _userProfileSerialize,
+  deserialize: _userProfileDeserialize,
+  deserializeProp: _userProfileDeserializeProp,
+  idName: r'id',
+  indexes: {
+    r'usernameOrEmail': IndexSchema(
+      id: 4369648240204002942,
+      name: r'usernameOrEmail',
+      unique: true,
+      replace: true,
+      properties: [
+        IndexPropertySchema(
+          name: r'usernameOrEmail',
+          type: IndexType.hash,
+          caseSensitive: true,
+        )
+      ],
+    )
+  },
+  links: {},
+  embeddedSchemas: {},
+  getId: _userProfileGetId,
+  getLinks: _userProfileGetLinks,
+  attach: _userProfileAttach,
+  version: '3.1.0',
+);
+
+int _userProfileEstimateSize(
+  UserProfile object,
+  List<int> offsets,
+  Map<Type, List<int>> allOffsets,
+) {
+  var bytesCount = offsets.last;
+  {
+    final value = object.name;
+    if (value != null) {
+      bytesCount += 3 + value.length * 3;
+    }
+  }
+  {
+    final value = object.schoolCode;
+    if (value != null) {
+      bytesCount += 3 + value.length * 3;
+    }
+  }
+  bytesCount += 3 + object.usernameOrEmail.length * 3;
+  return bytesCount;
+}
+
+void _userProfileSerialize(
+  UserProfile object,
+  IsarWriter writer,
+  List<int> offsets,
+  Map<Type, List<int>> allOffsets,
+) {
+  writer.writeBool(offsets[0], object.isActivelyLoggedIn);
+  writer.writeString(offsets[1], object.name);
+  writer.writeString(offsets[2], object.schoolCode);
+  writer.writeByte(offsets[3], object.type.index);
+  writer.writeString(offsets[4], object.usernameOrEmail);
+}
+
+UserProfile _userProfileDeserialize(
+  Id id,
+  IsarReader reader,
+  List<int> offsets,
+  Map<Type, List<int>> allOffsets,
+) {
+  final object = UserProfile();
+  object.id = id;
+  object.isActivelyLoggedIn = reader.readBool(offsets[0]);
+  object.name = reader.readStringOrNull(offsets[1]);
+  object.schoolCode = reader.readStringOrNull(offsets[2]);
+  object.type =
+      _UserProfiletypeValueEnumMap[reader.readByteOrNull(offsets[3])] ??
+          UserType.personal;
+  object.usernameOrEmail = reader.readString(offsets[4]);
+  return object;
+}
+
+P _userProfileDeserializeProp<P>(
+  IsarReader reader,
+  int propertyId,
+  int offset,
+  Map<Type, List<int>> allOffsets,
+) {
+  switch (propertyId) {
+    case 0:
+      return (reader.readBool(offset)) as P;
+    case 1:
+      return (reader.readStringOrNull(offset)) as P;
+    case 2:
+      return (reader.readStringOrNull(offset)) as P;
+    case 3:
+      return (_UserProfiletypeValueEnumMap[reader.readByteOrNull(offset)] ??
+          UserType.personal) as P;
+    case 4:
+      return (reader.readString(offset)) as P;
+    default:
+      throw IsarError('Unknown property with id $propertyId');
+  }
+}
+
+const _UserProfiletypeEnumValueMap = {
+  'personal': 0,
+  'school': 1,
+};
+const _UserProfiletypeValueEnumMap = {
+  0: UserType.personal,
+  1: UserType.school,
+};
+
+Id _userProfileGetId(UserProfile object) {
+  return object.id;
+}
+
+List<IsarLinkBase<dynamic>> _userProfileGetLinks(UserProfile object) {
+  return [];
+}
+
+void _userProfileAttach(
+    IsarCollection<dynamic> col, Id id, UserProfile object) {
+  object.id = id;
+}
+
+extension UserProfileByIndex on IsarCollection<UserProfile> {
+  Future<UserProfile?> getByUsernameOrEmail(String usernameOrEmail) {
+    return getByIndex(r'usernameOrEmail', [usernameOrEmail]);
+  }
+
+  UserProfile? getByUsernameOrEmailSync(String usernameOrEmail) {
+    return getByIndexSync(r'usernameOrEmail', [usernameOrEmail]);
+  }
+
+  Future<bool> deleteByUsernameOrEmail(String usernameOrEmail) {
+    return deleteByIndex(r'usernameOrEmail', [usernameOrEmail]);
+  }
+
+  bool deleteByUsernameOrEmailSync(String usernameOrEmail) {
+    return deleteByIndexSync(r'usernameOrEmail', [usernameOrEmail]);
+  }
+
+  Future<List<UserProfile?>> getAllByUsernameOrEmail(
+      List<String> usernameOrEmailValues) {
+    final values = usernameOrEmailValues.map((e) => [e]).toList();
+    return getAllByIndex(r'usernameOrEmail', values);
+  }
+
+  List<UserProfile?> getAllByUsernameOrEmailSync(
+      List<String> usernameOrEmailValues) {
+    final values = usernameOrEmailValues.map((e) => [e]).toList();
+    return getAllByIndexSync(r'usernameOrEmail', values);
+  }
+
+  Future<int> deleteAllByUsernameOrEmail(List<String> usernameOrEmailValues) {
+    final values = usernameOrEmailValues.map((e) => [e]).toList();
+    return deleteAllByIndex(r'usernameOrEmail', values);
+  }
+
+  int deleteAllByUsernameOrEmailSync(List<String> usernameOrEmailValues) {
+    final values = usernameOrEmailValues.map((e) => [e]).toList();
+    return deleteAllByIndexSync(r'usernameOrEmail', values);
+  }
+
+  Future<Id> putByUsernameOrEmail(UserProfile object) {
+    return putByIndex(r'usernameOrEmail', object);
+  }
+
+  Id putByUsernameOrEmailSync(UserProfile object, {bool saveLinks = true}) {
+    return putByIndexSync(r'usernameOrEmail', object, saveLinks: saveLinks);
+  }
+
+  Future<List<Id>> putAllByUsernameOrEmail(List<UserProfile> objects) {
+    return putAllByIndex(r'usernameOrEmail', objects);
+  }
+
+  List<Id> putAllByUsernameOrEmailSync(List<UserProfile> objects,
+      {bool saveLinks = true}) {
+    return putAllByIndexSync(r'usernameOrEmail', objects, saveLinks: saveLinks);
+  }
+}
+
+extension UserProfileQueryWhereSort
+    on QueryBuilder<UserProfile, UserProfile, QWhere> {
+  QueryBuilder<UserProfile, UserProfile, QAfterWhere> anyId() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(const IdWhereClause.any());
+    });
+  }
+}
+
+extension UserProfileQueryWhere
+    on QueryBuilder<UserProfile, UserProfile, QWhereClause> {
+  QueryBuilder<UserProfile, UserProfile, QAfterWhereClause> idEqualTo(Id id) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IdWhereClause.between(
+        lower: id,
+        upper: id,
+      ));
+    });
+  }
+
+  QueryBuilder<UserProfile, UserProfile, QAfterWhereClause> idNotEqualTo(
+      Id id) {
+    return QueryBuilder.apply(this, (query) {
+      if (query.whereSort == Sort.asc) {
+        return query
+            .addWhereClause(
+              IdWhereClause.lessThan(upper: id, includeUpper: false),
+            )
+            .addWhereClause(
+              IdWhereClause.greaterThan(lower: id, includeLower: false),
+            );
+      } else {
+        return query
+            .addWhereClause(
+              IdWhereClause.greaterThan(lower: id, includeLower: false),
+            )
+            .addWhereClause(
+              IdWhereClause.lessThan(upper: id, includeUpper: false),
+            );
+      }
+    });
+  }
+
+  QueryBuilder<UserProfile, UserProfile, QAfterWhereClause> idGreaterThan(Id id,
+      {bool include = false}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(
+        IdWhereClause.greaterThan(lower: id, includeLower: include),
+      );
+    });
+  }
+
+  QueryBuilder<UserProfile, UserProfile, QAfterWhereClause> idLessThan(Id id,
+      {bool include = false}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(
+        IdWhereClause.lessThan(upper: id, includeUpper: include),
+      );
+    });
+  }
+
+  QueryBuilder<UserProfile, UserProfile, QAfterWhereClause> idBetween(
+    Id lowerId,
+    Id upperId, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IdWhereClause.between(
+        lower: lowerId,
+        includeLower: includeLower,
+        upper: upperId,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<UserProfile, UserProfile, QAfterWhereClause>
+      usernameOrEmailEqualTo(String usernameOrEmail) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.equalTo(
+        indexName: r'usernameOrEmail',
+        value: [usernameOrEmail],
+      ));
+    });
+  }
+
+  QueryBuilder<UserProfile, UserProfile, QAfterWhereClause>
+      usernameOrEmailNotEqualTo(String usernameOrEmail) {
+    return QueryBuilder.apply(this, (query) {
+      if (query.whereSort == Sort.asc) {
+        return query
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'usernameOrEmail',
+              lower: [],
+              upper: [usernameOrEmail],
+              includeUpper: false,
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'usernameOrEmail',
+              lower: [usernameOrEmail],
+              includeLower: false,
+              upper: [],
+            ));
+      } else {
+        return query
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'usernameOrEmail',
+              lower: [usernameOrEmail],
+              includeLower: false,
+              upper: [],
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'usernameOrEmail',
+              lower: [],
+              upper: [usernameOrEmail],
+              includeUpper: false,
+            ));
+      }
+    });
+  }
+}
+
+extension UserProfileQueryFilter
+    on QueryBuilder<UserProfile, UserProfile, QFilterCondition> {
+  QueryBuilder<UserProfile, UserProfile, QAfterFilterCondition> idEqualTo(
+      Id value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'id',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<UserProfile, UserProfile, QAfterFilterCondition> idGreaterThan(
+    Id value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'id',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<UserProfile, UserProfile, QAfterFilterCondition> idLessThan(
+    Id value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'id',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<UserProfile, UserProfile, QAfterFilterCondition> idBetween(
+    Id lower,
+    Id upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'id',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<UserProfile, UserProfile, QAfterFilterCondition>
+      isActivelyLoggedInEqualTo(bool value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'isActivelyLoggedIn',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<UserProfile, UserProfile, QAfterFilterCondition> nameIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'name',
+      ));
+    });
+  }
+
+  QueryBuilder<UserProfile, UserProfile, QAfterFilterCondition>
+      nameIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'name',
+      ));
+    });
+  }
+
+  QueryBuilder<UserProfile, UserProfile, QAfterFilterCondition> nameEqualTo(
+    String? value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'name',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<UserProfile, UserProfile, QAfterFilterCondition> nameGreaterThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'name',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<UserProfile, UserProfile, QAfterFilterCondition> nameLessThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'name',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<UserProfile, UserProfile, QAfterFilterCondition> nameBetween(
+    String? lower,
+    String? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'name',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<UserProfile, UserProfile, QAfterFilterCondition> nameStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'name',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<UserProfile, UserProfile, QAfterFilterCondition> nameEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'name',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<UserProfile, UserProfile, QAfterFilterCondition> nameContains(
+      String value,
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'name',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<UserProfile, UserProfile, QAfterFilterCondition> nameMatches(
+      String pattern,
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'name',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<UserProfile, UserProfile, QAfterFilterCondition> nameIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'name',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<UserProfile, UserProfile, QAfterFilterCondition>
+      nameIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'name',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<UserProfile, UserProfile, QAfterFilterCondition>
+      schoolCodeIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'schoolCode',
+      ));
+    });
+  }
+
+  QueryBuilder<UserProfile, UserProfile, QAfterFilterCondition>
+      schoolCodeIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'schoolCode',
+      ));
+    });
+  }
+
+  QueryBuilder<UserProfile, UserProfile, QAfterFilterCondition>
+      schoolCodeEqualTo(
+    String? value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'schoolCode',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<UserProfile, UserProfile, QAfterFilterCondition>
+      schoolCodeGreaterThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'schoolCode',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<UserProfile, UserProfile, QAfterFilterCondition>
+      schoolCodeLessThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'schoolCode',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<UserProfile, UserProfile, QAfterFilterCondition>
+      schoolCodeBetween(
+    String? lower,
+    String? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'schoolCode',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<UserProfile, UserProfile, QAfterFilterCondition>
+      schoolCodeStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'schoolCode',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<UserProfile, UserProfile, QAfterFilterCondition>
+      schoolCodeEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'schoolCode',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<UserProfile, UserProfile, QAfterFilterCondition>
+      schoolCodeContains(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'schoolCode',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<UserProfile, UserProfile, QAfterFilterCondition>
+      schoolCodeMatches(String pattern, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'schoolCode',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<UserProfile, UserProfile, QAfterFilterCondition>
+      schoolCodeIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'schoolCode',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<UserProfile, UserProfile, QAfterFilterCondition>
+      schoolCodeIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'schoolCode',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<UserProfile, UserProfile, QAfterFilterCondition> typeEqualTo(
+      UserType value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'type',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<UserProfile, UserProfile, QAfterFilterCondition> typeGreaterThan(
+    UserType value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'type',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<UserProfile, UserProfile, QAfterFilterCondition> typeLessThan(
+    UserType value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'type',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<UserProfile, UserProfile, QAfterFilterCondition> typeBetween(
+    UserType lower,
+    UserType upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'type',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<UserProfile, UserProfile, QAfterFilterCondition>
+      usernameOrEmailEqualTo(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'usernameOrEmail',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<UserProfile, UserProfile, QAfterFilterCondition>
+      usernameOrEmailGreaterThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'usernameOrEmail',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<UserProfile, UserProfile, QAfterFilterCondition>
+      usernameOrEmailLessThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'usernameOrEmail',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<UserProfile, UserProfile, QAfterFilterCondition>
+      usernameOrEmailBetween(
+    String lower,
+    String upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'usernameOrEmail',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<UserProfile, UserProfile, QAfterFilterCondition>
+      usernameOrEmailStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'usernameOrEmail',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<UserProfile, UserProfile, QAfterFilterCondition>
+      usernameOrEmailEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'usernameOrEmail',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<UserProfile, UserProfile, QAfterFilterCondition>
+      usernameOrEmailContains(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'usernameOrEmail',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<UserProfile, UserProfile, QAfterFilterCondition>
+      usernameOrEmailMatches(String pattern, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'usernameOrEmail',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<UserProfile, UserProfile, QAfterFilterCondition>
+      usernameOrEmailIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'usernameOrEmail',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<UserProfile, UserProfile, QAfterFilterCondition>
+      usernameOrEmailIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'usernameOrEmail',
+        value: '',
+      ));
+    });
+  }
+}
+
+extension UserProfileQueryObject
+    on QueryBuilder<UserProfile, UserProfile, QFilterCondition> {}
+
+extension UserProfileQueryLinks
+    on QueryBuilder<UserProfile, UserProfile, QFilterCondition> {}
+
+extension UserProfileQuerySortBy
+    on QueryBuilder<UserProfile, UserProfile, QSortBy> {
+  QueryBuilder<UserProfile, UserProfile, QAfterSortBy>
+      sortByIsActivelyLoggedIn() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'isActivelyLoggedIn', Sort.asc);
+    });
+  }
+
+  QueryBuilder<UserProfile, UserProfile, QAfterSortBy>
+      sortByIsActivelyLoggedInDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'isActivelyLoggedIn', Sort.desc);
+    });
+  }
+
+  QueryBuilder<UserProfile, UserProfile, QAfterSortBy> sortByName() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'name', Sort.asc);
+    });
+  }
+
+  QueryBuilder<UserProfile, UserProfile, QAfterSortBy> sortByNameDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'name', Sort.desc);
+    });
+  }
+
+  QueryBuilder<UserProfile, UserProfile, QAfterSortBy> sortBySchoolCode() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'schoolCode', Sort.asc);
+    });
+  }
+
+  QueryBuilder<UserProfile, UserProfile, QAfterSortBy> sortBySchoolCodeDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'schoolCode', Sort.desc);
+    });
+  }
+
+  QueryBuilder<UserProfile, UserProfile, QAfterSortBy> sortByType() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'type', Sort.asc);
+    });
+  }
+
+  QueryBuilder<UserProfile, UserProfile, QAfterSortBy> sortByTypeDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'type', Sort.desc);
+    });
+  }
+
+  QueryBuilder<UserProfile, UserProfile, QAfterSortBy> sortByUsernameOrEmail() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'usernameOrEmail', Sort.asc);
+    });
+  }
+
+  QueryBuilder<UserProfile, UserProfile, QAfterSortBy>
+      sortByUsernameOrEmailDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'usernameOrEmail', Sort.desc);
+    });
+  }
+}
+
+extension UserProfileQuerySortThenBy
+    on QueryBuilder<UserProfile, UserProfile, QSortThenBy> {
+  QueryBuilder<UserProfile, UserProfile, QAfterSortBy> thenById() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'id', Sort.asc);
+    });
+  }
+
+  QueryBuilder<UserProfile, UserProfile, QAfterSortBy> thenByIdDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'id', Sort.desc);
+    });
+  }
+
+  QueryBuilder<UserProfile, UserProfile, QAfterSortBy>
+      thenByIsActivelyLoggedIn() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'isActivelyLoggedIn', Sort.asc);
+    });
+  }
+
+  QueryBuilder<UserProfile, UserProfile, QAfterSortBy>
+      thenByIsActivelyLoggedInDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'isActivelyLoggedIn', Sort.desc);
+    });
+  }
+
+  QueryBuilder<UserProfile, UserProfile, QAfterSortBy> thenByName() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'name', Sort.asc);
+    });
+  }
+
+  QueryBuilder<UserProfile, UserProfile, QAfterSortBy> thenByNameDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'name', Sort.desc);
+    });
+  }
+
+  QueryBuilder<UserProfile, UserProfile, QAfterSortBy> thenBySchoolCode() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'schoolCode', Sort.asc);
+    });
+  }
+
+  QueryBuilder<UserProfile, UserProfile, QAfterSortBy> thenBySchoolCodeDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'schoolCode', Sort.desc);
+    });
+  }
+
+  QueryBuilder<UserProfile, UserProfile, QAfterSortBy> thenByType() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'type', Sort.asc);
+    });
+  }
+
+  QueryBuilder<UserProfile, UserProfile, QAfterSortBy> thenByTypeDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'type', Sort.desc);
+    });
+  }
+
+  QueryBuilder<UserProfile, UserProfile, QAfterSortBy> thenByUsernameOrEmail() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'usernameOrEmail', Sort.asc);
+    });
+  }
+
+  QueryBuilder<UserProfile, UserProfile, QAfterSortBy>
+      thenByUsernameOrEmailDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'usernameOrEmail', Sort.desc);
+    });
+  }
+}
+
+extension UserProfileQueryWhereDistinct
+    on QueryBuilder<UserProfile, UserProfile, QDistinct> {
+  QueryBuilder<UserProfile, UserProfile, QDistinct>
+      distinctByIsActivelyLoggedIn() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'isActivelyLoggedIn');
+    });
+  }
+
+  QueryBuilder<UserProfile, UserProfile, QDistinct> distinctByName(
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'name', caseSensitive: caseSensitive);
+    });
+  }
+
+  QueryBuilder<UserProfile, UserProfile, QDistinct> distinctBySchoolCode(
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'schoolCode', caseSensitive: caseSensitive);
+    });
+  }
+
+  QueryBuilder<UserProfile, UserProfile, QDistinct> distinctByType() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'type');
+    });
+  }
+
+  QueryBuilder<UserProfile, UserProfile, QDistinct> distinctByUsernameOrEmail(
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'usernameOrEmail',
+          caseSensitive: caseSensitive);
+    });
+  }
+}
+
+extension UserProfileQueryProperty
+    on QueryBuilder<UserProfile, UserProfile, QQueryProperty> {
+  QueryBuilder<UserProfile, int, QQueryOperations> idProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'id');
+    });
+  }
+
+  QueryBuilder<UserProfile, bool, QQueryOperations>
+      isActivelyLoggedInProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'isActivelyLoggedIn');
+    });
+  }
+
+  QueryBuilder<UserProfile, String?, QQueryOperations> nameProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'name');
+    });
+  }
+
+  QueryBuilder<UserProfile, String?, QQueryOperations> schoolCodeProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'schoolCode');
+    });
+  }
+
+  QueryBuilder<UserProfile, UserType, QQueryOperations> typeProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'type');
+    });
+  }
+
+  QueryBuilder<UserProfile, String, QQueryOperations>
+      usernameOrEmailProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'usernameOrEmail');
+    });
+  }
+}

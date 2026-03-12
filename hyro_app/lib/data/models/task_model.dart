@@ -37,6 +37,9 @@ class TaskModel extends HiveObject {
   @HiveField(10)
   int priorityColorValue;
 
+  @HiveField(11)
+  DateTime? dueDate;
+
   TaskModel({
     required this.id,
     required this.title,
@@ -49,6 +52,7 @@ class TaskModel extends HiveObject {
     this.priorityColorValue = 0xFFF59E0B, // Default orange
     DateTime? createdAt,
     this.completedAt,
+    this.dueDate,
   }) : createdAt = createdAt ?? DateTime.now();
 
   TaskModel copyWith({
@@ -61,6 +65,7 @@ class TaskModel extends HiveObject {
     String? priority,
     int? priorityColorValue,
     DateTime? completedAt,
+    DateTime? dueDate,
   }) {
     return TaskModel(
       id: id,
@@ -74,6 +79,7 @@ class TaskModel extends HiveObject {
       priorityColorValue: priorityColorValue ?? this.priorityColorValue,
       createdAt: createdAt,
       completedAt: completedAt ?? this.completedAt,
+      dueDate: dueDate ?? this.dueDate,
     );
   }
 }

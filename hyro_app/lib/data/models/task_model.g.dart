@@ -28,13 +28,14 @@ class TaskModelAdapter extends TypeAdapter<TaskModel> {
       priorityColorValue: fields[10] as int,
       createdAt: fields[7] as DateTime?,
       completedAt: fields[8] as DateTime?,
+      dueDate: fields[11] as DateTime?,
     );
   }
 
   @override
   void write(BinaryWriter writer, TaskModel obj) {
     writer
-      ..writeByte(11)
+      ..writeByte(12)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
@@ -56,7 +57,9 @@ class TaskModelAdapter extends TypeAdapter<TaskModel> {
       ..writeByte(9)
       ..write(obj.priority)
       ..writeByte(10)
-      ..write(obj.priorityColorValue);
+      ..write(obj.priorityColorValue)
+      ..writeByte(11)
+      ..write(obj.dueDate);
   }
 
   @override

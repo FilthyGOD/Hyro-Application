@@ -21,26 +21,7 @@ class _TasksScreenState extends State<TasksScreen> {
   // ── Demo data ──
   // ── Demo data ──
 
-  final List<_CategoryData> _categories = [
-    _CategoryData(
-      name: 'University',
-      icon: Icons.school_rounded,
-      pending: 3,
-      color: AppColors.primary,
-    ),
-    _CategoryData(
-      name: 'Personal',
-      icon: Icons.person_rounded,
-      pending: 5,
-      color: const Color(0xFFEC4899),
-    ),
-    _CategoryData(
-      name: 'Work',
-      icon: Icons.work_rounded,
-      pending: 2,
-      color: const Color(0xFF22C55E),
-    ),
-  ];
+  // ── Categories will be dynamic ──
 
   @override
   Widget build(BuildContext context) {
@@ -148,18 +129,67 @@ class _TasksScreenState extends State<TasksScreen> {
   }
 
   Widget _buildCategoryCards() {
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      physics: const BouncingScrollPhysics(),
-      child: Row(
-        children:
-            _categories.map((cat) {
-              return Padding(
-                padding: const EdgeInsets.only(right: 16),
-                child: SizedBox(width: 160, child: _CategoryCard(data: cat)),
-              );
-            }).toList(),
-      ),
+    return Consumer<TaskProvider>(
+      builder: (context, provider, child) {
+        final tasks = provider.tasks;
+        final pendingUniversity =
+            tasks
+                .where((t) => t.category == 'University' && !t.isCompleted)
+                .length;
+        final pendingPersonal =
+            tasks
+                .where((t) => t.category == 'Personal' && !t.isCompleted)
+                .length;
+        final pendingWork =
+            tasks.where((t) => t.category == 'Work' && !t.isCompleted).length;
+
+        final totalUniversity =
+            tasks.where((t) => t.category == 'University').length;
+        final totalPersonal =
+            tasks.where((t) => t.category == 'Personal').length;
+        final totalWork = tasks.where((t) => t.category == 'Work').length;
+
+        final categoriesData = [
+          _CategoryData(
+            name: 'University',
+            icon: Icons.school_rounded,
+            pending: pendingUniversity,
+            total: totalUniversity,
+            color: AppColors.primary,
+          ),
+          _CategoryData(
+            name: 'Personal',
+            icon: Icons.person_rounded,
+            pending: pendingPersonal,
+            total: totalPersonal,
+            color: const Color(0xFFEC4899),
+          ),
+          _CategoryData(
+            name: 'Work',
+            icon: Icons.work_rounded,
+            pending: pendingWork,
+            total: totalWork,
+            color: const Color(0xFF22C55E),
+          ),
+        ];
+
+        return SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          physics: const BouncingScrollPhysics(),
+          child: Row(
+            children:
+                categoriesData.map((cat) {
+                  return Padding(
+                    padding: const EdgeInsets.only(right: 16),
+                    child: SizedBox(
+                      width: 160,
+                      child: _CategoryCard(data: cat),
+                    ),
+                  );
+                }).toList(),
+          ),
+        );
+      },
     );
   }
 
@@ -261,8 +291,6 @@ class _TasksScreenState extends State<TasksScreen> {
       children: [
         _buildAnalyticsCard(),
         const SizedBox(height: 16),
-        _buildStreakCard(),
-        const SizedBox(height: 16),
         _buildUpcomingCard(),
         const SizedBox(height: 80),
       ],
@@ -270,57 +298,68 @@ class _TasksScreenState extends State<TasksScreen> {
   }
 
   Widget _buildAnalyticsCard() {
-    return GlassCard(
-      padding: const EdgeInsets.all(20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text('Task Analytics', style: AppTypography.h3),
-          const SizedBox(height: 20),
-          // Circular chart
-          Center(
-            child: SizedBox(
-              width: 140,
-              height: 140,
-              child: CustomPaint(
-                painter: _DonutChartPainter(percentage: 0.74),
-                child: Center(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        '74%',
-                        style: AppTypography.h2.copyWith(
-                          fontWeight: FontWeight.w800,
-                        ),
+    return Consumer<TaskProvider>(
+      builder: (context, provider, child) {
+        final tasks = provider.tasks;
+        final total = tasks.length;
+        final completed = tasks.where((t) => t.isCompleted).length;
+        final pending = total - completed;
+        final percentage = total == 0 ? 0.0 : (completed / total);
+        final percentageStr = (percentage * 100).toInt().toString() + '%';
+
+        return GlassCard(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('Task Analytics', style: AppTypography.h3),
+              const SizedBox(height: 20),
+              // Circular chart
+              Center(
+                child: SizedBox(
+                  width: 140,
+                  height: 140,
+                  child: CustomPaint(
+                    painter: _DonutChartPainter(percentage: percentage),
+                    child: Center(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            percentageStr,
+                            style: AppTypography.h2.copyWith(
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                          Text(
+                            'Done',
+                            style: AppTypography.bodySmall.copyWith(
+                              color: AppColors.primary,
+                            ),
+                          ),
+                        ],
                       ),
-                      Text(
-                        'Done',
-                        style: AppTypography.bodySmall.copyWith(
-                          color: AppColors.primary,
-                        ),
-                      ),
-                    ],
+                    ),
                   ),
                 ),
               ),
-            ),
+              const SizedBox(height: 20),
+              // Stats
+              _buildStatRow(
+                color: AppColors.primary,
+                label: 'Completed',
+                value: completed.toString(),
+              ),
+              const SizedBox(height: 8),
+              _buildStatRow(
+                color: const Color(0xFFEC4899),
+                label: 'Pending',
+                value: pending.toString(),
+              ),
+            ],
           ),
-          const SizedBox(height: 20),
-          // Stats
-          _buildStatRow(
-            color: AppColors.primary,
-            label: 'Completed',
-            value: '12',
-          ),
-          const SizedBox(height: 8),
-          _buildStatRow(
-            color: const Color(0xFFEC4899),
-            label: 'Pending',
-            value: '4',
-          ),
-        ],
-      ),
+        );
+      },
     );
   }
 
@@ -343,71 +382,84 @@ class _TasksScreenState extends State<TasksScreen> {
     );
   }
 
-  Widget _buildStreakCard() {
-    return GlassCard(
-      padding: const EdgeInsets.all(20),
-      child: Row(
-        children: [
-          Container(
-            width: 44,
-            height: 44,
-            decoration: BoxDecoration(
-              color: const Color(0xFFF59E0B).withAlpha(30),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: const Icon(
-              Icons.local_fire_department_rounded,
-              color: Color(0xFFF59E0B),
-              size: 24,
-            ),
-          ),
-          const SizedBox(width: 16),
-          Column(
+  Widget _buildUpcomingCard() {
+    return Consumer<TaskProvider>(
+      builder: (context, provider, child) {
+        final now = DateTime.now();
+        final upcomingTasks =
+            provider.tasks
+                .where(
+                  (t) =>
+                      !t.isCompleted &&
+                      t.dueDate != null &&
+                      t.dueDate!.isAfter(now),
+                )
+                .toList()
+              ..sort((a, b) => a.dueDate!.compareTo(b.dueDate!));
+
+        final topTasks = upcomingTasks.take(3).toList();
+
+        return GlassCard(
+          padding: const EdgeInsets.all(20),
+          child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                '12 Day Streak',
-                style: AppTypography.labelLarge.copyWith(fontSize: 16),
+                'UPCOMING',
+                style: AppTypography.labelSmall.copyWith(
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 2,
+                ),
               ),
-              const SizedBox(height: 2),
-              Text('Keep it up!', style: AppTypography.bodySmall),
+              const SizedBox(height: 16),
+              if (topTasks.isEmpty)
+                Text(
+                  'No upcoming tasks',
+                  style: AppTypography.bodyMedium.copyWith(
+                    color: AppColors.textSecondary,
+                  ),
+                )
+              else
+                ...topTasks.map((t) {
+                  final month = _getMonthAbbrev(t.dueDate!.month);
+                  final day = t.dueDate!.day.toString();
+                  final timeStr = TimeOfDay.fromDateTime(
+                    t.dueDate!,
+                  ).format(context);
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 12),
+                    child: _UpcomingEvent(
+                      month: month,
+                      day: day,
+                      title: t.title,
+                      time: timeStr,
+                    ),
+                  );
+                }),
             ],
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 
-  Widget _buildUpcomingCard() {
-    return GlassCard(
-      padding: const EdgeInsets.all(20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'UPCOMING',
-            style: AppTypography.labelSmall.copyWith(
-              fontWeight: FontWeight.w700,
-              letterSpacing: 2,
-            ),
-          ),
-          const SizedBox(height: 16),
-          _UpcomingEvent(
-            month: 'OCT',
-            day: '24',
-            title: 'Exam Prep',
-            time: '10:00 AM - 12:00 PM',
-          ),
-          const SizedBox(height: 12),
-          _UpcomingEvent(
-            month: 'OCT',
-            day: '25',
-            title: 'Project Meet',
-            time: '2:00 PM - 3:00 PM',
-          ),
-        ],
-      ),
-    );
+  String _getMonthAbbrev(int month) {
+    const months = [
+      'JAN',
+      'FEB',
+      'MAR',
+      'APR',
+      'MAY',
+      'JUN',
+      'JUL',
+      'AUG',
+      'SEP',
+      'OCT',
+      'NOV',
+      'DEC',
+    ];
+    if (month >= 1 && month <= 12) return months[month - 1];
+    return '';
   }
 
   // ── Dialog ──
@@ -417,6 +469,8 @@ class _TasksScreenState extends State<TasksScreen> {
     String selectedPriority = 'MEDIUM';
     int pomodorosTarget = 1;
     String? selectedCategory = 'University';
+    DateTime? selectedDueDate;
+    TimeOfDay? selectedDueTime;
 
     showDialog(
       context: context,
@@ -480,6 +534,78 @@ class _TasksScreenState extends State<TasksScreen> {
                       },
                     ),
                     const SizedBox(height: 20),
+                    Text('Due Date (Optional)', style: AppTypography.bodySmall),
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: InkWell(
+                            onTap: () async {
+                              final date = await showDatePicker(
+                                context: context,
+                                initialDate: selectedDueDate ?? DateTime.now(),
+                                firstDate: DateTime.now(),
+                                lastDate: DateTime.now().add(
+                                  const Duration(days: 365),
+                                ),
+                              );
+                              if (date != null) {
+                                setDialogState(() => selectedDueDate = date);
+                              }
+                            },
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 12,
+                              ),
+                              decoration: BoxDecoration(
+                                color: AppColors.surfaceLight,
+                                borderRadius: BorderRadius.circular(8),
+                                border: Border.all(color: AppColors.cardBorder),
+                              ),
+                              child: Text(
+                                selectedDueDate != null
+                                    ? '${selectedDueDate!.day}/${selectedDueDate!.month}/${selectedDueDate!.year}'
+                                    : 'Select Date',
+                                style: AppTypography.bodyMedium,
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: InkWell(
+                            onTap: () async {
+                              final time = await showTimePicker(
+                                context: context,
+                                initialTime: selectedDueTime ?? TimeOfDay.now(),
+                              );
+                              if (time != null) {
+                                setDialogState(() => selectedDueTime = time);
+                              }
+                            },
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 12,
+                              ),
+                              decoration: BoxDecoration(
+                                color: AppColors.surfaceLight,
+                                borderRadius: BorderRadius.circular(8),
+                                border: Border.all(color: AppColors.cardBorder),
+                              ),
+                              child: Text(
+                                selectedDueTime != null
+                                    ? selectedDueTime!.format(context)
+                                    : 'Select Time',
+                                style: AppTypography.bodyMedium,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 20),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
@@ -532,6 +658,20 @@ class _TasksScreenState extends State<TasksScreen> {
                       colorValue = 0xFF22C55E; // green
                     }
 
+                    DateTime? finalDueDate;
+                    if (selectedDueDate != null) {
+                      final time =
+                          selectedDueTime ??
+                          const TimeOfDay(hour: 0, minute: 0);
+                      finalDueDate = DateTime(
+                        selectedDueDate!.year,
+                        selectedDueDate!.month,
+                        selectedDueDate!.day,
+                        time.hour,
+                        time.minute,
+                      );
+                    }
+
                     final task = TaskModel(
                       id: const Uuid().v4(),
                       title: title,
@@ -540,6 +680,7 @@ class _TasksScreenState extends State<TasksScreen> {
                       priority: selectedPriority,
                       priorityColorValue: colorValue,
                       pomodorosTarget: pomodorosTarget,
+                      dueDate: finalDueDate,
                     );
 
                     context.read<TaskProvider>().addTask(task);
@@ -602,7 +743,10 @@ class _CategoryCard extends StatelessWidget {
           ClipRRect(
             borderRadius: BorderRadius.circular(4),
             child: LinearProgressIndicator(
-              value: 0.6,
+              value:
+                  data.total == 0
+                      ? 0.0
+                      : ((data.total - data.pending) / data.total),
               minHeight: 4,
               backgroundColor: AppColors.surfaceLight,
               valueColor: AlwaysStoppedAnimation<Color>(data.color),
@@ -867,12 +1011,14 @@ class _CategoryData {
   final String name;
   final IconData icon;
   final int pending;
+  final int total;
   final Color color;
 
   _CategoryData({
     required this.name,
     required this.icon,
     required this.pending,
+    required this.total,
     required this.color,
   });
 }

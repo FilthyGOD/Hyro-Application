@@ -7,20 +7,26 @@ import 'features/focus/focus_screen.dart';
 import 'features/tasks/tasks_screen.dart';
 import 'features/stats/stats_screen.dart';
 import 'features/shop/shop_screen.dart';
-import 'features/profile/profile_screen.dart';
 import 'features/settings/settings_screen.dart';
+import 'features/profile/profile_screen.dart';
 import 'features/tasks/tasks_provider.dart';
 import 'features/stats/stats_provider.dart';
+import 'package:isar/isar.dart';
+import 'providers/auth_provider.dart';
+import 'screens/auth/login_screen.dart';
+import 'screens/auth/splash_screen.dart';
 import 'shared/layout/main_layout.dart';
 
 /// Root widget for the Hyro app.
 class HyroApp extends StatelessWidget {
-  const HyroApp({super.key});
+  final Isar isar;
+  const HyroApp({super.key, required this.isar});
 
   @override
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
+        ChangeNotifierProvider(create: (_) => AuthProvider(isar)),
         ChangeNotifierProvider(create: (_) => TaskProvider()),
         ChangeNotifierProvider(create: (_) => StatsProvider()),
       ],
@@ -36,7 +42,17 @@ class HyroApp extends StatelessWidget {
           title: 'Hyro',
           debugShowCheckedModeBanner: false,
           theme: AppTheme.darkTheme,
-          home: const _AppShell(),
+          home: Consumer<AuthProvider>(
+            builder: (context, auth, _) {
+              if (auth.isLoading) {
+                return const SplashScreen();
+              }
+              if (auth.isAuthenticated) {
+                return const _AppShell();
+              }
+              return const LoginScreen();
+            },
+          ),
         ),
       ),
     );

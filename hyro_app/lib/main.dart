@@ -4,6 +4,9 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'app.dart';
 import 'data/models/task_model.dart';
 import 'data/models/daily_stats.dart';
+import 'package:isar/isar.dart';
+import 'package:path_provider/path_provider.dart';
+import 'models/user_profile.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -22,5 +25,8 @@ void main() async {
   await Hive.openBox<TaskModel>('tasksBox');
   await Hive.openBox<DailyStats>('statsBox');
 
-  runApp(const HyroApp());
+  final dir = await getApplicationDocumentsDirectory();
+  final isar = await Isar.open([UserProfileSchema], directory: dir.path);
+
+  runApp(HyroApp(isar: isar));
 }

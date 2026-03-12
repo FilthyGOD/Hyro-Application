@@ -12,6 +12,9 @@ subprojects {
     val newSubprojectBuildDir: Directory = newBuildDir.dir(project.name)
     project.layout.buildDirectory.value(newSubprojectBuildDir)
 }
+
+apply(from = "fix_namespaces.gradle")
+
 subprojects {
     project.evaluationDependsOn(":app")
 }

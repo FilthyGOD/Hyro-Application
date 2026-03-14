@@ -29,7 +29,7 @@ class _TasksScreenState extends State<TasksScreen> {
       backgroundColor: Colors.transparent,
       floatingActionButton: FloatingActionButton(
         onPressed: _showAddTaskDialog,
-        backgroundColor: AppColors.primary,
+        backgroundColor: AppColors.timerColor,
         foregroundColor: Colors.white,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         child: const Icon(Icons.add, size: 28),
@@ -107,7 +107,7 @@ class _TasksScreenState extends State<TasksScreen> {
               Row(
                 children: [
                   Text(
-                    'Monday, Oct 24 • Focus Streak: 5 days ',
+                    'Lunes, 24 de Oct • Racha de Enfoque: 5 días ',
                     style: AppTypography.bodySmall,
                   ),
                   const Text('🔥', style: TextStyle(fontSize: 14)),
@@ -134,24 +134,26 @@ class _TasksScreenState extends State<TasksScreen> {
         final tasks = provider.tasks;
         final pendingUniversity =
             tasks
-                .where((t) => t.category == 'University' && !t.isCompleted)
+                .where((t) => t.category == 'Universidad' && !t.isCompleted)
                 .length;
         final pendingPersonal =
             tasks
                 .where((t) => t.category == 'Personal' && !t.isCompleted)
                 .length;
         final pendingWork =
-            tasks.where((t) => t.category == 'Work' && !t.isCompleted).length;
+            tasks
+                .where((t) => t.category == 'Trabajo' && !t.isCompleted)
+                .length;
 
         final totalUniversity =
-            tasks.where((t) => t.category == 'University').length;
+            tasks.where((t) => t.category == 'Universidad').length;
         final totalPersonal =
             tasks.where((t) => t.category == 'Personal').length;
-        final totalWork = tasks.where((t) => t.category == 'Work').length;
+        final totalWork = tasks.where((t) => t.category == 'Trabajo').length;
 
         final categoriesData = [
           _CategoryData(
-            name: 'University',
+            name: 'Universidad',
             icon: Icons.school_rounded,
             pending: pendingUniversity,
             total: totalUniversity,
@@ -165,7 +167,7 @@ class _TasksScreenState extends State<TasksScreen> {
             color: const Color(0xFFEC4899),
           ),
           _CategoryData(
-            name: 'Work',
+            name: 'Trabajo',
             icon: Icons.work_rounded,
             pending: pendingWork,
             total: totalWork,
@@ -194,11 +196,11 @@ class _TasksScreenState extends State<TasksScreen> {
   }
 
   Widget _buildTodaysFocusHeader() {
-    final filters = ['All', 'Pending', 'Completed'];
+    final filters = ['Todas', 'Pendientes', 'Completadas'];
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text("Today's Focus", style: AppTypography.h3),
+        Text("Enfoque de Hoy", style: AppTypography.h3),
         Row(
           children:
               filters.asMap().entries.map((entry) {
@@ -215,7 +217,7 @@ class _TasksScreenState extends State<TasksScreen> {
                       decoration: BoxDecoration(
                         color:
                             isSelected
-                                ? AppColors.primary
+                                ? AppColors.timerColor
                                 : AppColors.surfaceLight,
                         borderRadius: BorderRadius.circular(20),
                         border:
@@ -264,7 +266,7 @@ class _TasksScreenState extends State<TasksScreen> {
             padding: const EdgeInsets.symmetric(vertical: 32),
             child: Center(
               child: Text(
-                'No tasks found for this filter.',
+                'No se encontraron tareas con este filtro.',
                 style: AppTypography.bodyLarge.copyWith(
                   color: AppColors.textSecondary,
                 ),
@@ -312,7 +314,7 @@ class _TasksScreenState extends State<TasksScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Task Analytics', style: AppTypography.h3),
+              Text('Análisis de Tareas', style: AppTypography.h3),
               const SizedBox(height: 20),
               // Circular chart
               Center(
@@ -332,7 +334,7 @@ class _TasksScreenState extends State<TasksScreen> {
                             ),
                           ),
                           Text(
-                            'Done',
+                            'Hechas',
                             style: AppTypography.bodySmall.copyWith(
                               color: AppColors.primary,
                             ),
@@ -347,13 +349,13 @@ class _TasksScreenState extends State<TasksScreen> {
               // Stats
               _buildStatRow(
                 color: AppColors.primary,
-                label: 'Completed',
+                label: 'Completadas',
                 value: completed.toString(),
               ),
               const SizedBox(height: 8),
               _buildStatRow(
                 color: const Color(0xFFEC4899),
-                label: 'Pending',
+                label: 'Pendientes',
                 value: pending.toString(),
               ),
             ],
@@ -405,7 +407,7 @@ class _TasksScreenState extends State<TasksScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'UPCOMING',
+                'PRÓXIMAMENTE',
                 style: AppTypography.labelSmall.copyWith(
                   fontWeight: FontWeight.w700,
                   letterSpacing: 2,
@@ -414,7 +416,7 @@ class _TasksScreenState extends State<TasksScreen> {
               const SizedBox(height: 16),
               if (topTasks.isEmpty)
                 Text(
-                  'No upcoming tasks',
+                  'No hay tareas próximas',
                   style: AppTypography.bodyMedium.copyWith(
                     color: AppColors.textSecondary,
                   ),
@@ -445,18 +447,18 @@ class _TasksScreenState extends State<TasksScreen> {
 
   String _getMonthAbbrev(int month) {
     const months = [
-      'JAN',
+      'ENE',
       'FEB',
       'MAR',
-      'APR',
+      'ABR',
       'MAY',
       'JUN',
       'JUL',
-      'AUG',
+      'AGO',
       'SEP',
       'OCT',
       'NOV',
-      'DEC',
+      'DIC',
     ];
     if (month >= 1 && month <= 12) return months[month - 1];
     return '';
@@ -466,9 +468,9 @@ class _TasksScreenState extends State<TasksScreen> {
   void _showAddTaskDialog() {
     final titleController = TextEditingController();
     final descriptionController = TextEditingController();
-    String selectedPriority = 'MEDIUM';
+    String selectedPriority = 'MEDIA';
     int pomodorosTarget = 1;
-    String? selectedCategory = 'University';
+    String? selectedCategory = 'Universidad';
     DateTime? selectedDueDate;
     TimeOfDay? selectedDueTime;
 
@@ -482,7 +484,7 @@ class _TasksScreenState extends State<TasksScreen> {
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(16),
               ),
-              title: Text('New Task', style: AppTypography.h3),
+              title: Text('Nueva Tarea', style: AppTypography.h3),
               content: SingleChildScrollView(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
@@ -490,25 +492,27 @@ class _TasksScreenState extends State<TasksScreen> {
                   children: [
                     TextField(
                       controller: titleController,
-                      decoration: const InputDecoration(hintText: 'Task title'),
+                      decoration: const InputDecoration(
+                        hintText: 'Título de la tarea',
+                      ),
                       style: AppTypography.bodyLarge,
                     ),
                     const SizedBox(height: 12),
                     TextField(
                       controller: descriptionController,
                       decoration: const InputDecoration(
-                        hintText: 'Description (optional)',
+                        hintText: 'Descripción (opcional)',
                       ),
                       style: AppTypography.bodyLarge,
                     ),
                     const SizedBox(height: 20),
-                    Text('Priority', style: AppTypography.bodySmall),
+                    Text('Prioridad', style: AppTypography.bodySmall),
                     const SizedBox(height: 8),
                     DropdownButtonFormField<String>(
                       initialValue: selectedPriority,
                       dropdownColor: AppColors.surfaceLight,
                       items:
-                          ['HIGH PRIORITY', 'MEDIUM', 'LOW'].map((p) {
+                          ['ALTA PRIORIDAD', 'MEDIA', 'BAJA'].map((p) {
                             return DropdownMenuItem(value: p, child: Text(p));
                           }).toList(),
                       onChanged: (val) {
@@ -518,13 +522,13 @@ class _TasksScreenState extends State<TasksScreen> {
                       },
                     ),
                     const SizedBox(height: 20),
-                    Text('Category', style: AppTypography.bodySmall),
+                    Text('Categoría', style: AppTypography.bodySmall),
                     const SizedBox(height: 8),
                     DropdownButtonFormField<String>(
                       initialValue: selectedCategory,
                       dropdownColor: AppColors.surfaceLight,
                       items:
-                          ['University', 'Personal', 'Work'].map((c) {
+                          ['Universidad', 'Personal', 'Trabajo'].map((c) {
                             return DropdownMenuItem(value: c, child: Text(c));
                           }).toList(),
                       onChanged: (val) {
@@ -534,7 +538,10 @@ class _TasksScreenState extends State<TasksScreen> {
                       },
                     ),
                     const SizedBox(height: 20),
-                    Text('Due Date (Optional)', style: AppTypography.bodySmall),
+                    Text(
+                      'Fecha de Vencimiento (Opcional)',
+                      style: AppTypography.bodySmall,
+                    ),
                     const SizedBox(height: 8),
                     Row(
                       children: [
@@ -566,7 +573,7 @@ class _TasksScreenState extends State<TasksScreen> {
                               child: Text(
                                 selectedDueDate != null
                                     ? '${selectedDueDate!.day}/${selectedDueDate!.month}/${selectedDueDate!.year}'
-                                    : 'Select Date',
+                                    : 'Seleccionar Fecha',
                                 style: AppTypography.bodyMedium,
                               ),
                             ),
@@ -597,7 +604,7 @@ class _TasksScreenState extends State<TasksScreen> {
                               child: Text(
                                 selectedDueTime != null
                                     ? selectedDueTime!.format(context)
-                                    : 'Select Time',
+                                    : 'Seleccionar Hora',
                                 style: AppTypography.bodyMedium,
                               ),
                             ),
@@ -610,7 +617,7 @@ class _TasksScreenState extends State<TasksScreen> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(
-                          'Pomodoros required:',
+                          'Pomodoros requeridos:',
                           style: AppTypography.bodySmall,
                         ),
                         Row(
@@ -643,7 +650,7 @@ class _TasksScreenState extends State<TasksScreen> {
               actions: [
                 TextButton(
                   onPressed: () => Navigator.pop(ctx),
-                  child: const Text('Cancel'),
+                  child: const Text('Cancelar'),
                 ),
                 ElevatedButton(
                   onPressed: () {
@@ -651,10 +658,10 @@ class _TasksScreenState extends State<TasksScreen> {
                     if (title.isEmpty) return;
 
                     int colorValue = 0xFFF59E0B; // orange
-                    if (selectedPriority == 'HIGH PRIORITY') {
+                    if (selectedPriority == 'ALTA PRIORIDAD') {
                       colorValue = 0xFFEF4444; // red
                     }
-                    if (selectedPriority == 'LOW') {
+                    if (selectedPriority == 'BAJA') {
                       colorValue = 0xFF22C55E; // green
                     }
 
@@ -686,7 +693,7 @@ class _TasksScreenState extends State<TasksScreen> {
                     context.read<TaskProvider>().addTask(task);
                     Navigator.pop(ctx);
                   },
-                  child: const Text('Add Task'),
+                  child: const Text('Agregar Tarea'),
                 ),
               ],
             );
@@ -735,7 +742,7 @@ class _CategoryCard extends StatelessWidget {
           ),
           const SizedBox(height: 4),
           Text(
-            '${data.pending} TASKS PENDING',
+            '${data.pending} TAREAS PENDIENTES',
             style: AppTypography.labelSmall.copyWith(fontSize: 10),
           ),
           const SizedBox(height: 12),

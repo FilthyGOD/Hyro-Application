@@ -15,7 +15,7 @@ class CircularTimer extends StatelessWidget {
     super.key,
     required this.remainingSeconds,
     required this.progress,
-    this.label = 'TIME UNTIL BREAK',
+    this.label = 'TIEMPO HASTA EL DESCANSO',
     this.size = 300,
   });
 
@@ -32,9 +32,9 @@ class CircularTimer extends StatelessWidget {
             size: Size(size, size),
             painter: _TimerRingPainter(
               progress: progress,
-              progressColor: AppColors.primary,
+              progressColor: AppColors.timerColor,
               trackColor: AppColors.surfaceLight,
-              glowColor: AppColors.primaryGlow,
+              glowColor: AppColors.timerGlow,
               strokeWidth: 6,
             ),
           ),

@@ -4,21 +4,26 @@ import 'package:flutter/material.dart';
 class AppColors {
   AppColors._();
 
-  // ── Backgrounds ──
-  static const Color background = Color(0xFF0A0E1A);
-  static const Color surface = Color(0xFF131829);
-  static const Color surfaceLight = Color(0xFF1A2035);
-  static const Color cardBorder = Color(0xFF1E2540);
+  // ── Backgrounds (Deep Navy) ──
+  static const Color background = Color(0xFF050A1A);
+  static const Color surface = Color(0xFF0A1024);
+  static const Color surfaceLight = Color(0xFF131A33);
+  static const Color cardBorder = Color(0xFF1A2244);
 
-  // ── Primary Accent (Blue glow) ──
-  static const Color primary = Color(0xFF3B82F6);
-  static const Color primaryLight = Color(0xFF60A5FA);
-  static const Color primaryDark = Color(0xFF2563EB);
-  static const Color primaryGlow = Color(0x403B82F6);
+  // ── Primary Accent (Electric Blue) ──
+  static const Color primary = Color(0xFF00F2FF);
+  static const Color primaryLight = Color(0xFF80FAFF);
+  static const Color primaryDark = Color(0xFF00B3BC);
+  static const Color primaryGlow = Color(0x4000F2FF);
 
-  // ── Secondary Accent (Red — Pomodoro indicator) ──
-  static const Color pomodoroRed = Color(0xFFEF4444);
-  static const Color pomodoroRedLight = Color(0xFFFF6B6B);
+  // ── Timer original colors ──
+  static const Color timerColor = Color(0xFF3B82F6);
+  static const Color timerColorDark = Color(0xFF2563EB);
+  static const Color timerGlow = Color(0x403B82F6);
+
+  // ── Secondary Accent (Vibrant Violet & Pomodoro indicator) ──
+  static const Color pomodoroRed = Color(0xFF6A25F4); // Vibrant Violet
+  static const Color pomodoroRedLight = Color(0xFFA855F7); // Soft Neon Purple
 
   // ── Success / Break colors ──
   static const Color breakGreen = Color(0xFF22C55E);
@@ -42,7 +47,7 @@ class AppColors {
   static const LinearGradient timerGradient = LinearGradient(
     begin: Alignment.topCenter,
     end: Alignment.bottomCenter,
-    colors: [primary, primaryDark],
+    colors: [timerColor, timerColorDark],
   );
 
   static const LinearGradient cardGradient = LinearGradient(

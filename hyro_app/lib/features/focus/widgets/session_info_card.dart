@@ -22,7 +22,7 @@ class SessionInfoCard extends StatelessWidget {
             padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
             child: Column(
               children: [
-                Text('SESSION', style: AppTypography.statLabel),
+                Text('SESIÓN', style: AppTypography.statLabel),
                 const SizedBox(height: 6),
                 Text(
                   '$completedSessions/4',
@@ -38,7 +38,7 @@ class SessionInfoCard extends StatelessWidget {
             padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
             child: Column(
               children: [
-                Text('TOTAL FOCUS', style: AppTypography.statLabel),
+                Text('ENFOQUE TOTAL', style: AppTypography.statLabel),
                 const SizedBox(height: 6),
                 Text(
                   _formatHours(totalFocusMinutes),

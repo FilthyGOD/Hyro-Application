@@ -50,8 +50,8 @@ class ProfileScreen extends StatelessWidget {
                 child: _AchievementCard(
                   icon: Icons.local_fire_department,
                   color: Colors.orange,
-                  title: '5 Day Streak',
-                  subtitle: 'Current Record',
+                  title: 'Racha de 5 días',
+                  subtitle: 'Récord Actual',
                 ),
               ),
               const SizedBox(width: 12),
@@ -59,8 +59,8 @@ class ProfileScreen extends StatelessWidget {
                 child: _AchievementCard(
                   icon: Icons.emoji_events,
                   color: Colors.amber,
-                  title: '32 Sessions',
-                  subtitle: 'This Month',
+                  title: '32 Sesiones',
+                  subtitle: 'Este Mes',
                 ),
               ),
             ],
@@ -72,8 +72,8 @@ class ProfileScreen extends StatelessWidget {
                 child: _AchievementCard(
                   icon: Icons.timer,
                   color: AppColors.primary,
-                  title: '12.5 Hours',
-                  subtitle: 'Total Focus',
+                  title: '12.5 Horas',
+                  subtitle: 'Enfoque Total',
                 ),
               ),
               const SizedBox(width: 12),
@@ -81,8 +81,8 @@ class ProfileScreen extends StatelessWidget {
                 child: _AchievementCard(
                   icon: Icons.task_alt,
                   color: AppColors.breakGreen,
-                  title: '18 Tasks',
-                  subtitle: 'Completed',
+                  title: '18 Tareas',
+                  subtitle: 'Completadas',
                 ),
               ),
             ],

@@ -25,10 +25,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Settings', style: AppTypography.h1),
+          Text('Ajustes', style: AppTypography.h1),
           const SizedBox(height: 8),
           Text(
-            'Customize your focus experience',
+            'Personaliza tu experiencia de enfoque',
             style: AppTypography.bodyMedium,
           ),
           const SizedBox(height: 32),
@@ -38,10 +38,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Timer', style: AppTypography.h3),
+                Text('Temporizador', style: AppTypography.h3),
                 const SizedBox(height: 20),
                 _SliderSetting(
-                  label: 'Pomodoro Duration',
+                  label: 'Duración del Pomodoro',
                   value: _pomodoroDuration,
                   min: 10,
                   max: 60,
@@ -50,7 +50,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ),
                 const SizedBox(height: 16),
                 _SliderSetting(
-                  label: 'Short Break',
+                  label: 'Descanso Corto',
                   value: _shortBreak,
                   min: 1,
                   max: 15,
@@ -59,7 +59,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ),
                 const SizedBox(height: 16),
                 _SliderSetting(
-                  label: 'Long Break',
+                  label: 'Descanso Largo',
                   value: _longBreak,
                   min: 5,
                   max: 30,
@@ -76,18 +76,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Preferences', style: AppTypography.h3),
+                Text('Preferencias', style: AppTypography.h3),
                 const SizedBox(height: 16),
                 _ToggleSetting(
-                  label: 'Notifications',
-                  subtitle: 'Get notified when timer finishes',
+                  label: 'Notificaciones',
+                  subtitle: 'Recibe notificaciones al terminar el temporizador',
                   value: _notifications,
                   onChanged: (v) => setState(() => _notifications = v),
                 ),
                 const Divider(height: 24),
                 _ToggleSetting(
-                  label: 'Dark Mode',
-                  subtitle: 'Use dark theme',
+                  label: 'Modo Oscuro',
+                  subtitle: 'Usar tema oscuro',
                   value: _darkMode,
                   onChanged: (v) => setState(() => _darkMode = v),
                 ),
@@ -112,11 +112,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Connect Spotify',
+                            'Conectar Spotify',
                             style: AppTypography.labelLarge,
                           ),
                           Text(
-                            'Listen to focus playlists',
+                            'Escucha listas de reproducción para enfocarte',
                             style: AppTypography.bodySmall,
                           ),
                         ],
@@ -127,7 +127,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFF1DB954),
                       ),
-                      child: const Text('Connect'),
+                      child: const Text('Conectar'),
                     ),
                   ],
                 ),

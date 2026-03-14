@@ -43,14 +43,14 @@ class TimerControls extends StatelessWidget {
                   : isPaused
                   ? Icons.play_arrow
                   : Icons.play_arrow,
-          size: 72,
+          size: 60,
           onTap:
               isRunning
                   ? onPause
                   : isPaused
                   ? onResume
                   : onStart,
-          backgroundColor: AppColors.primary,
+          backgroundColor: AppColors.timerColor,
           iconColor: Colors.white,
           elevation: true,
         ),
@@ -134,7 +134,7 @@ class _ControlButtonState extends State<_ControlButton>
             shape: BoxShape.circle,
             boxShadow:
                 widget.elevation
-                    ? AppColors.glowShadow(AppColors.primary, blur: 24)
+                    ? AppColors.glowShadow(AppColors.timerColor, blur: 24)
                     : null,
             border: Border.all(
               color: AppColors.cardBorder,

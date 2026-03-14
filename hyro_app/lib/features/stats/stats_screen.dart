@@ -50,10 +50,10 @@ class _StatsScreenState extends State<StatsScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Stats & Achievements', style: AppTypography.h1),
+              Text('Estadísticas y Logros', style: AppTypography.h1),
               const SizedBox(height: 8),
               Text(
-                'Track your focus consistency and progress',
+                'Haz seguimiento de tu consistencia de enfoque y progreso',
                 style: AppTypography.bodyMedium,
               ),
               const SizedBox(height: 32),
@@ -130,7 +130,7 @@ class _StatsScreenState extends State<StatsScreen> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Text(
-                'CURRENT STREAK',
+                'RACHA ACTUAL',
                 style: AppTypography.labelSmall.copyWith(
                   color: Colors.orange,
                   letterSpacing: 2,
@@ -163,7 +163,7 @@ class _StatsScreenState extends State<StatsScreen> {
           ),
           const SizedBox(height: 8),
           Text(
-            'days streak',
+            'días de racha',
             style: AppTypography.h3.copyWith(color: Colors.white70),
           ),
           const SizedBox(height: 48),
@@ -171,11 +171,11 @@ class _StatsScreenState extends State<StatsScreen> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                'Next Milestone: $nextMilestone Days',
+                'Próximo Logro: $nextMilestone Días',
                 style: AppTypography.bodySmall,
               ),
               Text(
-                '$streak / $nextMilestone DAYS',
+                '$streak / $nextMilestone DÍAS',
                 style: AppTypography.labelSmall.copyWith(color: Colors.orange),
               ),
             ],
@@ -202,7 +202,7 @@ class _StatsScreenState extends State<StatsScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('Recent Milestones', style: AppTypography.h3),
+              Text('Logros Recientes', style: AppTypography.h3),
               Row(
                 children: [
                   const Icon(
@@ -225,24 +225,24 @@ class _StatsScreenState extends State<StatsScreen> {
 
           _MilestoneItem(
             icon: Icons.local_fire_department,
-            title: 'First Flame',
-            description: 'Achieved a 1 day streak',
+            title: 'Primera Llama',
+            description: 'Alcanzaste una racha de 1 día',
             isCompleted: true,
             progress: 1.0,
           ),
           const SizedBox(height: 16),
           _MilestoneItem(
             icon: Icons.auto_awesome,
-            title: 'Focus Master',
-            description: '100 Total Hours',
+            title: 'Maestro del Enfoque',
+            description: '100 Horas Totales',
             isCompleted: totalHours >= 100,
             progress: (totalHours / 100).clamp(0.0, 1.0),
           ),
           const SizedBox(height: 16),
           _MilestoneItem(
             icon: Icons.military_tech,
-            title: 'Century Club',
-            description: '100 Day Streak Goal',
+            title: 'Club del Siglo',
+            description: 'Meta de Racha de 100 Días',
             isCompleted: false, // Could pass current streak here too
             progress: 0.1, // Placeholder
           ),

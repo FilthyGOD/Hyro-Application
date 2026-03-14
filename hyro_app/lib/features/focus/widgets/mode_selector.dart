@@ -16,27 +16,27 @@ class ModeSelector extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
+    return Wrap(
+      alignment: WrapAlignment.center,
+      spacing: 10,
+      runSpacing: 10,
       children: [
         _ModeChip(
           label: 'Pomodoro',
           isActive: currentMode == TimerMode.pomodoro,
-          activeColor: AppColors.pomodoroRed,
+          activeColor: AppColors.primary,
           onTap: () => onModeChanged(TimerMode.pomodoro),
         ),
-        const SizedBox(width: 10),
         _ModeChip(
           label: 'Short Break',
           isActive: currentMode == TimerMode.shortBreak,
-          activeColor: AppColors.breakGreen,
+          activeColor: AppColors.primary,
           onTap: () => onModeChanged(TimerMode.shortBreak),
         ),
-        const SizedBox(width: 10),
         _ModeChip(
           label: 'Long Break',
           isActive: currentMode == TimerMode.longBreak,
-          activeColor: AppColors.breakGreen,
+          activeColor: AppColors.primary,
           onTap: () => onModeChanged(TimerMode.longBreak),
         ),
       ],
@@ -75,24 +75,22 @@ class _ModeChipState extends State<_ModeChip> {
           duration: const Duration(milliseconds: 200),
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
           decoration: BoxDecoration(
-            color: widget.isActive
-                ? widget.activeColor
-                : _hovering
+            color:
+                widget.isActive
+                    ? widget.activeColor
+                    : _hovering
                     ? AppColors.surfaceLight
                     : AppColors.surface,
             borderRadius: BorderRadius.circular(20),
             border: Border.all(
-              color: widget.isActive
-                  ? widget.activeColor
-                  : AppColors.cardBorder,
+              color:
+                  widget.isActive ? widget.activeColor : AppColors.cardBorder,
             ),
           ),
           child: Text(
             widget.label,
             style: AppTypography.chip.copyWith(
-              color: widget.isActive
-                  ? Colors.white
-                  : AppColors.textSecondary,
+              color: widget.isActive ? Colors.white : AppColors.textSecondary,
             ),
           ),
         ),

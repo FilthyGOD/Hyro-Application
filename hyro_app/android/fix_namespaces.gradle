@@ -1,0 +1,10 @@
+subprojects {
+    afterEvaluate { project ->
+        if (project.plugins.hasPlugin("com.android.library") || project.plugins.hasPlugin("com.android.application")) {
+            if (project.android.namespace == null) {
+                def pluginName = project.name.replaceAll("[^a-zA-Z0-9_]", "_")
+                project.android.namespace = "com.generated.namespace.${pluginName}"
+            }
+        }
+    }
+}

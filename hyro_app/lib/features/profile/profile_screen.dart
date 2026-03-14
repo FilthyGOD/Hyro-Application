@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../../providers/auth_provider.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_typography.dart';
 import '../../shared/widgets/glass_card.dart';
@@ -18,12 +20,28 @@ class ProfileScreen extends StatelessWidget {
           CircleAvatar(
             radius: 48,
             backgroundColor: AppColors.primary,
-            child: Text('H', style: AppTypography.h1.copyWith(fontSize: 36)),
+            child: Text(
+              context
+                      .watch<AuthProvider>()
+                      .currentUser
+                      ?.name
+                      ?.substring(0, 1)
+                      .toUpperCase() ??
+                  'H',
+              style: AppTypography.h1.copyWith(fontSize: 36),
+            ),
           ),
           const SizedBox(height: 16),
-          Text('User', style: AppTypography.h2),
+          Text(
+            context.watch<AuthProvider>().currentUser?.name ?? 'Usuario',
+            style: AppTypography.h2,
+          ),
           const SizedBox(height: 4),
-          Text('user@hyro.app', style: AppTypography.bodyMedium),
+          Text(
+            context.watch<AuthProvider>().currentUser?.usernameOrEmail ??
+                'correo@hyro.app',
+            style: AppTypography.bodyMedium,
+          ),
           const SizedBox(height: 32),
           // ── Achievement cards ──
           Row(
@@ -74,9 +92,11 @@ class ProfileScreen extends StatelessWidget {
           SizedBox(
             width: double.infinity,
             child: OutlinedButton.icon(
-              onPressed: () {},
+              onPressed: () {
+                context.read<AuthProvider>().logout();
+              },
               icon: const Icon(Icons.logout),
-              label: const Text('Sign Out'),
+              label: const Text('Cerrar Sesión'),
             ),
           ),
         ],
@@ -118,7 +138,10 @@ class _AchievementCard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(title, style: AppTypography.labelLarge.copyWith(fontSize: 13)),
+                Text(
+                  title,
+                  style: AppTypography.labelLarge.copyWith(fontSize: 13),
+                ),
                 Text(subtitle, style: AppTypography.bodySmall),
               ],
             ),

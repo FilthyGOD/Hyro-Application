@@ -2,17 +2,27 @@ import 'package:flutter/material.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../shared/widgets/glass_card.dart';
+import 'package:provider/provider.dart';
+import '../../stats/stats_provider.dart';
 
 /// Activity chart card showing daily focus sessions as vertical bars.
 class ActivityChart extends StatelessWidget {
   const ActivityChart({super.key});
 
-  // Sample data — would come from session repository in production
-  static const _data = [0.4, 0.7, 0.5, 0.9, 0.3, 0.6, 0.8];
-  static const _labels = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
-
   @override
   Widget build(BuildContext context) {
+    // Generate labels for the last 7 days, ending today at index 6
+    final List<String> labels = [];
+    final now = DateTime.now();
+    for (int i = 6; i >= 0; i--) {
+      final String weekdayStr = _getWeekdayLabel(
+        now.subtract(Duration(days: i)).weekday,
+      );
+      labels.add(weekdayStr);
+    }
+
+    final data = context.watch<StatsProvider>().weeklyActivityData;
+
     return GlassCard(
       padding: const EdgeInsets.all(16),
       child: Column(
@@ -25,11 +35,13 @@ class ActivityChart extends StatelessWidget {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               crossAxisAlignment: CrossAxisAlignment.end,
-              children: List.generate(_data.length, (i) {
+              children: List.generate(data.length, (i) {
                 return _ActivityBar(
-                  value: _data[i],
-                  label: _labels[i],
-                  isToday: i == 4, // Friday
+                  value: data[i],
+                  label: labels[i],
+                  isToday:
+                      i ==
+                      6, // Index 6 is today because we generated 6 to 0 days ago
                 );
               }),
             ),
@@ -37,6 +49,27 @@ class ActivityChart extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  String _getWeekdayLabel(int weekday) {
+    switch (weekday) {
+      case DateTime.monday:
+        return 'M';
+      case DateTime.tuesday:
+        return 'T';
+      case DateTime.wednesday:
+        return 'W';
+      case DateTime.thursday:
+        return 'T';
+      case DateTime.friday:
+        return 'F';
+      case DateTime.saturday:
+        return 'S';
+      case DateTime.sunday:
+        return 'S';
+      default:
+        return '';
+    }
   }
 }
 
@@ -64,11 +97,15 @@ class _ActivityBar extends StatelessWidget {
               child: Container(
                 width: 8,
                 decoration: BoxDecoration(
-                  color: isToday ? AppColors.primary : AppColors.primary.withAlpha(100),
+                  color:
+                      isToday
+                          ? AppColors.primary
+                          : AppColors.primary.withAlpha(100),
                   borderRadius: BorderRadius.circular(4),
-                  boxShadow: isToday
-                      ? AppColors.glowShadow(AppColors.primary, blur: 8)
-                      : null,
+                  boxShadow:
+                      isToday
+                          ? AppColors.glowShadow(AppColors.primary, blur: 8)
+                          : null,
                 ),
               ),
             ),

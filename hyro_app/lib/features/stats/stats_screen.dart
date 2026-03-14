@@ -1,177 +1,338 @@
 import 'package:flutter/material.dart';
-import 'package:fl_chart/fl_chart.dart';
+import 'package:provider/provider.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_typography.dart';
 import '../../shared/widgets/glass_card.dart';
+import 'stats_provider.dart';
+import 'widgets/streak_calendar.dart';
 
-/// Stats screen with weekly chart and focus summary.
-class StatsScreen extends StatelessWidget {
+class StatsScreen extends StatefulWidget {
   const StatsScreen({super.key});
 
   @override
+  State<StatsScreen> createState() => _StatsScreenState();
+}
+
+class _StatsScreenState extends State<StatsScreen> {
+  late DateTime _displayMonth;
+
+  @override
+  void initState() {
+    super.initState();
+    final now = DateTime.now();
+    _displayMonth = DateTime(now.year, now.month);
+  }
+
+  void _previousMonth() {
+    setState(() {
+      _displayMonth = DateTime(_displayMonth.year, _displayMonth.month - 1);
+    });
+  }
+
+  void _nextMonth() {
+    setState(() {
+      _displayMonth = DateTime(_displayMonth.year, _displayMonth.month + 1);
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(32),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text('Statistics', style: AppTypography.h1),
-          const SizedBox(height: 8),
-          Text('Your focus performance this week', style: AppTypography.bodyMedium),
-          const SizedBox(height: 24),
-          // ── Summary cards ──
-          Row(
+    return Consumer<StatsProvider>(
+      builder: (context, statsProvider, child) {
+        final streak = statsProvider.currentStreak;
+        final monthStats = statsProvider.getStatsForMonth(
+          _displayMonth.year,
+          _displayMonth.month,
+        );
+
+        return SingleChildScrollView(
+          padding: const EdgeInsets.all(32),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Expanded(
-                child: _SummaryCard(
-                  icon: Icons.local_fire_department,
-                  iconColor: Colors.orange,
-                  label: 'FOCUS STREAK',
-                  value: '5 days',
-                ),
+              Text('Stats & Achievements', style: AppTypography.h1),
+              const SizedBox(height: 8),
+              Text(
+                'Track your focus consistency and progress',
+                style: AppTypography.bodyMedium,
               ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: _SummaryCard(
-                  icon: Icons.access_time,
-                  iconColor: AppColors.primary,
-                  label: 'TOTAL HOURS',
-                  value: '12.5h',
-                ),
+              const SizedBox(height: 32),
+
+              // ── Current Streak Card ──
+              _buildCurrentStreakCard(streak),
+              const SizedBox(height: 24),
+
+              // ── Bottom Row/Column: Calendar & Milestones ──
+              LayoutBuilder(
+                builder: (context, constraints) {
+                  final isWide = constraints.maxWidth > 800;
+
+                  if (isWide) {
+                    return Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(
+                          flex: 3,
+                          child: StreakCalendar(
+                            displayMonth: _displayMonth,
+                            monthStats: monthStats,
+                            onPreviousMonth: _previousMonth,
+                            onNextMonth: _nextMonth,
+                          ),
+                        ),
+                        const SizedBox(width: 24),
+                        Expanded(
+                          flex: 2,
+                          child: _buildRecentMilestones(
+                            statsProvider.totalFocusHours,
+                          ),
+                        ),
+                      ],
+                    );
+                  } else {
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        StreakCalendar(
+                          displayMonth: _displayMonth,
+                          monthStats: monthStats,
+                          onPreviousMonth: _previousMonth,
+                          onNextMonth: _nextMonth,
+                        ),
+                        const SizedBox(height: 24),
+                        _buildRecentMilestones(statsProvider.totalFocusHours),
+                      ],
+                    );
+                  }
+                },
               ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: _SummaryCard(
-                  icon: Icons.check_circle_outline,
-                  iconColor: AppColors.breakGreen,
-                  label: 'SESSIONS',
-                  value: '32',
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildCurrentStreakCard(int streak) {
+    // Next milestone logic: 10, 30, 50, 100, 365, etc.
+    final milestones = [10, 30, 50, 100, 365, 900, 1000];
+    int nextMilestone = milestones.firstWhere(
+      (m) => m > streak,
+      orElse: () => streak + 100,
+    );
+    double progress = streak / nextMilestone;
+
+    return GlassCard(
+      padding: const EdgeInsets.symmetric(horizontal: 48, vertical: 36),
+      child: Column(
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                'CURRENT STREAK',
+                style: AppTypography.labelSmall.copyWith(
+                  color: Colors.orange,
+                  letterSpacing: 2,
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 24),
-          // ── Weekly chart ──
-          GlassCard(
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('Weekly Overview', style: AppTypography.h3),
-                const SizedBox(height: 20),
-                SizedBox(
-                  height: 200,
-                  child: BarChart(
-                    BarChartData(
-                      alignment: BarChartAlignment.spaceAround,
-                      maxY: 10,
-                      barTouchData: BarTouchData(enabled: false),
-                      titlesData: FlTitlesData(
-                        show: true,
-                        topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                        rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                        bottomTitles: AxisTitles(
-                          sideTitles: SideTitles(
-                            showTitles: true,
-                            getTitlesWidget: (value, meta) {
-                              const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-                              return Padding(
-                                padding: const EdgeInsets.only(top: 8),
-                                child: Text(
-                                  days[value.toInt()],
-                                  style: AppTypography.labelSmall,
-                                ),
-                              );
-                            },
-                          ),
-                        ),
-                        leftTitles: AxisTitles(
-                          sideTitles: SideTitles(
-                            showTitles: true,
-                            reservedSize: 28,
-                            getTitlesWidget: (value, meta) {
-                              return Text(
-                                '${value.toInt()}',
-                                style: AppTypography.labelSmall,
-                              );
-                            },
-                          ),
-                        ),
-                      ),
-                      gridData: FlGridData(
-                        show: true,
-                        drawVerticalLine: false,
-                        horizontalInterval: 2,
-                        getDrawingHorizontalLine: (value) => FlLine(
-                          color: AppColors.cardBorder,
-                          strokeWidth: 1,
-                        ),
-                      ),
-                      borderData: FlBorderData(show: false),
-                      barGroups: [
-                        _makeGroupData(0, 6),
-                        _makeGroupData(1, 8),
-                        _makeGroupData(2, 5),
-                        _makeGroupData(3, 9),
-                        _makeGroupData(4, 4),
-                        _makeGroupData(5, 7),
-                        _makeGroupData(6, 3),
-                      ],
-                    ),
-                  ),
+          const SizedBox(height: 16),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.baseline,
+            textBaseline: TextBaseline.alphabetic,
+            children: [
+              Text(
+                streak.toString(),
+                style: const TextStyle(
+                  fontSize: 120,
+                  fontWeight: FontWeight.w800,
+                  color: Colors.orange,
+                  height: 1,
                 ),
-              ],
-            ),
+              ),
+              const SizedBox(width: 8),
+              const Icon(
+                Icons.local_fire_department,
+                color: Colors.orange,
+                size: 48,
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'days streak',
+            style: AppTypography.h3.copyWith(color: Colors.white70),
+          ),
+          const SizedBox(height: 48),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Next Milestone: $nextMilestone Days',
+                style: AppTypography.bodySmall,
+              ),
+              Text(
+                '$streak / $nextMilestone DAYS',
+                style: AppTypography.labelSmall.copyWith(color: Colors.orange),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          LinearProgressIndicator(
+            value: progress,
+            backgroundColor: AppColors.surfaceLight,
+            color: Colors.orange,
+            minHeight: 8,
+            borderRadius: BorderRadius.circular(4),
           ),
         ],
       ),
     );
   }
 
-  BarChartGroupData _makeGroupData(int x, double y) {
-    return BarChartGroupData(
-      x: x,
-      barRods: [
-        BarChartRodData(
-          toY: y,
-          color: AppColors.primary,
-          width: 16,
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(6)),
-          backDrawRodData: BackgroundBarChartRodData(
-            show: true,
-            toY: 10,
-            color: AppColors.surfaceLight,
+  Widget _buildRecentMilestones(double totalHours) {
+    return GlassCard(
+      padding: const EdgeInsets.all(24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text('Recent Milestones', style: AppTypography.h3),
+              Row(
+                children: [
+                  const Icon(
+                    Icons.emoji_events,
+                    color: Colors.orange,
+                    size: 16,
+                  ),
+                  const SizedBox(width: 4),
+                  Text(
+                    '${totalHours.toStringAsFixed(1)} h',
+                    style: AppTypography.bodySmall.copyWith(
+                      color: Colors.orange,
+                    ),
+                  ),
+                ],
+              ),
+            ],
           ),
-        ),
-      ],
+          const SizedBox(height: 24),
+
+          _MilestoneItem(
+            icon: Icons.local_fire_department,
+            title: 'First Flame',
+            description: 'Achieved a 1 day streak',
+            isCompleted: true,
+            progress: 1.0,
+          ),
+          const SizedBox(height: 16),
+          _MilestoneItem(
+            icon: Icons.auto_awesome,
+            title: 'Focus Master',
+            description: '100 Total Hours',
+            isCompleted: totalHours >= 100,
+            progress: (totalHours / 100).clamp(0.0, 1.0),
+          ),
+          const SizedBox(height: 16),
+          _MilestoneItem(
+            icon: Icons.military_tech,
+            title: 'Century Club',
+            description: '100 Day Streak Goal',
+            isCompleted: false, // Could pass current streak here too
+            progress: 0.1, // Placeholder
+          ),
+        ],
+      ),
     );
   }
 }
 
-class _SummaryCard extends StatelessWidget {
+class _MilestoneItem extends StatelessWidget {
   final IconData icon;
-  final Color iconColor;
-  final String label;
-  final String value;
+  final String title;
+  final String description;
+  final bool isCompleted;
+  final double progress;
 
-  const _SummaryCard({
+  const _MilestoneItem({
     required this.icon,
-    required this.iconColor,
-    required this.label,
-    required this.value,
+    required this.title,
+    required this.description,
+    required this.isCompleted,
+    required this.progress,
   });
 
   @override
   Widget build(BuildContext context) {
-    return GlassCard(
+    return Container(
       padding: const EdgeInsets.all(16),
-      child: Column(
+      decoration: BoxDecoration(
+        color: AppColors.surfaceLight.withOpacity(0.5),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color:
+              isCompleted
+                  ? AppColors.primary.withOpacity(0.3)
+                  : Colors.transparent,
+        ),
+      ),
+      child: Row(
         children: [
-          Icon(icon, color: iconColor, size: 28),
-          const SizedBox(height: 10),
-          Text(label, style: AppTypography.statLabel),
-          const SizedBox(height: 4),
-          Text(value, style: AppTypography.statNumber.copyWith(fontSize: 22)),
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color:
+                  isCompleted
+                      ? AppColors.primary.withOpacity(0.1)
+                      : Colors.white.withOpacity(0.05),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              icon,
+              color: isCompleted ? AppColors.primary : Colors.white54,
+              size: 24,
+            ),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: AppTypography.bodyLarge.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: isCompleted ? Colors.white : Colors.white70,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(description, style: AppTypography.bodySmall),
+              ],
+            ),
+          ),
+          if (isCompleted)
+            Container(
+              padding: const EdgeInsets.all(4),
+              decoration: BoxDecoration(
+                color: AppColors.primary.withOpacity(0.2),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.check,
+                color: AppColors.primary,
+                size: 16,
+              ),
+            )
+          else
+            Text(
+              '${(progress * 100).toInt()}%',
+              style: AppTypography.labelSmall.copyWith(color: Colors.white54),
+            ),
         ],
       ),
     );

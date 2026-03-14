@@ -1,8 +1,8 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
-import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_typography.dart';
 
-/// Persistent mini player bar for Focus Radio / Spotify.
+/// Persistent mini player bar for Focus Radio.
 class FocusRadioBar extends StatefulWidget {
   const FocusRadioBar({super.key});
 
@@ -12,103 +12,125 @@ class FocusRadioBar extends StatefulWidget {
 
 class _FocusRadioBarState extends State<FocusRadioBar> {
   bool _isPlaying = false;
-  int _selectedAmbience = 0;
-  static const _ambiences = ['RAIN', 'CAFE', 'WHITE'];
-  static const _ambienceIcons = [Icons.water_drop, Icons.coffee, Icons.graphic_eq];
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      height: 64,
-      decoration: const BoxDecoration(
-        color: AppColors.radioBarBg,
-        border: Border(top: BorderSide(color: AppColors.cardBorder)),
-      ),
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: Row(
-        children: [
-          // ── Track info ──
-          Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(
-              color: AppColors.primary.withAlpha(40),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: const Icon(Icons.music_note, color: AppColors.primary, size: 20),
+    return SafeArea(
+      child: Center(
+        child: Container(
+          height: 72,
+          constraints: const BoxConstraints(maxWidth: 500),
+          margin: const EdgeInsets.symmetric(horizontal: 24),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(36),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.15),
+                blurRadius: 30,
+                offset: const Offset(0, 10),
+              ),
+            ],
           ),
-          const SizedBox(width: 12),
-          Expanded(
-            flex: 2,
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Deep Focus – Ambie...',
-                  style: AppTypography.bodySmall.copyWith(
-                    color: AppColors.textPrimary,
-                    fontWeight: FontWeight.w500,
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(36),
+            child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+              child: Container(
+                padding: const EdgeInsets.fromLTRB(12, 0, 16, 0),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(36),
+                  border: Border.all(
+                    color: Colors.white.withValues(alpha: 0.25),
+                    width: 1.5,
                   ),
-                  overflow: TextOverflow.ellipsis,
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      Colors.white.withValues(alpha: 0.3),
+                      Colors.white.withValues(alpha: 0.05),
+                    ],
+                  ),
                 ),
-                Text('FOCUS RADIO', style: AppTypography.labelSmall.copyWith(fontSize: 9)),
-              ],
-            ),
-          ),
-          // ── Playback controls ──
-          IconButton(
-            onPressed: () {},
-            icon: const Icon(Icons.skip_previous, color: AppColors.textSecondary, size: 20),
-            splashRadius: 18,
-          ),
-          IconButton(
-            onPressed: () => setState(() => _isPlaying = !_isPlaying),
-            icon: Icon(
-              _isPlaying ? Icons.pause_circle_filled : Icons.play_circle_fill,
-              color: AppColors.primary,
-              size: 32,
-            ),
-            splashRadius: 20,
-          ),
-          IconButton(
-            onPressed: () {},
-            icon: const Icon(Icons.skip_next, color: AppColors.textSecondary, size: 20),
-            splashRadius: 18,
-          ),
-          const SizedBox(width: 12),
-          // ── Ambience chips ──
-          ...List.generate(_ambiences.length, (i) {
-            final isSelected = i == _selectedAmbience;
-            return Padding(
-              padding: const EdgeInsets.only(right: 6),
-              child: GestureDetector(
-                onTap: () => setState(() => _selectedAmbience = i),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
+                child: Row(
                   children: [
-                    Icon(
-                      _ambienceIcons[i],
-                      size: 18,
-                      color: isSelected ? AppColors.primary : AppColors.textTertiary,
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      _ambiences[i],
-                      style: AppTypography.labelSmall.copyWith(
-                        fontSize: 8,
-                        color: isSelected ? AppColors.primary : AppColors.textTertiary,
+                    // ── Track info ──
+                    Container(
+                      width: 48,
+                      height: 48,
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(12),
                       ),
+                      child: const Icon(
+                        Icons.music_note,
+                        color: Colors.white70,
+                        size: 24,
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Deep Focus – Ambie...',
+                            style: AppTypography.bodySmall.copyWith(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w600,
+                              fontSize: 14,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          Text(
+                            'FOCUS RADIO',
+                            style: AppTypography.labelSmall.copyWith(
+                              color: Colors.white70,
+                              fontSize: 11,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
+                      ),
+                    ),
+                    // ── Playback controls ──
+                    IconButton(
+                      onPressed: () {},
+                      icon: const Icon(
+                        Icons.skip_previous_rounded,
+                        color: Colors.white,
+                        size: 28,
+                      ),
+                      splashRadius: 24,
+                    ),
+                    IconButton(
+                      onPressed: () => setState(() => _isPlaying = !_isPlaying),
+                      icon: Icon(
+                        _isPlaying
+                            ? Icons.pause_circle_filled_rounded
+                            : Icons.play_circle_fill_rounded,
+                        color: Colors.white,
+                        size: 40,
+                      ),
+                      splashRadius: 24,
+                    ),
+                    IconButton(
+                      onPressed: () {},
+                      icon: const Icon(
+                        Icons.skip_next_rounded,
+                        color: Colors.white,
+                        size: 28,
+                      ),
+                      splashRadius: 24,
                     ),
                   ],
                 ),
               ),
-            );
-          }),
-          const SizedBox(width: 8),
-          // ── Volume ──
-          const Icon(Icons.volume_up, color: AppColors.textTertiary, size: 18),
-        ],
+            ),
+          ),
+        ),
       ),
     );
   }

@@ -12,6 +12,7 @@ import 'widgets/session_info_card.dart';
 import 'widgets/mascot_card.dart';
 import 'widgets/mini_task_list.dart';
 import 'widgets/activity_chart.dart';
+import '../stats/stats_provider.dart';
 
 /// The main Focus screen with the Pomodoro timer and sidebar widgets.
 class FocusScreen extends StatelessWidget {
@@ -23,10 +24,26 @@ class FocusScreen extends StatelessWidget {
 
     return BlocBuilder<TimerCubit, TimerState>(
       builder: (context, state) {
+        final statsProvider = context.watch<StatsProvider>();
+        final streak = statsProvider.currentStreak;
+        final todaysStats = statsProvider.todaysStats;
+        final sessionsToday = todaysStats?.focusSessions ?? 0;
+        final minutesToday = todaysStats?.focusMinutes ?? 0;
+
         if (isDesktop) {
-          return _DesktopLayout(state: state);
+          return _DesktopLayout(
+            state: state,
+            streak: streak,
+            sessionsToday: sessionsToday,
+            minutesToday: minutesToday,
+          );
         }
-        return _MobileLayout(state: state);
+        return _MobileLayout(
+          state: state,
+          streak: streak,
+          sessionsToday: sessionsToday,
+          minutesToday: minutesToday,
+        );
       },
     );
   }
@@ -35,70 +52,116 @@ class FocusScreen extends StatelessWidget {
 // ── Desktop: two-column layout ──
 class _DesktopLayout extends StatelessWidget {
   final TimerState state;
-  const _DesktopLayout({required this.state});
+  final int streak;
+  final int sessionsToday;
+  final int minutesToday;
+
+  const _DesktopLayout({
+    required this.state,
+    required this.streak,
+    required this.sessionsToday,
+    required this.minutesToday,
+  });
 
   @override
   Widget build(BuildContext context) {
     final cubit = context.read<TimerCubit>();
 
     return Padding(
-      padding: const EdgeInsets.all(32),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      padding: const EdgeInsets.only(left: 72, top: 32, right: 32, bottom: 32),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // ── Left column: header + timer ──
+          _buildHeader(context, streak),
+          const SizedBox(height: 32),
           Expanded(
-            flex: 3,
-            child: Column(
+            child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _buildHeader(context),
-                const SizedBox(height: 32),
-                Center(
-                  child: CircularTimer(
-                    remainingSeconds: state.remainingSeconds,
-                    progress: state.progress,
-                    label: _getTimerLabel(state.mode),
-                    size: 320,
+                // ── Left column: timer (SCROLLABLE IF NEEDED) ──
+                Expanded(
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Spacer(flex: 3),
+                      Expanded(
+                        flex: 10,
+                        child: LayoutBuilder(
+                          builder: (context, constraints) {
+                            // Calculate a dynamic size based on available height,
+                            // ensuring it leaves room for controls and spacing.
+                            // Max size 460, Min size 160 (to force it to fit without scroll).
+                            final availableHeight = constraints.maxHeight;
+                            final desiredTimerSize =
+                                availableHeight -
+                                240; // 240px reserved for controls and padding
+                            final timerSize = desiredTimerSize.clamp(
+                              160.0,
+                              460.0,
+                            );
+
+                            return Column(
+                              children: [
+                                // Top spacer to push content down
+                                const Spacer(flex: 1),
+
+                                // The content (Timer, Controls, Scroller)
+                                CircularTimer(
+                                  remainingSeconds: state.remainingSeconds,
+                                  progress: state.progress,
+                                  label: _getTimerLabel(state.mode),
+                                  size: timerSize,
+                                ),
+                                const SizedBox(height: 32),
+                                TimerControls(
+                                  isRunning: state.isRunning,
+                                  isPaused: state.isPaused,
+                                  onStart: cubit.start,
+                                  onPause: cubit.pause,
+                                  onResume: cubit.resume,
+                                  onReset: cubit.reset,
+                                  onStop: cubit.stop,
+                                ),
+                                const SizedBox(height: 24),
+                                ModeSelector(
+                                  currentMode: state.mode,
+                                  onModeChanged: cubit.setMode,
+                                ),
+
+                                // Bottom spacer (flex: 2) to push content higher up
+                                // compensating for the space the music player takes later.
+                                const Spacer(flex: 3),
+                              ],
+                            );
+                          },
+                        ),
+                      ),
+                      const Spacer(flex: 2),
+                    ],
                   ),
                 ),
-                const SizedBox(height: 28),
-                TimerControls(
-                  isRunning: state.isRunning,
-                  isPaused: state.isPaused,
-                  onStart: cubit.start,
-                  onPause: cubit.pause,
-                  onResume: cubit.resume,
-                  onReset: cubit.reset,
-                  onStop: cubit.stop,
-                ),
-                const SizedBox(height: 24),
-                ModeSelector(
-                  currentMode: state.mode,
-                  onModeChanged: cubit.setMode,
+                const SizedBox(width: 48),
+                // ── Right column: info cards (SCROLLABLE) ──
+                SizedBox(
+                  width: 320, // Fixed width so data cards aren't stretched
+                  child: ListView(
+                    // ListView instead of SingleChildScrollView+Column for better scroll behavior
+                    children: [
+                      SessionInfoCard(
+                        completedSessions: sessionsToday,
+                        totalFocusMinutes: minutesToday,
+                      ),
+                      const SizedBox(height: 16),
+                      const MascotCard(),
+                      const SizedBox(height: 16),
+                      const MiniTaskList(),
+                      const SizedBox(height: 16),
+                      const ActivityChart(),
+                      const SizedBox(height: 32), // Bottom padding
+                    ],
+                  ),
                 ),
               ],
-            ),
-          ),
-          const SizedBox(width: 24),
-          // ── Right column: info cards ──
-          Expanded(
-            flex: 2,
-            child: SingleChildScrollView(
-              child: Column(
-                children: [
-                  SessionInfoCard(
-                    completedSessions: state.completedSessions,
-                    totalFocusMinutes: state.totalFocusMinutes,
-                  ),
-                  const SizedBox(height: 16),
-                  const MascotCard(),
-                  const SizedBox(height: 16),
-                  const MiniTaskList(),
-                  const SizedBox(height: 16),
-                  const ActivityChart(),
-                ],
-              ),
             ),
           ),
         ],
@@ -106,10 +169,31 @@ class _DesktopLayout extends StatelessWidget {
     );
   }
 
-  Widget _buildHeader(BuildContext context) {
+  Widget _buildHeader(BuildContext context, int streak) {
     final now = DateTime.now();
-    final dayNames = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
-    final monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    final dayNames = [
+      'Monday',
+      'Tuesday',
+      'Wednesday',
+      'Thursday',
+      'Friday',
+      'Saturday',
+      'Sunday',
+    ];
+    final monthNames = [
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
+    ];
 
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -120,7 +204,7 @@ class _DesktopLayout extends StatelessWidget {
             Text('Deep Work Session', style: AppTypography.h1),
             const SizedBox(height: 4),
             Text(
-              '${dayNames[now.weekday - 1]}, ${monthNames[now.month - 1]} ${now.day} • Focus Streak: 5 days 🔥',
+              '${dayNames[now.weekday - 1]}, ${monthNames[now.month - 1]} ${now.day} • Focus Streak: $streak days 🔥',
               style: AppTypography.bodyMedium,
             ),
           ],
@@ -133,7 +217,10 @@ class _DesktopLayout extends StatelessWidget {
             ),
             IconButton(
               onPressed: () {},
-              icon: const Icon(Icons.notifications_outlined, color: AppColors.textSecondary),
+              icon: const Icon(
+                Icons.notifications_outlined,
+                color: AppColors.textSecondary,
+              ),
             ),
           ],
         ),
@@ -148,7 +235,7 @@ class _DesktopLayout extends StatelessWidget {
       case TimerMode.shortBreak:
         return 'SHORT BREAK';
       case TimerMode.longBreak:
-        return 'LONG BREAK';
+        return 'LONG 12 BREAK';
     }
   }
 }
@@ -156,36 +243,49 @@ class _DesktopLayout extends StatelessWidget {
 // ── Mobile: single-column scrollable layout ──
 class _MobileLayout extends StatelessWidget {
   final TimerState state;
-  const _MobileLayout({required this.state});
+  final int streak;
+  final int sessionsToday;
+  final int minutesToday;
+
+  const _MobileLayout({
+    required this.state,
+    required this.streak,
+    required this.sessionsToday,
+    required this.minutesToday,
+  });
 
   @override
   Widget build(BuildContext context) {
     final cubit = context.read<TimerCubit>();
 
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.only(top: 64, left: 20, right: 20, bottom: 20),
       child: Column(
         children: [
           // Header
           Text('Deep Work Session', style: AppTypography.h2),
           const SizedBox(height: 4),
-          Text(
-            'Focus Streak: 5 days 🔥',
-            style: AppTypography.bodySmall,
-          ),
+          Text('Focus Streak: $streak days 🔥', style: AppTypography.bodySmall),
           const SizedBox(height: 24),
           // Session info
           SessionInfoCard(
-            completedSessions: state.completedSessions,
-            totalFocusMinutes: state.totalFocusMinutes,
+            completedSessions: sessionsToday,
+            totalFocusMinutes: minutesToday,
           ),
           const SizedBox(height: 24),
           // Timer
-          CircularTimer(
-            remainingSeconds: state.remainingSeconds,
-            progress: state.progress,
-            label: _getTimerLabel(state.mode),
-            size: 260,
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final availableWidth = constraints.maxWidth;
+              // Make timer responsive: max 260, but scales down if screen is narrow
+              final size = (availableWidth * 0.75).clamp(160.0, 260.0);
+              return CircularTimer(
+                remainingSeconds: state.remainingSeconds,
+                progress: state.progress,
+                label: _getTimerLabel(state.mode),
+                size: size,
+              );
+            },
           ),
           const SizedBox(height: 24),
           // Controls
@@ -200,10 +300,7 @@ class _MobileLayout extends StatelessWidget {
           ),
           const SizedBox(height: 20),
           // Mode selector
-          ModeSelector(
-            currentMode: state.mode,
-            onModeChanged: cubit.setMode,
-          ),
+          ModeSelector(currentMode: state.mode, onModeChanged: cubit.setMode),
           const SizedBox(height: 24),
           const MascotCard(),
           const SizedBox(height: 16),

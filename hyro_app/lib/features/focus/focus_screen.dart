@@ -13,6 +13,7 @@ import 'widgets/mascot_card.dart';
 import 'widgets/mini_task_list.dart';
 import 'widgets/activity_chart.dart';
 import '../stats/stats_provider.dart';
+import '../mascot/mascot_controller.dart';
 
 /// The main Focus screen with the Pomodoro timer and sidebar widgets.
 class FocusScreen extends StatelessWidget {
@@ -22,29 +23,40 @@ class FocusScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final isDesktop = Responsive.isDesktop(context);
 
-    return BlocBuilder<TimerCubit, TimerState>(
-      builder: (context, state) {
-        final statsProvider = context.watch<StatsProvider>();
-        final streak = statsProvider.currentStreak;
-        final todaysStats = statsProvider.todaysStats;
-        final sessionsToday = todaysStats?.focusSessions ?? 0;
-        final minutesToday = todaysStats?.focusMinutes ?? 0;
+    return BlocListener<TimerCubit, TimerState>(
+      listenWhen: (prev, curr) => prev.status != curr.status,
+      listener: (context, state) {
+        final mascot = context.read<MascotController>();
+        if (state.isRunning && state.mode == TimerMode.pomodoro) {
+          mascot.triggerEstudiando();
+        } else if (state.isIdle) {
+          mascot.triggerVolver();
+        }
+      },
+      child: BlocBuilder<TimerCubit, TimerState>(
+        builder: (context, state) {
+          final statsProvider = context.watch<StatsProvider>();
+          final streak = statsProvider.currentStreak;
+          final todaysStats = statsProvider.todaysStats;
+          final sessionsToday = todaysStats?.focusSessions ?? 0;
+          final minutesToday = todaysStats?.focusMinutes ?? 0;
 
-        if (isDesktop) {
-          return _DesktopLayout(
+          if (isDesktop) {
+            return _DesktopLayout(
+              state: state,
+              streak: streak,
+              sessionsToday: sessionsToday,
+              minutesToday: minutesToday,
+            );
+          }
+          return _MobileLayout(
             state: state,
             streak: streak,
             sessionsToday: sessionsToday,
             minutesToday: minutesToday,
           );
-        }
-        return _MobileLayout(
-          state: state,
-          streak: streak,
-          sessionsToday: sessionsToday,
-          minutesToday: minutesToday,
-        );
-      },
+        },
+      ),
     );
   }
 }

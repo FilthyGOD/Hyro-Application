@@ -11,6 +11,7 @@ import 'features/settings/settings_screen.dart';
 import 'features/profile/profile_screen.dart';
 import 'features/tasks/tasks_provider.dart';
 import 'features/stats/stats_provider.dart';
+import 'features/mascot/mascot_controller.dart';
 import 'package:isar/isar.dart';
 import 'providers/auth_provider.dart';
 import 'screens/auth/login_screen.dart';
@@ -29,6 +30,7 @@ class HyroApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => AuthProvider(isar)),
         ChangeNotifierProvider(create: (_) => TaskProvider()),
         ChangeNotifierProvider(create: (_) => StatsProvider()),
+        ChangeNotifierProvider(create: (_) => MascotController()),
       ],
       child: MultiBlocProvider(
         providers: [

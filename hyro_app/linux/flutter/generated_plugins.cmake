@@ -6,6 +6,7 @@ list(APPEND FLUTTER_PLUGIN_LIST
   audioplayers_linux
   gtk
   isar_flutter_libs
+  rive_common
   url_launcher_linux
 )
 

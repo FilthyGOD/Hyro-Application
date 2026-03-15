@@ -42,9 +42,9 @@ class MascotCard extends StatelessWidget {
               return SizedBox(
                 width: 180,
                 height: 180,
-                child: Rive(
-                  artboard: mascot.artboard!,
-                  fit: BoxFit.contain,
+                child: RiveWidget(
+                  controller: mascot.riveWidgetController!,
+                  fit: Fit.contain,
                 ),
               );
             },

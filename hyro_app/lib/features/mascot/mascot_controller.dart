@@ -1,65 +1,55 @@
 import 'dart:async';
 import 'dart:math';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:rive/rive.dart';
 
 /// Centralized controller for the Rive mascot animation.
 /// Shared between FocusScreen (idle/studying) and ShopScreen (purchase/equip).
 class MascotController extends ChangeNotifier {
-  Artboard? _artboard;
-  StateMachineController? _smController;
-
+  RiveWidgetController? _riveWidgetController;
+  
   // Triggers
-  SMITrigger? _triggerSaludo;
-  SMITrigger? _triggerEstudiando;
-  SMITrigger? _triggerCompra;
-  SMITrigger? _triggerVolver;
+  TriggerInput? _triggerSaludo;
+  TriggerInput? _triggerEstudiando;
+  TriggerInput? _triggerCompra;
+  TriggerInput? _triggerVolver;
 
   // Inputs
-  SMINumber? _shopItemId;
-  SMINumber? _sombrero;
+  NumberInput? _shopItemId;
+  NumberInput? _sombrero;
 
   Timer? _idleTimer;
   final _random = Random();
   bool _isStudying = false;
 
-  Artboard? get artboard => _artboard;
-  bool get isLoaded => _artboard != null;
+  RiveWidgetController? get riveWidgetController => _riveWidgetController;
+  bool get isLoaded => _riveWidgetController != null;
 
   MascotController() {
     _loadRiveFile();
   }
 
   Future<void> _loadRiveFile() async {
-    final data = await rootBundle.load('assets/mascot/jairo16.riv');
-    final file = RiveFile.import(data);
-    final artboard = file.mainArtboard.instance();
-
-    final controller = StateMachineController.fromArtboard(
-      artboard,
-      'State Machine 1',
+    final file = (await File.asset('assets/mascot/jairo16.riv', riveFactory: Factory.rive));
+    if (file == null) return;
+    
+    _riveWidgetController = RiveWidgetController(
+      file,
+      stateMachineSelector: StateMachineSelector.byName('State Machine 1'),
     );
 
-    if (controller != null) {
-      artboard.addController(controller);
-      _smController = controller;
+    final stateMachine = _riveWidgetController!.stateMachine;
 
-      // Resolve triggers
-      _triggerSaludo =
-          controller.findInput<bool>('trigger_saludo') as SMITrigger?;
-      _triggerEstudiando =
-          controller.findInput<bool>('trigger_estudiando') as SMITrigger?;
-      _triggerCompra =
-          controller.findInput<bool>('trigger_compra') as SMITrigger?;
-      _triggerVolver = controller.findInput<bool>('volver') as SMITrigger?;
+    // Resolve triggers
+    _triggerSaludo = stateMachine.trigger('trigger_saludo');
+    _triggerEstudiando = stateMachine.trigger('trigger_estudiando');
+    _triggerCompra = stateMachine.trigger('trigger_compra');
+    _triggerVolver = stateMachine.trigger('volver');
 
-      // Resolve number inputs
-      _shopItemId = controller.findInput<double>('shop_item_id') as SMINumber?;
-      _sombrero = controller.findInput<double>('sombrero') as SMINumber?;
-    }
+    // Resolve number inputs
+    _shopItemId = stateMachine.number('shop_item_id');
+    _sombrero = stateMachine.number('sombrero');
 
-    _artboard = artboard;
     notifyListeners();
 
     // Start the idle greeting loop
@@ -114,7 +104,7 @@ class MascotController extends ChangeNotifier {
   @override
   void dispose() {
     _cancelIdleLoop();
-    _smController?.dispose();
+    _riveWidgetController?.dispose();
     super.dispose();
   }
 }

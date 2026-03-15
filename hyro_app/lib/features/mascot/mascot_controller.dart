@@ -36,7 +36,7 @@ class MascotController extends ChangeNotifier {
   Future<void> _loadRiveFile() async {
     await RiveFile.initialize();
 
-    final data = await rootBundle.load('assets/mascot/jairo20.riv');
+    final data = await rootBundle.load('assets/mascot/jairo28.riv');
     final file = RiveFile.import(data);
     final artboard = file.mainArtboard.instance();
 

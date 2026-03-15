@@ -47,11 +47,7 @@ class StreakCalendar extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-<<<<<<< Updated upstream
-              Text('Streak Calendar', style: AppTypography.h3),
-=======
               Text('Calendario de Rachas', style: AppTypography.h3),
->>>>>>> Stashed changes
               Row(
                 children: [
                   IconButton(
@@ -168,20 +164,6 @@ class StreakCalendar extends StatelessWidget {
 
   String _getMonthName(int month) {
     const months = [
-<<<<<<< Updated upstream
-      'January',
-      'February',
-      'March',
-      'April',
-      'May',
-      'June',
-      'July',
-      'August',
-      'September',
-      'October',
-      'November',
-      'December',
-=======
       'Enero',
       'Febrero',
       'Marzo',
@@ -194,7 +176,6 @@ class StreakCalendar extends StatelessWidget {
       'Octubre',
       'Noviembre',
       'Diciembre',
->>>>>>> Stashed changes
     ];
     return months[month - 1];
   }

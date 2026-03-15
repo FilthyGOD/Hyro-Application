@@ -69,10 +69,7 @@ class _ShopScreenState extends State<ShopScreen>
           // Header
           Text('Tienda', style: AppTypography.h1),
           const SizedBox(height: 4),
-          Text(
-            'Personaliza a tu mascota',
-            style: AppTypography.bodyMedium,
-          ),
+          Text('Personaliza a tu mascota', style: AppTypography.bodyMedium),
           const SizedBox(height: 24),
 
           // ── Mascot Preview ──
@@ -96,10 +93,7 @@ class _ShopScreenState extends State<ShopScreen>
                 return SizedBox(
                   width: previewSize,
                   height: previewSize,
-                  child: Rive(
-                    artboard: mascot.artboard!,
-                    fit: BoxFit.contain,
-                  ),
+                  child: Rive(artboard: mascot.artboard!, fit: BoxFit.contain),
                 );
               },
             ),
@@ -157,74 +151,78 @@ class _ShopScreenState extends State<ShopScreen>
     return Column(
       children: [
         Expanded(
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: hatItems.map((hat) {
-              final isSelected = _selectedHat == hat.id;
-              final isOwned = _ownedHats.contains(hat.id);
+          child: SingleChildScrollView(
+            child: Wrap(
+              spacing: 12,
+              runSpacing: 12,
+              alignment: WrapAlignment.center,
+              children:
+                  hatItems.map((hat) {
+                    final isSelected = _selectedHat == hat.id;
+                    final isOwned = _ownedHats.contains(hat.id);
 
-              return Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 8),
-                child: GestureDetector(
-                  onTap: () => _onSelectHat(hat.id),
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 200),
-                    width: 100,
-                    padding: const EdgeInsets.symmetric(
-                      vertical: 16,
-                      horizontal: 8,
-                    ),
-                    decoration: BoxDecoration(
-                      color: isSelected
-                          ? AppColors.primary.withAlpha(30)
-                          : AppColors.surfaceLight,
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(
-                        color: isSelected
-                            ? AppColors.primary
-                            : AppColors.cardBorder,
-                        width: isSelected ? 2 : 1,
-                      ),
-                    ),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          hat.icon,
-                          style: const TextStyle(fontSize: 36),
+                    return GestureDetector(
+                      onTap: () => _onSelectHat(hat.id),
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 200),
+                        width: 100,
+                        padding: const EdgeInsets.symmetric(
+                          vertical: 16,
+                          horizontal: 8,
                         ),
-                        const SizedBox(height: 8),
-                        Text(
-                          hat.name,
-                          style: AppTypography.bodySmall.copyWith(
-                            color: isSelected
-                                ? AppColors.textPrimary
-                                : AppColors.textSecondary,
+                        decoration: BoxDecoration(
+                          color:
+                              isSelected
+                                  ? AppColors.primary.withAlpha(30)
+                                  : AppColors.surfaceLight,
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(
+                            color:
+                                isSelected
+                                    ? AppColors.primary
+                                    : AppColors.cardBorder,
+                            width: isSelected ? 2 : 1,
                           ),
-                          textAlign: TextAlign.center,
                         ),
-                        if (isOwned && hat.id != 0) ...[
-                          const SizedBox(height: 4),
-                          Text(
-                            'Comprado',
-                            style: AppTypography.bodySmall.copyWith(
-                              color: AppColors.breakGreen,
-                              fontSize: 10,
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              hat.icon,
+                              style: const TextStyle(fontSize: 36),
                             ),
-                          ),
-                        ],
-                      ],
-                    ),
-                  ),
-                ),
-              );
-            }).toList(),
+                            const SizedBox(height: 8),
+                            Text(
+                              hat.name,
+                              style: AppTypography.bodySmall.copyWith(
+                                color:
+                                    isSelected
+                                        ? AppColors.textPrimary
+                                        : AppColors.textSecondary,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                            if (isOwned && hat.id != 0) ...[
+                              const SizedBox(height: 4),
+                              Text(
+                                'Comprado',
+                                style: AppTypography.bodySmall.copyWith(
+                                  color: AppColors.breakGreen,
+                                  fontSize: 10,
+                                ),
+                              ),
+                            ],
+                          ],
+                        ),
+                      ),
+                    );
+                  }).toList(),
+            ),
           ),
         ),
         const SizedBox(height: 12),
         // Action button
-        if (_selectedHat >= 0)
-          _buildActionButton(),
+        if (_selectedHat >= 0) _buildActionButton(),
       ],
     );
   }
@@ -283,7 +281,9 @@ class _ShopScreenState extends State<ShopScreen>
           const SizedBox(height: 8),
           Text(
             '¡Próximamente!',
-            style: AppTypography.bodyLarge.copyWith(color: AppColors.textSecondary),
+            style: AppTypography.bodyLarge.copyWith(
+              color: AppColors.textSecondary,
+            ),
           ),
           const SizedBox(height: 4),
           Text(
@@ -293,7 +293,10 @@ class _ShopScreenState extends State<ShopScreen>
           const SizedBox(height: 32),
           OutlinedButton(
             onPressed: null,
-            child: Text('Notifícame', style: AppTypography.chip.copyWith(color: AppColors.textTertiary)),
+            child: Text(
+              'Notifícame',
+              style: AppTypography.chip.copyWith(color: AppColors.textTertiary),
+            ),
           ),
         ],
       ),

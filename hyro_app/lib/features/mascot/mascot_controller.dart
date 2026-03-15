@@ -32,7 +32,7 @@ class MascotController extends ChangeNotifier {
   }
 
   Future<void> _loadRiveFile() async {
-    final data = await rootBundle.load('assets/mascot/jairo15.riv');
+    final data = await rootBundle.load('assets/mascot/jairo16.riv');
     final file = RiveFile.import(data);
     final artboard = file.mainArtboard.instance();
 
@@ -46,9 +46,12 @@ class MascotController extends ChangeNotifier {
       _smController = controller;
 
       // Resolve triggers
-      _triggerSaludo = controller.findInput<bool>('trigger_saludo') as SMITrigger?;
-      _triggerEstudiando = controller.findInput<bool>('trigger_estudiando') as SMITrigger?;
-      _triggerCompra = controller.findInput<bool>('trigger_compra') as SMITrigger?;
+      _triggerSaludo =
+          controller.findInput<bool>('trigger_saludo') as SMITrigger?;
+      _triggerEstudiando =
+          controller.findInput<bool>('trigger_estudiando') as SMITrigger?;
+      _triggerCompra =
+          controller.findInput<bool>('trigger_compra') as SMITrigger?;
       _triggerVolver = controller.findInput<bool>('volver') as SMITrigger?;
 
       // Resolve number inputs

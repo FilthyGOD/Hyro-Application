@@ -29,6 +29,8 @@ class FocusScreen extends StatelessWidget {
         final mascot = context.read<MascotController>();
         if (state.isRunning && state.mode == TimerMode.pomodoro) {
           mascot.triggerEstudiando();
+        } else if (state.isPaused) {
+          mascot.triggerVolver();
         } else if (state.isIdle) {
           mascot.triggerVolver();
         }

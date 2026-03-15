@@ -4,6 +4,7 @@ import '../widgets/sidebar.dart';
 import '../widgets/spotify_bottom_bar.dart';
 import '../../core/services/spotify/spotify_auth_service.dart';
 import '../../core/services/spotify/spotify_player_service.dart';
+import '../widgets/animated_background.dart';
 
 /// Main layout scaffold with responsive sidebar + content + radio bar.
 class MainLayout extends StatefulWidget {
@@ -63,6 +64,8 @@ class _MainLayoutState extends State<MainLayout> {
           final sidebarWidth = isTablet ? 72.0 : 220.0;
           return Stack(
             children: [
+              // Animated breathing background
+              const Positioned.fill(child: AnimatedBackground()),
               // Main Content Region
               Positioned.fill(child: widget.child),
               // Floating Spotify Base
@@ -136,6 +139,9 @@ class _MainLayoutState extends State<MainLayout> {
       ),
       body: Stack(
         children: [
+          // Animated breathing background
+          const Positioned.fill(child: AnimatedBackground()),
+          // Main Content Region
           Positioned.fill(child: widget.child),
           Positioned(
             bottom: 16,

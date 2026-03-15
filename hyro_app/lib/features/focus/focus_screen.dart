@@ -184,27 +184,27 @@ class _DesktopLayout extends StatelessWidget {
   Widget _buildHeader(BuildContext context, int streak) {
     final now = DateTime.now();
     final dayNames = [
-      'Monday',
-      'Tuesday',
-      'Wednesday',
-      'Thursday',
-      'Friday',
-      'Saturday',
-      'Sunday',
+      'Lunes',
+      'Martes',
+      'Miércoles',
+      'Jueves',
+      'Viernes',
+      'Sábado',
+      'Domingo',
     ];
     final monthNames = [
-      'Jan',
+      'Ene',
       'Feb',
       'Mar',
-      'Apr',
+      'Abr',
       'May',
       'Jun',
       'Jul',
-      'Aug',
+      'Ago',
       'Sep',
       'Oct',
       'Nov',
-      'Dec',
+      'Dic',
     ];
 
     return Row(
@@ -213,10 +213,10 @@ class _DesktopLayout extends StatelessWidget {
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Deep Work Session', style: AppTypography.h1),
+            Text('Sesión de Trabajo Profundo', style: AppTypography.h1),
             const SizedBox(height: 4),
             Text(
-              '${dayNames[now.weekday - 1]}, ${monthNames[now.month - 1]} ${now.day} • Focus Streak: $streak days 🔥',
+              '${dayNames[now.weekday - 1]}, ${now.day} de ${monthNames[now.month - 1]} • Racha de Enfoque: $streak días 🔥',
               style: AppTypography.bodyMedium,
             ),
           ],
@@ -243,11 +243,11 @@ class _DesktopLayout extends StatelessWidget {
   String _getTimerLabel(TimerMode mode) {
     switch (mode) {
       case TimerMode.pomodoro:
-        return 'TIME UNTIL BREAK';
+        return 'TIEMPO HASTA EL DESCANSO';
       case TimerMode.shortBreak:
-        return 'SHORT BREAK';
+        return 'DESCANSO CORTO';
       case TimerMode.longBreak:
-        return 'LONG 12 BREAK';
+        return 'DESCANSO LARGO';
     }
   }
 }
@@ -275,9 +275,12 @@ class _MobileLayout extends StatelessWidget {
       child: Column(
         children: [
           // Header
-          Text('Deep Work Session', style: AppTypography.h2),
+          Text('Sesión de Trabajo Profundo', style: AppTypography.h2),
           const SizedBox(height: 4),
-          Text('Focus Streak: $streak days 🔥', style: AppTypography.bodySmall),
+          Text(
+            'Racha de Enfoque: $streak días 🔥',
+            style: AppTypography.bodySmall,
+          ),
           const SizedBox(height: 24),
           // Session info
           SessionInfoCard(
@@ -328,11 +331,11 @@ class _MobileLayout extends StatelessWidget {
   String _getTimerLabel(TimerMode mode) {
     switch (mode) {
       case TimerMode.pomodoro:
-        return 'TIME UNTIL BREAK';
+        return 'TIEMPO HASTA EL DESCANSO';
       case TimerMode.shortBreak:
-        return 'SHORT BREAK';
+        return 'DESCANSO CORTO';
       case TimerMode.longBreak:
-        return 'LONG BREAK';
+        return 'DESCANSO LARGO';
     }
   }
 }

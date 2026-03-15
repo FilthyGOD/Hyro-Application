@@ -31,13 +31,13 @@ class MiniTaskList extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('Tasks', style: AppTypography.h3),
+              Text('Tareas', style: AppTypography.h3),
               GestureDetector(
                 onTap: () {
                   // Navigate to tasks tab (handled by parent usually, or index change)
                 },
                 child: Text(
-                  'View All',
+                  'Ver Todas',
                   style: AppTypography.bodySmall.copyWith(
                     color: AppColors.primary,
                     fontWeight: FontWeight.w600,
@@ -51,7 +51,7 @@ class MiniTaskList extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 8),
               child: Text(
-                'No pending tasks. Great job!',
+                'No hay tareas pendientes. ¡Buen trabajo!',
                 style: AppTypography.bodyMedium.copyWith(
                   color: AppColors.textTertiary,
                 ),
@@ -63,7 +63,7 @@ class MiniTaskList extends StatelessWidget {
                 padding: const EdgeInsets.only(bottom: 8.0),
                 child: _TaskItem(
                   title: task.title,
-                  subtitle: task.category ?? 'No Category',
+                  subtitle: task.category ?? 'Sin Categoría',
                   color: Color(task.priorityColorValue),
                 ),
               ),

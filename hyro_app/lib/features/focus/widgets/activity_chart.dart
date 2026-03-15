@@ -28,7 +28,7 @@ class ActivityChart extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('ACTIVITY', style: AppTypography.statLabel),
+          Text('ACTIVIDAD', style: AppTypography.statLabel),
           const SizedBox(height: 16),
           SizedBox(
             height: 80,
@@ -54,19 +54,19 @@ class ActivityChart extends StatelessWidget {
   String _getWeekdayLabel(int weekday) {
     switch (weekday) {
       case DateTime.monday:
-        return 'M';
+        return 'L';
       case DateTime.tuesday:
-        return 'T';
+        return 'M';
       case DateTime.wednesday:
-        return 'W';
+        return 'X';
       case DateTime.thursday:
-        return 'T';
+        return 'J';
       case DateTime.friday:
-        return 'F';
+        return 'V';
       case DateTime.saturday:
         return 'S';
       case DateTime.sunday:
-        return 'S';
+        return 'D';
       default:
         return '';
     }

@@ -17,7 +17,7 @@ class MascotCard extends StatelessWidget {
       child: Column(
         children: [
           Text(
-            'HYRO THE HELPER',
+            'JAIRO EL ASISTENTE',
             style: AppTypography.statLabel.copyWith(
               color: AppColors.pomodoroRed,
               fontWeight: FontWeight.w700,
@@ -51,7 +51,7 @@ class MascotCard extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           Text(
-            '"Stay focused! You\'re doing great.\nKeep up the momentum!"',
+            '"¡Mantén el enfoque! Lo estás haciendo genial.\n¡Sigue así!"',
             style: AppTypography.bodySmall.copyWith(
               fontStyle: FontStyle.italic,
               color: AppColors.textSecondary,

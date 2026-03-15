@@ -19,27 +19,27 @@ class Sidebar extends StatelessWidget {
     _SidebarItemData(
       icon: Icons.timer_outlined,
       activeIcon: Icons.timer,
-      label: 'Focus',
+      label: 'Enfoque',
     ),
     _SidebarItemData(
       icon: Icons.check_circle_outline,
       activeIcon: Icons.check_circle,
-      label: 'Tasks',
+      label: 'Tareas',
     ),
     _SidebarItemData(
       icon: Icons.bar_chart_outlined,
       activeIcon: Icons.bar_chart,
-      label: 'Stats',
+      label: 'Estadísticas',
     ),
     _SidebarItemData(
       icon: Icons.storefront_outlined,
       activeIcon: Icons.storefront,
-      label: 'Shop',
+      label: 'Tienda',
     ),
     _SidebarItemData(
       icon: Icons.person_outline,
       activeIcon: Icons.person,
-      label: 'Profile',
+      label: 'Perfil',
     ),
   ];
 
@@ -73,7 +73,7 @@ class Sidebar extends StatelessWidget {
           // ── Settings ──
           _SidebarItem(
             icon: Icons.settings_outlined,
-            label: 'Settings',
+            label: 'Ajustes',
             isActive: false,
             collapsed: collapsed,
             onTap: () => onItemSelected(5),
@@ -137,11 +137,11 @@ class Sidebar extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'User',
+                    'Usuario',
                     style: AppTypography.labelLarge.copyWith(fontSize: 13),
                   ),
                   Text(
-                    'Free Plan',
+                    'Plan Gratis',
                     style: AppTypography.bodySmall.copyWith(fontSize: 11),
                   ),
                 ],

@@ -10,7 +10,7 @@ class AppTheme {
     return ThemeData(
       useMaterial3: true,
       brightness: Brightness.dark,
-      scaffoldBackgroundColor: AppColors.background,
+      scaffoldBackgroundColor: Colors.transparent,
       colorScheme: const ColorScheme.dark(
         surface: AppColors.surface,
         primary: AppColors.primary,
@@ -30,7 +30,7 @@ class AppTheme {
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
-          backgroundColor: AppColors.primary,
+          backgroundColor: AppColors.timerColor,
           foregroundColor: Colors.white,
           elevation: 0,
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
@@ -56,8 +56,10 @@ class AppTheme {
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: AppColors.surfaceLight,
-        contentPadding:
-            const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 14,
+        ),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: const BorderSide(color: AppColors.cardBorder),
@@ -75,10 +77,7 @@ class AppTheme {
           fontSize: 14,
         ),
       ),
-      iconTheme: const IconThemeData(
-        color: AppColors.textSecondary,
-        size: 22,
-      ),
+      iconTheme: const IconThemeData(color: AppColors.textSecondary, size: 22),
       dividerTheme: const DividerThemeData(
         color: AppColors.cardBorder,
         thickness: 1,
@@ -91,9 +90,7 @@ class AppTheme {
           fontWeight: FontWeight.w600,
           color: Colors.white,
         ),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         side: const BorderSide(color: AppColors.cardBorder),
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       ),

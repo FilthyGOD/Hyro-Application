@@ -278,15 +278,22 @@ class _ShopScreenState extends State<ShopScreen>
               color: AppColors.textTertiary,
             ),
           ),
-          const SizedBox(height: 16),
-          Text(
-            'Próximamente',
-            style: AppTypography.h3.copyWith(color: AppColors.textSecondary),
-          ),
+          const SizedBox(height: 24),
+          Text('Tienda', style: AppTypography.h2),
           const SizedBox(height: 8),
           Text(
-            'Nuevos cosméticos llegarán pronto.',
+            '¡Próximamente!',
+            style: AppTypography.bodyLarge.copyWith(color: AppColors.textSecondary),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'Desbloquea temas, mascotas y más.',
             style: AppTypography.bodySmall,
+          ),
+          const SizedBox(height: 32),
+          OutlinedButton(
+            onPressed: null,
+            child: Text('Notifícame', style: AppTypography.chip.copyWith(color: AppColors.textTertiary)),
           ),
         ],
       ),

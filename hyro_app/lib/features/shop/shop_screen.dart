@@ -7,6 +7,9 @@ import '../../core/utils/responsive.dart';
 import '../../shared/widgets/glass_card.dart';
 import '../mascot/mascot_controller.dart';
 
+// ── Cosmetic category enum ──
+enum _CosmeticCategory { sombrero, cara, cuerpo }
+
 /// Shop screen — mascot preview with cosmetic categories.
 class ShopScreen extends StatefulWidget {
   const ShopScreen({super.key});
@@ -18,8 +21,42 @@ class ShopScreen extends StatefulWidget {
 class _ShopScreenState extends State<ShopScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
-  int _selectedHat = -1; // -1 = nothing selected yet
-  final Set<int> _ownedHats = {0}; // 0 (none) is always owned
+
+  // Per-category selection (-1 = nothing selected yet)
+  final Map<_CosmeticCategory, int> _selectedItem = {
+    _CosmeticCategory.sombrero: -1,
+    _CosmeticCategory.cara: -1,
+    _CosmeticCategory.cuerpo: -1,
+  };
+
+  // Per-category owned items ("nada" IDs always owned)
+  final Map<_CosmeticCategory, Set<int>> _ownedItems = {
+    _CosmeticCategory.sombrero: {100},
+    _CosmeticCategory.cara: {200},
+    _CosmeticCategory.cuerpo: {300},
+  };
+
+  // ── Item catalogs ──
+  static const _sombreroItems = [
+    _ShopItem(id: 100, name: 'Nada', icon: '❌'),
+    _ShopItem(id: 101, name: 'Elegante', icon: '🎩'),
+    _ShopItem(id: 102, name: 'Mexicano', icon: '🤠'),
+    _ShopItem(id: 103, name: 'Payaso', icon: '🤡'),
+  ];
+
+  static const _caraItems = [
+    _ShopItem(id: 200, name: 'Nada', icon: '❌'),
+    _ShopItem(id: 201, name: 'Monóculo', icon: '🧐'),
+    _ShopItem(id: 202, name: 'Bigote', icon: '🥸'),
+    _ShopItem(id: 203, name: 'Nariz de payaso', icon: '🔴'),
+  ];
+
+  static const _cuerpoItems = [
+    _ShopItem(id: 300, name: 'Nada', icon: '❌'),
+    _ShopItem(id: 301, name: 'Traje elegante', icon: '🤵'),
+    _ShopItem(id: 302, name: 'Zarape', icon: '🇲🇽'),
+    _ShopItem(id: 303, name: 'Traje de payaso', icon: '🎪'),
+  ];
 
   @override
   void initState() {
@@ -33,23 +70,46 @@ class _ShopScreenState extends State<ShopScreen>
     super.dispose();
   }
 
-  void _onSelectHat(int hatId) {
-    setState(() => _selectedHat = hatId);
+  // ── Helpers to map category → "nada" ID ──
+  int _nadaId(_CosmeticCategory cat) {
+    switch (cat) {
+      case _CosmeticCategory.sombrero:
+        return 100;
+      case _CosmeticCategory.cara:
+        return 200;
+      case _CosmeticCategory.cuerpo:
+        return 300;
+    }
   }
 
-  void _onBuyHat(int hatId) {
+  // ── Actions ──
+  void _onSelect(_CosmeticCategory cat, int id) {
+    setState(() => _selectedItem[cat] = id);
+  }
+
+  void _onBuy(_CosmeticCategory cat, int itemId) {
     final mascot = context.read<MascotController>();
-    mascot.triggerCompra(hatId);
+    mascot.triggerCompra(itemId);
     setState(() {
-      _ownedHats.add(hatId);
+      _ownedItems[cat]!.add(itemId);
     });
   }
 
-  void _onEquipHat(int hatId) {
+  void _onEquip(_CosmeticCategory cat, int itemId) {
     final mascot = context.read<MascotController>();
-    mascot.setSombrero(hatId);
+    switch (cat) {
+      case _CosmeticCategory.sombrero:
+        mascot.setSombrero(itemId);
+        break;
+      case _CosmeticCategory.cara:
+        mascot.setCara(itemId);
+        break;
+      case _CosmeticCategory.cuerpo:
+        mascot.setCuerpo(itemId);
+        break;
+    }
     setState(() {
-      _selectedHat = hatId;
+      _selectedItem[cat] = itemId;
     });
   }
 
@@ -115,8 +175,8 @@ class _ShopScreenState extends State<ShopScreen>
                   dividerColor: AppColors.cardBorder,
                   tabs: const [
                     Tab(text: '🎩 Sombreros'),
-                    Tab(text: '👓 Lentes'),
-                    Tab(text: '👕 Vestuario'),
+                    Tab(text: '😎 Cara'),
+                    Tab(text: '👕 Cuerpo'),
                   ],
                 ),
                 const SizedBox(height: 16),
@@ -125,9 +185,12 @@ class _ShopScreenState extends State<ShopScreen>
                   child: TabBarView(
                     controller: _tabController,
                     children: [
-                      _buildHatsTab(),
-                      _buildComingSoonTab(),
-                      _buildComingSoonTab(),
+                      _buildCategoryTab(
+                        _CosmeticCategory.sombrero,
+                        _sombreroItems,
+                      ),
+                      _buildCategoryTab(_CosmeticCategory.cara, _caraItems),
+                      _buildCategoryTab(_CosmeticCategory.cuerpo, _cuerpoItems),
                     ],
                   ),
                 ),
@@ -140,13 +203,11 @@ class _ShopScreenState extends State<ShopScreen>
     );
   }
 
-  // ── Hats Tab ──
-  Widget _buildHatsTab() {
-    final hatItems = [
-      _HatItem(id: 0, name: 'Sin sombrero', icon: '❌'),
-      _HatItem(id: 1, name: 'Gorra', icon: '🧢'),
-      _HatItem(id: 2, name: 'Sombrero mago', icon: '🎩'),
-    ];
+  // ── Generic Category Tab ──
+  Widget _buildCategoryTab(_CosmeticCategory category, List<_ShopItem> items) {
+    final selected = _selectedItem[category]!;
+    final owned = _ownedItems[category]!;
+    final nadaId = _nadaId(category);
 
     return Column(
       children: [
@@ -157,12 +218,12 @@ class _ShopScreenState extends State<ShopScreen>
               runSpacing: 12,
               alignment: WrapAlignment.center,
               children:
-                  hatItems.map((hat) {
-                    final isSelected = _selectedHat == hat.id;
-                    final isOwned = _ownedHats.contains(hat.id);
+                  items.map((item) {
+                    final isSelected = selected == item.id;
+                    final isOwned = owned.contains(item.id);
 
                     return GestureDetector(
-                      onTap: () => _onSelectHat(hat.id),
+                      onTap: () => _onSelect(category, item.id),
                       child: AnimatedContainer(
                         duration: const Duration(milliseconds: 200),
                         width: 100,
@@ -188,12 +249,12 @@ class _ShopScreenState extends State<ShopScreen>
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             Text(
-                              hat.icon,
+                              item.icon,
                               style: const TextStyle(fontSize: 36),
                             ),
                             const SizedBox(height: 8),
                             Text(
-                              hat.name,
+                              item.name,
                               style: AppTypography.bodySmall.copyWith(
                                 color:
                                     isSelected
@@ -202,7 +263,7 @@ class _ShopScreenState extends State<ShopScreen>
                               ),
                               textAlign: TextAlign.center,
                             ),
-                            if (isOwned && hat.id != 0) ...[
+                            if (isOwned && item.id != nadaId) ...[
                               const SizedBox(height: 4),
                               Text(
                                 'Comprado',
@@ -222,21 +283,27 @@ class _ShopScreenState extends State<ShopScreen>
         ),
         const SizedBox(height: 12),
         // Action button
-        if (_selectedHat >= 0) _buildActionButton(),
+        if (selected >= 0)
+          _buildActionButton(category, selected, owned, nadaId),
       ],
     );
   }
 
-  Widget _buildActionButton() {
-    final isOwned = _ownedHats.contains(_selectedHat);
+  Widget _buildActionButton(
+    _CosmeticCategory category,
+    int selected,
+    Set<int> owned,
+    int nadaId,
+  ) {
+    final isOwned = owned.contains(selected);
 
-    if (_selectedHat == 0) {
-      // "Sin sombrero" — just equip (remove hat)
+    if (selected == nadaId) {
+      // "Nada" — just equip (remove cosmetic)
       return _ShopButton(
         label: 'Equipar',
         icon: Icons.checkroom,
         color: AppColors.primary,
-        onTap: () => _onEquipHat(0),
+        onTap: () => _onEquip(category, nadaId),
       );
     }
 
@@ -245,7 +312,7 @@ class _ShopScreenState extends State<ShopScreen>
         label: 'Equipar',
         icon: Icons.checkroom,
         color: AppColors.primary,
-        onTap: () => _onEquipHat(_selectedHat),
+        onTap: () => _onEquip(category, selected),
       );
     }
 
@@ -253,63 +320,17 @@ class _ShopScreenState extends State<ShopScreen>
       label: 'Comprar',
       icon: Icons.shopping_cart,
       color: AppColors.breakGreen,
-      onTap: () => _onBuyHat(_selectedHat),
-    );
-  }
-
-  // ── Coming Soon Tab ──
-  Widget _buildComingSoonTab() {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Container(
-            width: 72,
-            height: 72,
-            decoration: BoxDecoration(
-              color: AppColors.primary.withAlpha(20),
-              shape: BoxShape.circle,
-            ),
-            child: const Icon(
-              Icons.lock_outline,
-              size: 32,
-              color: AppColors.textTertiary,
-            ),
-          ),
-          const SizedBox(height: 24),
-          Text('Tienda', style: AppTypography.h2),
-          const SizedBox(height: 8),
-          Text(
-            '¡Próximamente!',
-            style: AppTypography.bodyLarge.copyWith(
-              color: AppColors.textSecondary,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            'Desbloquea temas, mascotas y más.',
-            style: AppTypography.bodySmall,
-          ),
-          const SizedBox(height: 32),
-          OutlinedButton(
-            onPressed: null,
-            child: Text(
-              'Notifícame',
-              style: AppTypography.chip.copyWith(color: AppColors.textTertiary),
-            ),
-          ),
-        ],
-      ),
+      onTap: () => _onBuy(category, selected),
     );
   }
 }
 
-// ── Hat data model ──
-class _HatItem {
+// ── Generic shop item model ──
+class _ShopItem {
   final int id;
   final String name;
   final String icon;
-  const _HatItem({required this.id, required this.name, required this.icon});
+  const _ShopItem({required this.id, required this.name, required this.icon});
 }
 
 // ── Shop Action Button ──

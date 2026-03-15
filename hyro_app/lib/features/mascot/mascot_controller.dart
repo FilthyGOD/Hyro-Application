@@ -19,6 +19,8 @@ class MascotController extends ChangeNotifier {
   // Inputs
   SMINumber? _shopItemId;
   SMINumber? _sombrero;
+  SMINumber? _cara;
+  SMINumber? _cuerpo;
 
   Timer? _idleTimer;
   final _random = Random();
@@ -32,7 +34,9 @@ class MascotController extends ChangeNotifier {
   }
 
   Future<void> _loadRiveFile() async {
-    final data = await rootBundle.load('assets/mascot/jairo16.riv');
+    await RiveFile.initialize();
+
+    final data = await rootBundle.load('assets/mascot/jairo20.riv');
     final file = RiveFile.import(data);
     final artboard = file.mainArtboard.instance();
 
@@ -54,9 +58,24 @@ class MascotController extends ChangeNotifier {
           controller.findInput<bool>('trigger_compra') as SMITrigger?;
       _triggerVolver = controller.findInput<bool>('volver') as SMITrigger?;
 
-      // Resolve number inputs
+      // Resolve number inputs (with fallback names just in case)
       _shopItemId = controller.findInput<double>('shop_item_id') as SMINumber?;
-      _sombrero = controller.findInput<double>('sombrero') as SMINumber?;
+      _sombrero =
+          (controller.findInput<double>('sombrero') ??
+                  controller.findInput<double>('control_sombrero'))
+              as SMINumber?;
+      _cara =
+          (controller.findInput<double>('cara') ??
+                  controller.findInput<double>('control_cara'))
+              as SMINumber?;
+      _cuerpo =
+          (controller.findInput<double>('cuerpo') ??
+                  controller.findInput<double>('control_cuerpo'))
+              as SMINumber?;
+
+      if (_sombrero == null) print('WARNING: Rive input "sombrero" not found!');
+      if (_cara == null) print('WARNING: Rive input "cara" not found!');
+      if (_cuerpo == null) print('WARNING: Rive input "cuerpo" not found!');
     }
 
     _artboard = artboard;
@@ -108,7 +127,18 @@ class MascotController extends ChangeNotifier {
   }
 
   void setSombrero(int id) {
+    print('Sending sombrero ID $id to Rive');
     _sombrero?.value = id.toDouble();
+  }
+
+  void setCara(int id) {
+    print('Sending cara ID $id to Rive');
+    _cara?.value = id.toDouble();
+  }
+
+  void setCuerpo(int id) {
+    print('Sending cuerpo ID $id to Rive');
+    _cuerpo?.value = id.toDouble();
   }
 
   @override

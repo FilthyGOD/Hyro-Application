@@ -29,7 +29,7 @@ dependencies:
   fl_chart: ^0.70.2
 
   # Rive Animations
-  rive: ^0.13.20
+  rive: ^0.14.4
 
   # Audio
   audioplayers: ^6.1.0

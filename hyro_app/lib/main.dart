@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:rive/rive.dart';
 import 'app.dart';
 import 'data/models/task_model.dart';
 import 'data/models/daily_stats.dart';
@@ -10,6 +11,7 @@ import 'models/user_profile.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await RiveNative.init();
 
   await Supabase.initialize(
     url: 'https://biuytttsqlevvrtbywxt.supabase.co',

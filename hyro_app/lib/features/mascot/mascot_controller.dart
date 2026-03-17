@@ -1,84 +1,74 @@
 import 'dart:async';
 import 'dart:math';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:rive/rive.dart';
 
 /// Centralized controller for the Rive mascot animation.
 /// Shared between FocusScreen (idle/studying) and ShopScreen (purchase/equip).
 class MascotController extends ChangeNotifier {
-  Artboard? _artboard;
-  StateMachineController? _smController;
+  File? _file;
+  RiveWidgetController? _riveController;
 
   // Triggers
-  SMITrigger? _triggerSaludo;
-  SMITrigger? _triggerEstudiando;
-  SMITrigger? _triggerCompra;
-  SMITrigger? _triggerVolver;
+  TriggerInput? _triggerSaludo;
+  TriggerInput? _triggerEstudiando;
+  TriggerInput? _triggerCompra;
+  TriggerInput? _triggerVolver;
 
   // Inputs
-  SMINumber? _shopItemId;
-  SMINumber? _sombrero;
-  SMINumber? _cara;
-  SMINumber? _cuerpo;
+  NumberInput? _shopItemId;
+  NumberInput? _sombrero;
+  NumberInput? _cara;
+  NumberInput? _cuerpo;
 
   Timer? _idleTimer;
   final _random = Random();
   bool _isStudying = false;
 
-  Artboard? get artboard => _artboard;
-  bool get isLoaded => _artboard != null;
+  RiveWidgetController? get controller => _riveController;
+  bool get isLoaded => _riveController != null;
 
   MascotController() {
     _loadRiveFile();
   }
 
   Future<void> _loadRiveFile() async {
-    await RiveFile.initialize();
-
-    final data = await rootBundle.load('assets/mascot/jairo28.riv');
-    final file = RiveFile.import(data);
-    final artboard = file.mainArtboard.instance();
-
-    final controller = StateMachineController.fromArtboard(
-      artboard,
-      'State Machine 1',
+    final file = await File.asset(
+      'assets/mascot/jairo28.riv',
+      riveFactory: Factory.flutter,
     );
 
-    if (controller != null) {
-      artboard.addController(controller);
-      _smController = controller;
-
-      // Resolve triggers
-      _triggerSaludo =
-          controller.findInput<bool>('trigger_saludo') as SMITrigger?;
-      _triggerEstudiando =
-          controller.findInput<bool>('trigger_estudiando') as SMITrigger?;
-      _triggerCompra =
-          controller.findInput<bool>('trigger_compra') as SMITrigger?;
-      _triggerVolver = controller.findInput<bool>('volver') as SMITrigger?;
-
-      // Resolve number inputs (with fallback names just in case)
-      _shopItemId = controller.findInput<double>('shop_item_id') as SMINumber?;
-      _sombrero =
-          (controller.findInput<double>('sombrero') ??
-                  controller.findInput<double>('control_sombrero'))
-              as SMINumber?;
-      _cara =
-          (controller.findInput<double>('cara') ??
-                  controller.findInput<double>('control_cara'))
-              as SMINumber?;
-      _cuerpo =
-          (controller.findInput<double>('cuerpo') ??
-                  controller.findInput<double>('control_cuerpo'))
-              as SMINumber?;
-
-      if (_sombrero == null) print('WARNING: Rive input "sombrero" not found!');
-      if (_cara == null) print('WARNING: Rive input "cara" not found!');
-      if (_cuerpo == null) print('WARNING: Rive input "cuerpo" not found!');
+    if (file == null) {
+      print('ERROR: Could not load Rive file jairo28.riv');
+      return;
     }
 
-    _artboard = artboard;
+    _file = file;
+
+    final riveController = RiveWidgetController(
+      file,
+      stateMachineSelector: const StateMachineNamed('State Machine 1'),
+    );
+
+    _riveController = riveController;
+    final sm = riveController.stateMachine;
+
+    // Resolve triggers
+    _triggerSaludo = sm.trigger('trigger_saludo');
+    _triggerEstudiando = sm.trigger('trigger_estudiando');
+    _triggerCompra = sm.trigger('trigger_compra');
+    _triggerVolver = sm.trigger('volver');
+
+    // Resolve number inputs
+    _shopItemId = sm.number('shop_item_id');
+    _sombrero = sm.number('sombrero') ?? sm.number('control_sombrero');
+    _cara = sm.number('cara') ?? sm.number('control_cara');
+    _cuerpo = sm.number('cuerpo') ?? sm.number('control_cuerpo');
+
+    if (_sombrero == null) print('WARNING: Rive input "sombrero" not found!');
+    if (_cara == null) print('WARNING: Rive input "cara" not found!');
+    if (_cuerpo == null) print('WARNING: Rive input "cuerpo" not found!');
+
     notifyListeners();
 
     // Start the idle greeting loop
@@ -144,7 +134,16 @@ class MascotController extends ChangeNotifier {
   @override
   void dispose() {
     _cancelIdleLoop();
-    _smController?.dispose();
+    _triggerSaludo?.dispose();
+    _triggerEstudiando?.dispose();
+    _triggerCompra?.dispose();
+    _triggerVolver?.dispose();
+    _shopItemId?.dispose();
+    _sombrero?.dispose();
+    _cara?.dispose();
+    _cuerpo?.dispose();
+    _riveController?.dispose();
+    _file?.dispose();
     super.dispose();
   }
 }

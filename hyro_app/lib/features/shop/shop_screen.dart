@@ -153,7 +153,10 @@ class _ShopScreenState extends State<ShopScreen>
                 return SizedBox(
                   width: previewSize,
                   height: previewSize,
-                  child: Rive(artboard: mascot.artboard!, fit: BoxFit.contain),
+                  child: RiveWidget(
+                    controller: mascot.controller!,
+                    fit: Fit.contain,
+                  ),
                 );
               },
             ),

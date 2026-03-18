@@ -22,12 +22,14 @@ class _ShopScreenState extends State<ShopScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
 
-  // Per-category selection (-1 = nothing selected yet)
+  // Per-category selection (-1 = nothing selected yet, though now populated in initState)
   final Map<_CosmeticCategory, int> _selectedItem = {
     _CosmeticCategory.sombrero: -1,
     _CosmeticCategory.cara: -1,
     _CosmeticCategory.cuerpo: -1,
   };
+
+  int _currentTabIndex = 0;
 
   // Per-category owned items ("nada" IDs always owned)
   final Map<_CosmeticCategory, Set<int>> _ownedItems = {
@@ -62,6 +64,13 @@ class _ShopScreenState extends State<ShopScreen>
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
+    _tabController.addListener(_handleTabSelection);
+
+    // Initialize with actually equipped items
+    final mascot = context.read<MascotController>();
+    _selectedItem[_CosmeticCategory.sombrero] = mascot.equippedSombrero;
+    _selectedItem[_CosmeticCategory.cara] = mascot.equippedCara;
+    _selectedItem[_CosmeticCategory.cuerpo] = mascot.equippedCuerpo;
   }
 
   @override
@@ -82,9 +91,34 @@ class _ShopScreenState extends State<ShopScreen>
     }
   }
 
+  void _handleTabSelection() {
+    if (_tabController.index != _currentTabIndex) {
+      _currentTabIndex = _tabController.index;
+      
+      final mascot = context.read<MascotController>();
+      mascot.restoreEquippedState();
+      
+      final currentCategory = _CosmeticCategory.values[_currentTabIndex];
+      final selectedId = _selectedItem[currentCategory];
+      
+      if (selectedId != null && selectedId >= 0) {
+        if (currentCategory == _CosmeticCategory.sombrero) mascot.previewSombrero(selectedId);
+        else if (currentCategory == _CosmeticCategory.cara) mascot.previewCara(selectedId);
+        else if (currentCategory == _CosmeticCategory.cuerpo) mascot.previewCuerpo(selectedId);
+      }
+    }
+  }
+
   // ── Actions ──
   void _onSelect(_CosmeticCategory cat, int id) {
     setState(() => _selectedItem[cat] = id);
+    
+    final mascot = context.read<MascotController>();
+    mascot.restoreEquippedState();
+    
+    if (cat == _CosmeticCategory.sombrero) mascot.previewSombrero(id);
+    else if (cat == _CosmeticCategory.cara) mascot.previewCara(id);
+    else if (cat == _CosmeticCategory.cuerpo) mascot.previewCuerpo(id);
   }
 
   void _onBuy(_CosmeticCategory cat, int itemId) {

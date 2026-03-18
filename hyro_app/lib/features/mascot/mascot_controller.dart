@@ -12,6 +12,7 @@ class MascotController extends ChangeNotifier {
   // Triggers
   TriggerInput? _triggerSaludo;
   TriggerInput? _triggerEstudiando;
+  TriggerInput? _triggerHueva;
   TriggerInput? _triggerCompra;
   TriggerInput? _triggerVolver;
 
@@ -25,6 +26,11 @@ class MascotController extends ChangeNotifier {
   final _random = Random();
   bool _isStudying = false;
 
+  // Track the genuinely equipped items
+  int equippedSombrero = 100;
+  int equippedCara = 200;
+  int equippedCuerpo = 300;
+
   RiveWidgetController? get controller => _riveController;
   bool get isLoaded => _riveController != null;
 
@@ -34,12 +40,12 @@ class MascotController extends ChangeNotifier {
 
   Future<void> _loadRiveFile() async {
     final file = await File.asset(
-      'assets/mascot/jairo28.riv',
+      'assets/mascot/jairo33.riv',
       riveFactory: Factory.flutter,
     );
 
     if (file == null) {
-      print('ERROR: Could not load Rive file jairo28.riv');
+      print('ERROR: Could not load Rive file jairo33.riv');
       return;
     }
 
@@ -56,6 +62,7 @@ class MascotController extends ChangeNotifier {
     // Resolve triggers
     _triggerSaludo = sm.trigger('trigger_saludo');
     _triggerEstudiando = sm.trigger('trigger_estudiando');
+    _triggerHueva = sm.trigger('trigger_hueva');
     _triggerCompra = sm.trigger('trigger_compra');
     _triggerVolver = sm.trigger('volver');
 
@@ -105,9 +112,16 @@ class MascotController extends ChangeNotifier {
     _triggerEstudiando?.fire();
   }
 
+  void triggerHueva() {
+    _isStudying = true;
+    _cancelIdleLoop();
+    _triggerHueva?.fire();
+  }
+
   void triggerVolver() {
     _isStudying = false;
     _triggerVolver?.fire();
+    restoreEquippedState(); // Restore original items
     _startIdleLoop();
   }
 
@@ -118,17 +132,38 @@ class MascotController extends ChangeNotifier {
 
   void setSombrero(int id) {
     print('Sending sombrero ID $id to Rive');
+    equippedSombrero = id;
+    _sombrero?.value = id.toDouble();
+  }
+
+  void previewSombrero(int id) {
     _sombrero?.value = id.toDouble();
   }
 
   void setCara(int id) {
     print('Sending cara ID $id to Rive');
+    equippedCara = id;
+    _cara?.value = id.toDouble();
+  }
+
+  void previewCara(int id) {
     _cara?.value = id.toDouble();
   }
 
   void setCuerpo(int id) {
     print('Sending cuerpo ID $id to Rive');
+    equippedCuerpo = id;
     _cuerpo?.value = id.toDouble();
+  }
+
+  void previewCuerpo(int id) {
+    _cuerpo?.value = id.toDouble();
+  }
+
+  void restoreEquippedState() {
+    _sombrero?.value = equippedSombrero.toDouble();
+    _cara?.value = equippedCara.toDouble();
+    _cuerpo?.value = equippedCuerpo.toDouble();
   }
 
   @override
@@ -136,6 +171,7 @@ class MascotController extends ChangeNotifier {
     _cancelIdleLoop();
     _triggerSaludo?.dispose();
     _triggerEstudiando?.dispose();
+    _triggerHueva?.dispose();
     _triggerCompra?.dispose();
     _triggerVolver?.dispose();
     _shopItemId?.dispose();

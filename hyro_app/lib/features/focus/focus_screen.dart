@@ -9,7 +9,7 @@ import 'widgets/circular_timer.dart';
 import 'widgets/timer_controls.dart';
 import 'widgets/mode_selector.dart';
 import 'widgets/session_info_card.dart';
-import 'widgets/mascot_card.dart';
+
 import 'widgets/mini_task_list.dart';
 import 'widgets/activity_chart.dart';
 import '../stats/stats_provider.dart';
@@ -29,6 +29,10 @@ class FocusScreen extends StatelessWidget {
         final mascot = context.read<MascotController>();
         if (state.isRunning && state.mode == TimerMode.pomodoro) {
           mascot.triggerEstudiando();
+        } else if (state.isRunning &&
+            (state.mode == TimerMode.shortBreak ||
+                state.mode == TimerMode.longBreak)) {
+          mascot.triggerHueva();
         } else if (state.isPaused) {
           mascot.triggerVolver();
         } else if (state.isIdle) {
@@ -165,8 +169,6 @@ class _DesktopLayout extends StatelessWidget {
                         completedSessions: sessionsToday,
                         totalFocusMinutes: minutesToday,
                       ),
-                      const SizedBox(height: 16),
-                      const MascotCard(),
                       const SizedBox(height: 16),
                       const MiniTaskList(),
                       const SizedBox(height: 16),
@@ -319,8 +321,6 @@ class _MobileLayout extends StatelessWidget {
           // Mode selector
           ModeSelector(currentMode: state.mode, onModeChanged: cubit.setMode),
           const SizedBox(height: 24),
-          const MascotCard(),
-          const SizedBox(height: 16),
           const MiniTaskList(),
           const SizedBox(height: 16),
           const ActivityChart(),

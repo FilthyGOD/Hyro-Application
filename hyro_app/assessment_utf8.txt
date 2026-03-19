@@ -27,14 +27,14 @@
    info - Statements in an if should be enclosed in a block - lib\features\shop\shop_screen.dart:119:44 - curly_braces_in_flow_control_structures
    info - Statements in an if should be enclosed in a block - lib\features\shop\shop_screen.dart:120:45 - curly_braces_in_flow_control_structures
    info - Statements in an if should be enclosed in a block - lib\features\shop\shop_screen.dart:121:47 - curly_braces_in_flow_control_structures
-   info - Use a 'SizedBox' to add whitespace to a layout - lib\features\stats\stats_screen.dart:170:11 - sized_box_for_whitespace
-   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\stats\stats_screen.dart:307:39 - deprecated_member_use
+   info - Use a 'SizedBox' to add whitespace to a layout - lib\features\stats\stats_screen.dart:175:11 - sized_box_for_whitespace
    info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\stats\stats_screen.dart:312:39 - deprecated_member_use
-   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\stats\stats_screen.dart:323:43 - deprecated_member_use
-   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\stats\stats_screen.dart:324:38 - deprecated_member_use
-   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\stats\stats_screen.dart:354:42 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\stats\stats_screen.dart:317:39 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\stats\stats_screen.dart:328:43 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\stats\stats_screen.dart:329:38 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\stats\stats_screen.dart:359:42 - deprecated_member_use
    info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\stats\widgets\streak_calendar.dart:143:35 - deprecated_member_use
-   info - Use interpolation to compose strings and values - lib\features\tasks\tasks_screen.dart:373:31 - prefer_interpolation_to_compose_strings
+   info - Use interpolation to compose strings and values - lib\features\tasks\tasks_screen.dart:378:31 - prefer_interpolation_to_compose_strings
 warning - 'getByIndex' is experimental and could be removed or changed at any time - lib\models\user_profile.g.dart:175:12 - experimental_member_use
 warning - 'getByIndexSync' is experimental and could be removed or changed at any time - lib\models\user_profile.g.dart:179:12 - experimental_member_use
 warning - 'deleteByIndex' is experimental and could be removed or changed at any time - lib\models\user_profile.g.dart:183:12 - experimental_member_use
@@ -51,20 +51,19 @@ warning - 'putAllByIndexSync' is experimental and could be removed or changed at
    info - Don't invoke 'print' in production code - test\inspect_strings.dart:11:9 - avoid_print
 
 flutter : 49 issues 
-found. (ran in 5.0s)
+found. (ran in 5.4s)
 En línea: 1 Carácter: 1
 + flutter analyze > 
 assessment.txt 2>&1
 + ~~~~~~~~~~~~~~~~~~~~~~
 ~~~~~~~~~~~~~~~
     + CategoryInfo      
-        : NotSpecified: 
-    (49 issues found. 
-(r    an in 
-5.0s):String)     [], 
-RemoteException
-    + 
-FullyQualifiedErro    
-rId : NativeCommandE    
-rror
+        : NotSpecified  
+  : (49 issues found.   
+  (ran in 5.4s):Stri    
+ng) [], RemoteExcep    
+tion
+    + FullyQualifiedErr 
+   orId : NativeComman  
+  dError
  

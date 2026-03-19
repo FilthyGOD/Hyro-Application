@@ -69,20 +69,32 @@ class _MainLayoutState extends State<MainLayout> {
               // Animated breathing background
               const Positioned.fill(child: AnimatedBackground()),
               // Main Content Region
-              Positioned.fill(child: widget.child),
+              Positioned.fill(
+                child: Center(
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 1200),
+                    child: widget.child,
+                  ),
+                ),
+              ),
               // Floating Spotify Base
               Positioned(
                 bottom: 24,
                 left: 0,
                 right: 0,
-                child: Consumer<UiProvider>(
-                  builder: (context, ui, _) {
-                    if (!ui.isMusicBarVisible) return const SizedBox.shrink();
-                    return SpotifyBottomBar(
-                      authService: _spotifyAuthService,
-                      playerService: _spotifyPlayerService,
-                    );
-                  },
+                child: Center(
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 1200),
+                    child: Consumer<UiProvider>(
+                      builder: (context, ui, _) {
+                        if (!ui.isMusicBarVisible) return const SizedBox.shrink();
+                        return SpotifyBottomBar(
+                          authService: _spotifyAuthService,
+                          playerService: _spotifyPlayerService,
+                        );
+                      },
+                    ),
+                  ),
                 ),
               ),
               // Optional backdrop for a nicer effect

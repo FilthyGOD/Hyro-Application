@@ -23,15 +23,35 @@ class _SettingsScreenState extends State<SettingsScreen> {
   @override
   Widget build(BuildContext context) {
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(32),
+      padding:
+          MediaQuery.of(context).size.width < 800
+              ? const EdgeInsets.symmetric(horizontal: 24, vertical: 32)
+              : const EdgeInsets.all(32),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment:
+            MediaQuery.of(context).size.width < 800
+                ? CrossAxisAlignment.center
+                : CrossAxisAlignment.start,
         children: [
-          Text('Ajustes', style: AppTypography.h1),
-          const SizedBox(height: 8),
-          Text(
-            'Personaliza tu experiencia de enfoque',
-            style: AppTypography.bodyMedium,
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final isMobile = MediaQuery.of(context).size.width < 800;
+              return Column(
+                children: [
+                  Text(
+                    'Ajustes',
+                    style: isMobile ? AppTypography.h2 : AppTypography.h1,
+                    textAlign: isMobile ? TextAlign.center : TextAlign.start,
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Personaliza tu experiencia de enfoque',
+                    style: AppTypography.bodyMedium,
+                    textAlign: isMobile ? TextAlign.center : TextAlign.start,
+                  ),
+                ],
+              );
+            },
           ),
           const SizedBox(height: 32),
           // ── Timer settings ──
@@ -146,6 +166,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ),
               ],
             ),
+          ),
+          // ── Music Bar Spacing ──
+          Consumer<UiProvider>(
+            builder: (context, ui, _) {
+              return SizedBox(height: ui.isMusicBarVisible ? 100 : 20);
+            },
           ),
         ],
       ),

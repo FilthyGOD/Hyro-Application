@@ -6,6 +6,7 @@ import '../../core/theme/app_typography.dart';
 import '../../shared/widgets/glass_card.dart';
 import 'stats_provider.dart';
 import 'widgets/streak_calendar.dart';
+import '../../providers/ui_provider.dart';
 
 class StatsScreen extends StatefulWidget {
   const StatsScreen({super.key});
@@ -47,15 +48,35 @@ class _StatsScreenState extends State<StatsScreen> {
         );
 
         return SingleChildScrollView(
-          padding: EdgeInsets.all(MediaQuery.of(context).size.width < 600 ? 16 : 32),
+          padding:
+              MediaQuery.of(context).size.width < 800
+                  ? const EdgeInsets.symmetric(horizontal: 24, vertical: 32)
+                  : const EdgeInsets.all(32),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            crossAxisAlignment:
+                MediaQuery.of(context).size.width < 800
+                    ? CrossAxisAlignment.center
+                    : CrossAxisAlignment.start,
             children: [
-              Text('Estadísticas y Logros', style: AppTypography.h1),
-              const SizedBox(height: 8),
-              Text(
-                'Haz seguimiento de tu consistencia de enfoque y progreso',
-                style: AppTypography.bodyMedium,
+              LayoutBuilder(
+                builder: (context, constraints) {
+                  final isMobile = MediaQuery.of(context).size.width < 800;
+                  return Column(
+                    children: [
+                      Text(
+                        'Estadísticas y Logros',
+                        style: isMobile ? AppTypography.h2 : AppTypography.h1,
+                        textAlign: isMobile ? TextAlign.center : TextAlign.start,
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Haz seguimiento de tu consistencia de enfoque y progreso',
+                        style: AppTypography.bodyMedium,
+                        textAlign: isMobile ? TextAlign.center : TextAlign.start,
+                      ),
+                    ],
+                  );
+                },
               ),
               const SizedBox(height: 32),
 
@@ -105,6 +126,12 @@ class _StatsScreenState extends State<StatsScreen> {
                       ],
                     );
                   }
+                },
+              ),
+              // ── Music Bar Spacing ──
+              Consumer<UiProvider>(
+                builder: (context, ui, _) {
+                  return SizedBox(height: ui.isMusicBarVisible ? 100 : 20);
                 },
               ),
             ],

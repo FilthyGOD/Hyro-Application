@@ -1,0 +1,70 @@
+﻿Analyzing hyro_app...                                           
+
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\core\theme\app_typography.dart:51:34 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\core\theme\app_typography.dart:52:45 - deprecated_member_use
+   info - Don't invoke 'print' in production code - lib\features\mascot\mascot_controller.dart:48:7 - avoid_print
+   info - 'trigger' is deprecated and shouldn't be used. Use Data Binding instead of state machine inputs for better editor and runtime control - lib\features\mascot\mascot_controller.dart:63:25 - deprecated_member_use
+   info - 'trigger' is deprecated and shouldn't be used. Use Data Binding instead of state machine inputs for better editor and runtime control - lib\features\mascot\mascot_controller.dart:64:29 - deprecated_member_use
+   info - 'trigger' is deprecated and shouldn't be used. Use Data Binding instead of state machine inputs for better editor and runtime control - lib\features\mascot\mascot_controller.dart:65:24 - deprecated_member_use
+   info - 'trigger' is deprecated and shouldn't be used. Use Data Binding instead of state machine inputs for better editor and runtime control - lib\features\mascot\mascot_controller.dart:66:25 - deprecated_member_use
+   info - 'trigger' is deprecated and shouldn't be used. Use Data Binding instead of state machine inputs for better editor and runtime control - lib\features\mascot\mascot_controller.dart:67:25 - deprecated_member_use
+   info - 'number' is deprecated and shouldn't be used. Use Data Binding instead of state machine inputs for better editor and runtime control - lib\features\mascot\mascot_controller.dart:70:22 - deprecated_member_use
+   info - 'number' is deprecated and shouldn't be used. Use Data Binding instead of state machine inputs for better editor and runtime control - lib\features\mascot\mascot_controller.dart:71:20 - deprecated_member_use
+   info - 'number' is deprecated and shouldn't be used. Use Data Binding instead of state machine inputs for better editor and runtime control - lib\features\mascot\mascot_controller.dart:71:45 - deprecated_member_use
+   info - 'number' is deprecated and shouldn't be used. Use Data Binding instead of state machine inputs for better editor and runtime control - lib\features\mascot\mascot_controller.dart:72:16 - deprecated_member_use
+   info - 'number' is deprecated and shouldn't be used. Use Data Binding instead of state machine inputs for better editor and runtime control - lib\features\mascot\mascot_controller.dart:72:37 - deprecated_member_use
+   info - 'number' is deprecated and shouldn't be used. Use Data Binding instead of state machine inputs for better editor and runtime control - lib\features\mascot\mascot_controller.dart:73:18 - deprecated_member_use
+   info - 'number' is deprecated and shouldn't be used. Use Data Binding instead of state machine inputs for better editor and runtime control - lib\features\mascot\mascot_controller.dart:73:41 - deprecated_member_use
+   info - Don't invoke 'print' in production code - lib\features\mascot\mascot_controller.dart:75:28 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\mascot\mascot_controller.dart:76:24 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\mascot\mascot_controller.dart:77:26 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\mascot\mascot_controller.dart:134:5 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\mascot\mascot_controller.dart:144:5 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\mascot\mascot_controller.dart:154:5 - avoid_print
+   info - Statements in an if should be enclosed in a block - lib\features\shop\shop_screen.dart:105:60 - curly_braces_in_flow_control_structures
+   info - Statements in an if should be enclosed in a block - lib\features\shop\shop_screen.dart:106:61 - curly_braces_in_flow_control_structures
+   info - Statements in an if should be enclosed in a block - lib\features\shop\shop_screen.dart:107:63 - curly_braces_in_flow_control_structures
+   info - Statements in an if should be enclosed in a block - lib\features\shop\shop_screen.dart:119:44 - curly_braces_in_flow_control_structures
+   info - Statements in an if should be enclosed in a block - lib\features\shop\shop_screen.dart:120:45 - curly_braces_in_flow_control_structures
+   info - Statements in an if should be enclosed in a block - lib\features\shop\shop_screen.dart:121:47 - curly_braces_in_flow_control_structures
+   info - Use a 'SizedBox' to add whitespace to a layout - lib\features\stats\stats_screen.dart:170:11 - sized_box_for_whitespace
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\stats\stats_screen.dart:307:39 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\stats\stats_screen.dart:312:39 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\stats\stats_screen.dart:323:43 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\stats\stats_screen.dart:324:38 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\stats\stats_screen.dart:354:42 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\stats\widgets\streak_calendar.dart:143:35 - deprecated_member_use
+   info - Use interpolation to compose strings and values - lib\features\tasks\tasks_screen.dart:373:31 - prefer_interpolation_to_compose_strings
+warning - 'getByIndex' is experimental and could be removed or changed at any time - lib\models\user_profile.g.dart:175:12 - experimental_member_use
+warning - 'getByIndexSync' is experimental and could be removed or changed at any time - lib\models\user_profile.g.dart:179:12 - experimental_member_use
+warning - 'deleteByIndex' is experimental and could be removed or changed at any time - lib\models\user_profile.g.dart:183:12 - experimental_member_use
+warning - 'deleteByIndexSync' is experimental and could be removed or changed at any time - lib\models\user_profile.g.dart:187:12 - experimental_member_use
+warning - 'getAllByIndex' is experimental and could be removed or changed at any time - lib\models\user_profile.g.dart:193:12 - experimental_member_use
+warning - 'getAllByIndexSync' is experimental and could be removed or changed at any time - lib\models\user_profile.g.dart:199:12 - experimental_member_use
+warning - 'deleteAllByIndex' is experimental and could be removed or changed at any time - lib\models\user_profile.g.dart:204:12 - experimental_member_use
+warning - 'deleteAllByIndexSync' is experimental and could be removed or changed at any time - lib\models\user_profile.g.dart:209:12 - experimental_member_use
+warning - 'putByIndex' is experimental and could be removed or changed at any time - lib\models\user_profile.g.dart:213:12 - experimental_member_use
+warning - 'putByIndexSync' is experimental and could be removed or changed at any time - lib\models\user_profile.g.dart:217:12 - experimental_member_use
+warning - 'putAllByIndex' is experimental and could be removed or changed at any time - lib\models\user_profile.g.dart:221:12 - experimental_member_use
+warning - 'putAllByIndexSync' is experimental and could be removed or changed at any time - lib\models\user_profile.g.dart:226:12 - experimental_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\shared\layout\main_layout.dart:97:58 - deprecated_member_use
+   info - Don't invoke 'print' in production code - test\inspect_strings.dart:11:9 - avoid_print
+
+flutter : 49 issues 
+found. (ran in 5.0s)
+En línea: 1 Carácter: 1
++ flutter analyze > 
+assessment.txt 2>&1
++ ~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~
+    + CategoryInfo      
+        : NotSpecified: 
+    (49 issues found. 
+(r    an in 
+5.0s):String)     [], 
+RemoteException
+    + 
+FullyQualifiedErro    
+rId : NativeCommandE    
+rror
+ 

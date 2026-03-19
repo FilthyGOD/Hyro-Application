@@ -7,6 +7,8 @@ import 'package:provider/provider.dart';
 import 'package:uuid/uuid.dart';
 import '../../data/models/task_model.dart';
 import 'tasks_provider.dart';
+import '../stats/stats_provider.dart';
+import '../../providers/ui_provider.dart';
 
 class TasksScreen extends StatefulWidget {
   const TasksScreen({super.key});
@@ -27,24 +29,38 @@ class _TasksScreenState extends State<TasksScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.transparent,
-      floatingActionButton: FloatingActionButton(
-        onPressed: _showAddTaskDialog,
-        backgroundColor: AppColors.timerColor,
-        foregroundColor: Colors.white,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        child: const Icon(Icons.add, size: 28),
+      floatingActionButton: Consumer<UiProvider>(
+        builder: (context, ui, _) {
+          return Padding(
+            padding: EdgeInsets.only(
+              bottom: ui.isMusicBarVisible ? 80 : 0,
+            ),
+            child: FloatingActionButton(
+              onPressed: _showAddTaskDialog,
+              backgroundColor: AppColors.timerColor,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: const Icon(Icons.add, size: 28),
+            ),
+          );
+        },
       ),
       body: LayoutBuilder(
         builder: (context, constraints) {
           final isLargeScreen = constraints.maxWidth > 800;
 
           return Padding(
-            padding: EdgeInsets.only(
-              left: isLargeScreen ? 72 : 16,
-              top: 32,
-              right: 32,
-              bottom: 32,
-            ),
+            padding:
+                isLargeScreen
+                    ? const EdgeInsets.only(
+                      left: 72,
+                      top: 32,
+                      right: 32,
+                      bottom: 32,
+                    )
+                    : const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
             child:
                 isLargeScreen
                     ? Row(
@@ -80,7 +96,12 @@ class _TasksScreenState extends State<TasksScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         // ── Header ──
-        _buildHeader(),
+        LayoutBuilder(
+          builder: (context, constraints) {
+            final isMobile = MediaQuery.of(context).size.width < 800;
+            return _buildHeader(isMobile: isMobile);
+          },
+        ),
         const SizedBox(height: 24),
         // ── Category Cards ──
         _buildCategoryCards(),
@@ -94,52 +115,72 @@ class _TasksScreenState extends State<TasksScreen> {
     );
   }
 
-  Widget _buildHeader() {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text('Mis Pendientes', style: AppTypography.h1),
-              const SizedBox(height: 4),
-              FittedBox(
-                fit: BoxFit.scaleDown,
-                alignment: Alignment.centerLeft,
-                child: Row(
-                  children: [
-                    Text(
-                      'Lunes, 24 de Oct • Racha de Enfoque: 5 días ',
-                      style: AppTypography.bodySmall,
-                    ),
-                    const Text('🔥', style: TextStyle(fontSize: 14)),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-        Row(
-          mainAxisSize: MainAxisSize.min,
+  Widget _buildHeader({required bool isMobile}) {
+    return Consumer<StatsProvider>(
+      builder: (context, statsProvider, _) {
+        final streak = statsProvider.currentStreak;
+        final formattedDate = _getFormattedDate();
+
+        return Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            IconButton(
-              padding: EdgeInsets.zero,
-              constraints: const BoxConstraints(),
-              onPressed: () {},
-              icon: Icon(Icons.search, color: AppColors.textTertiary),
-            ),
-            const SizedBox(width: 8),
-            IconButton(
-              padding: EdgeInsets.zero,
-              constraints: const BoxConstraints(),
-              onPressed: () {},
-              icon: Icon(Icons.notifications_none, color: AppColors.textTertiary),
+            if (isMobile) const SizedBox(width: 40),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Mis Pendientes', style: AppTypography.h1),
+                  const SizedBox(height: 4),
+                  FittedBox(
+                    fit: BoxFit.scaleDown,
+                    alignment: Alignment.centerLeft,
+                    child: Row(
+                      children: [
+                        Text(
+                          '$formattedDate • Racha de Enfoque: $streak días ',
+                          style: AppTypography.bodySmall,
+                        ),
+                        if (streak > 0)
+                          const Text('🔥', style: TextStyle(fontSize: 14)),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
             ),
           ],
-        ),
-      ],
+        );
+      },
     );
+  }
+
+  String _getFormattedDate() {
+    final now = DateTime.now();
+    final days = [
+      'Domingo',
+      'Lunes',
+      'Martes',
+      'Miércoles',
+      'Jueves',
+      'Viernes',
+      'Sábado',
+    ];
+    final months = [
+      'Ene',
+      'Feb',
+      'Mar',
+      'Abr',
+      'May',
+      'Jun',
+      'Jul',
+      'Ago',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dic',
+    ];
+    // weekday is 1-7 (Mon-Sun), days[0] is Sunday
+    return '${days[now.weekday % 7]}, ${now.day} de ${months[now.month - 1]}';
   }
 
   Widget _buildCategoryCards() {
@@ -868,10 +909,12 @@ class _TaskTile extends StatelessWidget {
                         ),
                       ],
                     ),
-                  const SizedBox(height: 16),
                   // Priority and Pomodoros Row
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  Wrap(
+                    alignment: WrapAlignment.spaceBetween,
+                    crossAxisAlignment: WrapCrossAlignment.center,
+                    spacing: 8,
+                    runSpacing: 8,
                     children: [
                       // Priority badge
                       Container(
@@ -909,10 +952,13 @@ class _TaskTile extends StatelessWidget {
                             color: AppColors.primary,
                           ),
                           const SizedBox(width: 4),
-                          Text(
-                            '${task.pomodorosTarget} Pomodoros',
-                            style: AppTypography.labelSmall.copyWith(
-                              color: AppColors.textSecondary,
+                          Flexible(
+                            child: Text(
+                              '${task.pomodorosTarget} Pomodoros',
+                              style: AppTypography.labelSmall.copyWith(
+                                color: AppColors.textSecondary,
+                              ),
+                              overflow: TextOverflow.ellipsis,
                             ),
                           ),
                         ],

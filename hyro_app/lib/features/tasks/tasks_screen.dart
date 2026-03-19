@@ -96,7 +96,7 @@ class _TasksScreenState extends State<TasksScreen> {
 
   Widget _buildHeader() {
     return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         Expanded(
           child: Column(
@@ -104,25 +104,39 @@ class _TasksScreenState extends State<TasksScreen> {
             children: [
               Text('Mis Pendientes', style: AppTypography.h1),
               const SizedBox(height: 4),
-              Row(
-                children: [
-                  Text(
-                    'Lunes, 24 de Oct • Racha de Enfoque: 5 días ',
-                    style: AppTypography.bodySmall,
-                  ),
-                  const Text('🔥', style: TextStyle(fontSize: 14)),
-                ],
+              FittedBox(
+                fit: BoxFit.scaleDown,
+                alignment: Alignment.centerLeft,
+                child: Row(
+                  children: [
+                    Text(
+                      'Lunes, 24 de Oct • Racha de Enfoque: 5 días ',
+                      style: AppTypography.bodySmall,
+                    ),
+                    const Text('🔥', style: TextStyle(fontSize: 14)),
+                  ],
+                ),
               ),
             ],
           ),
         ),
-        IconButton(
-          onPressed: () {},
-          icon: Icon(Icons.search, color: AppColors.textTertiary),
-        ),
-        IconButton(
-          onPressed: () {},
-          icon: Icon(Icons.notifications_none, color: AppColors.textTertiary),
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            IconButton(
+              padding: EdgeInsets.zero,
+              constraints: const BoxConstraints(),
+              onPressed: () {},
+              icon: Icon(Icons.search, color: AppColors.textTertiary),
+            ),
+            const SizedBox(width: 8),
+            IconButton(
+              padding: EdgeInsets.zero,
+              constraints: const BoxConstraints(),
+              onPressed: () {},
+              icon: Icon(Icons.notifications_none, color: AppColors.textTertiary),
+            ),
+          ],
         ),
       ],
     );
@@ -197,51 +211,59 @@ class _TasksScreenState extends State<TasksScreen> {
 
   Widget _buildTodaysFocusHeader() {
     final filters = ['Todas', 'Pendientes', 'Completadas'];
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text("Enfoque de Hoy", style: AppTypography.h3),
-        Row(
-          children:
-              filters.asMap().entries.map((entry) {
-                final isSelected = _selectedFilter == entry.key;
-                return Padding(
-                  padding: const EdgeInsets.only(left: 8),
-                  child: GestureDetector(
-                    onTap: () => setState(() => _selectedFilter = entry.key),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 8,
-                      ),
-                      decoration: BoxDecoration(
-                        color:
-                            isSelected
-                                ? AppColors.timerColor
-                                : AppColors.surfaceLight,
-                        borderRadius: BorderRadius.circular(20),
-                        border:
-                            isSelected
-                                ? null
-                                : Border.all(color: AppColors.cardBorder),
-                      ),
-                      child: Text(
-                        entry.value,
-                        style: AppTypography.bodySmall.copyWith(
-                          color:
-                              isSelected
-                                  ? Colors.white
-                                  : AppColors.textSecondary,
-                          fontWeight:
-                              isSelected ? FontWeight.w600 : FontWeight.w400,
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text("Enfoque de Hoy", style: AppTypography.h3),
+            const SizedBox(height: 12),
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children:
+                    filters.asMap().entries.map((entry) {
+                      final isSelected = _selectedFilter == entry.key;
+                      return Padding(
+                        padding: const EdgeInsets.only(right: 8),
+                        child: GestureDetector(
+                          onTap: () => setState(() => _selectedFilter = entry.key),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 8,
+                            ),
+                            decoration: BoxDecoration(
+                              color:
+                                  isSelected
+                                      ? AppColors.timerColor
+                                      : AppColors.surfaceLight,
+                              borderRadius: BorderRadius.circular(20),
+                              border:
+                                  isSelected
+                                      ? null
+                                      : Border.all(color: AppColors.cardBorder),
+                            ),
+                            child: Text(
+                              entry.value,
+                              style: AppTypography.bodySmall.copyWith(
+                                color:
+                                    isSelected
+                                        ? Colors.white
+                                        : AppColors.textSecondary,
+                                fontWeight:
+                                    isSelected ? FontWeight.w600 : FontWeight.w400,
+                              ),
+                            ),
+                          ),
                         ),
-                      ),
-                    ),
-                  ),
-                );
-              }).toList(),
-        ),
-      ],
+                      );
+                    }).toList(),
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 

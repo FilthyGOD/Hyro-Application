@@ -5,6 +5,8 @@ import '../widgets/spotify_bottom_bar.dart';
 import '../../core/services/spotify/spotify_auth_service.dart';
 import '../../core/services/spotify/spotify_player_service.dart';
 import '../widgets/animated_background.dart';
+import 'package:provider/provider.dart';
+import '../../providers/ui_provider.dart';
 
 /// Main layout scaffold with responsive sidebar + content + radio bar.
 class MainLayout extends StatefulWidget {
@@ -73,9 +75,14 @@ class _MainLayoutState extends State<MainLayout> {
                 bottom: 24,
                 left: 0,
                 right: 0,
-                child: SpotifyBottomBar(
-                  authService: _spotifyAuthService,
-                  playerService: _spotifyPlayerService,
+                child: Consumer<UiProvider>(
+                  builder: (context, ui, _) {
+                    if (!ui.isMusicBarVisible) return const SizedBox.shrink();
+                    return SpotifyBottomBar(
+                      authService: _spotifyAuthService,
+                      playerService: _spotifyPlayerService,
+                    );
+                  },
                 ),
               ),
               // Optional backdrop for a nicer effect
@@ -147,9 +154,14 @@ class _MainLayoutState extends State<MainLayout> {
             bottom: 16,
             left: 0,
             right: 0,
-            child: SpotifyBottomBar(
-              authService: _spotifyAuthService,
-              playerService: _spotifyPlayerService,
+            child: Consumer<UiProvider>(
+              builder: (context, ui, _) {
+                if (!ui.isMusicBarVisible) return const SizedBox.shrink();
+                return SpotifyBottomBar(
+                  authService: _spotifyAuthService,
+                  playerService: _spotifyPlayerService,
+                );
+              },
             ),
           ),
           Positioned(

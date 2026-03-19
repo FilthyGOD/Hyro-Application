@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../core/theme/app_colors.dart';
@@ -46,7 +47,7 @@ class _StatsScreenState extends State<StatsScreen> {
         );
 
         return SingleChildScrollView(
-          padding: const EdgeInsets.all(32),
+          padding: EdgeInsets.all(MediaQuery.of(context).size.width < 600 ? 16 : 32),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -139,27 +140,31 @@ class _StatsScreenState extends State<StatsScreen> {
             ],
           ),
           const SizedBox(height: 16),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.baseline,
-            textBaseline: TextBaseline.alphabetic,
-            children: [
-              Text(
-                streak.toString(),
-                style: const TextStyle(
-                  fontSize: 120,
-                  fontWeight: FontWeight.w800,
-                  color: Colors.orange,
-                  height: 1,
-                ),
+          Container(
+            height: clampDouble(MediaQuery.of(context).size.width * 0.3, 80, 150),
+            child: FittedBox(
+              fit: BoxFit.contain,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.baseline,
+                textBaseline: TextBaseline.alphabetic,
+                children: [
+                  Text(
+                    streak.toString(),
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w800,
+                      color: Colors.orange,
+                      height: 1,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  const Icon(
+                    Icons.local_fire_department,
+                    color: Colors.orange,
+                  ),
+                ],
               ),
-              const SizedBox(width: 8),
-              const Icon(
-                Icons.local_fire_department,
-                color: Colors.orange,
-                size: 48,
-              ),
-            ],
+            ),
           ),
           const SizedBox(height: 8),
           Text(

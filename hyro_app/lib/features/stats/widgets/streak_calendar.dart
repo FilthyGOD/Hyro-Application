@@ -44,29 +44,37 @@ class StreakCalendar extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text('Calendario de Rachas', style: AppTypography.h3),
-              Row(
+          LayoutBuilder(
+            builder: (context, constraints) {
+              return Wrap(
+                alignment: WrapAlignment.spaceBetween,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                spacing: 8,
+                runSpacing: 8,
                 children: [
-                  IconButton(
-                    icon: const Icon(Icons.chevron_left, color: Colors.white70),
-                    onPressed: onPreviousMonth,
-                    splashRadius: 20,
-                  ),
-                  Text('$monthName $year', style: AppTypography.bodyMedium),
-                  IconButton(
-                    icon: const Icon(
-                      Icons.chevron_right,
-                      color: Colors.white70,
-                    ),
-                    onPressed: onNextMonth,
-                    splashRadius: 20,
+                  Text('Calendario de Rachas', style: AppTypography.h3),
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      IconButton(
+                        icon: const Icon(Icons.chevron_left, color: Colors.white70),
+                        onPressed: onPreviousMonth,
+                        splashRadius: 20,
+                      ),
+                      Text('$monthName $year', style: AppTypography.bodyMedium),
+                      IconButton(
+                        icon: const Icon(
+                          Icons.chevron_right,
+                          color: Colors.white70,
+                        ),
+                        onPressed: onNextMonth,
+                        splashRadius: 20,
+                      ),
+                    ],
                   ),
                 ],
-              ),
-            ],
+              );
+            },
           ),
           const SizedBox(height: 24),
           _buildDaysOfWeek(),

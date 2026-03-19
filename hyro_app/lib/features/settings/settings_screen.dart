@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_typography.dart';
 import '../../shared/widgets/glass_card.dart';
+import 'package:provider/provider.dart';
+import '../../providers/ui_provider.dart';
 
 /// Settings screen for Pomodoro durations, notifications, and theme.
 class SettingsScreen extends StatefulWidget {
@@ -90,6 +92,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   subtitle: 'Usar tema oscuro',
                   value: _darkMode,
                   onChanged: (v) => setState(() => _darkMode = v),
+                ),
+                const Divider(height: 24),
+                Consumer<UiProvider>(
+                  builder: (context, ui, _) {
+                    return _ToggleSetting(
+                      label: 'Barra de Música',
+                      subtitle: 'Mostrar controles de música en la parte inferior',
+                      value: ui.isMusicBarVisible,
+                      onChanged: (v) => ui.setMusicBarVisibility(v),
+                    );
+                  },
                 ),
               ],
             ),

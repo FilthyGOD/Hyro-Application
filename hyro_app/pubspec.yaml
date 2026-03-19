@@ -51,6 +51,7 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^5.0.0
+  flutter_launcher_icons: ^0.14.4
   hive_generator: ^2.0.1
   build_runner: 2.4.13
   isar_generator: 3.1.0
@@ -62,3 +63,12 @@ flutter:
     - assets/audio/
     - assets/images/
     - assets/mascot/
+
+flutter_launcher_icons:
+  android: "launcher_icon"
+  ios: true
+  windows:
+    generate: true
+    image_path: "assets/images/app_icon.png"
+  image_path: "assets/images/app_icon.png"
+  min_sdk_android: 21

@@ -4,6 +4,8 @@ import '../../core/theme/app_typography.dart';
 import '../../shared/widgets/glass_card.dart';
 import 'package:provider/provider.dart';
 import '../../providers/ui_provider.dart';
+import 'settings_provider.dart';
+import '../focus/bloc/timer_cubit.dart';
 
 /// Settings screen for Pomodoro durations, notifications, and theme.
 class SettingsScreen extends StatefulWidget {
@@ -14,14 +16,10 @@ class SettingsScreen extends StatefulWidget {
 }
 
 class _SettingsScreenState extends State<SettingsScreen> {
-  double _pomodoroDuration = 25;
-  double _shortBreak = 5;
-  double _longBreak = 15;
-  bool _notifications = true;
-  bool _darkMode = true;
-
   @override
   Widget build(BuildContext context) {
+    final settings = context.watch<SettingsProvider>();
+    
     return SingleChildScrollView(
       padding:
           MediaQuery.of(context).size.width < 800
@@ -64,29 +62,38 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 const SizedBox(height: 20),
                 _SliderSetting(
                   label: 'Duración del Pomodoro',
-                  value: _pomodoroDuration,
+                  value: settings.pomodoroDuration,
                   min: 10,
                   max: 60,
                   suffix: 'min',
-                  onChanged: (v) => setState(() => _pomodoroDuration = v),
+                  onChanged: (v) {
+                    settings.setPomodoroDuration(v);
+                    context.read<TimerCubit>().refreshIfIdle();
+                  },
                 ),
                 const SizedBox(height: 16),
                 _SliderSetting(
                   label: 'Descanso Corto',
-                  value: _shortBreak,
+                  value: settings.shortBreakDuration,
                   min: 1,
                   max: 15,
                   suffix: 'min',
-                  onChanged: (v) => setState(() => _shortBreak = v),
+                  onChanged: (v) {
+                    settings.setShortBreakDuration(v);
+                    context.read<TimerCubit>().refreshIfIdle();
+                  },
                 ),
                 const SizedBox(height: 16),
                 _SliderSetting(
                   label: 'Descanso Largo',
-                  value: _longBreak,
+                  value: settings.longBreakDuration,
                   min: 5,
                   max: 30,
                   suffix: 'min',
-                  onChanged: (v) => setState(() => _longBreak = v),
+                  onChanged: (v) {
+                    settings.setLongBreakDuration(v);
+                    context.read<TimerCubit>().refreshIfIdle();
+                  },
                 ),
               ],
             ),
@@ -103,15 +110,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 _ToggleSetting(
                   label: 'Notificaciones',
                   subtitle: 'Recibe notificaciones al terminar el temporizador',
-                  value: _notifications,
-                  onChanged: (v) => setState(() => _notifications = v),
+                  value: settings.notificationsEnabled,
+                  onChanged: (v) => settings.setNotificationsEnabled(v),
                 ),
                 const Divider(height: 24),
                 _ToggleSetting(
                   label: 'Modo Oscuro',
                   subtitle: 'Usar tema oscuro',
-                  value: _darkMode,
-                  onChanged: (v) => setState(() => _darkMode = v),
+                  value: true, // App uses hardcoded dark theme for now
+                  onChanged: (v) {},
                 ),
                 const Divider(height: 24),
                 Consumer<UiProvider>(

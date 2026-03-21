@@ -2,14 +2,16 @@ import 'dart:async';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../core/constants/pomodoro_constants.dart';
 import '../../stats/stats_provider.dart';
+import '../../settings/settings_provider.dart';
 import 'timer_state.dart';
 
 /// Cubit that manages the Pomodoro timer logic.
 class TimerCubit extends Cubit<TimerState> {
   Timer? _timer;
   final StatsProvider? statsProvider;
+  final SettingsProvider? settingsProvider;
 
-  TimerCubit({this.statsProvider}) : super(const TimerState());
+  TimerCubit({this.statsProvider, this.settingsProvider}) : super(const TimerState());
 
   /// Start the timer.
   void start() {
@@ -45,10 +47,17 @@ class TimerCubit extends Cubit<TimerState> {
     );
   }
 
+  /// Refreshes the timer duration immediately if it's idle.
+  void refreshIfIdle() {
+    if (state.status == TimerStatus.idle) {
+      reset();
+    }
+  }
+
   /// Stop the timer completely and go back to idle pomodoro.
   void stop() {
     _timer?.cancel();
-    final totalSec = PomodoroConstants.pomodoroDuration * 60;
+    final totalSec = (settingsProvider?.pomodoroDuration.toInt() ?? PomodoroConstants.pomodoroDuration) * 60;
     emit(
       TimerState(
         completedSessions: state.completedSessions,
@@ -111,7 +120,7 @@ class TimerCubit extends Cubit<TimerState> {
       );
     } else {
       // Break finished → go back to pomodoro
-      final nextDuration = PomodoroConstants.pomodoroDuration * 60;
+      final nextDuration = (settingsProvider?.pomodoroDuration.toInt() ?? PomodoroConstants.pomodoroDuration) * 60;
       emit(
         state.copyWith(
           status: TimerStatus.finished,
@@ -126,11 +135,11 @@ class TimerCubit extends Cubit<TimerState> {
   int _durationForMode(TimerMode mode) {
     switch (mode) {
       case TimerMode.pomodoro:
-        return PomodoroConstants.pomodoroDuration;
+        return settingsProvider?.pomodoroDuration.toInt() ?? PomodoroConstants.pomodoroDuration;
       case TimerMode.shortBreak:
-        return PomodoroConstants.shortBreakDuration;
+        return settingsProvider?.shortBreakDuration.toInt() ?? PomodoroConstants.shortBreakDuration;
       case TimerMode.longBreak:
-        return PomodoroConstants.longBreakDuration;
+        return settingsProvider?.longBreakDuration.toInt() ?? PomodoroConstants.longBreakDuration;
     }
   }
 

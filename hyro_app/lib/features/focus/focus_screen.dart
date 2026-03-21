@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../../core/theme/app_colors.dart';
+// unused import removed
 import '../../core/theme/app_typography.dart';
 import '../../core/utils/responsive.dart';
 import 'bloc/timer_cubit.dart';
@@ -9,6 +9,7 @@ import 'widgets/circular_timer.dart';
 import 'widgets/timer_controls.dart';
 import 'widgets/mode_selector.dart';
 import 'widgets/session_info_card.dart';
+import 'widgets/completed_session_view.dart';
 
 import 'widgets/mini_task_list.dart';
 import 'widgets/activity_chart.dart';
@@ -46,6 +47,10 @@ class FocusScreen extends StatelessWidget {
           final todaysStats = statsProvider.todaysStats;
           final sessionsToday = todaysStats?.focusSessions ?? 0;
           final minutesToday = todaysStats?.focusMinutes ?? 0;
+
+          if (state.isFinished && state.mode == TimerMode.pomodoro) {
+            return CompletedSessionView(streak: streak);
+          }
 
           if (isDesktop) {
             return _DesktopLayout(
@@ -90,8 +95,10 @@ class _DesktopLayout extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          _buildHeader(context, streak),
-          const SizedBox(height: 32),
+          if (!state.isRunning) ...[
+            _buildHeader(context, streak),
+            const SizedBox(height: 32),
+          ],
           Expanded(
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -101,7 +108,7 @@ class _DesktopLayout extends StatelessWidget {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Spacer(flex: 3),
+                      Spacer(flex: state.isRunning ? 1 : 3),
                       Expanded(
                         flex: 10,
                         child: LayoutBuilder(
@@ -154,29 +161,31 @@ class _DesktopLayout extends StatelessWidget {
                           },
                         ),
                       ),
-                      const Spacer(flex: 2),
+                      Spacer(flex: state.isRunning ? 1 : 2),
                     ],
                   ),
                 ),
-                const SizedBox(width: 48),
                 // ── Right column: info cards (SCROLLABLE) ──
-                SizedBox(
-                  width: 320, // Fixed width so data cards aren't stretched
-                  child: ListView(
-                    // ListView instead of SingleChildScrollView+Column for better scroll behavior
-                    children: [
-                      SessionInfoCard(
-                        completedSessions: sessionsToday,
-                        totalFocusMinutes: minutesToday,
-                      ),
-                      const SizedBox(height: 16),
-                      const MiniTaskList(),
-                      const SizedBox(height: 16),
-                      const ActivityChart(),
-                      const SizedBox(height: 32), // Bottom padding
-                    ],
+                if (!state.isRunning) ...[
+                  const SizedBox(width: 48),
+                  SizedBox(
+                    width: 320, // Fixed width so data cards aren't stretched
+                    child: ListView(
+                      // ListView instead of SingleChildScrollView+Column for better scroll behavior
+                      children: [
+                        SessionInfoCard(
+                          completedSessions: sessionsToday,
+                          totalFocusMinutes: minutesToday,
+                        ),
+                        const SizedBox(height: 16),
+                        const MiniTaskList(),
+                        const SizedBox(height: 16),
+                        const ActivityChart(),
+                        const SizedBox(height: 32), // Bottom padding
+                      ],
+                    ),
                   ),
-                ),
+                ],
               ],
             ),
           ),
@@ -225,21 +234,6 @@ class _DesktopLayout extends StatelessWidget {
             ),
           ],
         ),
-        Row(
-          children: [
-            IconButton(
-              onPressed: () {},
-              icon: const Icon(Icons.dark_mode, color: AppColors.textSecondary),
-            ),
-            IconButton(
-              onPressed: () {},
-              icon: const Icon(
-                Icons.notifications_outlined,
-                color: AppColors.textSecondary,
-              ),
-            ),
-          ],
-        ),
       ],
     );
   }
@@ -278,20 +272,22 @@ class _MobileLayout extends StatelessWidget {
       padding: const EdgeInsets.only(top: 64, left: 20, right: 20, bottom: 20),
       child: Column(
         children: [
-          // Header
-          Text('Sesión de Trabajo Profundo', style: AppTypography.h2),
-          const SizedBox(height: 4),
-          Text(
-            'Racha de Enfoque: $streak días 🔥',
-            style: AppTypography.bodySmall,
-          ),
-          const SizedBox(height: 24),
-          // Session info
-          SessionInfoCard(
-            completedSessions: sessionsToday,
-            totalFocusMinutes: minutesToday,
-          ),
-          const SizedBox(height: 24),
+          if (!state.isRunning) ...[
+            // Header
+            Text('Sesión de Trabajo Profundo', style: AppTypography.h2),
+            const SizedBox(height: 4),
+            Text(
+              'Racha de Enfoque: $streak días 🔥',
+              style: AppTypography.bodySmall,
+            ),
+            const SizedBox(height: 24),
+            // Session info
+            SessionInfoCard(
+              completedSessions: sessionsToday,
+              totalFocusMinutes: minutesToday,
+            ),
+            const SizedBox(height: 24),
+          ],
           // Timer
           LayoutBuilder(
             builder: (context, constraints) {
@@ -320,10 +316,12 @@ class _MobileLayout extends StatelessWidget {
           const SizedBox(height: 20),
           // Mode selector
           ModeSelector(currentMode: state.mode, onModeChanged: cubit.setMode),
-          const SizedBox(height: 24),
-          const MiniTaskList(),
-          const SizedBox(height: 16),
-          const ActivityChart(),
+          if (!state.isRunning) ...[
+            const SizedBox(height: 24),
+            const MiniTaskList(),
+            const SizedBox(height: 16),
+            const ActivityChart(),
+          ],
           const SizedBox(height: 80), // space for radio bar
         ],
       ),

@@ -13,6 +13,7 @@ import 'features/profile/profile_screen.dart';
 import 'features/tasks/tasks_provider.dart';
 import 'features/stats/stats_provider.dart';
 import 'features/mascot/mascot_controller.dart';
+import 'features/settings/settings_provider.dart';
 import 'providers/ui_provider.dart';
 import 'package:isar/isar.dart';
 import 'providers/auth_provider.dart';
@@ -34,6 +35,7 @@ class HyroApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => TaskProvider()),
         ChangeNotifierProvider(create: (_) => StatsProvider()),
         ChangeNotifierProvider(create: (_) => MascotController()),
+        ChangeNotifierProvider(create: (_) => SettingsProvider()),
         ChangeNotifierProvider(create: (_) => UiProvider()),
       ],
       child: MultiBlocProvider(
@@ -41,7 +43,10 @@ class HyroApp extends StatelessWidget {
           BlocProvider(
             create:
                 (context) =>
-                    TimerCubit(statsProvider: context.read<StatsProvider>()),
+                    TimerCubit(
+                      statsProvider: context.read<StatsProvider>(),
+                      settingsProvider: context.read<SettingsProvider>(),
+                    ),
           ),
         ],
         child: MaterialApp(

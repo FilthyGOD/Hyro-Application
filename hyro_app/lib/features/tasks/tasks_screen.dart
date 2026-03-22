@@ -77,7 +77,7 @@ class _TasksScreenState extends State<TasksScreen> {
                         children: [
                           _buildLeftContent(),
                           const SizedBox(height: 32),
-                          _buildTaskList(),
+                          _buildRightContent(),
                         ],
                       ),
                     ),

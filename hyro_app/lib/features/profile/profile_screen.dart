@@ -7,6 +7,7 @@ import '../missions/models/daily_mission.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_typography.dart';
 import '../../shared/widgets/glass_card.dart';
+import '../../providers/ui_provider.dart';
 
 /// Profile screen showing user info, level/XP, coins, and daily missions.
 class ProfileScreen extends StatelessWidget {
@@ -217,6 +218,12 @@ class ProfileScreen extends StatelessWidget {
               icon: const Icon(Icons.logout),
               label: const Text('Cerrar Sesión'),
             ),
+          ),
+          // ── Music Bar Spacing ──
+          Consumer<UiProvider>(
+            builder: (context, ui, _) {
+              return SizedBox(height: ui.isMusicBarVisible ? 100 : 20);
+            },
           ),
         ],
       ),

@@ -36,11 +36,6 @@ class Sidebar extends StatelessWidget {
       activeIcon: Icons.storefront,
       label: 'Tienda',
     ),
-    _SidebarItemData(
-      icon: Icons.person_outline,
-      activeIcon: Icons.person,
-      label: 'Perfil',
-    ),
   ];
 
   @override
@@ -74,7 +69,7 @@ class Sidebar extends StatelessWidget {
           _SidebarItem(
             icon: Icons.settings_outlined,
             label: 'Ajustes',
-            isActive: false,
+            isActive: selectedIndex == 5,
             collapsed: collapsed,
             onTap: () => onItemSelected(5),
           ),
@@ -92,17 +87,13 @@ class Sidebar extends StatelessWidget {
       padding: EdgeInsets.symmetric(horizontal: collapsed ? 16 : 20),
       child: Row(
         children: [
-          Container(
-            width: 36,
-            height: 36,
-            decoration: BoxDecoration(
-              color: AppColors.primary,
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: const Icon(
-              Icons.auto_awesome,
-              color: Colors.white,
-              size: 20,
+          ClipRRect(
+            borderRadius: BorderRadius.circular(10),
+            child: Image.asset(
+              'assets/images/app_icon.png',
+              width: 36,
+              height: 36,
+              fit: BoxFit.cover,
             ),
           ),
           if (!collapsed) ...[
@@ -115,39 +106,49 @@ class Sidebar extends StatelessWidget {
   }
 
   Widget _buildUserInfo() {
+    final isActive = selectedIndex == 4;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: Container(
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: AppColors.surface,
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: AppColors.cardBorder),
-        ),
-        child: Row(
-          children: [
-            CircleAvatar(
-              radius: 16,
-              backgroundColor: AppColors.primary,
-              child: Text('H', style: AppTypography.labelLarge),
-            ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Usuario',
-                    style: AppTypography.labelLarge.copyWith(fontSize: 13),
-                  ),
-                  Text(
-                    'Plan Gratis',
-                    style: AppTypography.bodySmall.copyWith(fontSize: 11),
-                  ),
-                ],
+          onTap: () => onItemSelected(4),
+          child: Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: isActive ? AppColors.sidebarActive : AppColors.surface,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: isActive ? AppColors.primary : AppColors.cardBorder,
               ),
             ),
-          ],
+            child: Row(
+              children: [
+                CircleAvatar(
+                  radius: 16,
+                  backgroundColor: AppColors.primary,
+                  child: Text('H', style: AppTypography.labelLarge),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Usuario',
+                        style: AppTypography.labelLarge.copyWith(fontSize: 13),
+                      ),
+                      Text(
+                        'Plan Gratis',
+                        style: AppTypography.bodySmall.copyWith(fontSize: 11),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
         ),
       ),
     );

@@ -1,6 +1,7 @@
 import 'package:equatable/equatable.dart';
 
 enum TimerStatus { idle, running, paused, finished }
+
 enum TimerMode { pomodoro, shortBreak, longBreak }
 
 class TimerState extends Equatable {
@@ -48,11 +49,11 @@ class TimerState extends Equatable {
 
   @override
   List<Object?> get props => [
-        status,
-        mode,
-        remainingSeconds,
-        totalSeconds,
-        completedSessions,
-        totalFocusMinutes,
-      ];
+    status,
+    mode,
+    remainingSeconds,
+    totalSeconds,
+    completedSessions,
+    totalFocusMinutes,
+  ];
 }

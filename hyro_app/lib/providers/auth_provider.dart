@@ -46,7 +46,8 @@ class AuthProvider extends ChangeNotifier {
     });
   }
 
-  /// After Supabase OAuth sign-in, create/update the local Isar user.
+  /// After Supabase OAuth sign-in, create/update the local Isar user
+  /// and sync local guest progress to the cloud (only on first sign-in).
   Future<void> _syncSupabaseUserToIsar(User supabaseUser) async {
     final email = supabaseUser.email ?? supabaseUser.id;
     final name =
@@ -54,6 +55,19 @@ class AuthProvider extends ChangeNotifier {
         supabaseUser.userMetadata?['name'] as String? ??
         email.split('@').first;
 
+    // 1. Capturar datos del guest local ANTES de cambiar usuarios
+    final guestUser =
+        await isar.userProfiles
+            .filter()
+            .usernameOrEmailEqualTo('guest_local')
+            .findFirst();
+
+    final localNivel = guestUser?.nivel ?? 1;
+    final localExp = guestUser?.experiencia ?? 0;
+    final localMonedas = guestUser?.monedas ?? 0;
+    final localCompras = guestUser?.comprasLocales ?? [];
+
+    // 2. Crear/actualizar el usuario Supabase en Isar
     final existingUser =
         await isar.userProfiles
             .filter()
@@ -87,6 +101,19 @@ class AuthProvider extends ChangeNotifier {
 
       await isar.userProfiles.put(user);
     });
+
+    // 3. Sincronizar datos locales a Supabase (solo tiene efecto la primera vez)
+    try {
+      await Supabase.instance.client.rpc('sincronizar_perfil_local', params: {
+        'p_nivel': localNivel,
+        'p_experiencia': localExp,
+        'p_monedas': localMonedas,
+        'p_compras_ids': localCompras,
+      });
+      debugPrint('✅ Datos locales sincronizados a Supabase (nivel: $localNivel, xp: $localExp, monedas: $localMonedas, compras: $localCompras)');
+    } catch (e) {
+      debugPrint('⚠️ Error sincronizando datos locales a Supabase: $e');
+    }
 
     _currentUser = user;
     _isLoading = false;

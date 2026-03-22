@@ -48,7 +48,12 @@ class FocusScreen extends StatelessWidget {
           final sessionsToday = todaysStats?.focusSessions ?? 0;
           final minutesToday = todaysStats?.focusMinutes ?? 0;
 
-          if (state.isFinished && state.mode == TimerMode.pomodoro) {
+          final isPomodoroFinished =
+              state.isFinished &&
+              (state.mode == TimerMode.shortBreak ||
+                  state.mode == TimerMode.longBreak);
+
+          if (isPomodoroFinished) {
             return CompletedSessionView(streak: streak);
           }
 

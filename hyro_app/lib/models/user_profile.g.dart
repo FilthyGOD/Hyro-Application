@@ -17,29 +17,54 @@ const UserProfileSchema = CollectionSchema(
   name: r'UserProfile',
   id: 4738427352541298891,
   properties: {
-    r'isActivelyLoggedIn': PropertySchema(
+    r'comprasLocales': PropertySchema(
       id: 0,
+      name: r'comprasLocales',
+      type: IsarType.longList,
+    ),
+    r'experiencia': PropertySchema(
+      id: 1,
+      name: r'experiencia',
+      type: IsarType.long,
+    ),
+    r'isActivelyLoggedIn': PropertySchema(
+      id: 2,
       name: r'isActivelyLoggedIn',
       type: IsarType.bool,
     ),
+    r'itemEquipadoLocal': PropertySchema(
+      id: 3,
+      name: r'itemEquipadoLocal',
+      type: IsarType.long,
+    ),
+    r'monedas': PropertySchema(
+      id: 4,
+      name: r'monedas',
+      type: IsarType.long,
+    ),
     r'name': PropertySchema(
-      id: 1,
+      id: 5,
       name: r'name',
       type: IsarType.string,
     ),
+    r'nivel': PropertySchema(
+      id: 6,
+      name: r'nivel',
+      type: IsarType.long,
+    ),
     r'schoolCode': PropertySchema(
-      id: 2,
+      id: 7,
       name: r'schoolCode',
       type: IsarType.string,
     ),
     r'type': PropertySchema(
-      id: 3,
+      id: 8,
       name: r'type',
       type: IsarType.byte,
       enumMap: _UserProfiletypeEnumValueMap,
     ),
     r'usernameOrEmail': PropertySchema(
-      id: 4,
+      id: 9,
       name: r'usernameOrEmail',
       type: IsarType.string,
     )
@@ -78,6 +103,7 @@ int _userProfileEstimateSize(
   Map<Type, List<int>> allOffsets,
 ) {
   var bytesCount = offsets.last;
+  bytesCount += 3 + object.comprasLocales.length * 8;
   {
     final value = object.name;
     if (value != null) {
@@ -100,11 +126,16 @@ void _userProfileSerialize(
   List<int> offsets,
   Map<Type, List<int>> allOffsets,
 ) {
-  writer.writeBool(offsets[0], object.isActivelyLoggedIn);
-  writer.writeString(offsets[1], object.name);
-  writer.writeString(offsets[2], object.schoolCode);
-  writer.writeByte(offsets[3], object.type.index);
-  writer.writeString(offsets[4], object.usernameOrEmail);
+  writer.writeLongList(offsets[0], object.comprasLocales);
+  writer.writeLong(offsets[1], object.experiencia);
+  writer.writeBool(offsets[2], object.isActivelyLoggedIn);
+  writer.writeLong(offsets[3], object.itemEquipadoLocal);
+  writer.writeLong(offsets[4], object.monedas);
+  writer.writeString(offsets[5], object.name);
+  writer.writeLong(offsets[6], object.nivel);
+  writer.writeString(offsets[7], object.schoolCode);
+  writer.writeByte(offsets[8], object.type.index);
+  writer.writeString(offsets[9], object.usernameOrEmail);
 }
 
 UserProfile _userProfileDeserialize(
@@ -114,14 +145,19 @@ UserProfile _userProfileDeserialize(
   Map<Type, List<int>> allOffsets,
 ) {
   final object = UserProfile();
+  object.comprasLocales = reader.readLongList(offsets[0]) ?? [];
+  object.experiencia = reader.readLong(offsets[1]);
   object.id = id;
-  object.isActivelyLoggedIn = reader.readBool(offsets[0]);
-  object.name = reader.readStringOrNull(offsets[1]);
-  object.schoolCode = reader.readStringOrNull(offsets[2]);
+  object.isActivelyLoggedIn = reader.readBool(offsets[2]);
+  object.itemEquipadoLocal = reader.readLongOrNull(offsets[3]);
+  object.monedas = reader.readLong(offsets[4]);
+  object.name = reader.readStringOrNull(offsets[5]);
+  object.nivel = reader.readLong(offsets[6]);
+  object.schoolCode = reader.readStringOrNull(offsets[7]);
   object.type =
-      _UserProfiletypeValueEnumMap[reader.readByteOrNull(offsets[3])] ??
+      _UserProfiletypeValueEnumMap[reader.readByteOrNull(offsets[8])] ??
           UserType.personal;
-  object.usernameOrEmail = reader.readString(offsets[4]);
+  object.usernameOrEmail = reader.readString(offsets[9]);
   return object;
 }
 
@@ -133,15 +169,25 @@ P _userProfileDeserializeProp<P>(
 ) {
   switch (propertyId) {
     case 0:
-      return (reader.readBool(offset)) as P;
+      return (reader.readLongList(offset) ?? []) as P;
     case 1:
-      return (reader.readStringOrNull(offset)) as P;
+      return (reader.readLong(offset)) as P;
     case 2:
-      return (reader.readStringOrNull(offset)) as P;
+      return (reader.readBool(offset)) as P;
     case 3:
+      return (reader.readLongOrNull(offset)) as P;
+    case 4:
+      return (reader.readLong(offset)) as P;
+    case 5:
+      return (reader.readStringOrNull(offset)) as P;
+    case 6:
+      return (reader.readLong(offset)) as P;
+    case 7:
+      return (reader.readStringOrNull(offset)) as P;
+    case 8:
       return (_UserProfiletypeValueEnumMap[reader.readByteOrNull(offset)] ??
           UserType.personal) as P;
-    case 4:
+    case 9:
       return (reader.readString(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -352,6 +398,207 @@ extension UserProfileQueryWhere
 
 extension UserProfileQueryFilter
     on QueryBuilder<UserProfile, UserProfile, QFilterCondition> {
+  QueryBuilder<UserProfile, UserProfile, QAfterFilterCondition>
+      comprasLocalesElementEqualTo(int value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'comprasLocales',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<UserProfile, UserProfile, QAfterFilterCondition>
+      comprasLocalesElementGreaterThan(
+    int value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'comprasLocales',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<UserProfile, UserProfile, QAfterFilterCondition>
+      comprasLocalesElementLessThan(
+    int value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'comprasLocales',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<UserProfile, UserProfile, QAfterFilterCondition>
+      comprasLocalesElementBetween(
+    int lower,
+    int upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'comprasLocales',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<UserProfile, UserProfile, QAfterFilterCondition>
+      comprasLocalesLengthEqualTo(int length) {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'comprasLocales',
+        length,
+        true,
+        length,
+        true,
+      );
+    });
+  }
+
+  QueryBuilder<UserProfile, UserProfile, QAfterFilterCondition>
+      comprasLocalesIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'comprasLocales',
+        0,
+        true,
+        0,
+        true,
+      );
+    });
+  }
+
+  QueryBuilder<UserProfile, UserProfile, QAfterFilterCondition>
+      comprasLocalesIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'comprasLocales',
+        0,
+        false,
+        999999,
+        true,
+      );
+    });
+  }
+
+  QueryBuilder<UserProfile, UserProfile, QAfterFilterCondition>
+      comprasLocalesLengthLessThan(
+    int length, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'comprasLocales',
+        0,
+        true,
+        length,
+        include,
+      );
+    });
+  }
+
+  QueryBuilder<UserProfile, UserProfile, QAfterFilterCondition>
+      comprasLocalesLengthGreaterThan(
+    int length, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'comprasLocales',
+        length,
+        include,
+        999999,
+        true,
+      );
+    });
+  }
+
+  QueryBuilder<UserProfile, UserProfile, QAfterFilterCondition>
+      comprasLocalesLengthBetween(
+    int lower,
+    int upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'comprasLocales',
+        lower,
+        includeLower,
+        upper,
+        includeUpper,
+      );
+    });
+  }
+
+  QueryBuilder<UserProfile, UserProfile, QAfterFilterCondition>
+      experienciaEqualTo(int value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'experiencia',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<UserProfile, UserProfile, QAfterFilterCondition>
+      experienciaGreaterThan(
+    int value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'experiencia',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<UserProfile, UserProfile, QAfterFilterCondition>
+      experienciaLessThan(
+    int value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'experiencia',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<UserProfile, UserProfile, QAfterFilterCondition>
+      experienciaBetween(
+    int lower,
+    int upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'experiencia',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
   QueryBuilder<UserProfile, UserProfile, QAfterFilterCondition> idEqualTo(
       Id value) {
     return QueryBuilder.apply(this, (query) {
@@ -411,6 +658,134 @@ extension UserProfileQueryFilter
       return query.addFilterCondition(FilterCondition.equalTo(
         property: r'isActivelyLoggedIn',
         value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<UserProfile, UserProfile, QAfterFilterCondition>
+      itemEquipadoLocalIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'itemEquipadoLocal',
+      ));
+    });
+  }
+
+  QueryBuilder<UserProfile, UserProfile, QAfterFilterCondition>
+      itemEquipadoLocalIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'itemEquipadoLocal',
+      ));
+    });
+  }
+
+  QueryBuilder<UserProfile, UserProfile, QAfterFilterCondition>
+      itemEquipadoLocalEqualTo(int? value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'itemEquipadoLocal',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<UserProfile, UserProfile, QAfterFilterCondition>
+      itemEquipadoLocalGreaterThan(
+    int? value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'itemEquipadoLocal',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<UserProfile, UserProfile, QAfterFilterCondition>
+      itemEquipadoLocalLessThan(
+    int? value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'itemEquipadoLocal',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<UserProfile, UserProfile, QAfterFilterCondition>
+      itemEquipadoLocalBetween(
+    int? lower,
+    int? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'itemEquipadoLocal',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<UserProfile, UserProfile, QAfterFilterCondition> monedasEqualTo(
+      int value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'monedas',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<UserProfile, UserProfile, QAfterFilterCondition>
+      monedasGreaterThan(
+    int value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'monedas',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<UserProfile, UserProfile, QAfterFilterCondition> monedasLessThan(
+    int value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'monedas',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<UserProfile, UserProfile, QAfterFilterCondition> monedasBetween(
+    int lower,
+    int upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'monedas',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
       ));
     });
   }
@@ -559,6 +934,60 @@ extension UserProfileQueryFilter
       return query.addFilterCondition(FilterCondition.greaterThan(
         property: r'name',
         value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<UserProfile, UserProfile, QAfterFilterCondition> nivelEqualTo(
+      int value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'nivel',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<UserProfile, UserProfile, QAfterFilterCondition>
+      nivelGreaterThan(
+    int value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'nivel',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<UserProfile, UserProfile, QAfterFilterCondition> nivelLessThan(
+    int value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'nivel',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<UserProfile, UserProfile, QAfterFilterCondition> nivelBetween(
+    int lower,
+    int upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'nivel',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
       ));
     });
   }
@@ -915,6 +1344,18 @@ extension UserProfileQueryLinks
 
 extension UserProfileQuerySortBy
     on QueryBuilder<UserProfile, UserProfile, QSortBy> {
+  QueryBuilder<UserProfile, UserProfile, QAfterSortBy> sortByExperiencia() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'experiencia', Sort.asc);
+    });
+  }
+
+  QueryBuilder<UserProfile, UserProfile, QAfterSortBy> sortByExperienciaDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'experiencia', Sort.desc);
+    });
+  }
+
   QueryBuilder<UserProfile, UserProfile, QAfterSortBy>
       sortByIsActivelyLoggedIn() {
     return QueryBuilder.apply(this, (query) {
@@ -929,6 +1370,32 @@ extension UserProfileQuerySortBy
     });
   }
 
+  QueryBuilder<UserProfile, UserProfile, QAfterSortBy>
+      sortByItemEquipadoLocal() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'itemEquipadoLocal', Sort.asc);
+    });
+  }
+
+  QueryBuilder<UserProfile, UserProfile, QAfterSortBy>
+      sortByItemEquipadoLocalDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'itemEquipadoLocal', Sort.desc);
+    });
+  }
+
+  QueryBuilder<UserProfile, UserProfile, QAfterSortBy> sortByMonedas() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'monedas', Sort.asc);
+    });
+  }
+
+  QueryBuilder<UserProfile, UserProfile, QAfterSortBy> sortByMonedasDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'monedas', Sort.desc);
+    });
+  }
+
   QueryBuilder<UserProfile, UserProfile, QAfterSortBy> sortByName() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'name', Sort.asc);
@@ -938,6 +1405,18 @@ extension UserProfileQuerySortBy
   QueryBuilder<UserProfile, UserProfile, QAfterSortBy> sortByNameDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'name', Sort.desc);
+    });
+  }
+
+  QueryBuilder<UserProfile, UserProfile, QAfterSortBy> sortByNivel() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'nivel', Sort.asc);
+    });
+  }
+
+  QueryBuilder<UserProfile, UserProfile, QAfterSortBy> sortByNivelDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'nivel', Sort.desc);
     });
   }
 
@@ -981,6 +1460,18 @@ extension UserProfileQuerySortBy
 
 extension UserProfileQuerySortThenBy
     on QueryBuilder<UserProfile, UserProfile, QSortThenBy> {
+  QueryBuilder<UserProfile, UserProfile, QAfterSortBy> thenByExperiencia() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'experiencia', Sort.asc);
+    });
+  }
+
+  QueryBuilder<UserProfile, UserProfile, QAfterSortBy> thenByExperienciaDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'experiencia', Sort.desc);
+    });
+  }
+
   QueryBuilder<UserProfile, UserProfile, QAfterSortBy> thenById() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'id', Sort.asc);
@@ -1007,6 +1498,32 @@ extension UserProfileQuerySortThenBy
     });
   }
 
+  QueryBuilder<UserProfile, UserProfile, QAfterSortBy>
+      thenByItemEquipadoLocal() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'itemEquipadoLocal', Sort.asc);
+    });
+  }
+
+  QueryBuilder<UserProfile, UserProfile, QAfterSortBy>
+      thenByItemEquipadoLocalDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'itemEquipadoLocal', Sort.desc);
+    });
+  }
+
+  QueryBuilder<UserProfile, UserProfile, QAfterSortBy> thenByMonedas() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'monedas', Sort.asc);
+    });
+  }
+
+  QueryBuilder<UserProfile, UserProfile, QAfterSortBy> thenByMonedasDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'monedas', Sort.desc);
+    });
+  }
+
   QueryBuilder<UserProfile, UserProfile, QAfterSortBy> thenByName() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'name', Sort.asc);
@@ -1016,6 +1533,18 @@ extension UserProfileQuerySortThenBy
   QueryBuilder<UserProfile, UserProfile, QAfterSortBy> thenByNameDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'name', Sort.desc);
+    });
+  }
+
+  QueryBuilder<UserProfile, UserProfile, QAfterSortBy> thenByNivel() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'nivel', Sort.asc);
+    });
+  }
+
+  QueryBuilder<UserProfile, UserProfile, QAfterSortBy> thenByNivelDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'nivel', Sort.desc);
     });
   }
 
@@ -1059,6 +1588,18 @@ extension UserProfileQuerySortThenBy
 
 extension UserProfileQueryWhereDistinct
     on QueryBuilder<UserProfile, UserProfile, QDistinct> {
+  QueryBuilder<UserProfile, UserProfile, QDistinct> distinctByComprasLocales() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'comprasLocales');
+    });
+  }
+
+  QueryBuilder<UserProfile, UserProfile, QDistinct> distinctByExperiencia() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'experiencia');
+    });
+  }
+
   QueryBuilder<UserProfile, UserProfile, QDistinct>
       distinctByIsActivelyLoggedIn() {
     return QueryBuilder.apply(this, (query) {
@@ -1066,10 +1607,29 @@ extension UserProfileQueryWhereDistinct
     });
   }
 
+  QueryBuilder<UserProfile, UserProfile, QDistinct>
+      distinctByItemEquipadoLocal() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'itemEquipadoLocal');
+    });
+  }
+
+  QueryBuilder<UserProfile, UserProfile, QDistinct> distinctByMonedas() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'monedas');
+    });
+  }
+
   QueryBuilder<UserProfile, UserProfile, QDistinct> distinctByName(
       {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'name', caseSensitive: caseSensitive);
+    });
+  }
+
+  QueryBuilder<UserProfile, UserProfile, QDistinct> distinctByNivel() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'nivel');
     });
   }
 
@@ -1103,6 +1663,19 @@ extension UserProfileQueryProperty
     });
   }
 
+  QueryBuilder<UserProfile, List<int>, QQueryOperations>
+      comprasLocalesProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'comprasLocales');
+    });
+  }
+
+  QueryBuilder<UserProfile, int, QQueryOperations> experienciaProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'experiencia');
+    });
+  }
+
   QueryBuilder<UserProfile, bool, QQueryOperations>
       isActivelyLoggedInProperty() {
     return QueryBuilder.apply(this, (query) {
@@ -1110,9 +1683,28 @@ extension UserProfileQueryProperty
     });
   }
 
+  QueryBuilder<UserProfile, int?, QQueryOperations>
+      itemEquipadoLocalProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'itemEquipadoLocal');
+    });
+  }
+
+  QueryBuilder<UserProfile, int, QQueryOperations> monedasProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'monedas');
+    });
+  }
+
   QueryBuilder<UserProfile, String?, QQueryOperations> nameProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'name');
+    });
+  }
+
+  QueryBuilder<UserProfile, int, QQueryOperations> nivelProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'nivel');
     });
   }
 

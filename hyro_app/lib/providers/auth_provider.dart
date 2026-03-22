@@ -25,6 +25,8 @@ class AuthProvider extends ChangeNotifier {
   bool get isLoading => _isLoading;
   bool get isAuthenticated =>
       _currentUser != null && _currentUser!.isActivelyLoggedIn;
+      
+  bool get isGuest => _currentUser?.usernameOrEmail == 'guest_local';
 
   /// Returns the Supabase user UUID, or null if not signed in via Supabase.
   String? get supabaseUserId => Supabase.instance.client.auth.currentUser?.id;
@@ -114,7 +116,45 @@ class AuthProvider extends ChangeNotifier {
     // Artificial delay for splash screen
     await Future.delayed(const Duration(seconds: 5));
 
-    _currentUser = activeUser;
+    if (activeUser != null) {
+      _currentUser = activeUser;
+      _isLoading = false;
+      notifyListeners();
+    } else {
+      await _loginAsGuest();
+    }
+  }
+
+  Future<void> _loginAsGuest() async {
+    final existingGuest = await isar.userProfiles
+        .filter()
+        .usernameOrEmailEqualTo('guest_local')
+        .findFirst();
+
+    final guest = existingGuest ?? UserProfile()
+      ..usernameOrEmail = 'guest_local'
+      ..name = 'Invitado'
+      ..type = UserType.personal
+      ..isActivelyLoggedIn = true;
+
+    if (existingGuest != null) {
+      guest.isActivelyLoggedIn = true;
+    }
+
+    await isar.writeTxn(() async {
+      final activeUsers = await isar.userProfiles
+          .filter()
+          .isActivelyLoggedInEqualTo(true)
+          .findAll();
+
+      for (var u in activeUsers) {
+        u.isActivelyLoggedIn = false;
+        await isar.userProfiles.put(u);
+      }
+      await isar.userProfiles.put(guest);
+    });
+
+    _currentUser = guest;
     _isLoading = false;
     notifyListeners();
   }
@@ -275,8 +315,10 @@ class AuthProvider extends ChangeNotifier {
         await isar.userProfiles.put(_currentUser!);
       });
       _currentUser = null;
-      notifyListeners();
     }
+    
+    // Fallback to guest mode
+    await _loginAsGuest();
   }
 
   @override

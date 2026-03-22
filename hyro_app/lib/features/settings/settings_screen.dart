@@ -63,7 +63,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 _SliderSetting(
                   label: 'Duración del Pomodoro',
                   value: settings.pomodoroDuration,
-                  min: 10,
+                  min: 1,
                   max: 60,
                   suffix: 'min',
                   onChanged: (v) {

@@ -21,4 +21,11 @@ class UserProfile {
 
   // Track if they are currently logged in
   bool isActivelyLoggedIn = true;
+
+  // Guest Mode local gamification data
+  int nivel = 1;
+  int experiencia = 0;
+  int monedas = 0;
+  List<int> comprasLocales = [];
+  int? itemEquipadoLocal;
 }

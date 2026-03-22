@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../../screens/auth/login_screen.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/profile_provider.dart';
 import '../missions/missions_provider.dart';
@@ -35,14 +36,35 @@ class ProfileScreen extends StatelessWidget {
           ),
           const SizedBox(height: 16),
           Text(
-            auth.currentUser?.name ?? 'Usuario',
+            auth.isGuest ? 'Modo Invitado' : (auth.currentUser?.name ?? 'Usuario'),
             style: AppTypography.h2,
           ),
           const SizedBox(height: 4),
-          Text(
-            auth.currentUser?.usernameOrEmail ?? 'correo@hyro.app',
-            style: AppTypography.bodyMedium,
-          ),
+          if (!auth.isGuest)
+            Text(
+              auth.currentUser?.usernameOrEmail ?? '',
+              style: AppTypography.bodyMedium,
+            )
+          else
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+              decoration: BoxDecoration(
+                color: Colors.amber.withOpacity(0.2),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.amber.withOpacity(0.5)),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                   const Icon(Icons.cloud_off, color: Colors.amber, size: 14),
+                   const SizedBox(width: 6),
+                   Text(
+                     'Progreso Local',
+                     style: AppTypography.bodySmall.copyWith(color: Colors.amber, fontWeight: FontWeight.bold),
+                   ),
+                ],
+              ),
+            ),
           const SizedBox(height: 24),
 
           // ── Level & XP Bar ──
@@ -208,17 +230,39 @@ class ProfileScreen extends StatelessWidget {
           ),
           const SizedBox(height: 32),
 
-          // ── Logout ──
-          SizedBox(
-            width: double.infinity,
-            child: OutlinedButton.icon(
-              onPressed: () {
-                context.read<AuthProvider>().logout();
-              },
-              icon: const Icon(Icons.logout),
-              label: const Text('Cerrar Sesión'),
+          // ── Action Button (Login for Guests, Logout for Users) ──
+          if (auth.isGuest)
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                onPressed: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(builder: (_) => const LoginScreen()),
+                  );
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                ),
+                icon: const Icon(Icons.cloud_sync, color: Colors.white),
+                label: Text(
+                  'Iniciar Sesión para Sincronizar',
+                  style: AppTypography.h3.copyWith(color: Colors.white, fontSize: 16),
+                ),
+              ),
+            )
+          else
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton.icon(
+                onPressed: () {
+                  context.read<AuthProvider>().logout();
+                },
+                icon: const Icon(Icons.logout),
+                label: const Text('Cerrar Sesión'),
+              ),
             ),
-          ),
           // ── Music Bar Spacing ──
           Consumer<UiProvider>(
             builder: (context, ui, _) {
@@ -333,9 +377,7 @@ class _MissionCard extends StatelessWidget {
               child: ElevatedButton(
                 onPressed: () async {
                   final userId = auth.supabaseUserId;
-                  if (userId != null) {
-                    await missions.claimMission(mission.id, userId);
-                  }
+                  await missions.claimMission(mission.id, userId);
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.amber,

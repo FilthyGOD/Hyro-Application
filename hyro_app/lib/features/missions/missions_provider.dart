@@ -178,7 +178,7 @@ class MissionsProvider extends ChangeNotifier {
   // ─── Claiming ──────────────────────────────────────────────────────
 
   /// Claims a completed mission, granting XP via ProfileProvider.
-  Future<bool> claimMission(String missionId, String userId) async {
+  Future<bool> claimMission(String missionId, String? userId) async {
     final mission = missions.firstWhere(
       (m) => m.id == missionId,
       orElse: () => throw Exception('Misión no encontrada: $missionId'),

@@ -27,6 +27,9 @@ class _LoginScreenState extends State<LoginScreen> {
 
     if (mounted) {
       setState(() => _isLoading = false);
+      if (auth.isAuthenticated && !auth.isGuest && Navigator.of(context).canPop()) {
+        Navigator.of(context).pop();
+      }
     }
   }
 
@@ -42,14 +45,27 @@ class _LoginScreenState extends State<LoginScreen> {
     return Scaffold(
       backgroundColor: const Color(0xFF101422), // Deep navy from designs
       body: SafeArea(
-        child: LayoutBuilder(
-          builder: (context, constraints) {
-            if (constraints.maxWidth >= 850) {
-              return _buildDesktopLayout();
-            } else {
-              return _buildMobileLayout();
-            }
-          },
+        child: Stack(
+          children: [
+            LayoutBuilder(
+              builder: (context, constraints) {
+                if (constraints.maxWidth >= 850) {
+                  return _buildDesktopLayout();
+                } else {
+                  return _buildMobileLayout();
+                }
+              },
+            ),
+            if (Navigator.of(context).canPop())
+              Positioned(
+                top: 16,
+                left: 16,
+                child: IconButton(
+                  icon: const Icon(Icons.close, color: Colors.white, size: 30),
+                  onPressed: () => Navigator.of(context).pop(),
+                ),
+              ),
+          ],
         ),
       ),
     );
@@ -488,6 +504,9 @@ class _LoginScreenState extends State<LoginScreen> {
     await auth.signInWithGoogle();
     if (mounted) {
       setState(() => _isLoading = false);
+      if (auth.isAuthenticated && !auth.isGuest && Navigator.of(context).canPop()) {
+        Navigator.of(context).pop();
+      }
     }
   }
 

@@ -121,34 +121,34 @@ class _TasksScreenState extends State<TasksScreen> {
         final streak = statsProvider.currentStreak;
         final formattedDate = _getFormattedDate();
 
-        return Row(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            if (isMobile) const SizedBox(width: 40),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('Mis Pendientes', style: AppTypography.h1),
-                  const SizedBox(height: 4),
-                  FittedBox(
-                    fit: BoxFit.scaleDown,
-                    alignment: Alignment.centerLeft,
-                    child: Row(
-                      children: [
-                        Text(
-                          '$formattedDate • Racha de Enfoque: $streak días ',
-                          style: AppTypography.bodySmall,
-                        ),
-                        if (streak > 0)
-                          const Text('🔥', style: TextStyle(fontSize: 14)),
-                      ],
-                    ),
-                  ),
-                ],
+        return SizedBox(
+          width: double.infinity,
+          child: Column(
+            crossAxisAlignment: isMobile ? CrossAxisAlignment.center : CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Mis Pendientes',
+                style: isMobile ? AppTypography.h2 : AppTypography.h1,
+                textAlign: isMobile ? TextAlign.center : TextAlign.start,
               ),
-            ),
-          ],
+              const SizedBox(height: 4),
+              FittedBox(
+                fit: BoxFit.scaleDown,
+                alignment: isMobile ? Alignment.center : Alignment.centerLeft,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      '$formattedDate • Racha de Enfoque: $streak días ',
+                      style: AppTypography.bodySmall,
+                    ),
+                    if (streak > 0)
+                      const Text('🔥', style: TextStyle(fontSize: 14)),
+                  ],
+                ),
+              ),
+            ],
+          ),
         );
       },
     );

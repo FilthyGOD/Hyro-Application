@@ -22,6 +22,31 @@ class TimerControls extends StatelessWidget {
     required this.onStop,
   });
 
+  void _confirmAction(BuildContext context, String title, String content, VoidCallback onConfirm) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppColors.surface,
+        title: Text(title, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+        content: Text(content, style: const TextStyle(color: Colors.white70)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancelar', style: TextStyle(color: Colors.white54)),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(ctx);
+              onConfirm();
+            },
+            style: ElevatedButton.styleFrom(backgroundColor: AppColors.timerColor),
+            child: const Text('Confirmar', style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Row(
@@ -31,7 +56,13 @@ class TimerControls extends StatelessWidget {
         _ControlButton(
           icon: Icons.replay,
           size: 48,
-          onTap: onReset,
+          onTap: () {
+            if (isRunning || isPaused) {
+              _confirmAction(context, 'Reiniciar', '¿Reiniciar el temporizador?', onReset);
+            } else {
+              onReset();
+            }
+          },
           backgroundColor: AppColors.surfaceLight,
         ),
         const SizedBox(width: 24),
@@ -44,12 +75,15 @@ class TimerControls extends StatelessWidget {
                   ? Icons.play_arrow
                   : Icons.play_arrow,
           size: 60,
-          onTap:
-              isRunning
-                  ? onPause
-                  : isPaused
-                  ? onResume
-                  : onStart,
+          onTap: () {
+            if (isRunning) {
+              _confirmAction(context, 'Pausar', '¿Estás seguro de que deseas pausar tu sesión?', onPause);
+            } else if (isPaused) {
+              onResume();
+            } else {
+              onStart();
+            }
+          },
           backgroundColor: AppColors.timerColor,
           iconColor: Colors.white,
           elevation: true,
@@ -59,7 +93,13 @@ class TimerControls extends StatelessWidget {
         _ControlButton(
           icon: Icons.stop,
           size: 48,
-          onTap: onStop,
+          onTap: () {
+            if (isRunning || isPaused) {
+               _confirmAction(context, 'Detener', '¿Deseas detener y salir de la sesión actual?', onStop);
+            } else {
+               onStop();
+            }
+          },
           backgroundColor: AppColors.surfaceLight,
         ),
       ],

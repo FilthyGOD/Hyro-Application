@@ -20,7 +20,6 @@ import 'providers/profile_provider.dart';
 import 'providers/shop_provider.dart';
 import 'package:isar/isar.dart';
 import 'providers/auth_provider.dart';
-import 'screens/auth/login_screen.dart';
 import 'screens/auth/splash_screen.dart';
 import 'shared/layout/main_layout.dart';
 import 'shared/widgets/floating_mascot.dart';
@@ -40,8 +39,8 @@ class HyroApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => MascotController()),
         ChangeNotifierProvider(create: (_) => SettingsProvider()),
         ChangeNotifierProvider(create: (_) => UiProvider()),
-        ChangeNotifierProvider(create: (_) => ProfileProvider()),
-        ChangeNotifierProvider(create: (_) => ShopProvider()),
+        ChangeNotifierProvider(create: (_) => ProfileProvider(isar)),
+        ChangeNotifierProvider(create: (_) => ShopProvider(isar)),
         ChangeNotifierProxyProvider<ProfileProvider, MissionsProvider>(
           create: (ctx) => MissionsProvider(
             profileProvider: ctx.read<ProfileProvider>(),
@@ -72,10 +71,8 @@ class HyroApp extends StatelessWidget {
               if (auth.isLoading) {
                 return const SplashScreen();
               }
-              if (auth.isAuthenticated) {
-                return _AppShell(authProvider: auth);
-              }
-              return const LoginScreen();
+              // Todos entran al shell (invitados o usuarios logueados)
+              return _AppShell(authProvider: auth);
             },
           ),
         ),
@@ -119,12 +116,13 @@ class _AppShellState extends State<_AppShell> {
     context.read<TimerCubit>().authProvider = widget.authProvider;
 
     final userId = widget.authProvider.supabaseUserId;
-    if (userId != null) {
-      final profileProvider = context.read<ProfileProvider>();
-      final shopProvider = context.read<ShopProvider>();
-      await profileProvider.loadProfile(userId);
-      await shopProvider.loadShop(userId);
-    }
+    
+    final profileProvider = context.read<ProfileProvider>();
+    final shopProvider = context.read<ShopProvider>();
+    
+    await profileProvider.loadProfile(userId);
+    await shopProvider.loadShop(userId);
+
     final missionsProvider = context.read<MissionsProvider>();
     await missionsProvider.initialize();
   }

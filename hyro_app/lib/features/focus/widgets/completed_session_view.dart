@@ -3,6 +3,10 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../core/theme/app_typography.dart';
 import '../bloc/timer_cubit.dart';
 import '../bloc/timer_state.dart';
+import '../../../providers/auth_provider.dart';
+import '../../settings/settings_provider.dart';
+import '../../../providers/ui_provider.dart';
+import 'package:provider/provider.dart';
 
 class CompletedSessionView extends StatelessWidget {
   final int streak;
@@ -11,6 +15,10 @@ class CompletedSessionView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isMobile = MediaQuery.of(context).size.width < 600;
+    final auth = context.watch<AuthProvider>();
+    final settings = context.read<SettingsProvider>();
+    final userName = auth.currentUser?.name;
+    final pomodoroMins = settings.pomodoroDuration.toInt();
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -24,45 +32,47 @@ class CompletedSessionView extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   _buildHeader(context),
-                  const SizedBox(height: 48),
+                  const SizedBox(height: 32),
                   Center(
-                    child: _buildGlowingStar(),
+                    child: _buildGlowingStar(isMobile),
                   ),
-                  const SizedBox(height: 48),
-                  const Text(
-                    '¡Excelente trabajo, John!',
+                  const SizedBox(height: 32),
+                  Text(
+                    userName != null && userName.trim().isNotEmpty
+                        ? '¡Excelente trabajo, $userName!'
+                        : '¡Excelente trabajo!',
                     textAlign: TextAlign.center,
                     style: TextStyle(
-                      fontSize: 48,
+                      fontSize: isMobile ? 32 : 48,
                       fontWeight: FontWeight.bold,
                       color: Colors.white,
                     ),
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 12),
                   const Text(
                     'Has completado tu sesión con éxito. ¡Sigue así!',
                     textAlign: TextAlign.center,
                     style: TextStyle(
-                      fontSize: 18,
+                      fontSize: 16,
                       color: Colors.white70,
                     ),
                   ),
-                  const SizedBox(height: 48),
+                  const SizedBox(height: 32),
                   Wrap(
                     alignment: WrapAlignment.center,
-                    spacing: 16,
-                    runSpacing: 16,
+                    spacing: 12,
+                    runSpacing: 12,
                     children: [
-                      _buildStatCard('TIEMPO', '25m Focused', context),
-                      _buildStatCard('PROGRESO', '+50 XP', context),
-                      _buildStatCard('RACHA', '$streak Day Streak', context),
+                      _buildStatCard('TIEMPO', '${pomodoroMins}m Enfoque', context),
+                      _buildStatCard('PROGRESO', '+10 XP', context),
+                      _buildStatCard('RACHA', '$streak Días de Racha', context),
                     ],
                   ),
-                  const SizedBox(height: 48),
+                  const SizedBox(height: 32),
                   Wrap(
                     alignment: WrapAlignment.center,
-                    spacing: 16,
-                    runSpacing: 16,
+                    spacing: 12,
+                    runSpacing: 12,
                     children: [
                       _buildActionButton(
                         label: 'Iniciar Descanso',
@@ -75,18 +85,17 @@ class CompletedSessionView extends StatelessWidget {
                         },
                       ),
                       _buildActionButton(
-                        label: 'Ver Logros',
-                        icon: Icons.emoji_events,
-                        isPrimary: false,
-                        onPressed: () {},
-                      ),
-                      _buildActionButton(
                         label: 'Próxima Tarea',
                         icon: Icons.arrow_forward,
                         isPrimary: false,
                         onPressed: () {},
                       ),
                     ],
+                  ),
+                  Consumer<UiProvider>(
+                    builder: (context, ui, _) {
+                      return SizedBox(height: ui.isMusicBarVisible ? 100 : 20);
+                    },
                   ),
                 ],
               ),
@@ -116,25 +125,29 @@ class CompletedSessionView extends StatelessWidget {
     );
   }
 
-  Widget _buildGlowingStar() {
+  Widget _buildGlowingStar(bool isMobile) {
+    final size = isMobile ? 120.0 : 180.0;
+    final innerSize = isMobile ? 60.0 : 90.0;
+    final iconSize = isMobile ? 36.0 : 60.0;
+
     return Container(
-      width: 180,
-      height: 180,
+      width: size,
+      height: size,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
         border: Border.all(color: const Color(0xFFFACC15).withOpacity(0.3), width: 2),
         boxShadow: [
           BoxShadow(
             color: const Color(0xFFFACC15).withOpacity(0.2),
-            blurRadius: 80,
-            spreadRadius: 20,
+            blurRadius: isMobile ? 40 : 80,
+            spreadRadius: isMobile ? 10 : 20,
           ),
         ],
       ),
       child: Center(
         child: Container(
-          width: 90,
-          height: 90,
+          width: innerSize,
+          height: innerSize,
           decoration: const BoxDecoration(
             shape: BoxShape.circle,
             color: Color(0xFFF59E0B),
@@ -145,10 +158,10 @@ class CompletedSessionView extends StatelessWidget {
               ),
             ],
           ),
-          child: const Icon(
+          child: Icon(
             Icons.star_rounded,
-            size: 60,
-            color: Color(0xFF2B1F05), // Dark interior like the image
+            size: iconSize,
+            color: const Color(0xFF2B1F05), // Dark interior like the image
           ),
         ),
       ),

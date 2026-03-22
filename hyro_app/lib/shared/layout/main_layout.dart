@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../core/theme/app_colors.dart';
 import '../../core/utils/responsive.dart';
 import '../widgets/sidebar.dart';
 import '../widgets/spotify_bottom_bar.dart';
@@ -6,7 +7,9 @@ import '../../core/services/spotify/spotify_auth_service.dart';
 import '../../core/services/spotify/spotify_player_service.dart';
 import '../widgets/animated_background.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../providers/ui_provider.dart';
+import '../../features/focus/bloc/timer_cubit.dart';
 
 /// Main layout scaffold with responsive sidebar + content + radio bar.
 class MainLayout extends StatefulWidget {
@@ -54,9 +57,10 @@ class _MainLayoutState extends State<MainLayout> {
   Widget build(BuildContext context) {
     final isMobile = Responsive.isMobile(context);
     final isTablet = Responsive.isTablet(context);
+    final isTimerRunning = context.watch<TimerCubit>().state.isRunning;
 
     if (isMobile) {
-      return _buildMobileLayout();
+      return _buildMobileLayout(isTimerRunning);
     }
 
     return Scaffold(
@@ -143,19 +147,9 @@ class _MainLayoutState extends State<MainLayout> {
     );
   }
 
-  Widget _buildMobileLayout() {
+  Widget _buildMobileLayout(bool isTimerRunning) {
     return Scaffold(
       key: _scaffoldKey,
-      drawer: SizedBox(
-        width: 220,
-        child: Sidebar(
-          selectedIndex: widget.selectedIndex,
-          onItemSelected: (index) {
-            widget.onNavigate(index);
-            Navigator.of(context).pop(); // close drawer
-          },
-        ),
-      ),
       body: Stack(
         children: [
           // Animated breathing background
@@ -176,20 +170,74 @@ class _MainLayoutState extends State<MainLayout> {
               },
             ),
           ),
-          Positioned(
-            top: 24,
-            left: 16,
-            child: Builder(
-              builder:
-                  (ctx) => IconButton(
-                    icon: const Icon(Icons.menu, color: Colors.white, size: 28),
+          if (!isTimerRunning)
+            Positioned(
+              top: 16,
+              right: 16,
+              child: SafeArea(
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: Colors.black.withOpacity(0.3),
+                    shape: BoxShape.circle,
+                  ),
+                  child: IconButton(
+                    icon: const Icon(Icons.settings_outlined, color: Colors.white, size: 24),
                     onPressed: () {
-                      Scaffold.of(ctx).openDrawer();
+                      widget.onNavigate(5);
                     },
                   ),
+                ),
+              ),
             ),
-          ),
         ],
+      ),
+      bottomNavigationBar: isTimerRunning
+          ? null
+          : Theme(
+              data: Theme.of(context).copyWith(
+                splashColor: Colors.transparent,
+                highlightColor: Colors.transparent,
+              ),
+              child: BottomNavigationBar(
+          backgroundColor: AppColors.surface,
+          type: BottomNavigationBarType.fixed,
+          currentIndex: widget.selectedIndex < 5 ? widget.selectedIndex : 0,
+          selectedItemColor: AppColors.primary,
+          unselectedItemColor: AppColors.textSecondary,
+          selectedFontSize: 11,
+          unselectedFontSize: 11,
+          showUnselectedLabels: true,
+          onTap: (index) {
+            widget.onNavigate(index);
+          },
+          items: const [
+            BottomNavigationBarItem(
+              icon: Icon(Icons.timer_outlined),
+              activeIcon: Icon(Icons.timer),
+              label: 'Enfoque',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.check_circle_outline),
+              activeIcon: Icon(Icons.check_circle),
+              label: 'Tareas',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.bar_chart_outlined),
+              activeIcon: Icon(Icons.bar_chart),
+              label: 'Estads', /* Shortened for fit */
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.storefront_outlined),
+              activeIcon: Icon(Icons.storefront),
+              label: 'Tienda',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.person_outline),
+              activeIcon: Icon(Icons.person),
+              label: 'Perfil',
+            ),
+          ],
+        ),
       ),
     );
   }

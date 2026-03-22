@@ -2,10 +2,15 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../features/shop/models/shop_item.dart';
+import 'package:hyro_app/models/user_profile.dart';
+import 'package:isar/isar.dart';
 
-/// Manages the shop catalog, user inventory, and purchases via Supabase.
+/// Manages the shop catalog, user inventory, and purchases via Supabase or Isar.
 class ShopProvider extends ChangeNotifier {
   final _supabase = Supabase.instance.client;
+  final Isar isar;
+
+  ShopProvider(this.isar);
 
   List<ShopItem> catalog = [];
   Set<int> ownedItemIds = {};
@@ -14,35 +19,41 @@ class ShopProvider extends ChangeNotifier {
 
   // ─── Load Catalog + Inventory ─────────────────────────────────────
 
-  /// Fetches the full store catalog and the user's owned items in parallel.
-  Future<void> loadShop(String userId) async {
+  /// Fetches the full store catalog and the user's owned items.
+  Future<void> loadShop(String? userId) async {
     isLoading = true;
     error = null;
     Future.microtask(() => notifyListeners());
 
     try {
-      // Parallel fetch: catalog + user inventory
-      final results = await Future.wait([
-        _supabase
-            .from('objetos_tienda')
-            .select('id, nombre, categoria, precio')
-            .order('id'),
-        _supabase
-            .from('inventario_usuarios')
-            .select('objeto_id')
-            .eq('usuario_id', userId),
-      ]);
-
-      final catalogData = results[0] as List<dynamic>;
-      final inventoryData = results[1] as List<dynamic>;
+      // 1. Load catalog from Supabase (catalog is always from DB, even for guests, assuming network is available. 
+      // If offline, we could cache it, but let's just query it).
+      final catalogData = await _supabase
+          .from('objetos_tienda')
+          .select('id, nombre, categoria, precio')
+          .order('id') as List<dynamic>;
 
       catalog = catalogData
           .map((e) => ShopItem.fromJson(Map<String, dynamic>.from(e)))
           .toList();
 
-      ownedItemIds = inventoryData
-          .map((e) => (e['objeto_id'] as num).toInt())
-          .toSet();
+      if (userId == null) {
+        // Local inventory and coins
+        final activeUser = await isar.userProfiles.filter().isActivelyLoggedInEqualTo(true).findFirst();
+        if (activeUser != null) {
+          ownedItemIds = activeUser.comprasLocales.toSet();
+        }
+      } else {
+        // Cloud inventory
+        final inventoryData = await _supabase
+            .from('inventario_usuarios')
+            .select('objeto_id')
+            .eq('usuario_id', userId) as List<dynamic>;
+
+        ownedItemIds = inventoryData
+            .map((e) => (e['objeto_id'] as num).toInt())
+            .toSet();
+      }
     } catch (e) {
       error = 'Error cargando tienda: $e';
       debugPrint(error);
@@ -54,10 +65,9 @@ class ShopProvider extends ChangeNotifier {
 
   // ─── Purchase ─────────────────────────────────────────────────────
 
-  /// Attempts to purchase an item via the `comprar_objeto` RPC.
-  /// Returns `true` on success, `false` on failure (sets [error]).
-  Future<bool> purchaseItem(String userId, int itemId) async {
-    // Local pre-check (the RPC also validates server-side)
+  /// Attempts to purchase an item.
+  Future<bool> purchaseItem(String? userId, int itemId) async {
+    // Local pre-check
     if (ownedItemIds.contains(itemId)) {
       error = 'Ya posees este objeto';
       notifyListeners();
@@ -65,16 +75,42 @@ class ShopProvider extends ChangeNotifier {
     }
 
     try {
-      await _supabase.rpc(
-        'comprar_objeto',
-        params: {'p_usuario_id': userId, 'p_objeto_id': itemId},
-      );
+      if (userId == null) {
+        // Local purchase
+        final item = catalog.firstWhere((i) => i.id == itemId);
+        final activeUser = await isar.userProfiles.filter().isActivelyLoggedInEqualTo(true).findFirst();
+        
+        if (activeUser == null) {
+          throw Exception("No user found");
+        }
+        
+        if (activeUser.monedas < item.precio) {
+          error = 'No tienes suficientes monedas';
+          notifyListeners();
+          return false;
+        }
 
-      // Optimistic update — add to local owned set immediately
-      ownedItemIds.add(itemId);
-      error = null;
-      notifyListeners();
-      return true;
+        await isar.writeTxn(() async {
+          activeUser.monedas -= item.precio;
+          activeUser.comprasLocales = [...activeUser.comprasLocales, itemId];
+          await isar.userProfiles.put(activeUser);
+        });
+        
+        ownedItemIds.add(itemId);
+        error = null;
+        notifyListeners();
+        return true;
+      } else {
+        await _supabase.rpc(
+          'comprar_objeto',
+          params: {'p_usuario_id': userId, 'p_objeto_id': itemId},
+        );
+
+        ownedItemIds.add(itemId);
+        error = null;
+        notifyListeners();
+        return true;
+      }
     } on PostgrestException catch (e) {
       error = _friendlyError(e.message);
       debugPrint('Purchase error: ${e.message}');

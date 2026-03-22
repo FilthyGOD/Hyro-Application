@@ -59,6 +59,7 @@ class HyroApp extends StatelessWidget {
                       settingsProvider: context.read<SettingsProvider>(),
                       profileProvider: context.read<ProfileProvider>(),
                       missionsProvider: context.read<MissionsProvider>(),
+                      taskProvider: context.read<TaskProvider>(),
                     ),
           ),
         ],

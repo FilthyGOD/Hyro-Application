@@ -5,6 +5,7 @@ import '../../stats/stats_provider.dart';
 import '../../settings/settings_provider.dart';
 import '../../../providers/profile_provider.dart';
 import '../../missions/missions_provider.dart';
+import '../../tasks/tasks_provider.dart';
 import '../../../providers/auth_provider.dart';
 import 'timer_state.dart';
 
@@ -15,6 +16,7 @@ class TimerCubit extends Cubit<TimerState> {
   final SettingsProvider? settingsProvider;
   final ProfileProvider? profileProvider;
   final MissionsProvider? missionsProvider;
+  final TaskProvider? taskProvider;
 
   /// Optional reference to AuthProvider — set from outside after creation.
   AuthProvider? authProvider;
@@ -24,13 +26,18 @@ class TimerCubit extends Cubit<TimerState> {
     this.settingsProvider,
     this.profileProvider,
     this.missionsProvider,
+    this.taskProvider,
   }) : super(const TimerState());
 
   /// Start the timer.
-  void start() {
+  void start({String? taskId, String? taskTitle}) {
     if (state.status == TimerStatus.running) return;
 
-    emit(state.copyWith(status: TimerStatus.running));
+    emit(state.copyWith(
+      status: TimerStatus.running,
+      activeTaskId: taskId ?? state.activeTaskId,
+      activeTaskTitle: taskTitle ?? state.activeTaskTitle,
+    ));
     _timer?.cancel();
     _timer = Timer.periodic(const Duration(seconds: 1), (_) => _tick());
   }
@@ -77,6 +84,8 @@ class TimerCubit extends Cubit<TimerState> {
         totalFocusMinutes: state.totalFocusMinutes,
         remainingSeconds: totalSec,
         totalSeconds: totalSec,
+        activeTaskId: state.activeTaskId,
+        activeTaskTitle: state.activeTaskTitle,
       ),
     );
   }
@@ -92,6 +101,8 @@ class TimerCubit extends Cubit<TimerState> {
         totalSeconds: totalSec,
         completedSessions: state.completedSessions,
         totalFocusMinutes: state.totalFocusMinutes,
+        activeTaskId: state.activeTaskId,
+        activeTaskTitle: state.activeTaskTitle,
       ),
     );
   }
@@ -124,6 +135,11 @@ class TimerCubit extends Cubit<TimerState> {
       missionsProvider?.updateProgress('pomodoro_completed', 1);
       missionsProvider?.updateProgress('minutes_studied', focusMinutes);
 
+      // ── Task Linking hook ──
+      if (state.activeTaskId != null && taskProvider != null) {
+        taskProvider?.incrementTaskPomodoro(state.activeTaskId!);
+      }
+
       // Auto-transition: after 4 pomodoros → long break, else short break
       final nextMode =
           newSessions % PomodoroConstants.pomodorosBeforeLongBreak == 0
@@ -139,6 +155,8 @@ class TimerCubit extends Cubit<TimerState> {
           totalSeconds: nextDuration,
           completedSessions: newSessions,
           totalFocusMinutes: newFocusMinutes,
+          activeTaskId: state.activeTaskId,
+          activeTaskTitle: state.activeTaskTitle,
         ),
       );
     } else {

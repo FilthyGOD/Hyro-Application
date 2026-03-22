@@ -102,7 +102,7 @@ class _MainLayoutState extends State<MainLayout> {
                 ),
               ),
               // Optional backdrop for a nicer effect
-              if (_isDesktopSidebarVisible)
+              if (_isDesktopSidebarVisible && !isTimerRunning)
                 Positioned.fill(
                   child: GestureDetector(
                     onTap: () {
@@ -113,7 +113,7 @@ class _MainLayoutState extends State<MainLayout> {
                     child: Container(color: Colors.black.withOpacity(0.3)),
                   ),
                 ),
-              if (!_isDesktopSidebarVisible)
+              if (!_isDesktopSidebarVisible && !isTimerRunning)
                 Positioned(
                   top: 24,
                   left: 24,
@@ -130,7 +130,7 @@ class _MainLayoutState extends State<MainLayout> {
               AnimatedPositioned(
                 duration: const Duration(milliseconds: 300),
                 curve: Curves.easeInOut,
-                left: _isDesktopSidebarVisible ? 0 : -sidebarWidth,
+                left: (_isDesktopSidebarVisible && !isTimerRunning) ? 0 : -sidebarWidth,
                 top: 0,
                 bottom: 0,
                 width: sidebarWidth,

@@ -10,10 +10,11 @@ import 'widgets/timer_controls.dart';
 import 'widgets/mode_selector.dart';
 import 'widgets/session_info_card.dart';
 import 'widgets/completed_session_view.dart';
-
+import '../../core/theme/app_colors.dart';
 import 'widgets/mini_task_list.dart';
 import 'widgets/activity_chart.dart';
 import '../stats/stats_provider.dart';
+import '../tasks/tasks_provider.dart';
 import '../mascot/mascot_controller.dart';
 
 /// The main Focus screen with the Pomodoro timer and sidebar widgets.
@@ -142,11 +143,21 @@ class _DesktopLayout extends StatelessWidget {
                                   label: _getTimerLabel(state.mode),
                                   size: timerSize,
                                 ),
-                                const SizedBox(height: 32),
+                                const SizedBox(height: 16),
+                                if (state.isRunning && state.activeTaskTitle != null)
+                                  Padding(
+                                    padding: const EdgeInsets.only(bottom: 16),
+                                    child: Text(
+                                      'Enfocando en: ${state.activeTaskTitle}',
+                                      style: AppTypography.bodySmall.copyWith(color: AppColors.primary),
+                                      textAlign: TextAlign.center,
+                                    ),
+                                  ),
+                                const SizedBox(height: 16),
                                 TimerControls(
                                   isRunning: state.isRunning,
                                   isPaused: state.isPaused,
-                                  onStart: cubit.start,
+                                  onStart: () => _handleStart(context, cubit),
                                   onPause: cubit.pause,
                                   onResume: cubit.resume,
                                   onReset: cubit.reset,
@@ -307,12 +318,22 @@ class _MobileLayout extends StatelessWidget {
               );
             },
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: 16),
+          if (state.isRunning && state.activeTaskTitle != null)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 16),
+              child: Text(
+                'Enfocando en: ${state.activeTaskTitle}',
+                style: AppTypography.bodySmall.copyWith(color: AppColors.primary),
+                textAlign: TextAlign.center,
+              ),
+            ),
+          const SizedBox(height: 8),
           // Controls
           TimerControls(
             isRunning: state.isRunning,
             isPaused: state.isPaused,
-            onStart: cubit.start,
+            onStart: () => _handleStart(context, cubit),
             onPause: cubit.pause,
             onResume: cubit.resume,
             onReset: cubit.reset,
@@ -343,4 +364,63 @@ class _MobileLayout extends StatelessWidget {
         return 'DESCANSO LARGO';
     }
   }
+}
+
+void _handleStart(BuildContext context, TimerCubit cubit) {
+  final taskProvider = context.read<TaskProvider>();
+  final pendingTasks = taskProvider.tasks.where((t) => !t.isCompleted).toList();
+
+  if (pendingTasks.isEmpty) {
+    cubit.start();
+    return;
+  }
+
+  showModalBottomSheet<String?>(
+    context: context,
+    backgroundColor: AppColors.surface,
+    shape: const RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+    ),
+    builder: (ctx) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text('Selecciona una tarea para enfocarte', style: AppTypography.h3, textAlign: TextAlign.center),
+            const SizedBox(height: 16),
+            Flexible(
+              child: ListView.builder(
+                shrinkWrap: true,
+                itemCount: pendingTasks.length,
+                itemBuilder: (context, index) {
+                  final task = pendingTasks[index];
+                  return ListTile(
+                    leading: Icon(Icons.check_circle_outline, color: Color(task.priorityColorValue)),
+                    title: Text(task.title, style: AppTypography.bodyMedium),
+                    subtitle: Text('${task.pomodorosCompleted} / ${task.pomodorosTarget} Pomodoros', style: TextStyle(color: Colors.white54, fontSize: 12)),
+                    onTap: () => Navigator.pop(ctx, task.id),
+                  );
+                },
+              ),
+            ),
+            const Divider(color: AppColors.cardBorder),
+            ListTile(
+              leading: const Icon(Icons.play_arrow, color: Colors.white54),
+              title: const Text('Empezar sin tarea', style: TextStyle(color: Colors.white54)),
+              onTap: () => Navigator.pop(ctx, 'NO_TASK'),
+            ),
+          ],
+        ),
+      );
+    },
+  ).then((taskId) {
+    if (taskId == 'NO_TASK') {
+      cubit.start();
+    } else if (taskId != null) {
+      final task = pendingTasks.firstWhere((t) => t.id == taskId);
+      cubit.start(taskId: task.id, taskTitle: task.title);
+    }
+  });
 }

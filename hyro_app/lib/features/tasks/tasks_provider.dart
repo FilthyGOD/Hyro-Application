@@ -78,6 +78,17 @@ class TaskProvider extends ChangeNotifier {
     }
   }
 
+  Future<void> incrementTaskPomodoro(String id) async {
+    final taskIndex = _tasks.indexWhere((t) => t.id == id);
+    if (taskIndex != -1) {
+      final task = _tasks[taskIndex];
+      final updatedTask = task.copyWith(
+        pomodorosCompleted: task.pomodorosCompleted + 1,
+      );
+      await updateTask(updatedTask);
+    }
+  }
+
   List<TaskModel> get filteredTasks {
     // Add logic here if we want filtering by status, priority, etc.
     return _tasks;

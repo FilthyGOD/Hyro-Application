@@ -482,9 +482,18 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
+  void _signInWithGoogle() async {
+    setState(() => _isLoading = true);
+    final auth = context.read<AuthProvider>();
+    await auth.signInWithGoogle();
+    if (mounted) {
+      setState(() => _isLoading = false);
+    }
+  }
+
   Widget _buildSocialButton(String text, IconData icon, {bool isDesktop = false}) {
     return OutlinedButton.icon(
-      onPressed: () {},
+      onPressed: text == 'Google' ? (_isLoading ? null : _signInWithGoogle) : () {},
       icon: Container(
         padding: const EdgeInsets.all(2),
         decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),

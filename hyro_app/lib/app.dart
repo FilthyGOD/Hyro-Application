@@ -14,7 +14,10 @@ import 'features/tasks/tasks_provider.dart';
 import 'features/stats/stats_provider.dart';
 import 'features/mascot/mascot_controller.dart';
 import 'features/settings/settings_provider.dart';
+import 'features/missions/missions_provider.dart';
 import 'providers/ui_provider.dart';
+import 'providers/profile_provider.dart';
+import 'providers/shop_provider.dart';
 import 'package:isar/isar.dart';
 import 'providers/auth_provider.dart';
 import 'screens/auth/login_screen.dart';
@@ -37,6 +40,15 @@ class HyroApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => MascotController()),
         ChangeNotifierProvider(create: (_) => SettingsProvider()),
         ChangeNotifierProvider(create: (_) => UiProvider()),
+        ChangeNotifierProvider(create: (_) => ProfileProvider()),
+        ChangeNotifierProvider(create: (_) => ShopProvider()),
+        ChangeNotifierProxyProvider<ProfileProvider, MissionsProvider>(
+          create: (ctx) => MissionsProvider(
+            profileProvider: ctx.read<ProfileProvider>(),
+          ),
+          update: (ctx, profile, previous) =>
+              previous ?? MissionsProvider(profileProvider: profile),
+        ),
       ],
       child: MultiBlocProvider(
         providers: [
@@ -46,6 +58,8 @@ class HyroApp extends StatelessWidget {
                     TimerCubit(
                       statsProvider: context.read<StatsProvider>(),
                       settingsProvider: context.read<SettingsProvider>(),
+                      profileProvider: context.read<ProfileProvider>(),
+                      missionsProvider: context.read<MissionsProvider>(),
                     ),
           ),
         ],
@@ -59,7 +73,7 @@ class HyroApp extends StatelessWidget {
                 return const SplashScreen();
               }
               if (auth.isAuthenticated) {
-                return const _AppShell();
+                return _AppShell(authProvider: auth);
               }
               return const LoginScreen();
             },
@@ -71,7 +85,8 @@ class HyroApp extends StatelessWidget {
 }
 
 class _AppShell extends StatefulWidget {
-  const _AppShell();
+  final AuthProvider authProvider;
+  const _AppShell({required this.authProvider});
 
   @override
   State<_AppShell> createState() => _AppShellState();
@@ -79,6 +94,7 @@ class _AppShell extends StatefulWidget {
 
 class _AppShellState extends State<_AppShell> {
   int _selectedIndex = 0;
+  bool _initialized = false;
 
   static const _screens = <Widget>[
     FocusScreen(), // 0
@@ -88,6 +104,30 @@ class _AppShellState extends State<_AppShell> {
     ProfileScreen(), // 4
     SettingsScreen(), // 5
   ];
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_initialized) {
+      _initialized = true;
+      _loadGamificationData();
+    }
+  }
+
+  Future<void> _loadGamificationData() async {
+    // Give TimerCubit access to auth for userId lookups
+    context.read<TimerCubit>().authProvider = widget.authProvider;
+
+    final userId = widget.authProvider.supabaseUserId;
+    if (userId != null) {
+      final profileProvider = context.read<ProfileProvider>();
+      final shopProvider = context.read<ShopProvider>();
+      await profileProvider.loadProfile(userId);
+      await shopProvider.loadShop(userId);
+    }
+    final missionsProvider = context.read<MissionsProvider>();
+    await missionsProvider.initialize();
+  }
 
   void _onNavigate(int index) {
     final previousIndex = _selectedIndex;

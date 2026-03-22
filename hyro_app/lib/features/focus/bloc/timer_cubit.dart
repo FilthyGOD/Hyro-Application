@@ -3,6 +3,9 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../core/constants/pomodoro_constants.dart';
 import '../../stats/stats_provider.dart';
 import '../../settings/settings_provider.dart';
+import '../../../providers/profile_provider.dart';
+import '../../missions/missions_provider.dart';
+import '../../../providers/auth_provider.dart';
 import 'timer_state.dart';
 
 /// Cubit that manages the Pomodoro timer logic.
@@ -10,8 +13,18 @@ class TimerCubit extends Cubit<TimerState> {
   Timer? _timer;
   final StatsProvider? statsProvider;
   final SettingsProvider? settingsProvider;
+  final ProfileProvider? profileProvider;
+  final MissionsProvider? missionsProvider;
 
-  TimerCubit({this.statsProvider, this.settingsProvider}) : super(const TimerState());
+  /// Optional reference to AuthProvider — set from outside after creation.
+  AuthProvider? authProvider;
+
+  TimerCubit({
+    this.statsProvider,
+    this.settingsProvider,
+    this.profileProvider,
+    this.missionsProvider,
+  }) : super(const TimerState());
 
   /// Start the timer.
   void start() {
@@ -95,11 +108,21 @@ class TimerCubit extends Cubit<TimerState> {
   void _onTimerFinished() {
     if (state.mode == TimerMode.pomodoro) {
       final newSessions = state.completedSessions + 1;
-      final newFocusMinutes =
-          state.totalFocusMinutes + (state.totalSeconds ~/ 60);
+      final focusMinutes = state.totalSeconds ~/ 60;
+      final newFocusMinutes = state.totalFocusMinutes + focusMinutes;
 
       // Tell stats provider to record this session
-      statsProvider?.addFocusSession(state.totalSeconds ~/ 60);
+      statsProvider?.addFocusSession(focusMinutes);
+
+      // ── Gamification hooks ──
+      final userId = authProvider?.supabaseUserId;
+      if (userId != null) {
+        // 10 XP per completed pomodoro
+        profileProvider?.grantXP(userId, 10);
+      }
+      // Update mission progress
+      missionsProvider?.updateProgress('pomodoro_completed', 1);
+      missionsProvider?.updateProgress('minutes_studied', focusMinutes);
 
       // Auto-transition: after 4 pomodoros → long break, else short break
       final nextMode =

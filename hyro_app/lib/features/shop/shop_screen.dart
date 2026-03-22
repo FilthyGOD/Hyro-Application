@@ -6,11 +6,15 @@ import '../../core/theme/app_typography.dart';
 import '../../core/utils/responsive.dart';
 import '../../shared/widgets/glass_card.dart';
 import '../mascot/mascot_controller.dart';
+import '../../providers/shop_provider.dart';
+import '../../providers/profile_provider.dart';
+import '../../providers/auth_provider.dart';
+import 'models/shop_item.dart';
 
 // ── Cosmetic category enum ──
 enum _CosmeticCategory { sombrero, cara, cuerpo }
 
-/// Shop screen — mascot preview with cosmetic categories.
+/// Shop screen — mascot preview with cosmetic categories backed by Supabase.
 class ShopScreen extends StatefulWidget {
   const ShopScreen({super.key});
 
@@ -22,7 +26,7 @@ class _ShopScreenState extends State<ShopScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
 
-  // Per-category selection (-1 = nothing selected yet, though now populated in initState)
+  // Per-category selection
   final Map<_CosmeticCategory, int> _selectedItem = {
     _CosmeticCategory.sombrero: -1,
     _CosmeticCategory.cara: -1,
@@ -30,35 +34,14 @@ class _ShopScreenState extends State<ShopScreen>
   };
 
   int _currentTabIndex = 0;
+  bool _isPurchasing = false;
 
-  // Per-category owned items ("nada" IDs always owned)
-  final Map<_CosmeticCategory, Set<int>> _ownedItems = {
-    _CosmeticCategory.sombrero: {100},
-    _CosmeticCategory.cara: {200},
-    _CosmeticCategory.cuerpo: {300},
+  // "Nada" items (always owned, id X00 per category)
+  static const _nadaItems = {
+    _CosmeticCategory.sombrero: ShopItem(id: 100, nombre: 'Nada', categoria: 'Sombrero', precio: 0),
+    _CosmeticCategory.cara: ShopItem(id: 200, nombre: 'Nada', categoria: 'Cara', precio: 0),
+    _CosmeticCategory.cuerpo: ShopItem(id: 300, nombre: 'Nada', categoria: 'Traje', precio: 0),
   };
-
-  // ── Item catalogs ──
-  static const _sombreroItems = [
-    _ShopItem(id: 100, name: 'Nada', icon: '❌'),
-    _ShopItem(id: 101, name: 'Elegante', icon: '🎩'),
-    _ShopItem(id: 102, name: 'Mexicano', icon: '🤠'),
-    _ShopItem(id: 103, name: 'Payaso', icon: '🤡'),
-  ];
-
-  static const _caraItems = [
-    _ShopItem(id: 200, name: 'Nada', icon: '❌'),
-    _ShopItem(id: 201, name: 'Monóculo', icon: '🧐'),
-    _ShopItem(id: 202, name: 'Bigote', icon: '🥸'),
-    _ShopItem(id: 203, name: 'Nariz de payaso', icon: '🔴'),
-  ];
-
-  static const _cuerpoItems = [
-    _ShopItem(id: 300, name: 'Nada', icon: '❌'),
-    _ShopItem(id: 301, name: 'Traje elegante', icon: '🤵'),
-    _ShopItem(id: 302, name: 'Zarape', icon: '🇲🇽'),
-    _ShopItem(id: 303, name: 'Traje de payaso', icon: '🎪'),
-  ];
 
   @override
   void initState() {
@@ -79,28 +62,39 @@ class _ShopScreenState extends State<ShopScreen>
     super.dispose();
   }
 
-  // ── Helpers to map category → "nada" ID ──
+  // ── Helpers ──
   int _nadaId(_CosmeticCategory cat) {
     switch (cat) {
-      case _CosmeticCategory.sombrero:
-        return 100;
-      case _CosmeticCategory.cara:
-        return 200;
-      case _CosmeticCategory.cuerpo:
-        return 300;
+      case _CosmeticCategory.sombrero: return 100;
+      case _CosmeticCategory.cara: return 200;
+      case _CosmeticCategory.cuerpo: return 300;
     }
+  }
+
+  String _categoryFilter(_CosmeticCategory cat) {
+    switch (cat) {
+      case _CosmeticCategory.sombrero: return 'sombr';
+      case _CosmeticCategory.cara: return 'cara';
+      case _CosmeticCategory.cuerpo: return 'traje';
+    }
+  }
+
+  List<ShopItem> _itemsForCategory(ShopProvider shop, _CosmeticCategory cat) {
+    final nada = _nadaItems[cat]!;
+    final fromDb = shop.itemsByCategory(_categoryFilter(cat));
+    return [nada, ...fromDb];
   }
 
   void _handleTabSelection() {
     if (_tabController.index != _currentTabIndex) {
       _currentTabIndex = _tabController.index;
-      
+
       final mascot = context.read<MascotController>();
       mascot.restoreEquippedState();
-      
+
       final currentCategory = _CosmeticCategory.values[_currentTabIndex];
       final selectedId = _selectedItem[currentCategory];
-      
+
       if (selectedId != null && selectedId >= 0) {
         if (currentCategory == _CosmeticCategory.sombrero) mascot.previewSombrero(selectedId);
         else if (currentCategory == _CosmeticCategory.cara) mascot.previewCara(selectedId);
@@ -112,21 +106,43 @@ class _ShopScreenState extends State<ShopScreen>
   // ── Actions ──
   void _onSelect(_CosmeticCategory cat, int id) {
     setState(() => _selectedItem[cat] = id);
-    
+
     final mascot = context.read<MascotController>();
     mascot.restoreEquippedState();
-    
+
     if (cat == _CosmeticCategory.sombrero) mascot.previewSombrero(id);
     else if (cat == _CosmeticCategory.cara) mascot.previewCara(id);
     else if (cat == _CosmeticCategory.cuerpo) mascot.previewCuerpo(id);
   }
 
-  void _onBuy(_CosmeticCategory cat, int itemId) {
-    final mascot = context.read<MascotController>();
-    mascot.triggerCompra(itemId);
-    setState(() {
-      _ownedItems[cat]!.add(itemId);
-    });
+  Future<void> _onBuy(_CosmeticCategory cat, int itemId) async {
+    final auth = context.read<AuthProvider>();
+    final shop = context.read<ShopProvider>();
+    final profile = context.read<ProfileProvider>();
+    final userId = auth.supabaseUserId;
+    if (userId == null) return;
+
+    setState(() => _isPurchasing = true);
+
+    final success = await shop.purchaseItem(userId, itemId);
+
+    if (success && mounted) {
+      // Refresh profile to get updated coin count
+      await profile.loadProfile(userId);
+
+      final mascot = context.read<MascotController>();
+      mascot.triggerCompra(itemId);
+    } else if (!success && mounted) {
+      // Show error snackbar
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(shop.error ?? 'Error al comprar'),
+          backgroundColor: Colors.red.shade700,
+        ),
+      );
+    }
+
+    if (mounted) setState(() => _isPurchasing = false);
   }
 
   void _onEquip(_CosmeticCategory cat, int itemId) {
@@ -150,6 +166,8 @@ class _ShopScreenState extends State<ShopScreen>
   @override
   Widget build(BuildContext context) {
     final isDesktop = Responsive.isDesktop(context);
+    final profile = context.watch<ProfileProvider>();
+    final shop = context.watch<ShopProvider>();
 
     return SingleChildScrollView(
       padding: EdgeInsets.only(
@@ -160,8 +178,33 @@ class _ShopScreenState extends State<ShopScreen>
       ),
       child: Column(
         children: [
-          // Header
-          Text('Tienda', style: AppTypography.h1),
+          // Header with coin count
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text('Tienda', style: AppTypography.h1),
+              const SizedBox(width: 16),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(
+                  color: Colors.amber.withAlpha(25),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: Colors.amber.withAlpha(60)),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.monetization_on, color: Colors.amber, size: 18),
+                    const SizedBox(width: 4),
+                    Text(
+                      '${profile.monedas}',
+                      style: AppTypography.labelLarge.copyWith(color: Colors.amber),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
           const SizedBox(height: 4),
           Text('Personaliza a tu mascota', style: AppTypography.bodyMedium),
           const SizedBox(height: 24),
@@ -197,53 +240,57 @@ class _ShopScreenState extends State<ShopScreen>
           ),
           const SizedBox(height: 24),
 
-          // ── Tabs ──
-          GlassCard(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              children: [
-                TabBar(
-                  controller: _tabController,
-                  indicatorColor: AppColors.primary,
-                  labelColor: AppColors.textPrimary,
-                  unselectedLabelColor: AppColors.textSecondary,
-                  labelStyle: AppTypography.labelLarge,
-                  unselectedLabelStyle: AppTypography.bodyMedium,
-                  dividerColor: AppColors.cardBorder,
-                  tabs: const [
-                    Tab(text: '🎩 Sombreros'),
-                    Tab(text: '😎 Cara'),
-                    Tab(text: '👕 Cuerpo'),
-                  ],
-                ),
-                const SizedBox(height: 16),
-                SizedBox(
-                  height: 280,
-                  child: TabBarView(
+          // ── Loading / Content ──
+          if (shop.isLoading)
+            const Padding(
+              padding: EdgeInsets.all(48),
+              child: CircularProgressIndicator(color: AppColors.primary),
+            )
+          else
+            // ── Tabs ──
+            GlassCard(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                children: [
+                  TabBar(
                     controller: _tabController,
-                    children: [
-                      _buildCategoryTab(
-                        _CosmeticCategory.sombrero,
-                        _sombreroItems,
-                      ),
-                      _buildCategoryTab(_CosmeticCategory.cara, _caraItems),
-                      _buildCategoryTab(_CosmeticCategory.cuerpo, _cuerpoItems),
+                    indicatorColor: AppColors.primary,
+                    labelColor: AppColors.textPrimary,
+                    unselectedLabelColor: AppColors.textSecondary,
+                    labelStyle: AppTypography.labelLarge,
+                    unselectedLabelStyle: AppTypography.bodyMedium,
+                    dividerColor: AppColors.cardBorder,
+                    tabs: const [
+                      Tab(text: '🎩 Sombreros'),
+                      Tab(text: '😎 Cara'),
+                      Tab(text: '👕 Cuerpo'),
                     ],
                   ),
-                ),
-              ],
+                  const SizedBox(height: 16),
+                  SizedBox(
+                    height: 280,
+                    child: TabBarView(
+                      controller: _tabController,
+                      children: [
+                        _buildCategoryTab(shop, _CosmeticCategory.sombrero),
+                        _buildCategoryTab(shop, _CosmeticCategory.cara),
+                        _buildCategoryTab(shop, _CosmeticCategory.cuerpo),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ),
-          const SizedBox(height: 80), // bottom padding for nav
+          const SizedBox(height: 80),
         ],
       ),
     );
   }
 
   // ── Generic Category Tab ──
-  Widget _buildCategoryTab(_CosmeticCategory category, List<_ShopItem> items) {
+  Widget _buildCategoryTab(ShopProvider shop, _CosmeticCategory category) {
+    final items = _itemsForCategory(shop, category);
     final selected = _selectedItem[category]!;
-    final owned = _ownedItems[category]!;
     final nadaId = _nadaId(category);
 
     return Column(
@@ -254,88 +301,101 @@ class _ShopScreenState extends State<ShopScreen>
               spacing: 12,
               runSpacing: 12,
               alignment: WrapAlignment.center,
-              children:
-                  items.map((item) {
-                    final isSelected = selected == item.id;
-                    final isOwned = owned.contains(item.id);
+              children: items.map((item) {
+                final isSelected = selected == item.id;
+                final isOwned = shop.ownsItem(item.id) || item.id == nadaId;
 
-                    return GestureDetector(
-                      onTap: () => _onSelect(category, item.id),
-                      child: AnimatedContainer(
-                        duration: const Duration(milliseconds: 200),
-                        width: 100,
-                        padding: const EdgeInsets.symmetric(
-                          vertical: 16,
-                          horizontal: 8,
+                return GestureDetector(
+                  onTap: () => _onSelect(category, item.id),
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    width: 100,
+                    padding: const EdgeInsets.symmetric(
+                      vertical: 16,
+                      horizontal: 8,
+                    ),
+                    decoration: BoxDecoration(
+                      color: isSelected
+                          ? AppColors.primary.withAlpha(30)
+                          : AppColors.surfaceLight,
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(
+                        color: isSelected
+                            ? AppColors.primary
+                            : AppColors.cardBorder,
+                        width: isSelected ? 2 : 1,
+                      ),
+                    ),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          item.id == nadaId ? '❌' : item.icon,
+                          style: const TextStyle(fontSize: 36),
                         ),
-                        decoration: BoxDecoration(
-                          color:
-                              isSelected
-                                  ? AppColors.primary.withAlpha(30)
-                                  : AppColors.surfaceLight,
-                          borderRadius: BorderRadius.circular(16),
-                          border: Border.all(
-                            color:
-                                isSelected
-                                    ? AppColors.primary
-                                    : AppColors.cardBorder,
-                            width: isSelected ? 2 : 1,
+                        const SizedBox(height: 8),
+                        Text(
+                          item.nombre,
+                          style: AppTypography.bodySmall.copyWith(
+                            color: isSelected
+                                ? AppColors.textPrimary
+                                : AppColors.textSecondary,
                           ),
+                          textAlign: TextAlign.center,
                         ),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(
-                              item.icon,
-                              style: const TextStyle(fontSize: 36),
+                        if (isOwned && item.id != nadaId) ...[
+                          const SizedBox(height: 4),
+                          Text(
+                            'Comprado',
+                            style: AppTypography.bodySmall.copyWith(
+                              color: AppColors.breakGreen,
+                              fontSize: 10,
                             ),
-                            const SizedBox(height: 8),
-                            Text(
-                              item.name,
-                              style: AppTypography.bodySmall.copyWith(
-                                color:
-                                    isSelected
-                                        ? AppColors.textPrimary
-                                        : AppColors.textSecondary,
-                              ),
-                              textAlign: TextAlign.center,
-                            ),
-                            if (isOwned && item.id != nadaId) ...[
-                              const SizedBox(height: 4),
+                          ),
+                        ],
+                        if (!isOwned) ...[
+                          const SizedBox(height: 4),
+                          Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(Icons.monetization_on, color: Colors.amber, size: 12),
+                              const SizedBox(width: 2),
                               Text(
-                                'Comprado',
+                                '${item.precio}',
                                 style: AppTypography.bodySmall.copyWith(
-                                  color: AppColors.breakGreen,
+                                  color: Colors.amber,
                                   fontSize: 10,
+                                  fontWeight: FontWeight.w600,
                                 ),
                               ),
                             ],
-                          ],
-                        ),
-                      ),
-                    );
-                  }).toList(),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                );
+              }).toList(),
             ),
           ),
         ),
         const SizedBox(height: 12),
         // Action button
         if (selected >= 0)
-          _buildActionButton(category, selected, owned, nadaId),
+          _buildActionButton(shop, category, selected, nadaId),
       ],
     );
   }
 
   Widget _buildActionButton(
+    ShopProvider shop,
     _CosmeticCategory category,
     int selected,
-    Set<int> owned,
     int nadaId,
   ) {
-    final isOwned = owned.contains(selected);
+    final isOwned = shop.ownsItem(selected) || selected == nadaId;
 
     if (selected == nadaId) {
-      // "Nada" — just equip (remove cosmetic)
       return _ShopButton(
         label: 'Equipar',
         icon: Icons.checkroom,
@@ -353,21 +413,15 @@ class _ShopScreenState extends State<ShopScreen>
       );
     }
 
+    // Not owned — show price and buy button
+    final item = _itemsForCategory(shop, category).firstWhere((i) => i.id == selected);
     return _ShopButton(
-      label: 'Comprar',
+      label: _isPurchasing ? 'Comprando...' : 'Comprar · ${item.precio} 🪙',
       icon: Icons.shopping_cart,
       color: AppColors.breakGreen,
-      onTap: () => _onBuy(category, selected),
+      onTap: _isPurchasing ? () {} : () => _onBuy(category, selected),
     );
   }
-}
-
-// ── Generic shop item model ──
-class _ShopItem {
-  final int id;
-  final String name;
-  final String icon;
-  const _ShopItem({required this.id, required this.name, required this.icon});
 }
 
 // ── Shop Action Button ──

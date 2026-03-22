@@ -10,9 +10,38 @@ import 'package:path_provider/path_provider.dart';
 import 'models/user_profile.dart';
 import 'package:window_manager/window_manager.dart';
 import 'dart:io';
+import 'package:windows_single_instance/windows_single_instance.dart'; // <-- Vuelve el salvador
 
-void main() async {
+void main(List<String> args) async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // ─── EL CADENERO OFICIAL (PARCHADO PARA NULLS) ───────────────────
+  if (Platform.isWindows) {
+    // Le ponemos "bool?" y "??" para que nunca sea nulo
+    bool? resultadoInstancia = await WindowsSingleInstance.ensureSingleInstance(
+      args,
+      "hyro_app_instancia_unica",
+      onSecondWindow: (List<String> nuevosArgs) async {
+        if (nuevosArgs.isNotEmpty) {
+          final enlace = nuevosArgs.first;
+          debugPrint('🚨 [Hyro Debug] ¡Link robado del clon!: $enlace');
+          try {
+            await Supabase.instance.client.auth.getSessionFromUrl(
+              Uri.parse(enlace),
+            );
+          } catch (e) {
+            debugPrint('Error en Supabase: $e');
+          }
+        }
+      },
+    );
+
+    // Si es falso (o sea, es el clon), se cierra. Si es nulo, sigue adelante.
+    if (resultadoInstancia == false) {
+      exit(0);
+    }
+  }
+  // ──────────────────────────────────────────────────────────────────
 
   // Desktop window management
   if (!Platform.isAndroid && !Platform.isIOS) {
@@ -43,7 +72,6 @@ void main() async {
   Hive.registerAdapter(TaskModelAdapter());
   Hive.registerAdapter(DailyStatsAdapter());
 
-  // Pre-open the box to avoid async issues later if wanted, or let repository handle it.
   await Hive.openBox<TaskModel>('tasksBox');
   await Hive.openBox<DailyStats>('statsBox');
 

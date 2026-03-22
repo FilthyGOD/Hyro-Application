@@ -1,16 +1,23 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
+import '../../providers/profile_provider.dart';
+import '../missions/missions_provider.dart';
+import '../missions/models/daily_mission.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_typography.dart';
 import '../../shared/widgets/glass_card.dart';
 
-/// Profile screen showing user info and achievements.
+/// Profile screen showing user info, level/XP, coins, and daily missions.
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final auth = context.watch<AuthProvider>();
+    final profile = context.watch<ProfileProvider>();
+    final missions = context.watch<MissionsProvider>();
+
     return SingleChildScrollView(
       padding: const EdgeInsets.all(32),
       child: Column(
@@ -21,28 +28,139 @@ class ProfileScreen extends StatelessWidget {
             radius: 48,
             backgroundColor: AppColors.primary,
             child: Text(
-              context
-                      .watch<AuthProvider>()
-                      .currentUser
-                      ?.name
-                      ?.substring(0, 1)
-                      .toUpperCase() ??
-                  'H',
+              auth.currentUser?.name?.substring(0, 1).toUpperCase() ?? 'H',
               style: AppTypography.h1.copyWith(fontSize: 36),
             ),
           ),
           const SizedBox(height: 16),
           Text(
-            context.watch<AuthProvider>().currentUser?.name ?? 'Usuario',
+            auth.currentUser?.name ?? 'Usuario',
             style: AppTypography.h2,
           ),
           const SizedBox(height: 4),
           Text(
-            context.watch<AuthProvider>().currentUser?.usernameOrEmail ??
-                'correo@hyro.app',
+            auth.currentUser?.usernameOrEmail ?? 'correo@hyro.app',
             style: AppTypography.bodyMedium,
           ),
-          const SizedBox(height: 32),
+          const SizedBox(height: 24),
+
+          // ── Level & XP Bar ──
+          GlassCard(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 6,
+                          ),
+                          decoration: BoxDecoration(
+                            gradient: const LinearGradient(
+                              colors: [
+                                Color(0xFF6A25F4),
+                                Color(0xFFA855F7),
+                              ],
+                            ),
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Text(
+                            'Nv. ${profile.nivel}',
+                            style: AppTypography.labelLarge.copyWith(
+                              fontSize: 14,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Text(
+                          '${profile.experiencia} / ${profile.xpForNextLevel} XP',
+                          style: AppTypography.bodyMedium,
+                        ),
+                      ],
+                    ),
+                    Row(
+                      children: [
+                        const Icon(
+                          Icons.monetization_on,
+                          color: Colors.amber,
+                          size: 20,
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          '${profile.monedas}',
+                          style: AppTypography.labelLarge.copyWith(
+                            color: Colors.amber,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                // XP progress bar
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: LinearProgressIndicator(
+                    value: profile.levelProgress,
+                    minHeight: 8,
+                    backgroundColor: AppColors.surfaceLight,
+                    valueColor: const AlwaysStoppedAnimation<Color>(
+                      AppColors.primary,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 24),
+
+          // ── Daily Missions ──
+          Align(
+            alignment: Alignment.centerLeft,
+            child: Row(
+              children: [
+                const Icon(
+                  Icons.assignment,
+                  color: AppColors.primary,
+                  size: 20,
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  'Misiones Diarias',
+                  style: AppTypography.h3.copyWith(fontSize: 18),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 12),
+          if (missions.isLoading)
+            const Padding(
+              padding: EdgeInsets.all(32),
+              child: CircularProgressIndicator(color: AppColors.primary),
+            )
+          else if (missions.missions.isEmpty)
+            GlassCard(
+              padding: const EdgeInsets.all(24),
+              child: Text(
+                'Las misiones se generarán automáticamente.',
+                style: AppTypography.bodyMedium,
+                textAlign: TextAlign.center,
+              ),
+            )
+          else
+            ...missions.missions.map(
+              (mission) => Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: _MissionCard(mission: mission),
+              ),
+            ),
+          const SizedBox(height: 24),
+
           // ── Achievement cards ──
           Row(
             children: [
@@ -88,7 +206,8 @@ class ProfileScreen extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 32),
-          // ── Actions ──
+
+          // ── Logout ──
           SizedBox(
             width: double.infinity,
             child: OutlinedButton.icon(
@@ -104,6 +223,135 @@ class ProfileScreen extends StatelessWidget {
     );
   }
 }
+
+// ─── Mission Card Widget ──────────────────────────────────────────────
+
+class _MissionCard extends StatelessWidget {
+  final DailyMission mission;
+
+  const _MissionCard({required this.mission});
+
+  @override
+  Widget build(BuildContext context) {
+    final auth = context.read<AuthProvider>();
+    final missions = context.read<MissionsProvider>();
+
+    Color statusColor;
+    IconData statusIcon;
+    if (mission.isClaimed) {
+      statusColor = AppColors.breakGreen;
+      statusIcon = Icons.check_circle;
+    } else if (mission.isCompleted) {
+      statusColor = Colors.amber;
+      statusIcon = Icons.star;
+    } else {
+      statusColor = AppColors.primary;
+      statusIcon = Icons.radio_button_unchecked;
+    }
+
+    return GlassCard(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(statusIcon, color: statusColor, size: 20),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  mission.title,
+                  style: AppTypography.labelLarge.copyWith(
+                    fontSize: 14,
+                    decoration:
+                        mission.isClaimed ? TextDecoration.lineThrough : null,
+                  ),
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 8,
+                  vertical: 4,
+                ),
+                decoration: BoxDecoration(
+                  color: Colors.amber.withAlpha(25),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.bolt, color: Colors.amber, size: 14),
+                    const SizedBox(width: 2),
+                    Text(
+                      '+${mission.xpReward} XP',
+                      style: AppTypography.bodySmall.copyWith(
+                        color: Colors.amber,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(mission.description, style: AppTypography.bodySmall),
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              Expanded(
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(6),
+                  child: LinearProgressIndicator(
+                    value: mission.progress,
+                    minHeight: 6,
+                    backgroundColor: AppColors.surfaceLight,
+                    valueColor: AlwaysStoppedAnimation<Color>(statusColor),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Text(
+                '${mission.currentProgress}/${mission.targetValue}',
+                style: AppTypography.bodySmall.copyWith(
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
+          if (mission.isCompleted && !mission.isClaimed) ...[
+            const SizedBox(height: 10),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: () async {
+                  final userId = auth.supabaseUserId;
+                  if (userId != null) {
+                    await missions.claimMission(mission.id, userId);
+                  }
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.amber,
+                  foregroundColor: Colors.black,
+                  padding: const EdgeInsets.symmetric(vertical: 10),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+                child: const Text(
+                  '¡Reclamar!',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+// ─── Achievement Card Widget ──────────────────────────────────────────
 
 class _AchievementCard extends StatelessWidget {
   final IconData icon;

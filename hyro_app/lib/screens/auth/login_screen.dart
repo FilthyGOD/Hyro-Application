@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:hyro_app/providers/auth_provider.dart';
+import '../../shared/widgets/animated_background.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -27,7 +28,9 @@ class _LoginScreenState extends State<LoginScreen> {
 
     if (mounted) {
       setState(() => _isLoading = false);
-      if (auth.isAuthenticated && !auth.isGuest && Navigator.of(context).canPop()) {
+      if (auth.isAuthenticated &&
+          !auth.isGuest &&
+          Navigator.of(context).canPop()) {
         Navigator.of(context).pop();
       }
     }
@@ -47,6 +50,7 @@ class _LoginScreenState extends State<LoginScreen> {
       body: SafeArea(
         child: Stack(
           children: [
+            const Positioned.fill(child: AnimatedBackground()),
             LayoutBuilder(
               builder: (context, constraints) {
                 if (constraints.maxWidth >= 850) {
@@ -84,8 +88,12 @@ class _LoginScreenState extends State<LoginScreen> {
               _buildLogo(showText: true),
               const SizedBox(height: 16),
               const Text(
-                'Let\'s get started',
-                style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: Colors.white),
+                'Comencemos',
+                style: TextStyle(
+                  fontSize: 32,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
               ),
               const SizedBox(height: 48),
               Stack(
@@ -97,37 +105,53 @@ class _LoginScreenState extends State<LoginScreen> {
                     padding: const EdgeInsets.all(24),
                     decoration: BoxDecoration(
                       color: Colors.transparent,
-                      border: Border.all(color: const Color(0xFF2B3352), width: 1.5),
+                      border: Border.all(
+                        color: const Color(0xFF2B3352),
+                        width: 1.5,
+                      ),
                       borderRadius: BorderRadius.circular(24),
                     ),
                     child: Column(
                       children: [
                         const SizedBox(height: 56), // Space for avatar
                         _buildInputField(
-                          label: 'Mobile Number / Email',
-                          hint: 'e.g. hello@aura.com',
+                          label: 'EMAIL O USUARIO',
+                          hint: 'user@Hyro.com',
                           controller: _emailController,
                           prefixIcon: Icons.alternate_email,
                         ),
                         const SizedBox(height: 24),
                         _buildInputField(
-                          label: 'Password',
+                          label: 'CONTRASEÑA',
                           hint: '••••••••',
                           controller: _passwordController,
                           prefixIcon: Icons.lock_outline,
                           isPassword: true,
-                          actionText: 'Forgot Password?',
+                          actionText: 'Olvide mi contraseña',
                         ),
                         const SizedBox(height: 32),
-                        _buildGradientButton(text: 'SIGN IN', onPressed: _login),
+                        _buildGradientButton(
+                          text: 'Iniciar Sesión',
+                          onPressed: _login,
+                        ),
                         const SizedBox(height: 32),
-                        _buildDivider('IF FEELING LAZY'),
+                        _buildDivider('INGRESAR CON'),
                         const SizedBox(height: 24),
                         Row(
                           children: [
-                            Expanded(child: _buildSocialButton('Google', Icons.g_mobiledata)),
+                            Expanded(
+                              child: _buildSocialButton(
+                                'Google',
+                                Icons.g_mobiledata,
+                              ),
+                            ),
                             const SizedBox(width: 16),
-                            Expanded(child: _buildSocialButton('Facebook', Icons.facebook)),
+                            Expanded(
+                              child: _buildSocialButton(
+                                'Facebook',
+                                Icons.facebook,
+                              ),
+                            ),
                           ],
                         ),
                       ],
@@ -154,7 +178,11 @@ class _LoginScreenState extends State<LoginScreen> {
                         child: const CircleAvatar(
                           radius: 38,
                           backgroundColor: Color(0xFF1B2236),
-                          child: Icon(Icons.cruelty_free, size: 40, color: Colors.white70), // Placeholder for capybara
+                          child: Icon(
+                            Icons.flash_on,
+                            size: 40,
+                            color: Colors.white70,
+                          ), // Placeholder for logo
                         ),
                       ),
                     ),
@@ -178,55 +206,46 @@ class _LoginScreenState extends State<LoginScreen> {
           flex: 4,
           child: Container(
             padding: const EdgeInsets.only(left: 64.0, top: 48.0, right: 64.0),
-            decoration: const BoxDecoration(
-              gradient: RadialGradient(
-                center: Alignment(-0.5, -0.2),
-                radius: 1.2,
-                colors: [Color(0xFF1C2744), Color(0xFF101422)],
-              ),
-            ),
+            color: Colors.transparent,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _buildLogo(showText: true, size: 32, labelText: 'Focus Aura', useThinFont: true),
+                _buildLogo(
+                  showText: true,
+                  size: 40,
+                  labelText: 'Hyro',
+                  useThinFont: false,
+                ),
                 const SizedBox(height: 64),
                 RichText(
                   text: const TextSpan(
-                    style: TextStyle(fontSize: 64, fontWeight: FontWeight.bold, height: 1.1),
+                    style: TextStyle(
+                      fontSize: 64,
+                      fontWeight: FontWeight.bold,
+                      height: 1.1,
+                    ),
                     children: [
-                      TextSpan(text: 'Atmospheric\n', style: TextStyle(color: Colors.white)),
-                      TextSpan(text: 'Intelligence.', style: TextStyle(color: Color(0xFF3CDCF8))), // Cyan
+                      TextSpan(
+                        text: 'Eleva tu\n',
+                        style: TextStyle(color: Colors.white),
+                      ),
+                      TextSpan(
+                        text: 'potencial.',
+                        style: TextStyle(color: Color(0xFF3CDCF8)),
+                      ), // Cyan
                     ],
                   ),
                 ),
                 const SizedBox(height: 24),
                 const Text(
-                  'The next evolution of cognitive sanctuary. Sync\nyour state, find your flow.',
-                  style: TextStyle(fontSize: 18, color: Colors.white54, height: 1.5),
+                  'Domina tu tiempo, organiza tus tareas\ny alcanza tus metas con Hyro.',
+                  style: TextStyle(
+                    fontSize: 20,
+                    color: Colors.white70,
+                    height: 1.5,
+                  ),
                 ),
                 const Spacer(),
-                // Abstract wave placeholder
-                Container(
-                  height: 300,
-                  width: double.infinity,
-                  decoration: BoxDecoration(
-                    borderRadius: const BorderRadius.only(topLeft: Radius.circular(32), topRight: Radius.circular(32)),
-                    gradient: LinearGradient(
-                      begin: Alignment.bottomLeft,
-                      end: Alignment.topRight,
-                      colors: [
-                        const Color(0xFF3CDCF8).withOpacity(0.15), 
-                        const Color(0xFF101422).withOpacity(0.0)
-                      ],
-                    ),
-                  ),
-                  child: Center(
-                    child: Text(
-                      '[Abstract Aura Graphic]', 
-                      style: TextStyle(color: Colors.white.withOpacity(0.1), fontSize: 24)
-                    )
-                  ),
-                )
               ],
             ),
           ),
@@ -235,16 +254,20 @@ class _LoginScreenState extends State<LoginScreen> {
         Expanded(
           flex: 5,
           child: Container(
-            color: const Color(0xFF15192B), // Slightly different shade for right panel
+            color: Colors.transparent, // Let animated background show through
             child: Center(
               child: Container(
                 constraints: const BoxConstraints(maxWidth: 450),
                 padding: const EdgeInsets.all(48.0),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF191D32),
+                  color: const Color(0xFF191D32).withOpacity(0.85),
                   borderRadius: BorderRadius.circular(24),
                   boxShadow: [
-                    BoxShadow(color: Colors.black.withOpacity(0.2), blurRadius: 40, offset: const Offset(0, 20)),
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.2),
+                      blurRadius: 40,
+                      offset: const Offset(0, 20),
+                    ),
                   ],
                 ),
                 child: Column(
@@ -252,42 +275,62 @@ class _LoginScreenState extends State<LoginScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const Text(
-                      'Welcome Back',
-                      style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Colors.white),
+                      'Bienvenido',
+                      style: TextStyle(
+                        fontSize: 28,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
                     ),
                     const SizedBox(height: 8),
                     const Text(
-                      'Please enter your credentials to resume focus.',
+                      'Por favor ingresa tus credenciales para continuar',
                       style: TextStyle(color: Colors.white54, fontSize: 13),
                     ),
                     const SizedBox(height: 40),
                     _buildInputField(
-                      label: 'EMAIL OR USERNAME',
-                      hint: 'aura.user@flow.com',
+                      label: 'EMAIL O USUARIO',
+                      hint: 'user@Hyro.com',
                       controller: _emailController,
                       prefixIcon: Icons.alternate_email,
                       isDesktop: true,
                     ),
                     const SizedBox(height: 24),
                     _buildInputField(
-                      label: 'PASSWORD',
+                      label: 'CONTRASEÑA',
                       hint: '••••••••',
                       controller: _passwordController,
                       prefixIcon: Icons.lock_outline,
                       isPassword: true,
-                      actionText: 'Forgot?',
+                      actionText: 'Olvide mi contraseña',
                       isDesktop: true,
                     ),
                     const SizedBox(height: 32),
-                    _buildGradientButton(text: 'Log In', onPressed: _login, isDesktop: true),
+                    _buildGradientButton(
+                      text: 'Iniciar Sesión',
+                      onPressed: _login,
+                      isDesktop: true,
+                    ),
                     const SizedBox(height: 32),
-                    _buildDivider('CONTINUE WITH'),
+                    _buildDivider('INGRESAR CON'),
                     const SizedBox(height: 24),
                     Row(
                       children: [
-                        Expanded(child: _buildSocialButton('Google', Icons.g_mobiledata, isDesktop: true)),
+                        Expanded(
+                          child: _buildSocialButton(
+                            'Google',
+                            Icons.g_mobiledata,
+                            isDesktop: true,
+                          ),
+                        ),
                         const SizedBox(width: 16),
-                        Expanded(child: _buildSocialButton('Facebook', Icons.facebook, isDesktop: true)),
+                        Expanded(
+                          child: _buildSocialButton(
+                            'Facebook',
+                            Icons.facebook,
+                            isDesktop: true,
+                          ),
+                        ),
                       ],
                     ),
                     const SizedBox(height: 48),
@@ -302,46 +345,27 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  Widget _buildLogo({required bool showText, double size = 32, String labelText = 'FOCUS AURA', bool useThinFont = false}) {
+  Widget _buildLogo({
+    required bool showText,
+    double size = 32,
+    String labelText = 'Hyro',
+    bool useThinFont = false,
+  }) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        // Custom 3-circle logo approximation
-        SizedBox(
-          width: size,
-          height: size,
-          child: Stack(
-            children: [
-              Positioned(
-                top: 0,
-                right: 0,
-                child: Container(
-                  width: size * 0.6,
-                  height: size * 0.6,
-                  decoration: const BoxDecoration(color: Color(0xFF3CDCF8), shape: BoxShape.circle),
-                ),
-              ),
-              Positioned(
-                bottom: size * 0.1,
-                left: size * 0.1,
-                child: Container(
-                  width: size * 0.4,
-                  height: size * 0.4,
-                  decoration: BoxDecoration(color: const Color(0xFF3CDCF8).withOpacity(0.8), shape: BoxShape.circle),
-                ),
-              ),
-              Positioned(
-                bottom: -size * 0.05,
-                right: size * 0.2,
-                child: Container(
-                  width: size * 0.35,
-                  height: size * 0.35,
-                  decoration: BoxDecoration(color: const Color(0xFF3CDCF8).withOpacity(0.6), shape: BoxShape.circle),
-                ),
-              ),
-            ],
+        ClipRRect(
+          borderRadius: BorderRadius.circular(size * 0.25),
+          child: Image.asset(
+            'assets/images/app_icon.png',
+            width: size,
+            height: size,
+            fit: BoxFit.cover,
+            errorBuilder: (context, error, stackTrace) {
+              return Icon(Icons.flash_on, size: size, color: const Color(0xFF3CDCF8));
+            },
           ),
         ),
         if (showText) ...[
@@ -352,17 +376,9 @@ class _LoginScreenState extends State<LoginScreen> {
               fontSize: size * 0.75,
               fontWeight: useThinFont ? FontWeight.w500 : FontWeight.bold,
               color: Colors.white,
+              letterSpacing: 1.2,
             ),
           ),
-          if (useThinFont)
-            Text(
-              ' Aura',
-              style: TextStyle(
-                fontSize: size * 0.75,
-                fontWeight: FontWeight.bold,
-                color: const Color(0xFFCC88FF), // Purple suffix
-              ),
-            ),
         ],
       ],
     );
@@ -378,7 +394,7 @@ class _LoginScreenState extends State<LoginScreen> {
     bool isDesktop = false,
   }) {
     final labelColor = isDesktop ? Colors.white54 : Colors.white60;
-    
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -413,10 +429,24 @@ class _LoginScreenState extends State<LoginScreen> {
           decoration: InputDecoration(
             hintText: hint,
             hintStyle: const TextStyle(color: Colors.white24),
-            prefixIcon: Icon(prefixIcon, color: const Color(0xFF3CDCF8), size: 18),
-            suffixIcon: isPassword ? const Icon(Icons.remove_red_eye_outlined, color: Colors.white38, size: 18) : null,
+            prefixIcon: Icon(
+              prefixIcon,
+              color: const Color(0xFF3CDCF8),
+              size: 18,
+            ),
+            suffixIcon:
+                isPassword
+                    ? const Icon(
+                      Icons.remove_red_eye_outlined,
+                      color: Colors.white38,
+                      size: 18,
+                    )
+                    : null,
             filled: true,
-            fillColor: isDesktop ? const Color(0xFF141725) : Colors.white.withOpacity(0.0),
+            fillColor:
+                isDesktop
+                    ? const Color(0xFF141725)
+                    : Colors.white.withOpacity(0.0),
             contentPadding: const EdgeInsets.symmetric(vertical: 18),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(16),
@@ -428,7 +458,10 @@ class _LoginScreenState extends State<LoginScreen> {
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(16),
-              borderSide: const BorderSide(color: Color(0xFF3CDCF8), width: 1.5),
+              borderSide: const BorderSide(
+                color: Color(0xFF3CDCF8),
+                width: 1.5,
+              ),
             ),
           ),
         ),
@@ -436,7 +469,11 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  Widget _buildGradientButton({required String text, required VoidCallback onPressed, bool isDesktop = false}) {
+  Widget _buildGradientButton({
+    required String text,
+    required VoidCallback onPressed,
+    bool isDesktop = false,
+  }) {
     // Only gradient button in both images, maybe desktop is slightly different but mostly same
     return Container(
       width: double.infinity,
@@ -461,23 +498,29 @@ class _LoginScreenState extends State<LoginScreen> {
         style: ElevatedButton.styleFrom(
           backgroundColor: Colors.transparent,
           shadowColor: Colors.transparent,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
         ),
-        child: _isLoading
-            ? const SizedBox(
-                width: 24,
-                height: 24,
-                child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
-              )
-            : Text(
-                text,
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  letterSpacing: 0.5,
-                  color: Colors.white,
+        child:
+            _isLoading
+                ? const SizedBox(
+                  width: 24,
+                  height: 24,
+                  child: CircularProgressIndicator(
+                    color: Colors.white,
+                    strokeWidth: 2,
+                  ),
+                )
+                : Text(
+                  text,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 0.5,
+                    color: Colors.white,
+                  ),
                 ),
-              ),
       ),
     );
   }
@@ -490,7 +533,12 @@ class _LoginScreenState extends State<LoginScreen> {
           padding: const EdgeInsets.symmetric(horizontal: 16.0),
           child: Text(
             text,
-            style: TextStyle(color: Colors.white.withOpacity(0.4), fontSize: 11, letterSpacing: 1.2, fontWeight: FontWeight.bold),
+            style: TextStyle(
+              color: Colors.white.withOpacity(0.4),
+              fontSize: 11,
+              letterSpacing: 1.2,
+              fontWeight: FontWeight.bold,
+            ),
           ),
         ),
         Expanded(child: Divider(color: Colors.white.withOpacity(0.08))),
@@ -504,39 +552,61 @@ class _LoginScreenState extends State<LoginScreen> {
     await auth.signInWithGoogle();
     if (mounted) {
       setState(() => _isLoading = false);
-      if (auth.isAuthenticated && !auth.isGuest && Navigator.of(context).canPop()) {
+      if (auth.isAuthenticated &&
+          !auth.isGuest &&
+          Navigator.of(context).canPop()) {
         Navigator.of(context).pop();
       }
     }
   }
 
-  Widget _buildSocialButton(String text, IconData icon, {bool isDesktop = false}) {
+  Widget _buildSocialButton(
+    String text,
+    IconData icon, {
+    bool isDesktop = false,
+  }) {
     return OutlinedButton.icon(
-      onPressed: text == 'Google' ? (_isLoading ? null : _signInWithGoogle) : () {},
+      onPressed:
+          text == 'Google' ? (_isLoading ? null : _signInWithGoogle) : () {},
       icon: Container(
         padding: const EdgeInsets.all(2),
-        decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          shape: BoxShape.circle,
+        ),
         child: Icon(icon, color: const Color(0xFF101422), size: 16),
       ),
       label: Text(
         text,
-        style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 13),
+        style: const TextStyle(
+          color: Colors.white,
+          fontWeight: FontWeight.w600,
+          fontSize: 13,
+        ),
       ),
       style: OutlinedButton.styleFrom(
         padding: const EdgeInsets.symmetric(vertical: 16),
-        side: BorderSide(color: Colors.white.withOpacity(isDesktop ? 0.0 : 0.08)), // Desktop has no border, just background
+        side: BorderSide(
+          color: Colors.white.withOpacity(isDesktop ? 0.0 : 0.08),
+        ), // Desktop has no border, just background
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        backgroundColor: isDesktop ? const Color(0xFF141725) : Colors.white.withOpacity(0.02),
+        backgroundColor:
+            isDesktop
+                ? const Color(0xFF141725)
+                : Colors.white.withOpacity(0.02),
       ),
     );
   }
 
   Widget _buildSignUpText({required bool isMobile}) {
     final textColor = Colors.white54;
-    final actionColor = isMobile ? const Color(0xFF3CDCF8) : const Color(0xFFCC88FF); // Mobile uses Cyan, Desktop uses Purple
-    final prefix = isMobile ? "Don't have an account? " : "New to Focus Aura? ";
-    final suffix = isMobile ? "Sign Up" : "Create an Account";
-    
+    final actionColor =
+        isMobile
+            ? const Color(0xFF3CDCF8)
+            : const Color(0xFFCC88FF); // Mobile uses Cyan, Desktop uses Purple
+    final prefix = isMobile ? "¿No tienes una cuenta? " : "¿Nuevo en Hyro? ";
+    final suffix = isMobile ? "Regístrate" : "Crear una cuenta";
+
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
@@ -545,7 +615,11 @@ class _LoginScreenState extends State<LoginScreen> {
           onTap: () {},
           child: Text(
             suffix,
-            style: TextStyle(color: actionColor, fontSize: 13, fontWeight: FontWeight.bold),
+            style: TextStyle(
+              color: actionColor,
+              fontSize: 13,
+              fontWeight: FontWeight.bold,
+            ),
           ),
         ),
       ],

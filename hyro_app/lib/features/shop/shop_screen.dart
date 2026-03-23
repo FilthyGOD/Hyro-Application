@@ -38,9 +38,24 @@ class _ShopScreenState extends State<ShopScreen>
 
   // "Nada" items (always owned, id X00 per category)
   static const _nadaItems = {
-    _CosmeticCategory.sombrero: ShopItem(id: 100, nombre: 'Nada', categoria: 'Sombrero', precio: 0),
-    _CosmeticCategory.cara: ShopItem(id: 200, nombre: 'Nada', categoria: 'Cara', precio: 0),
-    _CosmeticCategory.cuerpo: ShopItem(id: 300, nombre: 'Nada', categoria: 'Traje', precio: 0),
+    _CosmeticCategory.sombrero: ShopItem(
+      id: 100,
+      nombre: 'Nada',
+      categoria: 'Sombrero',
+      precio: 0,
+    ),
+    _CosmeticCategory.cara: ShopItem(
+      id: 200,
+      nombre: 'Nada',
+      categoria: 'Cara',
+      precio: 0,
+    ),
+    _CosmeticCategory.cuerpo: ShopItem(
+      id: 300,
+      nombre: 'Nada',
+      categoria: 'Traje',
+      precio: 0,
+    ),
   };
 
   @override
@@ -65,17 +80,23 @@ class _ShopScreenState extends State<ShopScreen>
   // ── Helpers ──
   int _nadaId(_CosmeticCategory cat) {
     switch (cat) {
-      case _CosmeticCategory.sombrero: return 100;
-      case _CosmeticCategory.cara: return 200;
-      case _CosmeticCategory.cuerpo: return 300;
+      case _CosmeticCategory.sombrero:
+        return 100;
+      case _CosmeticCategory.cara:
+        return 200;
+      case _CosmeticCategory.cuerpo:
+        return 300;
     }
   }
 
   String _categoryFilter(_CosmeticCategory cat) {
     switch (cat) {
-      case _CosmeticCategory.sombrero: return 'sombr';
-      case _CosmeticCategory.cara: return 'cara';
-      case _CosmeticCategory.cuerpo: return 'traje';
+      case _CosmeticCategory.sombrero:
+        return 'sombr';
+      case _CosmeticCategory.cara:
+        return 'cara';
+      case _CosmeticCategory.cuerpo:
+        return 'traje';
     }
   }
 
@@ -96,9 +117,12 @@ class _ShopScreenState extends State<ShopScreen>
       final selectedId = _selectedItem[currentCategory];
 
       if (selectedId != null && selectedId >= 0) {
-        if (currentCategory == _CosmeticCategory.sombrero) mascot.previewSombrero(selectedId);
-        else if (currentCategory == _CosmeticCategory.cara) mascot.previewCara(selectedId);
-        else if (currentCategory == _CosmeticCategory.cuerpo) mascot.previewCuerpo(selectedId);
+        if (currentCategory == _CosmeticCategory.sombrero)
+          mascot.previewSombrero(selectedId);
+        else if (currentCategory == _CosmeticCategory.cara)
+          mascot.previewCara(selectedId);
+        else if (currentCategory == _CosmeticCategory.cuerpo)
+          mascot.previewCuerpo(selectedId);
       }
     }
   }
@@ -110,9 +134,12 @@ class _ShopScreenState extends State<ShopScreen>
     final mascot = context.read<MascotController>();
     mascot.restoreEquippedState();
 
-    if (cat == _CosmeticCategory.sombrero) mascot.previewSombrero(id);
-    else if (cat == _CosmeticCategory.cara) mascot.previewCara(id);
-    else if (cat == _CosmeticCategory.cuerpo) mascot.previewCuerpo(id);
+    if (cat == _CosmeticCategory.sombrero)
+      mascot.previewSombrero(id);
+    else if (cat == _CosmeticCategory.cara)
+      mascot.previewCara(id);
+    else if (cat == _CosmeticCategory.cuerpo)
+      mascot.previewCuerpo(id);
   }
 
   Future<void> _onBuy(_CosmeticCategory cat, int itemId) async {
@@ -185,7 +212,10 @@ class _ShopScreenState extends State<ShopScreen>
               Text('Tienda', style: AppTypography.h1),
               const SizedBox(width: 16),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 6,
+                ),
                 decoration: BoxDecoration(
                   color: Colors.amber.withAlpha(25),
                   borderRadius: BorderRadius.circular(20),
@@ -194,11 +224,17 @@ class _ShopScreenState extends State<ShopScreen>
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Icon(Icons.monetization_on, color: Colors.amber, size: 18),
+                    const Icon(
+                      Icons.monetization_on,
+                      color: Colors.amber,
+                      size: 18,
+                    ),
                     const SizedBox(width: 4),
                     Text(
                       '${profile.monedas}',
-                      style: AppTypography.labelLarge.copyWith(color: Colors.amber),
+                      style: AppTypography.labelLarge.copyWith(
+                        color: Colors.amber,
+                      ),
                     ),
                   ],
                 ),
@@ -301,88 +337,95 @@ class _ShopScreenState extends State<ShopScreen>
               spacing: 12,
               runSpacing: 12,
               alignment: WrapAlignment.center,
-              children: items.map((item) {
-                final isSelected = selected == item.id;
-                final isOwned = shop.ownsItem(item.id) || item.id == nadaId;
+              children:
+                  items.map((item) {
+                    final isSelected = selected == item.id;
+                    final isOwned = shop.ownsItem(item.id) || item.id == nadaId;
 
-                return GestureDetector(
-                  onTap: () => _onSelect(category, item.id),
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 200),
-                    width: 100,
-                    padding: const EdgeInsets.symmetric(
-                      vertical: 16,
-                      horizontal: 8,
-                    ),
-                    decoration: BoxDecoration(
-                      color: isSelected
-                          ? AppColors.primary.withAlpha(30)
-                          : AppColors.surfaceLight,
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(
-                        color: isSelected
-                            ? AppColors.primary
-                            : AppColors.cardBorder,
-                        width: isSelected ? 2 : 1,
-                      ),
-                    ),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          item.id == nadaId ? '❌' : item.icon,
-                          style: const TextStyle(fontSize: 36),
+                    return GestureDetector(
+                      onTap: () => _onSelect(category, item.id),
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 200),
+                        width: 100,
+                        padding: const EdgeInsets.symmetric(
+                          vertical: 16,
+                          horizontal: 8,
                         ),
-                        const SizedBox(height: 8),
-                        Text(
-                          item.nombre,
-                          style: AppTypography.bodySmall.copyWith(
-                            color: isSelected
-                                ? AppColors.textPrimary
-                                : AppColors.textSecondary,
+                        decoration: BoxDecoration(
+                          color:
+                              isSelected
+                                  ? AppColors.primary.withAlpha(30)
+                                  : AppColors.surfaceLight,
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(
+                            color:
+                                isSelected
+                                    ? AppColors.primary
+                                    : AppColors.cardBorder,
+                            width: isSelected ? 2 : 1,
                           ),
-                          textAlign: TextAlign.center,
                         ),
-                        if (isOwned && item.id != nadaId) ...[
-                          const SizedBox(height: 4),
-                          Text(
-                            'Comprado',
-                            style: AppTypography.bodySmall.copyWith(
-                              color: AppColors.breakGreen,
-                              fontSize: 10,
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              item.id == nadaId ? '❌' : item.icon,
+                              style: const TextStyle(fontSize: 36),
                             ),
-                          ),
-                        ],
-                        if (!isOwned) ...[
-                          const SizedBox(height: 4),
-                          Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              const Icon(Icons.monetization_on, color: Colors.amber, size: 12),
-                              const SizedBox(width: 2),
+                            const SizedBox(height: 8),
+                            Text(
+                              item.nombre,
+                              style: AppTypography.bodySmall.copyWith(
+                                color:
+                                    isSelected
+                                        ? AppColors.textPrimary
+                                        : AppColors.textSecondary,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                            if (isOwned && item.id != nadaId) ...[
+                              const SizedBox(height: 4),
                               Text(
-                                '${item.precio}',
+                                'Comprado',
                                 style: AppTypography.bodySmall.copyWith(
-                                  color: Colors.amber,
+                                  color: AppColors.breakGreen,
                                   fontSize: 10,
-                                  fontWeight: FontWeight.w600,
                                 ),
                               ),
                             ],
-                          ),
-                        ],
-                      ],
-                    ),
-                  ),
-                );
-              }).toList(),
+                            if (!isOwned) ...[
+                              const SizedBox(height: 4),
+                              Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  const Icon(
+                                    Icons.monetization_on,
+                                    color: Colors.amber,
+                                    size: 12,
+                                  ),
+                                  const SizedBox(width: 2),
+                                  Text(
+                                    '${item.precio}',
+                                    style: AppTypography.bodySmall.copyWith(
+                                      color: Colors.amber,
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ],
+                        ),
+                      ),
+                    );
+                  }).toList(),
             ),
           ),
         ),
         const SizedBox(height: 12),
         // Action button
-        if (selected >= 0)
-          _buildActionButton(shop, category, selected, nadaId),
+        if (selected >= 0) _buildActionButton(shop, category, selected, nadaId),
       ],
     );
   }
@@ -399,7 +442,7 @@ class _ShopScreenState extends State<ShopScreen>
       return _ShopButton(
         label: 'Equipar',
         icon: Icons.checkroom,
-        color: AppColors.primary,
+        color: AppColors.timerColor,
         onTap: () => _onEquip(category, nadaId),
       );
     }
@@ -408,17 +451,20 @@ class _ShopScreenState extends State<ShopScreen>
       return _ShopButton(
         label: 'Equipar',
         icon: Icons.checkroom,
-        color: AppColors.primary,
+        color: AppColors.timerColor,
         onTap: () => _onEquip(category, selected),
       );
     }
 
     // Not owned — show price and buy button
-    final item = _itemsForCategory(shop, category).firstWhere((i) => i.id == selected);
+    final item = _itemsForCategory(
+      shop,
+      category,
+    ).firstWhere((i) => i.id == selected);
     return _ShopButton(
       label: _isPurchasing ? 'Comprando...' : 'Comprar · ${item.precio} 🪙',
       icon: Icons.shopping_cart,
-      color: AppColors.breakGreen,
+      color: AppColors.timerColor,
       onTap: _isPurchasing ? () {} : () => _onBuy(category, selected),
     );
   }

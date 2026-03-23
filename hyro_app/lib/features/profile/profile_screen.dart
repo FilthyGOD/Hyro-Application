@@ -36,7 +36,9 @@ class ProfileScreen extends StatelessWidget {
           ),
           const SizedBox(height: 16),
           Text(
-            auth.isGuest ? 'Modo Invitado' : (auth.currentUser?.name ?? 'Usuario'),
+            auth.isGuest
+                ? 'Modo Invitado'
+                : (auth.currentUser?.name ?? 'Usuario'),
             style: AppTypography.h2,
           ),
           const SizedBox(height: 4),
@@ -56,12 +58,15 @@ class ProfileScreen extends StatelessWidget {
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                   const Icon(Icons.cloud_off, color: Colors.amber, size: 14),
-                   const SizedBox(width: 6),
-                   Text(
-                     'Progreso Local',
-                     style: AppTypography.bodySmall.copyWith(color: Colors.amber, fontWeight: FontWeight.bold),
-                   ),
+                  const Icon(Icons.cloud_off, color: Colors.amber, size: 14),
+                  const SizedBox(width: 6),
+                  Text(
+                    'Progreso Local',
+                    style: AppTypography.bodySmall.copyWith(
+                      color: Colors.amber,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -84,10 +89,7 @@ class ProfileScreen extends StatelessWidget {
                           ),
                           decoration: BoxDecoration(
                             gradient: const LinearGradient(
-                              colors: [
-                                Color(0xFF6A25F4),
-                                Color(0xFFA855F7),
-                              ],
+                              colors: [Color(0xFF6A25F4), Color(0xFFA855F7)],
                             ),
                             borderRadius: BorderRadius.circular(20),
                           ),
@@ -241,14 +243,19 @@ class ProfileScreen extends StatelessWidget {
                   );
                 },
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primary,
+                  backgroundColor: AppColors.timerColor,
                   padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                 ),
                 icon: const Icon(Icons.cloud_sync, color: Colors.white),
                 label: Text(
                   'Iniciar Sesión para Sincronizar',
-                  style: AppTypography.h3.copyWith(color: Colors.white, fontSize: 16),
+                  style: AppTypography.h3.copyWith(
+                    color: Colors.white,
+                    fontSize: 16,
+                  ),
                 ),
               ),
             )
@@ -320,10 +327,7 @@ class _MissionCard extends StatelessWidget {
                 ),
               ),
               Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 8,
-                  vertical: 4,
-                ),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
                   color: Colors.amber.withAlpha(25),
                   borderRadius: BorderRadius.circular(12),
@@ -380,8 +384,8 @@ class _MissionCard extends StatelessWidget {
                   await missions.claimMission(mission.id, userId);
                 },
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.amber,
-                  foregroundColor: Colors.black,
+                  backgroundColor: AppColors.primary,
+                  foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(vertical: 10),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(10),

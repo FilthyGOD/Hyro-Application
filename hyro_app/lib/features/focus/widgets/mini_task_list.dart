@@ -4,6 +4,7 @@ import '../../../core/theme/app_typography.dart';
 import '../../../shared/widgets/glass_card.dart';
 import 'package:provider/provider.dart';
 import '../../tasks/tasks_provider.dart';
+import '../../../app.dart';
 
 /// Mini task list shown on the Focus screen.
 class MiniTaskList extends StatelessWidget {
@@ -34,7 +35,7 @@ class MiniTaskList extends StatelessWidget {
               Text('Tareas', style: AppTypography.h3),
               GestureDetector(
                 onTap: () {
-                  // Navigate to tasks tab (handled by parent usually, or index change)
+                  context.findAncestorStateOfType<AppShellState>()?.navigateTo(1);
                 },
                 child: Text(
                   'Ver Todas',

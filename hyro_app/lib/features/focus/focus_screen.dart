@@ -16,6 +16,7 @@ import 'widgets/activity_chart.dart';
 import '../stats/stats_provider.dart';
 import '../tasks/tasks_provider.dart';
 import '../mascot/mascot_controller.dart';
+import '../settings/settings_provider.dart';
 
 /// The main Focus screen with the Pomodoro timer and sidebar widgets.
 class FocusScreen extends StatelessWidget {
@@ -126,10 +127,11 @@ class _DesktopLayout extends StatelessWidget {
                             final desiredTimerSize =
                                 availableHeight -
                                 240; // 240px reserved for controls and padding
+                            final settings = context.watch<SettingsProvider>();
                             final timerSize = desiredTimerSize.clamp(
                               160.0,
                               460.0,
-                            );
+                            ) * settings.timerSizeMultiplier;
 
                             return Column(
                               children: [
@@ -186,19 +188,26 @@ class _DesktopLayout extends StatelessWidget {
                   const SizedBox(width: 48),
                   SizedBox(
                     width: 320, // Fixed width so data cards aren't stretched
-                    child: ListView(
-                      // ListView instead of SingleChildScrollView+Column for better scroll behavior
-                      children: [
-                        SessionInfoCard(
-                          completedSessions: sessionsToday,
-                          totalFocusMinutes: minutesToday,
-                        ),
-                        const SizedBox(height: 16),
-                        const MiniTaskList(),
-                        const SizedBox(height: 16),
-                        const ActivityChart(),
-                        const SizedBox(height: 32), // Bottom padding
-                      ],
+                    child: Builder(
+                      builder: (context) {
+                        final settings = context.watch<SettingsProvider>();
+                        if (settings.hideFocusCards) return const SizedBox.shrink();
+                        
+                        return ListView(
+                          // ListView instead of SingleChildScrollView+Column for better scroll behavior
+                          children: [
+                            SessionInfoCard(
+                              completedSessions: sessionsToday,
+                              totalFocusMinutes: minutesToday,
+                            ),
+                            const SizedBox(height: 16),
+                            const MiniTaskList(),
+                            const SizedBox(height: 16),
+                            const ActivityChart(),
+                            const SizedBox(height: 32), // Bottom padding
+                          ],
+                        );
+                      },
                     ),
                   ),
                 ],
@@ -283,6 +292,7 @@ class _MobileLayout extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cubit = context.read<TimerCubit>();
+    final settings = context.watch<SettingsProvider>();
 
     return SingleChildScrollView(
       padding: const EdgeInsets.only(top: 64, left: 20, right: 20, bottom: 20),
@@ -298,18 +308,21 @@ class _MobileLayout extends StatelessWidget {
             ),
             const SizedBox(height: 24),
             // Session info
-            SessionInfoCard(
-              completedSessions: sessionsToday,
-              totalFocusMinutes: minutesToday,
-            ),
-            const SizedBox(height: 24),
+            if (!settings.hideFocusCards) ...[
+              SessionInfoCard(
+                completedSessions: sessionsToday,
+                totalFocusMinutes: minutesToday,
+              ),
+              const SizedBox(height: 24),
+            ],
           ],
           // Timer
           LayoutBuilder(
             builder: (context, constraints) {
               final availableWidth = constraints.maxWidth;
+              final settings = context.watch<SettingsProvider>();
               // Make timer responsive: max 260, but scales down if screen is narrow
-              final size = (availableWidth * 0.75).clamp(160.0, 260.0);
+              final size = (availableWidth * 0.75).clamp(160.0, 260.0) * settings.timerSizeMultiplier;
               return CircularTimer(
                 remainingSeconds: state.remainingSeconds,
                 progress: state.progress,
@@ -339,10 +352,9 @@ class _MobileLayout extends StatelessWidget {
             onReset: cubit.reset,
             onStop: cubit.stop,
           ),
-          const SizedBox(height: 20),
-          // Mode selector
+          const SizedBox(height: 24),
           ModeSelector(currentMode: state.mode, onModeChanged: cubit.setMode),
-          if (!state.isRunning) ...[
+          if (!state.isRunning && !settings.hideFocusCards) ...[
             const SizedBox(height: 24),
             const MiniTaskList(),
             const SizedBox(height: 16),
@@ -375,20 +387,21 @@ void _handleStart(BuildContext context, TimerCubit cubit) {
     return;
   }
 
-  showModalBottomSheet<String?>(
+  showDialog<String?>(
     context: context,
-    backgroundColor: AppColors.surface,
-    shape: const RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-    ),
     builder: (ctx) {
-      return Padding(
-        padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Text('Selecciona una tarea para enfocarte', style: AppTypography.h3, textAlign: TextAlign.center),
+      return Dialog(
+        backgroundColor: AppColors.surface,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text('Selecciona una tarea para enfocarte', style: AppTypography.h3, textAlign: TextAlign.center),
             const SizedBox(height: 16),
             Flexible(
               child: ListView.builder(
@@ -411,7 +424,8 @@ void _handleStart(BuildContext context, TimerCubit cubit) {
               title: const Text('Empezar sin tarea', style: TextStyle(color: Colors.white54)),
               onTap: () => Navigator.pop(ctx, 'NO_TASK'),
             ),
-          ],
+            ],
+          ),
         ),
       );
     },

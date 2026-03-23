@@ -23,6 +23,7 @@ import 'providers/auth_provider.dart';
 import 'screens/auth/splash_screen.dart';
 import 'shared/layout/main_layout.dart';
 import 'shared/widgets/floating_mascot.dart';
+import 'core/utils/responsive.dart';
 
 /// Root widget for the Hyro app.
 class HyroApp extends StatelessWidget {
@@ -73,7 +74,7 @@ class HyroApp extends StatelessWidget {
                 return const SplashScreen();
               }
               // Todos entran al shell (invitados o usuarios logueados)
-              return _AppShell(authProvider: auth);
+              return AppShell(authProvider: auth);
             },
           ),
         ),
@@ -82,26 +83,29 @@ class HyroApp extends StatelessWidget {
   }
 }
 
-class _AppShell extends StatefulWidget {
+class AppShell extends StatefulWidget {
   final AuthProvider authProvider;
-  const _AppShell({required this.authProvider});
+  const AppShell({super.key, required this.authProvider});
 
   @override
-  State<_AppShell> createState() => _AppShellState();
+  State<AppShell> createState() => AppShellState();
 }
 
-class _AppShellState extends State<_AppShell> with WidgetsBindingObserver {
+class AppShellState extends State<AppShell> with WidgetsBindingObserver {
   int _selectedIndex = 0;
   bool _initialized = false;
+  late final PageController _pageController;
 
   @override
   void initState() {
     super.initState();
+    _pageController = PageController(initialPage: _selectedIndex);
     WidgetsBinding.instance.addObserver(this);
   }
 
   @override
   void dispose() {
+    _pageController.dispose();
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
@@ -112,7 +116,8 @@ class _AppShellState extends State<_AppShell> with WidgetsBindingObserver {
         state == AppLifecycleState.inactive || 
         state == AppLifecycleState.detached) {
       final cubit = context.read<TimerCubit>();
-      if (cubit.state.isRunning) {
+      final settings = context.read<SettingsProvider>();
+      if (cubit.state.isRunning && settings.autoPauseTimer) {
         cubit.pause();
       }
     }
@@ -152,9 +157,29 @@ class _AppShellState extends State<_AppShell> with WidgetsBindingObserver {
     await missionsProvider.initialize();
   }
 
-  void _onNavigate(int index) {
+  void navigateTo(int index) {
     final previousIndex = _selectedIndex;
+    final timerState = context.read<TimerCubit>().state;
+    final settings = context.read<SettingsProvider>();
+
+    if (settings.strictMode && timerState.isRunning && previousIndex == 0 && index != 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Modo estricto activado. ¡Termina tu sesión de enfoque primero!')),
+      );
+      return;
+    }
+
     setState(() => _selectedIndex = index);
+    
+    if (index == 5 || !Responsive.isMobile(context)) {
+      _pageController.jumpToPage(index);
+    } else {
+      _pageController.animateToPage(
+        index,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeInOut,
+      );
+    }
 
     if (previousIndex == index) return;
 
@@ -167,7 +192,7 @@ class _AppShellState extends State<_AppShell> with WidgetsBindingObserver {
 
     // Arriving at Focus → resume animation if timer is running
     if (index == 0) {
-      final timerState = context.read<TimerCubit>().state;
+      // timerState was read above
       if (timerState.isRunning) {
         if (timerState.mode == TimerMode.pomodoro) {
           mascot.triggerEstudiando();
@@ -184,10 +209,34 @@ class _AppShellState extends State<_AppShell> with WidgetsBindingObserver {
       children: [
         MainLayout(
           selectedIndex: _selectedIndex,
-          onNavigate: _onNavigate,
-          child: AnimatedSwitcher(
-            duration: const Duration(milliseconds: 300),
-            child: _screens[_selectedIndex],
+          onNavigate: navigateTo,
+          child: PageView(
+            controller: _pageController,
+            physics: (context.watch<SettingsProvider>().strictMode && context.watch<TimerCubit>().state.isRunning)
+                ? const NeverScrollableScrollPhysics() // Bloquea el swipe en modo estricto si está corriendo
+                : const BouncingScrollPhysics(),
+            onPageChanged: (index) {
+              final previousIndex = _selectedIndex;
+              if (index != _selectedIndex) {
+                setState(() => _selectedIndex = index);
+                
+                final mascot = context.read<MascotController>();
+                if (previousIndex == 0 || previousIndex == 3) {
+                  mascot.triggerVolver();
+                }
+                if (index == 0) {
+                  final timerState = context.read<TimerCubit>().state;
+                  if (timerState.isRunning) {
+                    if (timerState.mode == TimerMode.pomodoro) {
+                      mascot.triggerEstudiando();
+                    } else {
+                      mascot.triggerHueva();
+                    }
+                  }
+                }
+              }
+            },
+            children: _screens,
           ),
         ),
         // Floating mascot overlay — hidden on the Shop screen (index 3)

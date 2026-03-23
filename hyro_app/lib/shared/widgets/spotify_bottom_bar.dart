@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import '../../core/theme/app_typography.dart';
 import '../../core/services/spotify/spotify_auth_service.dart';
 import '../../core/services/spotify/spotify_player_service.dart';
+import '../../providers/ui_provider.dart';
+import 'package:provider/provider.dart';
 
 class SpotifyBottomBar extends StatefulWidget {
   final SpotifyAuthService authService;
@@ -159,8 +161,14 @@ class _SpotifyBottomBarState extends State<SpotifyBottomBar> {
   }
 
   Widget _buildLiquidBarContainer({required Widget child}) {
-    return SafeArea(
-      child: Center(
+    return Dismissible(
+      key: const Key('spotify_bottom_bar'),
+      direction: DismissDirection.startToEnd,
+      onDismissed: (_) {
+        context.read<UiProvider>().setMusicBarMinimized(true);
+      },
+      child: SafeArea(
+        child: Center(
         child: Container(
           height: 72,
           constraints: const BoxConstraints(maxWidth: 500),
@@ -201,6 +209,7 @@ class _SpotifyBottomBarState extends State<SpotifyBottomBar> {
               ),
             ),
           ),
+        ),
         ),
       ),
     );

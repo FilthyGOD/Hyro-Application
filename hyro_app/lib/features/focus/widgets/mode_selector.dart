@@ -33,12 +33,6 @@ class ModeSelector extends StatelessWidget {
           activeColor: AppColors.timerColor,
           onTap: () => onModeChanged(TimerMode.shortBreak),
         ),
-        _ModeChip(
-          label: 'Descanso Largo',
-          isActive: currentMode == TimerMode.longBreak,
-          activeColor: AppColors.timerColor,
-          onTap: () => onModeChanged(TimerMode.longBreak),
-        ),
       ],
     );
   }

@@ -92,6 +92,7 @@ class _MainLayoutState extends State<MainLayout> {
                     child: Consumer<UiProvider>(
                       builder: (context, ui, _) {
                         if (!ui.isMusicBarVisible) return const SizedBox.shrink();
+                        if (ui.isMusicBarMinimized) return _buildMinimizedMusicBar(ui);
                         return SpotifyBottomBar(
                           authService: _spotifyAuthService,
                           playerService: _spotifyPlayerService,
@@ -163,6 +164,7 @@ class _MainLayoutState extends State<MainLayout> {
             child: Consumer<UiProvider>(
               builder: (context, ui, _) {
                 if (!ui.isMusicBarVisible) return const SizedBox.shrink();
+                if (ui.isMusicBarMinimized) return _buildMinimizedMusicBar(ui);
                 return SpotifyBottomBar(
                   authService: _spotifyAuthService,
                   playerService: _spotifyPlayerService,
@@ -237,6 +239,35 @@ class _MainLayoutState extends State<MainLayout> {
               label: 'Perfil',
             ),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMinimizedMusicBar(UiProvider ui) {
+    return Align(
+      alignment: Alignment.centerRight,
+      child: Padding(
+        padding: const EdgeInsets.only(right: 16.0),
+        child: GestureDetector(
+          onTap: () => ui.setMusicBarMinimized(false),
+          child: Container(
+            width: 48,
+            height: 48,
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.15),
+              shape: BoxShape.circle,
+              border: Border.all(color: Colors.white.withOpacity(0.25), width: 1.5),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.15),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: const Icon(Icons.arrow_back_ios_new, color: Colors.white, size: 20),
+          ),
         ),
       ),
     );

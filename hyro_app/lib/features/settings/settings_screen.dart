@@ -95,6 +95,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     context.read<TimerCubit>().refreshIfIdle();
                   },
                 ),
+                const SizedBox(height: 16),
+                _TimerSizeSelector(
+                  currentSize: settings.timerSize,
+                  onSizeChanged: (v) {
+                    settings.setTimerSize(v);
+                    context.read<TimerCubit>().refreshIfIdle();
+                  },
+                ),
               ],
             ),
           ),
@@ -115,21 +123,31 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ),
                 const Divider(height: 24),
                 _ToggleSetting(
+                  label: 'Pausa Automática',
+                  subtitle: 'Si sales de la app, el contador se pausa',
+                  value: settings.autoPauseTimer,
+                  onChanged: (v) => settings.setAutoPauseTimer(v),
+                ),
+                const Divider(height: 24),
+                _ToggleSetting(
+                  label: 'Modo Estricto',
+                  subtitle: 'Bloquea salir de la pantalla mientras el temporizador esté activo',
+                  value: settings.strictMode,
+                  onChanged: (v) => settings.setStrictMode(v),
+                ),
+                const Divider(height: 24),
+                _ToggleSetting(
+                  label: 'Ocultar Tarjetas',
+                  subtitle: 'Oculta las tarjetas de tareas y estadísticas en la vista de enfoque',
+                  value: settings.hideFocusCards,
+                  onChanged: (v) => settings.setHideFocusCards(v),
+                ),
+                const Divider(height: 24),
+                _ToggleSetting(
                   label: 'Modo Oscuro',
                   subtitle: 'Usar tema oscuro',
                   value: true, // App uses hardcoded dark theme for now
                   onChanged: (v) {},
-                ),
-                const Divider(height: 24),
-                Consumer<UiProvider>(
-                  builder: (context, ui, _) {
-                    return _ToggleSetting(
-                      label: 'Barra de Música',
-                      subtitle: 'Mostrar controles de música en la parte inferior',
-                      value: ui.isMusicBarVisible,
-                      onChanged: (v) => ui.setMusicBarVisibility(v),
-                    );
-                  },
                 ),
               ],
             ),
@@ -170,6 +188,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       child: const Text('Conectar'),
                     ),
                   ],
+                ),
+                const Divider(height: 32),
+                Consumer<UiProvider>(
+                  builder: (context, ui, _) {
+                    return _ToggleSetting(
+                      label: 'Barra de Música',
+                      subtitle: 'Mostrar controles de música en la parte inferior',
+                      value: ui.isMusicBarVisible,
+                      onChanged: (v) => ui.setMusicBarVisibility(v),
+                    );
+                  },
                 ),
               ],
             ),
@@ -271,6 +300,65 @@ class _ToggleSetting extends StatelessWidget {
           value: value,
           onChanged: onChanged,
           activeThumbColor: AppColors.primary,
+        ),
+      ],
+    );
+  }
+}
+
+class _TimerSizeSelector extends StatelessWidget {
+  final TimerSize currentSize;
+  final ValueChanged<TimerSize> onSizeChanged;
+
+  const _TimerSizeSelector({
+    required this.currentSize,
+    required this.onSizeChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text('Tamaño del Reloj', style: AppTypography.labelLarge),
+        const SizedBox(height: 12),
+        SizedBox(
+          width: double.infinity,
+          child: SegmentedButton<TimerSize>(
+            segments: const [
+              ButtonSegment(
+                value: TimerSize.small,
+                label: Text('Pequeño', style: TextStyle(fontSize: 12)),
+              ),
+              ButtonSegment(
+                value: TimerSize.medium,
+                label: Text('Mediano', style: TextStyle(fontSize: 12)),
+              ),
+              ButtonSegment(
+                value: TimerSize.large,
+                label: Text('Grande', style: TextStyle(fontSize: 12)),
+              ),
+            ],
+            selected: {currentSize},
+            onSelectionChanged: (Set<TimerSize> newSelection) {
+              onSizeChanged(newSelection.first);
+            },
+            style: ButtonStyle(
+              backgroundColor: WidgetStateProperty.resolveWith<Color>((states) {
+                if (states.contains(WidgetState.selected)) {
+                  return AppColors.primary.withAlpha(50);
+                }
+                return Colors.transparent;
+              }),
+              foregroundColor: WidgetStateProperty.resolveWith<Color>((states) {
+                if (states.contains(WidgetState.selected)) {
+                  return AppColors.primary;
+                }
+                return Colors.white70;
+              }),
+              side: WidgetStateProperty.all(const BorderSide(color: AppColors.cardBorder)),
+            ),
+          ),
         ),
       ],
     );

@@ -67,8 +67,12 @@ class _FloatingMascotState extends State<FloatingMascot>
     final bubbleSize = _getBubbleSize(isMobile);
     final screenSize = MediaQuery.sizeOf(context);
 
-    _initPositionIfNeeded(screenSize, bubbleSize);
-    _clampPosition(screenSize, bubbleSize);
+    // Re-check position if screen size changed
+    if (_posX != null && _posY != null) {
+       _clampPosition(screenSize, bubbleSize);
+    } else {
+       _initPositionIfNeeded(screenSize, bubbleSize);
+    }
 
     // When hidden, slide off to the right edge
     final targetX = widget.visible ? _posX! : screenSize.width + 20;

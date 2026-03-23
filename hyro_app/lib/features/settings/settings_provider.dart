@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-enum TimerSize { small, medium, large }
+enum TimerSize { small, medium }
 
 class SettingsProvider extends ChangeNotifier {
   double _pomodoroDuration = 25;
@@ -24,11 +24,9 @@ class SettingsProvider extends ChangeNotifier {
   double get timerSizeMultiplier {
     switch (_timerSize) {
       case TimerSize.small:
-        return 0.75;
+        return 0.8;
       case TimerSize.medium:
         return 1.0;
-      case TimerSize.large:
-        return 1.35;
     }
   }
 

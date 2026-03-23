@@ -23,6 +23,7 @@ import 'providers/auth_provider.dart';
 import 'screens/auth/splash_screen.dart';
 import 'shared/layout/main_layout.dart';
 import 'shared/widgets/floating_mascot.dart';
+import 'features/focus/mini_focus_screen.dart';
 import 'core/utils/responsive.dart';
 
 /// Root widget for the Hyro app.
@@ -205,6 +206,10 @@ class AppShellState extends State<AppShell> with WidgetsBindingObserver {
 
   @override
   Widget build(BuildContext context) {
+    if (context.watch<UiProvider>().isMiniMode) {
+      return const MiniFocusScreen();
+    }
+
     return Stack(
       children: [
         MainLayout(

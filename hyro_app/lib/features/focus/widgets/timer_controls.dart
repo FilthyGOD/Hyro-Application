@@ -10,6 +10,7 @@ class TimerControls extends StatelessWidget {
   final VoidCallback onResume;
   final VoidCallback onReset;
   final VoidCallback onStop;
+  final double buttonSizeMultiplier;
 
   const TimerControls({
     super.key,
@@ -20,6 +21,7 @@ class TimerControls extends StatelessWidget {
     required this.onResume,
     required this.onReset,
     required this.onStop,
+    this.buttonSizeMultiplier = 1.0,
   });
 
   void _confirmAction(BuildContext context, String title, String content, VoidCallback onConfirm) {
@@ -55,7 +57,7 @@ class TimerControls extends StatelessWidget {
         // Reset
         _ControlButton(
           icon: Icons.replay,
-          size: 48,
+          size: 48 * buttonSizeMultiplier,
           onTap: () {
             if (isRunning || isPaused) {
               _confirmAction(context, 'Reiniciar', '¿Reiniciar el temporizador?', onReset);
@@ -65,7 +67,7 @@ class TimerControls extends StatelessWidget {
           },
           backgroundColor: AppColors.surfaceLight,
         ),
-        const SizedBox(width: 24),
+        SizedBox(width: 24 * buttonSizeMultiplier),
         // Play / Pause
         _ControlButton(
           icon:
@@ -74,7 +76,7 @@ class TimerControls extends StatelessWidget {
                   : isPaused
                   ? Icons.play_arrow
                   : Icons.play_arrow,
-          size: 60,
+          size: 60 * buttonSizeMultiplier,
           onTap: () {
             if (isRunning) {
               _confirmAction(context, 'Pausar', '¿Estás seguro de que deseas pausar tu sesión?', onPause);
@@ -88,7 +90,7 @@ class TimerControls extends StatelessWidget {
           iconColor: Colors.white,
           elevation: true,
         ),
-        const SizedBox(width: 24),
+        SizedBox(width: 24 * buttonSizeMultiplier),
         // Stop
         _ControlButton(
           icon: Icons.stop,

@@ -17,6 +17,7 @@ import '../stats/stats_provider.dart';
 import '../tasks/tasks_provider.dart';
 import '../mascot/mascot_controller.dart';
 import '../settings/settings_provider.dart';
+import '../../providers/ui_provider.dart';
 
 /// The main Focus screen with the Pomodoro timer and sidebar widgets.
 class FocusScreen extends StatelessWidget {
@@ -24,7 +25,6 @@ class FocusScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDesktop = Responsive.isDesktop(context);
 
     return BlocListener<TimerCubit, TimerState>(
       listenWhen: (prev, curr) => prev.status != curr.status,
@@ -58,20 +58,24 @@ class FocusScreen extends StatelessWidget {
           if (isPomodoroFinished) {
             return CompletedSessionView(streak: streak);
           }
-
-          if (isDesktop) {
-            return _DesktopLayout(
-              state: state,
-              streak: streak,
-              sessionsToday: sessionsToday,
-              minutesToday: minutesToday,
-            );
-          }
-          return _MobileLayout(
-            state: state,
-            streak: streak,
-            sessionsToday: sessionsToday,
-            minutesToday: minutesToday,
+ 
+          return LayoutBuilder(
+            builder: (context, constraints) {
+              if (constraints.maxWidth >= 900) {
+                return _DesktopLayout(
+                  state: state,
+                  streak: streak,
+                  sessionsToday: sessionsToday,
+                  minutesToday: minutesToday,
+                );
+              }
+              return _MobileLayout(
+                state: state,
+                streak: streak,
+                sessionsToday: sessionsToday,
+                minutesToday: minutesToday,
+              );
+            },
           );
         },
       ),
@@ -96,11 +100,21 @@ class _DesktopLayout extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cubit = context.read<TimerCubit>();
+    final settings = context.watch<SettingsProvider>();
 
-    return Padding(
-      padding: const EdgeInsets.only(left: 72, top: 32, right: 32, bottom: 32),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
+    final isCentered = state.isRunning || settings.hideFocusCards;
+
+    return Stack(
+      children: [
+        Padding(
+          padding: EdgeInsets.only(
+            left: isCentered ? 32 : 72,
+            top: 32,
+            right: 32,
+            bottom: 32,
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           if (!state.isRunning) ...[
             _buildHeader(context, streak),
@@ -115,7 +129,7 @@ class _DesktopLayout extends StatelessWidget {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Spacer(flex: state.isRunning ? 1 : 3),
+                      Spacer(flex: isCentered ? 1 : 3),
                       Expanded(
                         flex: 10,
                         child: LayoutBuilder(
@@ -134,10 +148,8 @@ class _DesktopLayout extends StatelessWidget {
                             ) * settings.timerSizeMultiplier;
 
                             return Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                // Top spacer to push content down
-                                const Spacer(flex: 1),
-
                                 // The content (Timer, Controls, Scroller)
                                 CircularTimer(
                                   remainingSeconds: state.remainingSeconds,
@@ -170,44 +182,32 @@ class _DesktopLayout extends StatelessWidget {
                                   currentMode: state.mode,
                                   onModeChanged: cubit.setMode,
                                 ),
-
-                                // Bottom spacer (flex: 2) to push content higher up
-                                // compensating for the space the music player takes later.
-                                const Spacer(flex: 3),
                               ],
                             );
                           },
                         ),
                       ),
-                      Spacer(flex: state.isRunning ? 1 : 2),
+                      Spacer(flex: isCentered ? 1 : 2),
                     ],
                   ),
                 ),
                 // ── Right column: info cards (SCROLLABLE) ──
-                if (!state.isRunning) ...[
+                if (!state.isRunning && !settings.hideFocusCards) ...[
                   const SizedBox(width: 48),
                   SizedBox(
                     width: 320, // Fixed width so data cards aren't stretched
-                    child: Builder(
-                      builder: (context) {
-                        final settings = context.watch<SettingsProvider>();
-                        if (settings.hideFocusCards) return const SizedBox.shrink();
-                        
-                        return ListView(
-                          // ListView instead of SingleChildScrollView+Column for better scroll behavior
-                          children: [
-                            SessionInfoCard(
-                              completedSessions: sessionsToday,
-                              totalFocusMinutes: minutesToday,
-                            ),
-                            const SizedBox(height: 16),
-                            const MiniTaskList(),
-                            const SizedBox(height: 16),
-                            const ActivityChart(),
-                            const SizedBox(height: 32), // Bottom padding
-                          ],
-                        );
-                      },
+                    child: ListView(
+                      children: [
+                        SessionInfoCard(
+                          completedSessions: sessionsToday,
+                          totalFocusMinutes: minutesToday,
+                        ),
+                        const SizedBox(height: 16),
+                        const MiniTaskList(),
+                        const SizedBox(height: 16),
+                        const ActivityChart(),
+                        const SizedBox(height: 32),
+                      ],
                     ),
                   ),
                 ],
@@ -216,6 +216,21 @@ class _DesktopLayout extends StatelessWidget {
           ),
         ],
       ),
+    ),
+          Positioned(
+            top: 32,
+            right: 32,
+            child: Tooltip(
+              message: 'Keep on top',
+              child: IconButton(
+                icon: const Icon(Icons.picture_in_picture_alt, color: Colors.white70),
+                onPressed: () {
+                  context.read<UiProvider>().setMiniMode(true);
+                },
+              ),
+            ),
+          ),
+      ],
     );
   }
 
@@ -294,10 +309,65 @@ class _MobileLayout extends StatelessWidget {
     final cubit = context.read<TimerCubit>();
     final settings = context.watch<SettingsProvider>();
 
+    // When timer is running, use Center layout instead of scroll
+    if (state.isRunning) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Center(
+                child: LayoutBuilder(
+                  builder: (context, constraints) {
+                    final availableWidth = constraints.maxWidth;
+                    final size = (availableWidth * 0.75).clamp(160.0, 260.0) * settings.timerSizeMultiplier;
+                    return CircularTimer(
+                      remainingSeconds: state.remainingSeconds,
+                      progress: state.progress,
+                      label: _getTimerLabel(state.mode),
+                      size: size,
+                    );
+                  },
+                ),
+              ),
+              const SizedBox(height: 16),
+              if (state.activeTaskTitle != null)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 16),
+                  child: Text(
+                    'Enfocando en: ${state.activeTaskTitle}',
+                    style: AppTypography.bodySmall.copyWith(color: AppColors.primary),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+              const SizedBox(height: 8),
+              TimerControls(
+                isRunning: state.isRunning,
+                isPaused: state.isPaused,
+                onStart: () => _handleStart(context, cubit),
+                onPause: cubit.pause,
+                onResume: cubit.resume,
+                onReset: cubit.reset,
+                onStop: cubit.stop,
+              ),
+              const SizedBox(height: 24),
+              ModeSelector(currentMode: state.mode, onModeChanged: cubit.setMode),
+            ],
+          ),
+        ),
+      );
+    }
+
     return SingleChildScrollView(
-      padding: const EdgeInsets.only(top: 64, left: 20, right: 20, bottom: 20),
-      child: Column(
-        children: [
+      padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 20).copyWith(top: 64),
+      child: Container(
+        width: double.infinity,
+        alignment: Alignment.topCenter,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
           if (!state.isRunning) ...[
             // Header
             Text('Sesión de Trabajo Profundo', style: AppTypography.h2),
@@ -317,30 +387,22 @@ class _MobileLayout extends StatelessWidget {
             ],
           ],
           // Timer
-          LayoutBuilder(
-            builder: (context, constraints) {
-              final availableWidth = constraints.maxWidth;
-              final settings = context.watch<SettingsProvider>();
-              // Make timer responsive: max 260, but scales down if screen is narrow
-              final size = (availableWidth * 0.75).clamp(160.0, 260.0) * settings.timerSizeMultiplier;
-              return CircularTimer(
-                remainingSeconds: state.remainingSeconds,
-                progress: state.progress,
-                label: _getTimerLabel(state.mode),
-                size: size,
-              );
-            },
+          Center(
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                final availableWidth = constraints.maxWidth;
+                final settings = context.watch<SettingsProvider>();
+                final size = (availableWidth * 0.75).clamp(160.0, 260.0) * settings.timerSizeMultiplier;
+                return CircularTimer(
+                  remainingSeconds: state.remainingSeconds,
+                  progress: state.progress,
+                  label: _getTimerLabel(state.mode),
+                  size: size,
+                );
+              },
+            ),
           ),
           const SizedBox(height: 16),
-          if (state.isRunning && state.activeTaskTitle != null)
-            Padding(
-              padding: const EdgeInsets.only(bottom: 16),
-              child: Text(
-                'Enfocando en: ${state.activeTaskTitle}',
-                style: AppTypography.bodySmall.copyWith(color: AppColors.primary),
-                textAlign: TextAlign.center,
-              ),
-            ),
           const SizedBox(height: 8),
           // Controls
           TimerControls(
@@ -360,8 +422,9 @@ class _MobileLayout extends StatelessWidget {
             const SizedBox(height: 16),
             const ActivityChart(),
           ],
-          const SizedBox(height: 80), // space for radio bar
+          const SizedBox(height: 80),
         ],
+      ),
       ),
     );
   }

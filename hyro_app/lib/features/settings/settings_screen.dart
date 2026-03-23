@@ -334,10 +334,6 @@ class _TimerSizeSelector extends StatelessWidget {
                 value: TimerSize.medium,
                 label: Text('Mediano', style: TextStyle(fontSize: 12)),
               ),
-              ButtonSegment(
-                value: TimerSize.large,
-                label: Text('Grande', style: TextStyle(fontSize: 12)),
-              ),
             ],
             selected: {currentSize},
             onSelectionChanged: (Set<TimerSize> newSelection) {

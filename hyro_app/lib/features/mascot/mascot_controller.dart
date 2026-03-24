@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:rive/rive.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 /// Centralized controller for the Rive mascot animation.
 /// Shared between FocusScreen (idle/studying) and ShopScreen (purchase/equip).
@@ -43,7 +44,19 @@ class MascotController extends ChangeNotifier {
   bool get isLoaded => _riveController != null;
 
   MascotController() {
-    _loadRiveFile();
+    _initPrefsAndLoadRive();
+  }
+
+  Future<void> _initPrefsAndLoadRive() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      equippedSombrero = prefs.getInt('equipped_sombrero') ?? 100;
+      equippedCara = prefs.getInt('equipped_cara') ?? 200;
+      equippedCuerpo = prefs.getInt('equipped_cuerpo') ?? 300;
+    } catch (e) {
+      print('Error loading prefs: $e');
+    }
+    await _loadRiveFile();
   }
 
   Future<void> _loadRiveFile() async {
@@ -93,8 +106,8 @@ class MascotController extends ChangeNotifier {
 
     notifyListeners();
 
-    // Iniciar con el equipamiento guardado
-    restoreEquippedState();
+    // No restauramos el equipamiento aquí para que la animación inicial 'cargando'
+    // se mantenga sin cosméticos. Se restaurarán al llamar a triggerVolver().
 
     // Start the idle greeting loop
     _startIdleLoop();
@@ -191,30 +204,42 @@ class MascotController extends ChangeNotifier {
     _triggerCompra?.fire();
   }
 
-  void setSombrero(int id) {
+  Future<void> setSombrero(int id) async {
     print('Sending sombrero ID $id to Rive');
     equippedSombrero = id;
     _sombrero?.value = id.toDouble();
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setInt('equipped_sombrero', id);
+    } catch (_) {}
   }
 
   void previewSombrero(int id) {
     _sombrero?.value = id.toDouble();
   }
 
-  void setCara(int id) {
+  Future<void> setCara(int id) async {
     print('Sending cara ID $id to Rive');
     equippedCara = id;
     _cara?.value = id.toDouble();
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setInt('equipped_cara', id);
+    } catch (_) {}
   }
 
   void previewCara(int id) {
     _cara?.value = id.toDouble();
   }
 
-  void setCuerpo(int id) {
+  Future<void> setCuerpo(int id) async {
     print('Sending cuerpo ID $id to Rive');
     equippedCuerpo = id;
     _cuerpo?.value = id.toDouble();
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setInt('equipped_cuerpo', id);
+    } catch (_) {}
   }
 
   void previewCuerpo(int id) {

@@ -127,10 +127,8 @@ class TimerCubit extends Cubit<TimerState> {
 
       // ── Gamification hooks ──
       final userId = authProvider?.supabaseUserId;
-      if (userId != null) {
-        // 10 XP per completed pomodoro
-        profileProvider?.grantXP(userId, 10);
-      }
+      // 10 XP per completed pomodoro (grantXP natively supports local accounts)
+      profileProvider?.grantXP(userId, 10);
       // Update mission progress
       missionsProvider?.updateProgress('pomodoro_completed', 1);
       missionsProvider?.updateProgress('minutes_studied', focusMinutes);

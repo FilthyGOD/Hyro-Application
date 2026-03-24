@@ -19,6 +19,18 @@ class ShopProvider extends ChangeNotifier {
 
   // ─── Load Catalog + Inventory ─────────────────────────────────────
 
+  static const List<ShopItem> _defaultCatalog = [
+    ShopItem(id: 101, nombre: 'Sombrero de Copa', categoria: 'Sombrero', precio: 50),
+    ShopItem(id: 102, nombre: 'Sombrero Vaquero', categoria: 'Sombrero', precio: 75),
+    ShopItem(id: 103, nombre: 'Sombrero Payaso', categoria: 'Sombrero', precio: 100),
+    ShopItem(id: 201, nombre: 'Monóculo', categoria: 'Cara', precio: 50),
+    ShopItem(id: 202, nombre: 'Gafas de Sol', categoria: 'Cara', precio: 75),
+    ShopItem(id: 203, nombre: 'Nariz de Payaso', categoria: 'Cara', precio: 100),
+    ShopItem(id: 301, nombre: 'Smoking', categoria: 'Traje', precio: 100),
+    ShopItem(id: 302, nombre: 'Poncho', categoria: 'Traje', precio: 150),
+    ShopItem(id: 303, nombre: 'Traje Payaso', categoria: 'Traje', precio: 200),
+  ];
+
   /// Fetches the full store catalog and the user's owned items.
   Future<void> loadShop(String? userId) async {
     isLoading = true;
@@ -26,16 +38,20 @@ class ShopProvider extends ChangeNotifier {
     Future.microtask(() => notifyListeners());
 
     try {
-      // 1. Load catalog from Supabase (catalog is always from DB, even for guests, assuming network is available. 
-      // If offline, we could cache it, but let's just query it).
-      final catalogData = await _supabase
-          .from('objetos_tienda')
-          .select('id, nombre, categoria, precio')
-          .order('id') as List<dynamic>;
+      try {
+        // 1. Load catalog from Supabase
+        final catalogData = await _supabase
+            .from('objetos_tienda')
+            .select('id, nombre, categoria, precio')
+            .order('id') as List<dynamic>;
 
-      catalog = catalogData
-          .map((e) => ShopItem.fromJson(Map<String, dynamic>.from(e)))
-          .toList();
+        catalog = catalogData
+            .map((e) => ShopItem.fromJson(Map<String, dynamic>.from(e)))
+            .toList();
+      } catch (e) {
+        debugPrint('Fallback to local catalog due to DB error: $e');
+        catalog = List.from(_defaultCatalog);
+      }
 
       if (userId == null) {
         // Local inventory and coins

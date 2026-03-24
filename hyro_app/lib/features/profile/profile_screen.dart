@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:rive/rive.dart';
 import '../../screens/auth/login_screen.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/profile_provider.dart';
@@ -9,6 +10,7 @@ import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_typography.dart';
 import '../../shared/widgets/glass_card.dart';
 import '../../providers/ui_provider.dart';
+import '../mascot/mascot_controller.dart';
 
 /// Profile screen showing user info, level/XP, coins, and daily missions.
 class ProfileScreen extends StatelessWidget {
@@ -25,14 +27,33 @@ class ProfileScreen extends StatelessWidget {
       child: Column(
         children: [
           const SizedBox(height: 20),
-          // ── Avatar ──
-          CircleAvatar(
-            radius: 48,
-            backgroundColor: AppColors.primary,
-            child: Text(
-              auth.currentUser?.name?.substring(0, 1).toUpperCase() ?? 'H',
-              style: AppTypography.h1.copyWith(fontSize: 36),
-            ),
+          // ── Mascot Avatar ──
+          Consumer<MascotController>(
+            builder: (context, mascot, _) {
+              if (!mascot.isLoaded) {
+                return CircleAvatar(
+                  radius: 48,
+                  backgroundColor: AppColors.primary,
+                  child: Text(
+                    auth.currentUser?.name?.substring(0, 1).toUpperCase() ?? 'H',
+                    style: AppTypography.h1.copyWith(fontSize: 36),
+                  ),
+                );
+              }
+              return Container(
+                width: 96,
+                height: 96,
+                decoration: const BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: AppColors.surfaceLight,
+                ),
+                clipBehavior: Clip.hardEdge,
+                child: RiveWidget(
+                  controller: mascot.controller!,
+                  fit: Fit.contain,
+                ),
+              );
+            },
           ),
           const SizedBox(height: 16),
           Text(

@@ -15,16 +15,24 @@ class MascotController extends ChangeNotifier {
   TriggerInput? _triggerHueva;
   TriggerInput? _triggerCompra;
   TriggerInput? _triggerVolver;
+  TriggerInput? _triggerCargando;
+  TriggerInput? _triggerRacha;
+  TriggerInput? _triggerFestejo;
 
   // Inputs
   NumberInput? _shopItemId;
   NumberInput? _sombrero;
   NumberInput? _cara;
   NumberInput? _cuerpo;
+  NumberInput? _unidades;
+  NumberInput? _decenas;
 
   Timer? _idleTimer;
   final _random = Random();
   bool _isStudying = false;
+  bool _isInitialLoad = true;
+
+  bool get isInitialLoad => _isInitialLoad;
 
   // Track the genuinely equipped items
   int equippedSombrero = 100;
@@ -40,12 +48,12 @@ class MascotController extends ChangeNotifier {
 
   Future<void> _loadRiveFile() async {
     final file = await File.asset(
-      'assets/mascot/jairo33.riv',
+      'assets/mascot/jairo40.riv',
       riveFactory: Factory.flutter,
     );
 
     if (file == null) {
-      print('ERROR: Could not load Rive file jairo33.riv');
+      print('ERROR: Could not load Rive file jairo40.riv');
       return;
     }
 
@@ -65,18 +73,28 @@ class MascotController extends ChangeNotifier {
     _triggerHueva = sm.trigger('trigger_hueva');
     _triggerCompra = sm.trigger('trigger_compra');
     _triggerVolver = sm.trigger('volver');
+    _triggerCargando = sm.trigger('trigger_cargando');
+    _triggerRacha = sm.trigger('trigger_racha');
+    _triggerFestejo = sm.trigger('trigger_festejo');
 
     // Resolve number inputs
     _shopItemId = sm.number('shop_item_id');
     _sombrero = sm.number('sombrero') ?? sm.number('control_sombrero');
     _cara = sm.number('cara') ?? sm.number('control_cara');
     _cuerpo = sm.number('cuerpo') ?? sm.number('control_cuerpo');
+    _unidades = sm.number('unidades');
+    _decenas = sm.number('decenas');
 
     if (_sombrero == null) print('WARNING: Rive input "sombrero" not found!');
     if (_cara == null) print('WARNING: Rive input "cara" not found!');
     if (_cuerpo == null) print('WARNING: Rive input "cuerpo" not found!');
+    if (_unidades == null) print('WARNING: Rive input "unidades" not found!');
+    if (_decenas == null) print('WARNING: Rive input "decenas" not found!');
 
     notifyListeners();
+
+    // Iniciar con el equipamiento guardado
+    restoreEquippedState();
 
     // Start the idle greeting loop
     _startIdleLoop();
@@ -109,6 +127,9 @@ class MascotController extends ChangeNotifier {
   void triggerEstudiando() {
     _isStudying = true;
     _cancelIdleLoop();
+    // Restablecer contadores antes de estudiar
+    _unidades?.value = 0;
+    _decenas?.value = 0;
     _triggerEstudiando?.fire();
   }
 
@@ -120,9 +141,49 @@ class MascotController extends ChangeNotifier {
 
   void triggerVolver() {
     _isStudying = false;
+    _unidades?.value = 0;
+    _decenas?.value = 0;
     _triggerVolver?.fire();
-    restoreEquippedState(); // Restore original items
+
+    // Al volver al estado idle, nos aseguramos de que los cosméticos estén puestos
+    restoreEquippedState();
     _startIdleLoop();
+  }
+
+  void triggerCargando() {
+    _cancelIdleLoop();
+    // Clear cosmetics for cargando animation
+    _sombrero?.value = 0;
+    _cara?.value = 0;
+    _cuerpo?.value = 0;
+    _triggerCargando?.fire();
+  }
+
+  // CORRECCIÓN CLAVE: Usar async/await para dar tiempo a la máquina de estados
+  Future<void> triggerRacha(int streak) async {
+    _triggerVolver?.fire(); // Return to movimiento_suave first
+
+    // Damos un pequeño respiro de 50ms para que Rive procese la transición 'volver'
+    // antes de inyectarle la nueva animación.
+    await Future.delayed(const Duration(milliseconds: 50));
+
+    _unidades?.value = (streak % 10).toDouble();
+    _decenas?.value = (streak ~/ 10).toDouble();
+    _triggerRacha
+        ?.fire(); // NOTA: Cambiado a triggerRacha en lugar de Estudiando
+  }
+
+  // CORRECCIÓN CLAVE: Igual que en triggerRacha
+  Future<void> triggerFestejo() async {
+    //_cancelIdleLoop();
+    _triggerVolver?.fire();
+
+    await Future.delayed(const Duration(milliseconds: 550));
+    _triggerFestejo?.fire();
+  }
+
+  void markInitialLoadComplete() {
+    _isInitialLoad = false;
   }
 
   void triggerCompra(int itemId) {
@@ -174,10 +235,15 @@ class MascotController extends ChangeNotifier {
     _triggerHueva?.dispose();
     _triggerCompra?.dispose();
     _triggerVolver?.dispose();
+    _triggerCargando?.dispose();
+    _triggerRacha?.dispose();
+    _triggerFestejo?.dispose();
     _shopItemId?.dispose();
     _sombrero?.dispose();
     _cara?.dispose();
     _cuerpo?.dispose();
+    _unidades?.dispose();
+    _decenas?.dispose();
     _riveController?.dispose();
     _file?.dispose();
     super.dispose();

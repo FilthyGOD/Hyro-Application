@@ -151,6 +151,9 @@ class _FloatingMascotState extends State<FloatingMascot>
                     filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
                     child: Consumer<MascotController>(
                       builder: (context, mascot, _) {
+                        if (!widget.visible) {
+                          return const SizedBox();
+                        }
                         if (!mascot.isLoaded) {
                           return const Center(
                             child: SizedBox(

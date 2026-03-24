@@ -156,6 +156,11 @@ class AppShellState extends State<AppShell> with WidgetsBindingObserver {
 
     final missionsProvider = context.read<MissionsProvider>();
     await missionsProvider.initialize();
+
+    // SM starts in cargando → transition to movimiento_suave
+    final mascot = context.read<MascotController>();
+    mascot.triggerVolver();
+    mascot.markInitialLoadComplete();
   }
 
   void navigateTo(int index) {
@@ -186,14 +191,18 @@ class AppShellState extends State<AppShell> with WidgetsBindingObserver {
 
     final mascot = context.read<MascotController>();
 
-    // Leaving Focus or Shop → always reset mascot to idle
+    // Leaving Focus, Shop, or Stats → reset mascot to idle
     if (previousIndex == 0 || previousIndex == 3) {
+      mascot.triggerVolver();
+    }
+    if (previousIndex == 2) {
       mascot.triggerVolver();
     }
 
     // Arriving at Focus → resume animation if timer is running
     if (index == 0) {
-      // timerState was read above
+      // Also fire volver to ensure we leave any other animation state
+      mascot.triggerVolver();
       if (timerState.isRunning) {
         if (timerState.mode == TimerMode.pomodoro) {
           mascot.triggerEstudiando();
@@ -201,6 +210,12 @@ class AppShellState extends State<AppShell> with WidgetsBindingObserver {
           mascot.triggerHueva();
         }
       }
+    }
+
+    // Arriving at Stats → trigger racha animation
+    if (index == 2) {
+      final streak = context.read<StatsProvider>().currentStreak;
+      mascot.triggerRacha(streak);
     }
   }
 
@@ -226,10 +241,11 @@ class AppShellState extends State<AppShell> with WidgetsBindingObserver {
                 setState(() => _selectedIndex = index);
                 
                 final mascot = context.read<MascotController>();
-                if (previousIndex == 0 || previousIndex == 3) {
+                if (previousIndex == 0 || previousIndex == 3 || previousIndex == 2) {
                   mascot.triggerVolver();
                 }
                 if (index == 0) {
+                  mascot.triggerVolver();
                   final timerState = context.read<TimerCubit>().state;
                   if (timerState.isRunning) {
                     if (timerState.mode == TimerMode.pomodoro) {
@@ -239,13 +255,27 @@ class AppShellState extends State<AppShell> with WidgetsBindingObserver {
                     }
                   }
                 }
+                if (index == 2) {
+                  final streak = context.read<StatsProvider>().currentStreak;
+                  mascot.triggerRacha(streak);
+                }
               }
             },
             children: _screens,
           ),
         ),
-        // Floating mascot overlay — hidden on the Shop screen (index 3)
-        FloatingMascot(visible: _selectedIndex != 3),
+        // Floating mascot overlay — only visible on Focus (0) and Tasks (1), and not during completed session view
+        Builder(
+          builder: (context) {
+            final timerState = context.watch<TimerCubit>().state;
+            final isPomodoroFinished = timerState.isFinished &&
+                (timerState.mode == TimerMode.shortBreak ||
+                 timerState.mode == TimerMode.longBreak);
+                 
+            final isVisible = (_selectedIndex == 0 || _selectedIndex == 1) && !isPomodoroFinished;
+            return FloatingMascot(visible: isVisible);
+          },
+        ),
       ],
     );
   }

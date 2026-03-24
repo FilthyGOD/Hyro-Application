@@ -1,12 +1,14 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:rive/rive.dart' hide Animation;
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_typography.dart';
 import '../../shared/widgets/glass_card.dart';
 import 'stats_provider.dart';
 import 'widgets/streak_calendar.dart';
 import '../../providers/ui_provider.dart';
+import '../mascot/mascot_controller.dart';
 
 class StatsScreen extends StatefulWidget {
   const StatsScreen({super.key});
@@ -23,6 +25,20 @@ class _StatsScreenState extends State<StatsScreen> {
     super.initState();
     final now = DateTime.now();
     _displayMonth = DateTime(now.year, now.month);
+
+    // Trigger racha animation on entering stats screen
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final mascot = context.read<MascotController>();
+      final streak = context.read<StatsProvider>().currentStreak;
+      mascot.triggerRacha(streak);
+    });
+  }
+
+  @override
+  void dispose() {
+    // Return mascot to movimiento_suave when leaving stats
+    // (in case this widget gets disposed independently of navigation)
+    super.dispose();
   }
 
   void _previousMonth() {
@@ -167,36 +183,33 @@ class _StatsScreenState extends State<StatsScreen> {
             ],
           ),
           const SizedBox(height: 16),
-          Container(
-            height: clampDouble(MediaQuery.of(context).size.width * 0.3, 80, 150),
-            child: FittedBox(
-              fit: BoxFit.contain,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.baseline,
-                textBaseline: TextBaseline.alphabetic,
-                children: [
-                  Text(
-                    streak.toString(),
-                    style: const TextStyle(
-                      fontWeight: FontWeight.w800,
-                      color: Colors.orange,
-                      height: 1,
+          // Rive racha animation replaces the number + fire icon
+          Consumer<MascotController>(
+            builder: (context, mascot, _) {
+              final height = clampDouble(MediaQuery.of(context).size.width * 0.3, 80, 150);
+              if (!mascot.isLoaded) {
+                return SizedBox(
+                  height: height,
+                  child: Center(
+                    child: Text(
+                      streak.toString(),
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w800,
+                        color: Colors.orange,
+                        fontSize: 64,
+                      ),
                     ),
                   ),
-                  const SizedBox(width: 8),
-                  const Icon(
-                    Icons.local_fire_department,
-                    color: Colors.orange,
-                  ),
-                ],
-              ),
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'días de racha',
-            style: AppTypography.h3.copyWith(color: Colors.white70),
+                );
+              }
+              return SizedBox(
+                height: height,
+                child: RiveWidget(
+                  controller: mascot.controller!,
+                  fit: Fit.contain,
+                ),
+              );
+            },
           ),
           const SizedBox(height: 48),
           Row(

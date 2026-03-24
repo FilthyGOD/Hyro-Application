@@ -1,16 +1,34 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:rive/rive.dart' hide Animation;
 import '../../../core/theme/app_typography.dart';
 import '../bloc/timer_cubit.dart';
 import '../bloc/timer_state.dart';
 import '../../../providers/auth_provider.dart';
 import '../../settings/settings_provider.dart';
 import '../../../providers/ui_provider.dart';
+import '../../mascot/mascot_controller.dart';
 import 'package:provider/provider.dart';
 
-class CompletedSessionView extends StatelessWidget {
+class CompletedSessionView extends StatefulWidget {
   final int streak;
   const CompletedSessionView({super.key, required this.streak});
+
+  @override
+  State<CompletedSessionView> createState() => _CompletedSessionViewState();
+}
+
+class _CompletedSessionViewState extends State<CompletedSessionView> {
+  @override
+  void initState() {
+    super.initState();
+    // Trigger festejo animation when this view appears
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<MascotController>().triggerFestejo();
+    });
+  }
+
+  int get streak => widget.streak;
 
   @override
   Widget build(BuildContext context) {
@@ -34,7 +52,7 @@ class CompletedSessionView extends StatelessWidget {
                   _buildHeader(context),
                   const SizedBox(height: 32),
                   Center(
-                    child: _buildGlowingStar(isMobile),
+                    child: _buildFestejoAnimation(isMobile),
                   ),
                   const SizedBox(height: 32),
                   Text(
@@ -125,46 +143,30 @@ class CompletedSessionView extends StatelessWidget {
     );
   }
 
-  Widget _buildGlowingStar(bool isMobile) {
-    final size = isMobile ? 120.0 : 180.0;
-    final innerSize = isMobile ? 60.0 : 90.0;
-    final iconSize = isMobile ? 36.0 : 60.0;
+  Widget _buildFestejoAnimation(bool isMobile) {
+    final size = isMobile ? 150.0 : 200.0;
 
-    return Container(
-      width: size,
-      height: size,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        border: Border.all(color: const Color(0xFFFACC15).withOpacity(0.3), width: 2),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFFFACC15).withOpacity(0.2),
-            blurRadius: isMobile ? 40 : 80,
-            spreadRadius: isMobile ? 10 : 20,
+    return Consumer<MascotController>(
+      builder: (context, mascot, _) {
+        if (!mascot.isLoaded) {
+          // Fallback while Rive loads
+          return SizedBox(
+            width: size,
+            height: size,
+            child: const Center(
+              child: Icon(Icons.star_rounded, size: 60, color: Color(0xFFF59E0B)),
+            ),
+          );
+        }
+        return SizedBox(
+          width: size,
+          height: size,
+          child: RiveWidget(
+            controller: mascot.controller!,
+            fit: Fit.contain,
           ),
-        ],
-      ),
-      child: Center(
-        child: Container(
-          width: innerSize,
-          height: innerSize,
-          decoration: const BoxDecoration(
-            shape: BoxShape.circle,
-            color: Color(0xFFF59E0B),
-            boxShadow: [
-              BoxShadow(
-                color: Color(0xFFF59E0B),
-                blurRadius: 40,
-              ),
-            ],
-          ),
-          child: Icon(
-            Icons.star_rounded,
-            size: iconSize,
-            color: const Color(0xFF2B1F05), // Dark interior like the image
-          ),
-        ),
-      ),
+        );
+      },
     );
   }
 

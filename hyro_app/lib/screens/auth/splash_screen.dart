@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:rive/rive.dart';
+import '../../features/mascot/mascot_controller.dart';
 
 class SplashScreen extends StatelessWidget {
   const SplashScreen({super.key});
@@ -11,8 +14,28 @@ class SplashScreen extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            // Reusing the flash icon as logo
-            const Icon(Icons.flash_on, size: 100, color: Colors.blueAccent),
+            // Rive cargando animation (SM starts in cargando state)
+            Consumer<MascotController>(
+              builder: (context, mascot, _) {
+                if (!mascot.isLoaded) {
+                  return const SizedBox(
+                    width: 200,
+                    height: 200,
+                    child: Center(
+                      child: CircularProgressIndicator(color: Colors.blueAccent),
+                    ),
+                  );
+                }
+                return SizedBox(
+                  width: 200,
+                  height: 200,
+                  child: RiveWidget(
+                    controller: mascot.controller!,
+                    fit: Fit.contain,
+                  ),
+                );
+              },
+            ),
             const SizedBox(height: 24),
             Text(
               'Hyro',
@@ -23,8 +46,6 @@ class SplashScreen extends StatelessWidget {
                 letterSpacing: 2,
               ),
             ),
-            const SizedBox(height: 48),
-            const CircularProgressIndicator(color: Colors.blueAccent),
           ],
         ),
       ),

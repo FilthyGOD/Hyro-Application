@@ -25,7 +25,6 @@ class FocusScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-
     return BlocListener<TimerCubit, TimerState>(
       listenWhen: (prev, curr) => prev.status != curr.status,
       listener: (context, state) {
@@ -58,7 +57,7 @@ class FocusScreen extends StatelessWidget {
           if (isPomodoroFinished) {
             return CompletedSessionView(streak: streak);
           }
- 
+
           return LayoutBuilder(
             builder: (context, constraints) {
               if (constraints.maxWidth >= 900) {
@@ -115,121 +114,132 @@ class _DesktopLayout extends StatelessWidget {
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          if (!state.isRunning) ...[
-            _buildHeader(context, streak),
-            const SizedBox(height: 32),
-          ],
-          Expanded(
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // ── Left column: timer (SCROLLABLE IF NEEDED) ──
-                Expanded(
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Spacer(flex: isCentered ? 1 : 3),
-                      Expanded(
-                        flex: 10,
-                        child: LayoutBuilder(
-                          builder: (context, constraints) {
-                            // Calculate a dynamic size based on available height,
-                            // ensuring it leaves room for controls and spacing.
-                            // Max size 460, Min size 160 (to force it to fit without scroll).
-                            final availableHeight = constraints.maxHeight;
-                            final desiredTimerSize =
-                                availableHeight -
-                                240; // 240px reserved for controls and padding
-                            final settings = context.watch<SettingsProvider>();
-                            final timerSize = desiredTimerSize.clamp(
-                              160.0,
-                              460.0,
-                            ) * settings.timerSizeMultiplier;
+            children: [
+              if (!state.isRunning) ...[
+                _buildHeader(context, streak),
+                const SizedBox(height: 32),
+              ],
+              Expanded(
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // ── Left column: timer (SCROLLABLE IF NEEDED) ──
+                    Expanded(
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Spacer(flex: isCentered ? 1 : 3),
+                          Expanded(
+                            flex: 10,
+                            child: LayoutBuilder(
+                              builder: (context, constraints) {
+                                // Calculate a dynamic size based on available height,
+                                // ensuring it leaves room for controls and spacing.
+                                // Max size 460, Min size 160 (to force it to fit without scroll).
+                                final availableHeight = constraints.maxHeight;
+                                final desiredTimerSize =
+                                    availableHeight -
+                                    240; // 240px reserved for controls and padding
+                                final settings =
+                                    context.watch<SettingsProvider>();
+                                final timerSize =
+                                    desiredTimerSize.clamp(160.0, 460.0) *
+                                    settings.timerSizeMultiplier;
 
-                            return Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                // The content (Timer, Controls, Scroller)
-                                CircularTimer(
-                                  remainingSeconds: state.remainingSeconds,
-                                  progress: state.progress,
-                                  label: _getTimerLabel(state.mode),
-                                  size: timerSize,
-                                ),
-                                const SizedBox(height: 16),
-                                if (state.isRunning && state.activeTaskTitle != null)
-                                  Padding(
-                                    padding: const EdgeInsets.only(bottom: 16),
-                                    child: Text(
-                                      'Enfocando en: ${state.activeTaskTitle}',
-                                      style: AppTypography.bodySmall.copyWith(color: AppColors.primary),
-                                      textAlign: TextAlign.center,
+                                return Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    // The content (Timer, Controls, Scroller)
+                                    CircularTimer(
+                                      remainingSeconds: state.remainingSeconds,
+                                      progress: state.progress,
+                                      label: _getTimerLabel(state.mode),
+                                      size: timerSize,
                                     ),
-                                  ),
-                                const SizedBox(height: 16),
-                                TimerControls(
-                                  isRunning: state.isRunning,
-                                  isPaused: state.isPaused,
-                                  onStart: () => _handleStart(context, cubit),
-                                  onPause: cubit.pause,
-                                  onResume: cubit.resume,
-                                  onReset: cubit.reset,
-                                  onStop: cubit.stop,
-                                ),
-                                const SizedBox(height: 24),
-                                ModeSelector(
-                                  currentMode: state.mode,
-                                  onModeChanged: cubit.setMode,
-                                ),
-                              ],
-                            );
-                          },
+                                    const SizedBox(height: 16),
+                                    if (state.isRunning &&
+                                        state.activeTaskTitle != null)
+                                      Padding(
+                                        padding: const EdgeInsets.only(
+                                          bottom: 16,
+                                        ),
+                                        child: Text(
+                                          'Enfocando en: ${state.activeTaskTitle}',
+                                          style: AppTypography.bodySmall
+                                              .copyWith(
+                                                color: AppColors.primary,
+                                              ),
+                                          textAlign: TextAlign.center,
+                                        ),
+                                      ),
+                                    const SizedBox(height: 16),
+                                    TimerControls(
+                                      isRunning: state.isRunning,
+                                      isPaused: state.isPaused,
+                                      onStart:
+                                          () => _handleStart(context, cubit),
+                                      onPause: cubit.pause,
+                                      onResume: cubit.resume,
+                                      onReset: cubit.reset,
+                                      onStop: cubit.stop,
+                                    ),
+                                    const SizedBox(height: 24),
+                                    ModeSelector(
+                                      currentMode: state.mode,
+                                      onModeChanged: cubit.setMode,
+                                    ),
+                                  ],
+                                );
+                              },
+                            ),
+                          ),
+                          Spacer(flex: isCentered ? 1 : 2),
+                        ],
+                      ),
+                    ),
+                    // ── Right column: info cards (SCROLLABLE) ──
+                    if (!state.isRunning && !settings.hideFocusCards) ...[
+                      const SizedBox(width: 48),
+                      SizedBox(
+                        width:
+                            320, // Fixed width so data cards aren't stretched
+                        child: ListView(
+                          children: [
+                            SessionInfoCard(
+                              completedSessions: sessionsToday,
+                              totalFocusMinutes: minutesToday,
+                            ),
+                            const SizedBox(height: 16),
+                            const MiniTaskList(),
+                            const SizedBox(height: 16),
+                            const ActivityChart(),
+                            const SizedBox(height: 32),
+                          ],
                         ),
                       ),
-                      Spacer(flex: isCentered ? 1 : 2),
                     ],
-                  ),
+                  ],
                 ),
-                // ── Right column: info cards (SCROLLABLE) ──
-                if (!state.isRunning && !settings.hideFocusCards) ...[
-                  const SizedBox(width: 48),
-                  SizedBox(
-                    width: 320, // Fixed width so data cards aren't stretched
-                    child: ListView(
-                      children: [
-                        SessionInfoCard(
-                          completedSessions: sessionsToday,
-                          totalFocusMinutes: minutesToday,
-                        ),
-                        const SizedBox(height: 16),
-                        const MiniTaskList(),
-                        const SizedBox(height: 16),
-                        const ActivityChart(),
-                        const SizedBox(height: 32),
-                      ],
-                    ),
-                  ),
-                ],
-              ],
-            ),
-          ),
-        ],
-      ),
-    ),
-          Positioned(
-            top: 32,
-            right: 32,
-            child: Tooltip(
-              message: 'Keep on top',
-              child: IconButton(
-                icon: const Icon(Icons.picture_in_picture_alt, color: Colors.white70),
-                onPressed: () {
-                  context.read<UiProvider>().setMiniMode(true);
-                },
               ),
+            ],
+          ),
+        ),
+        Positioned(
+          top: 32,
+          right: 32,
+          child: Tooltip(
+            message: 'Keep on top',
+            child: IconButton(
+              icon: const Icon(
+                Icons.picture_in_picture_alt,
+                color: Colors.white70,
+              ),
+              onPressed: () {
+                context.read<UiProvider>().setMiniMode(true);
+              },
             ),
           ),
+        ),
       ],
     );
   }
@@ -322,7 +332,9 @@ class _MobileLayout extends StatelessWidget {
                 child: LayoutBuilder(
                   builder: (context, constraints) {
                     final availableWidth = constraints.maxWidth;
-                    final size = (availableWidth * 0.75).clamp(160.0, 260.0) * settings.timerSizeMultiplier;
+                    final size =
+                        (availableWidth * 0.75).clamp(160.0, 260.0) *
+                        settings.timerSizeMultiplier;
                     return CircularTimer(
                       remainingSeconds: state.remainingSeconds,
                       progress: state.progress,
@@ -338,7 +350,9 @@ class _MobileLayout extends StatelessWidget {
                   padding: const EdgeInsets.only(bottom: 16),
                   child: Text(
                     'Enfocando en: ${state.activeTaskTitle}',
-                    style: AppTypography.bodySmall.copyWith(color: AppColors.primary),
+                    style: AppTypography.bodySmall.copyWith(
+                      color: AppColors.primary,
+                    ),
                     textAlign: TextAlign.center,
                   ),
                 ),
@@ -353,7 +367,10 @@ class _MobileLayout extends StatelessWidget {
                 onStop: cubit.stop,
               ),
               const SizedBox(height: 24),
-              ModeSelector(currentMode: state.mode, onModeChanged: cubit.setMode),
+              ModeSelector(
+                currentMode: state.mode,
+                onModeChanged: cubit.setMode,
+              ),
             ],
           ),
         ),
@@ -361,70 +378,75 @@ class _MobileLayout extends StatelessWidget {
     }
 
     return SingleChildScrollView(
-      padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 20).copyWith(top: 64),
+      padding: const EdgeInsets.symmetric(
+        vertical: 20,
+        horizontal: 20,
+      ).copyWith(top: 64),
       child: Container(
         width: double.infinity,
         alignment: Alignment.topCenter,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-          if (!state.isRunning) ...[
-            // Header
-            Text('Sesión de Trabajo Profundo', style: AppTypography.h2),
-            const SizedBox(height: 4),
-            Text(
-              'Racha de Enfoque: $streak días 🔥',
-              style: AppTypography.bodySmall,
-            ),
-            const SizedBox(height: 24),
-            // Session info
-            if (!settings.hideFocusCards) ...[
-              SessionInfoCard(
-                completedSessions: sessionsToday,
-                totalFocusMinutes: minutesToday,
+            if (!state.isRunning) ...[
+              // Header
+              Text('Sesión de Trabajo Profundo', style: AppTypography.h2),
+              const SizedBox(height: 4),
+              Text(
+                'Racha de Enfoque: $streak días 🔥',
+                style: AppTypography.bodySmall,
               ),
               const SizedBox(height: 24),
+              // Session info
+              if (!settings.hideFocusCards) ...[
+                SessionInfoCard(
+                  completedSessions: sessionsToday,
+                  totalFocusMinutes: minutesToday,
+                ),
+                const SizedBox(height: 24),
+              ],
             ],
-          ],
-          // Timer
-          Center(
-            child: LayoutBuilder(
-              builder: (context, constraints) {
-                final availableWidth = constraints.maxWidth;
-                final settings = context.watch<SettingsProvider>();
-                final size = (availableWidth * 0.75).clamp(160.0, 260.0) * settings.timerSizeMultiplier;
-                return CircularTimer(
-                  remainingSeconds: state.remainingSeconds,
-                  progress: state.progress,
-                  label: _getTimerLabel(state.mode),
-                  size: size,
-                );
-              },
+            // Timer
+            Center(
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  final availableWidth = constraints.maxWidth;
+                  final settings = context.watch<SettingsProvider>();
+                  final size =
+                      (availableWidth * 0.75).clamp(160.0, 260.0) *
+                      settings.timerSizeMultiplier;
+                  return CircularTimer(
+                    remainingSeconds: state.remainingSeconds,
+                    progress: state.progress,
+                    label: _getTimerLabel(state.mode),
+                    size: size,
+                  );
+                },
+              ),
             ),
-          ),
-          const SizedBox(height: 16),
-          const SizedBox(height: 8),
-          // Controls
-          TimerControls(
-            isRunning: state.isRunning,
-            isPaused: state.isPaused,
-            onStart: () => _handleStart(context, cubit),
-            onPause: cubit.pause,
-            onResume: cubit.resume,
-            onReset: cubit.reset,
-            onStop: cubit.stop,
-          ),
-          const SizedBox(height: 24),
-          ModeSelector(currentMode: state.mode, onModeChanged: cubit.setMode),
-          if (!state.isRunning && !settings.hideFocusCards) ...[
-            const SizedBox(height: 24),
-            const MiniTaskList(),
             const SizedBox(height: 16),
-            const ActivityChart(),
+            const SizedBox(height: 8),
+            // Controls
+            TimerControls(
+              isRunning: state.isRunning,
+              isPaused: state.isPaused,
+              onStart: () => _handleStart(context, cubit),
+              onPause: cubit.pause,
+              onResume: cubit.resume,
+              onReset: cubit.reset,
+              onStop: cubit.stop,
+            ),
+            const SizedBox(height: 24),
+            ModeSelector(currentMode: state.mode, onModeChanged: cubit.setMode),
+            if (!state.isRunning && !settings.hideFocusCards) ...[
+              const SizedBox(height: 24),
+              const MiniTaskList(),
+              const SizedBox(height: 16),
+              const ActivityChart(),
+            ],
+            const SizedBox(height: 80),
           ],
-          const SizedBox(height: 80),
-        ],
-      ),
+        ),
       ),
     );
   }
@@ -455,38 +477,49 @@ void _handleStart(BuildContext context, TimerCubit cubit) {
     builder: (ctx) {
       return Dialog(
         backgroundColor: AppColors.surface,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         child: Padding(
           padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Text('Selecciona una tarea para enfocarte', style: AppTypography.h3, textAlign: TextAlign.center),
-            const SizedBox(height: 16),
-            Flexible(
-              child: ListView.builder(
-                shrinkWrap: true,
-                itemCount: pendingTasks.length,
-                itemBuilder: (context, index) {
-                  final task = pendingTasks[index];
-                  return ListTile(
-                    leading: Icon(Icons.check_circle_outline, color: Color(task.priorityColorValue)),
-                    title: Text(task.title, style: AppTypography.bodyMedium),
-                    subtitle: Text('${task.pomodorosCompleted} / ${task.pomodorosTarget} Pomodoros', style: TextStyle(color: Colors.white54, fontSize: 12)),
-                    onTap: () => Navigator.pop(ctx, task.id),
-                  );
-                },
+              Text(
+                'Selecciona una tarea para enfocarte',
+                style: AppTypography.h3,
+                textAlign: TextAlign.center,
               ),
-            ),
-            const Divider(color: AppColors.cardBorder),
-            ListTile(
-              leading: const Icon(Icons.play_arrow, color: Colors.white54),
-              title: const Text('Empezar sin tarea', style: TextStyle(color: Colors.white54)),
-              onTap: () => Navigator.pop(ctx, 'NO_TASK'),
-            ),
+              const SizedBox(height: 16),
+              Flexible(
+                child: ListView.builder(
+                  shrinkWrap: true,
+                  itemCount: pendingTasks.length,
+                  itemBuilder: (context, index) {
+                    final task = pendingTasks[index];
+                    return ListTile(
+                      leading: Icon(
+                        Icons.check_circle_outline,
+                        color: Color(task.priorityColorValue),
+                      ),
+                      title: Text(task.title, style: AppTypography.bodyMedium),
+                      subtitle: Text(
+                        '${task.pomodorosCompleted} / ${task.pomodorosTarget} Pomodoros',
+                        style: TextStyle(color: Colors.white54, fontSize: 12),
+                      ),
+                      onTap: () => Navigator.pop(ctx, task.id),
+                    );
+                  },
+                ),
+              ),
+              const Divider(color: AppColors.cardBorder),
+              ListTile(
+                leading: const Icon(Icons.play_arrow, color: Colors.white54),
+                title: const Text(
+                  'Empezar sin tarea',
+                  style: TextStyle(color: Colors.white54),
+                ),
+                onTap: () => Navigator.pop(ctx, 'NO_TASK'),
+              ),
             ],
           ),
         ),

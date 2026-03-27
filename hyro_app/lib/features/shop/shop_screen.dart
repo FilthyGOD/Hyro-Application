@@ -147,7 +147,6 @@ class _ShopScreenState extends State<ShopScreen>
     final shop = context.read<ShopProvider>();
     final profile = context.read<ProfileProvider>();
     final userId = auth.supabaseUserId;
-    if (userId == null) return;
 
     setState(() => _isPurchasing = true);
 
@@ -457,10 +456,13 @@ class _ShopScreenState extends State<ShopScreen>
     }
 
     // Not owned — show price and buy button
-    final item = _itemsForCategory(
-      shop,
-      category,
-    ).firstWhere((i) => i.id == selected);
+    final items = _itemsForCategory(shop, category);
+    final itemIdx = items.indexWhere((i) => i.id == selected);
+    
+    // If the selected/equipped item is not in the current catalog (e.g. from old prefs), hide button.
+    if (itemIdx == -1) return const SizedBox.shrink();
+    
+    final item = items[itemIdx];
     return _ShopButton(
       label: _isPurchasing ? 'Comprando...' : 'Comprar · ${item.precio} 🪙',
       icon: Icons.shopping_cart,

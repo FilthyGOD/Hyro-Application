@@ -20,15 +20,30 @@ class ShopProvider extends ChangeNotifier {
   // ─── Load Catalog + Inventory ─────────────────────────────────────
 
   static const List<ShopItem> _defaultCatalog = [
-    ShopItem(id: 101, nombre: 'Sombrero de Copa', categoria: 'Sombrero', precio: 50),
-    ShopItem(id: 102, nombre: 'Sombrero Vaquero', categoria: 'Sombrero', precio: 75),
-    ShopItem(id: 103, nombre: 'Sombrero Payaso', categoria: 'Sombrero', precio: 100),
-    ShopItem(id: 201, nombre: 'Monóculo', categoria: 'Cara', precio: 50),
-    ShopItem(id: 202, nombre: 'Gafas de Sol', categoria: 'Cara', precio: 75),
-    ShopItem(id: 203, nombre: 'Nariz de Payaso', categoria: 'Cara', precio: 100),
-    ShopItem(id: 301, nombre: 'Smoking', categoria: 'Traje', precio: 100),
-    ShopItem(id: 302, nombre: 'Poncho', categoria: 'Traje', precio: 150),
-    ShopItem(id: 303, nombre: 'Traje Payaso', categoria: 'Traje', precio: 200),
+    ShopItem(
+      id: 101,
+      nombre: 'Sombrero de Copa',
+      categoria: 'Sombrero',
+      precio: 1,
+    ),
+    ShopItem(
+      id: 102,
+      nombre: 'Sombrero Vaquero',
+      categoria: 'Sombrero',
+      precio: 1,
+    ),
+    ShopItem(
+      id: 103,
+      nombre: 'Sombrero Payaso',
+      categoria: 'Sombrero',
+      precio: 1,
+    ),
+    ShopItem(id: 201, nombre: 'Monóculo', categoria: 'Cara', precio: 1),
+    ShopItem(id: 202, nombre: 'Gafas de Sol', categoria: 'Cara', precio: 1),
+    ShopItem(id: 203, nombre: 'Nariz de Payaso', categoria: 'Cara', precio: 1),
+    ShopItem(id: 301, nombre: 'Smoking', categoria: 'Traje', precio: 1),
+    ShopItem(id: 302, nombre: 'Poncho', categoria: 'Traje', precio: 1),
+    ShopItem(id: 303, nombre: 'Traje Payaso', categoria: 'Traje', precio: 1),
   ];
 
   /// Fetches the full store catalog and the user's owned items.
@@ -40,14 +55,23 @@ class ShopProvider extends ChangeNotifier {
     try {
       try {
         // 1. Load catalog from Supabase
-        final catalogData = await _supabase
-            .from('objetos_tienda')
-            .select('id, nombre, categoria, precio')
-            .order('id') as List<dynamic>;
+        final catalogData =
+            await _supabase
+                    .from('objetos_tienda')
+                    .select('id, nombre, categoria, precio')
+                    .order('id')
+                as List<dynamic>;
 
-        catalog = catalogData
-            .map((e) => ShopItem.fromJson(Map<String, dynamic>.from(e)))
-            .toList();
+        if (catalogData.isEmpty) {
+          throw Exception(
+            'Catálogo vacío (posible bloqueo de RLS o sin conexión)',
+          );
+        }
+
+        catalog =
+            catalogData
+                .map((e) => ShopItem.fromJson(Map<String, dynamic>.from(e)))
+                .toList();
       } catch (e) {
         debugPrint('Fallback to local catalog due to DB error: $e');
         catalog = List.from(_defaultCatalog);
@@ -55,20 +79,25 @@ class ShopProvider extends ChangeNotifier {
 
       if (userId == null) {
         // Local inventory and coins
-        final activeUser = await isar.userProfiles.filter().isActivelyLoggedInEqualTo(true).findFirst();
+        final activeUser =
+            await isar.userProfiles
+                .filter()
+                .isActivelyLoggedInEqualTo(true)
+                .findFirst();
         if (activeUser != null) {
           ownedItemIds = activeUser.comprasLocales.toSet();
         }
       } else {
         // Cloud inventory
-        final inventoryData = await _supabase
-            .from('inventario_usuarios')
-            .select('objeto_id')
-            .eq('usuario_id', userId) as List<dynamic>;
+        final inventoryData =
+            await _supabase
+                    .from('inventario_usuarios')
+                    .select('objeto_id')
+                    .eq('usuario_id', userId)
+                as List<dynamic>;
 
-        ownedItemIds = inventoryData
-            .map((e) => (e['objeto_id'] as num).toInt())
-            .toSet();
+        ownedItemIds =
+            inventoryData.map((e) => (e['objeto_id'] as num).toInt()).toSet();
       }
     } catch (e) {
       error = 'Error cargando tienda: $e';
@@ -94,12 +123,16 @@ class ShopProvider extends ChangeNotifier {
       if (userId == null) {
         // Local purchase
         final item = catalog.firstWhere((i) => i.id == itemId);
-        final activeUser = await isar.userProfiles.filter().isActivelyLoggedInEqualTo(true).findFirst();
-        
+        final activeUser =
+            await isar.userProfiles
+                .filter()
+                .isActivelyLoggedInEqualTo(true)
+                .findFirst();
+
         if (activeUser == null) {
           throw Exception("No user found");
         }
-        
+
         if (activeUser.monedas < item.precio) {
           error = 'No tienes suficientes monedas';
           notifyListeners();
@@ -111,7 +144,7 @@ class ShopProvider extends ChangeNotifier {
           activeUser.comprasLocales = [...activeUser.comprasLocales, itemId];
           await isar.userProfiles.put(activeUser);
         });
-        
+
         ownedItemIds.add(itemId);
         error = null;
         notifyListeners();
@@ -147,11 +180,17 @@ class ShopProvider extends ChangeNotifier {
 
   /// Get catalog items filtered by category keyword.
   List<ShopItem> itemsByCategory(String category) =>
-      catalog.where((item) => item.categoria.toLowerCase().contains(category.toLowerCase())).toList();
+      catalog
+          .where(
+            (item) =>
+                item.categoria.toLowerCase().contains(category.toLowerCase()),
+          )
+          .toList();
 
   /// Translate Postgres exceptions into user-friendly messages.
   String _friendlyError(String pgMsg) {
-    if (pgMsg.contains('Monedas insuficientes')) return 'No tienes suficientes monedas';
+    if (pgMsg.contains('Monedas insuficientes'))
+      return 'No tienes suficientes monedas';
     if (pgMsg.contains('Ya posees')) return 'Ya tienes este objeto';
     if (pgMsg.contains('Objeto no encontrado')) return 'Este objeto no existe';
     return 'Error al procesar la compra';

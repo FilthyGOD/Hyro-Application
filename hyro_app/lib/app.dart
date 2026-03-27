@@ -96,12 +96,28 @@ class AppShellState extends State<AppShell> with WidgetsBindingObserver {
   int _selectedIndex = 0;
   bool _initialized = false;
   late final PageController _pageController;
+  String? _lastUserId;
+  bool _lastIsGuest = false;
 
   @override
   void initState() {
     super.initState();
     _pageController = PageController(initialPage: _selectedIndex);
+    _lastUserId = widget.authProvider.supabaseUserId;
+    _lastIsGuest = widget.authProvider.isGuest;
     WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void didUpdateWidget(AppShell oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    final currentUserId = widget.authProvider.supabaseUserId;
+    final currentIsGuest = widget.authProvider.isGuest;
+    if (_lastUserId != currentUserId || _lastIsGuest != currentIsGuest) {
+      _lastUserId = currentUserId;
+      _lastIsGuest = currentIsGuest;
+      _loadGamificationData();
+    }
   }
 
   @override

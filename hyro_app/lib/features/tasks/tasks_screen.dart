@@ -447,6 +447,7 @@ class _TasksScreenState extends State<TasksScreen> {
   void _showAddCategoryDialog() {
     final titleController = TextEditingController();
     int selectedColor = 0xFF22C55E; // Default Green
+    int? selectedIcon; // Default nil
 
     final colors = [
       0xFF22C55E, // Green
@@ -456,6 +457,20 @@ class _TasksScreenState extends State<TasksScreen> {
       0xFF8B5CF6, // Purple
       0xFFEC4899, // Pink
       0xFF06B6D4, // Cyan
+    ];
+
+    final icons = [
+      Icons.school.codePoint,
+      Icons.person.codePoint,
+      Icons.work.codePoint,
+      Icons.menu_book.codePoint,
+      Icons.computer.codePoint,
+      Icons.sports_esports.codePoint,
+      Icons.music_note.codePoint,
+      Icons.fitness_center.codePoint,
+      Icons.flight.codePoint,
+      Icons.palette.codePoint,
+      Icons.shopping_bag.codePoint,
     ];
 
     showDialog(
@@ -482,7 +497,7 @@ class _TasksScreenState extends State<TasksScreen> {
                       style: AppTypography.bodyLarge,
                     ),
                     const SizedBox(height: 20),
-                    Text('Color e Ícono', style: AppTypography.bodySmall),
+                    Text('Color', style: AppTypography.bodySmall),
                     const SizedBox(height: 12),
                     Wrap(
                       spacing: 12,
@@ -509,6 +524,35 @@ class _TasksScreenState extends State<TasksScreen> {
                         );
                       }).toList(),
                     ),
+                    const SizedBox(height: 20),
+                    Text('Ícono (Opcional)', style: AppTypography.bodySmall),
+                    const SizedBox(height: 12),
+                    Wrap(
+                      spacing: 12,
+                      runSpacing: 12,
+                      children: icons.map((iconCode) {
+                        final isSelected = selectedIcon == iconCode;
+                        return GestureDetector(
+                          onTap: () => setDialogState(() => selectedIcon = (isSelected ? null : iconCode)),
+                          child: Container(
+                            width: 36,
+                            height: 36,
+                            decoration: BoxDecoration(
+                              color: AppColors.surfaceLight,
+                              borderRadius: BorderRadius.circular(8),
+                              border: isSelected
+                                  ? Border.all(color: AppColors.primary, width: 2)
+                                  : Border.all(color: Colors.transparent, width: 2),
+                            ),
+                            child: Icon(
+                              IconData(iconCode, fontFamily: 'MaterialIcons'),
+                              size: 20,
+                              color: isSelected ? AppColors.primary : Colors.white70,
+                            ),
+                          ),
+                        );
+                      }).toList(),
+                    ),
                   ],
                 ),
               ),
@@ -526,6 +570,7 @@ class _TasksScreenState extends State<TasksScreen> {
                       id: const Uuid().v4(),
                       name: title,
                       colorValue: selectedColor,
+                      iconCodePoint: selectedIcon,
                     );
 
                     context.read<CategoryProvider>().addCategory(cat);
@@ -803,10 +848,16 @@ class _CategoryListTile extends StatelessWidget {
                     shape: BoxShape.circle,
                   ),
                   child: Center(
-                    child: Text(
-                      category.name.isNotEmpty ? category.name[0].toUpperCase() : 'C',
-                      style: TextStyle(color: color, fontWeight: FontWeight.bold),
-                    ),
+                    child: category.iconCodePoint != null
+                        ? Icon(
+                            IconData(category.iconCodePoint!, fontFamily: 'MaterialIcons'),
+                            size: 16,
+                            color: color,
+                          )
+                        : Text(
+                            category.name.isNotEmpty ? category.name[0].toUpperCase() : 'C',
+                            style: TextStyle(color: color, fontWeight: FontWeight.bold),
+                          ),
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -891,10 +942,16 @@ class _CategoryCard extends StatelessWidget {
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Center(
-                  child: Text(
-                    category.name.isNotEmpty ? category.name[0].toUpperCase() : 'C',
-                    style: TextStyle(color: color, fontSize: 20, fontWeight: FontWeight.bold),
-                  ),
+                  child: category.iconCodePoint != null
+                      ? Icon(
+                          IconData(category.iconCodePoint!, fontFamily: 'MaterialIcons'),
+                          size: 20,
+                          color: color,
+                        )
+                      : Text(
+                          category.name.isNotEmpty ? category.name[0].toUpperCase() : 'C',
+                          style: TextStyle(color: color, fontSize: 20, fontWeight: FontWeight.bold),
+                        ),
                 ),
               ),
               Icon(Icons.more_horiz, color: AppColors.textTertiary, size: 20),

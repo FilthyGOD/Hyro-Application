@@ -1,7 +1,11 @@
+import 'dart:async';
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:rive/rive.dart';
 import 'package:hyro_app/providers/auth_provider.dart';
 import '../../shared/widgets/animated_background.dart';
+import '../../features/mascot/mascot_controller.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -14,6 +18,70 @@ class _LoginScreenState extends State<LoginScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _isLoading = false;
+  Timer? _greetingTimer;
+  final _random = Random();
+  bool _hasFiredInitialSaludo = false;
+
+  @override
+  void initState() {
+    super.initState();
+    // Fire saludo on the first frame after the widget is built
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _fireInitialSaludo();
+    });
+  }
+
+  void _fireInitialSaludo() {
+    if (_hasFiredInitialSaludo) return;
+    _hasFiredInitialSaludo = true;
+
+    final mascot = context.read<MascotController>();
+    if (mascot.isLoaded) {
+      mascot.triggerSaludo();
+      // After the greeting animation completes (~3s), go back to movimiento_suave
+      Future.delayed(const Duration(seconds: 3), () {
+        if (mounted) {
+          mascot.triggerVolver();
+          _startGreetingLoop();
+        }
+      });
+    } else {
+      // If not loaded yet, listen for load then fire
+      void listener() {
+        if (mascot.isLoaded && mounted) {
+          mascot.removeListener(listener);
+          mascot.triggerSaludo();
+          Future.delayed(const Duration(seconds: 3), () {
+            if (mounted) {
+              mascot.triggerVolver();
+              _startGreetingLoop();
+            }
+          });
+        }
+      }
+
+      mascot.addListener(listener);
+    }
+  }
+
+  void _startGreetingLoop() {
+    _greetingTimer?.cancel();
+    final delay = Duration(seconds: 12 + _random.nextInt(9)); // 12-20s
+    _greetingTimer = Timer(delay, () {
+      if (mounted) {
+        final mascot = context.read<MascotController>();
+        mascot.triggerSaludo();
+        _startGreetingLoop(); // schedule next
+      }
+    });
+  }
+
+  void _onMascotTap() {
+    final mascot = context.read<MascotController>();
+    mascot.triggerSaludo();
+    // Reset the greeting loop timer
+    _startGreetingLoop();
+  }
 
   void _login() async {
     final email = _emailController.text.trim();
@@ -38,6 +106,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   void dispose() {
+    _greetingTimer?.cancel();
     _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
@@ -85,7 +154,6 @@ class _LoginScreenState extends State<LoginScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              _buildLogo(showText: true),
               const SizedBox(height: 16),
               const Text(
                 'Comencemos',
@@ -158,31 +226,55 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                   ),
                   Positioned(
-                    top: -10,
-                    child: Container(
-                      padding: const EdgeInsets.all(6),
-                      decoration: const BoxDecoration(
-                        color: Color(0xFF101422),
-                        shape: BoxShape.circle,
-                      ),
+                    top: -30,
+                    child: GestureDetector(
+                      onTap: _onMascotTap,
                       child: Container(
-                        padding: const EdgeInsets.all(3),
-                        decoration: const BoxDecoration(
-                          gradient: LinearGradient(
+                        width: 100,
+                        height: 100,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          gradient: const LinearGradient(
                             colors: [Color(0xFF3CDCF8), Color(0xFF265691)],
                             begin: Alignment.topCenter,
                             end: Alignment.bottomCenter,
                           ),
-                          shape: BoxShape.circle,
+                          boxShadow: [
+                            BoxShadow(
+                              color: const Color(0xFF3CDCF8).withOpacity(0.3),
+                              blurRadius: 20,
+                              spreadRadius: 2,
+                            ),
+                          ],
                         ),
-                        child: const CircleAvatar(
-                          radius: 38,
-                          backgroundColor: Color(0xFF1B2236),
-                          child: Icon(
-                            Icons.flash_on,
-                            size: 40,
-                            color: Colors.white70,
-                          ), // Placeholder for logo
+                        padding: const EdgeInsets.all(3),
+                        child: Container(
+                          decoration: const BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: Color(0xFF1B2236),
+                          ),
+                          clipBehavior: Clip.hardEdge,
+                          child: Consumer<MascotController>(
+                            builder: (context, mascot, _) {
+                              if (!mascot.isLoaded) {
+                                return const Icon(
+                                  Icons.pets,
+                                  size: 40,
+                                  color: Colors.white70,
+                                );
+                              }
+                              return Transform.scale(
+                                scale: 1.4,
+                                child: Transform.translate(
+                                  offset: const Offset(0, -5),
+                                  child: RiveWidget(
+                                    controller: mascot.controller!,
+                                    fit: Fit.contain,
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
                         ),
                       ),
                     ),
@@ -210,12 +302,6 @@ class _LoginScreenState extends State<LoginScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _buildLogo(
-                  showText: true,
-                  size: 40,
-                  labelText: 'Hyro',
-                  useThinFont: false,
-                ),
                 const SizedBox(height: 64),
                 RichText(
                   text: const TextSpan(
@@ -364,7 +450,11 @@ class _LoginScreenState extends State<LoginScreen> {
             height: size,
             fit: BoxFit.cover,
             errorBuilder: (context, error, stackTrace) {
-              return Icon(Icons.flash_on, size: size, color: const Color(0xFF3CDCF8));
+              return Icon(
+                Icons.flash_on,
+                size: size,
+                color: const Color(0xFF3CDCF8),
+              );
             },
           ),
         ),

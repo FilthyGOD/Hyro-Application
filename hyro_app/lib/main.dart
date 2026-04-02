@@ -5,6 +5,7 @@ import 'package:rive/rive.dart';
 import 'app.dart';
 import 'data/models/task_model.dart';
 import 'data/models/daily_stats.dart';
+import 'data/models/category_model.dart';
 import 'package:isar/isar.dart';
 import 'package:path_provider/path_provider.dart';
 import 'models/user_profile.dart';
@@ -71,9 +72,11 @@ void main(List<String> args) async {
   await Hive.initFlutter();
   Hive.registerAdapter(TaskModelAdapter());
   Hive.registerAdapter(DailyStatsAdapter());
+  Hive.registerAdapter(CategoryModelAdapter());
 
   await Hive.openBox<TaskModel>('tasksBox');
   await Hive.openBox<DailyStats>('statsBox');
+  await Hive.openBox<CategoryModel>('categoriesBox');
 
   final dir = await getApplicationDocumentsDirectory();
   final isar = await Isar.open([UserProfileSchema], directory: dir.path);

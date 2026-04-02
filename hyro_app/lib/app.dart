@@ -15,6 +15,7 @@ import 'features/stats/stats_provider.dart';
 import 'features/mascot/mascot_controller.dart';
 import 'features/settings/settings_provider.dart';
 import 'features/missions/missions_provider.dart';
+import 'features/categories/category_provider.dart';
 import 'providers/ui_provider.dart';
 import 'providers/profile_provider.dart';
 import 'providers/shop_provider.dart';
@@ -41,6 +42,7 @@ class HyroApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => MascotController()),
         ChangeNotifierProvider(create: (_) => SettingsProvider()),
         ChangeNotifierProvider(create: (_) => UiProvider()),
+        ChangeNotifierProvider(create: (_) => CategoryProvider()),
         ChangeNotifierProvider(create: (_) => ProfileProvider(isar)),
         ChangeNotifierProvider(create: (_) => ShopProvider(isar)),
         ChangeNotifierProxyProvider<ProfileProvider, MissionsProvider>(

@@ -9,6 +9,8 @@ import '../../data/models/task_model.dart';
 import 'tasks_provider.dart';
 import '../stats/stats_provider.dart';
 import '../../providers/ui_provider.dart';
+import '../categories/category_provider.dart';
+import '../../data/models/category_model.dart';
 
 class TasksScreen extends StatefulWidget {
   const TasksScreen({super.key});
@@ -18,11 +20,7 @@ class TasksScreen extends StatefulWidget {
 }
 
 class _TasksScreenState extends State<TasksScreen> {
-  int _selectedFilter = 0; // 0=All, 1=Pending, 2=Completed
-
   // ── Demo data ──
-  // ── Demo data ──
-
   // ── Categories will be dynamic ──
 
   @override
@@ -36,7 +34,7 @@ class _TasksScreenState extends State<TasksScreen> {
               bottom: ui.isMusicBarVisible ? 80 : 0,
             ),
             child: FloatingActionButton(
-              onPressed: _showAddTaskDialog,
+              onPressed: _showAddCategoryDialog,
               backgroundColor: AppColors.timerColor,
               foregroundColor: Colors.white,
               shape: RoundedRectangleBorder(
@@ -106,11 +104,11 @@ class _TasksScreenState extends State<TasksScreen> {
         // ── Category Cards ──
         _buildCategoryCards(),
         const SizedBox(height: 32),
-        // ── Today's Focus + Filters ──
-        _buildTodaysFocusHeader(),
+        // ── Categories Header ──
+        _buildCategoriesHeader(),
         const SizedBox(height: 16),
-        // ── Task List ──
-        _buildTaskList(),
+        // ── Categories List ──
+        _buildCategoryList(),
       ],
     );
   }
@@ -184,152 +182,63 @@ class _TasksScreenState extends State<TasksScreen> {
   }
 
   Widget _buildCategoryCards() {
-    return Consumer<TaskProvider>(
-      builder: (context, provider, child) {
-        final tasks = provider.tasks;
-        final pendingUniversity =
-            tasks
-                .where((t) => t.category == 'Universidad' && !t.isCompleted)
-                .length;
-        final pendingPersonal =
-            tasks
-                .where((t) => t.category == 'Personal' && !t.isCompleted)
-                .length;
-        final pendingWork =
-            tasks
-                .where((t) => t.category == 'Trabajo' && !t.isCompleted)
-                .length;
-
-        final totalUniversity =
-            tasks.where((t) => t.category == 'Universidad').length;
-        final totalPersonal =
-            tasks.where((t) => t.category == 'Personal').length;
-        final totalWork = tasks.where((t) => t.category == 'Trabajo').length;
-
-        final categoriesData = [
-          _CategoryData(
-            name: 'Universidad',
-            icon: Icons.school_rounded,
-            pending: pendingUniversity,
-            total: totalUniversity,
-            color: AppColors.primary,
-          ),
-          _CategoryData(
-            name: 'Personal',
-            icon: Icons.person_rounded,
-            pending: pendingPersonal,
-            total: totalPersonal,
-            color: const Color(0xFFEC4899),
-          ),
-          _CategoryData(
-            name: 'Trabajo',
-            icon: Icons.work_rounded,
-            pending: pendingWork,
-            total: totalWork,
-            color: const Color(0xFF22C55E),
-          ),
-        ];
+    return Consumer2<CategoryProvider, TaskProvider>(
+      builder: (context, categoryProvider, taskProvider, child) {
+        final categories = categoryProvider.categories;
+        if (categories.isEmpty) return const SizedBox.shrink();
 
         return SingleChildScrollView(
           scrollDirection: Axis.horizontal,
           physics: const BouncingScrollPhysics(),
           child: Row(
-            children:
-                categoriesData.map((cat) {
-                  return Padding(
-                    padding: const EdgeInsets.only(right: 16),
-                    child: SizedBox(
-                      width: 160,
-                      child: _CategoryCard(data: cat),
-                    ),
-                  );
-                }).toList(),
+            children: categories.map((cat) {
+              final tasks = taskProvider.tasks.where((t) => t.category == cat.name);
+              final pending = tasks.where((t) => !t.isCompleted).length;
+              final total = tasks.length;
+              
+              return Padding(
+                padding: const EdgeInsets.only(right: 16),
+                child: SizedBox(
+                  width: 160,
+                  child: _CategoryCard(
+                    category: cat,
+                    pending: pending,
+                    total: total,
+                  ),
+                ),
+              );
+            }).toList(),
           ),
         );
       },
     );
   }
 
-  Widget _buildTodaysFocusHeader() {
-    final filters = ['Todas', 'Pendientes', 'Completadas'];
+  Widget _buildCategoriesHeader() {
     return LayoutBuilder(
       builder: (context, constraints) {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text("Enfoque de Hoy", style: AppTypography.h3),
+            Text("Tus Categorías", style: AppTypography.h3),
             const SizedBox(height: 12),
-            SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Row(
-                children:
-                    filters.asMap().entries.map((entry) {
-                      final isSelected = _selectedFilter == entry.key;
-                      return Padding(
-                        padding: const EdgeInsets.only(right: 8),
-                        child: GestureDetector(
-                          onTap: () => setState(() => _selectedFilter = entry.key),
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 8,
-                            ),
-                            decoration: BoxDecoration(
-                              color:
-                                  isSelected
-                                      ? AppColors.timerColor
-                                      : AppColors.surfaceLight,
-                              borderRadius: BorderRadius.circular(20),
-                              border:
-                                  isSelected
-                                      ? null
-                                      : Border.all(color: AppColors.cardBorder),
-                            ),
-                            child: Text(
-                              entry.value,
-                              style: AppTypography.bodySmall.copyWith(
-                                color:
-                                    isSelected
-                                        ? Colors.white
-                                        : AppColors.textSecondary,
-                                fontWeight:
-                                    isSelected ? FontWeight.w600 : FontWeight.w400,
-                              ),
-                            ),
-                          ),
-                        ),
-                      );
-                    }).toList(),
-              ),
-            ),
           ],
         );
       },
     );
   }
 
-  Widget _buildTaskList() {
-    return Consumer<TaskProvider>(
-      builder: (context, provider, child) {
-        if (provider.isLoading) {
-          return const Center(child: CircularProgressIndicator());
-        }
+  Widget _buildCategoryList() {
+    return Consumer2<CategoryProvider, TaskProvider>(
+      builder: (context, categoryProvider, taskProvider, child) {
+        final categories = categoryProvider.categories;
 
-        var tasks = provider.tasks;
-
-        // Apply filter
-        if (_selectedFilter == 1) {
-          tasks = tasks.where((t) => !t.isCompleted).toList();
-        } else if (_selectedFilter == 2) {
-          tasks = tasks.where((t) => t.isCompleted).toList();
-        }
-
-        if (tasks.isEmpty) {
+        if (categories.isEmpty) {
           return Padding(
             padding: const EdgeInsets.symmetric(vertical: 32),
             child: Center(
               child: Text(
-                'No se encontraron tareas con este filtro.',
+                'Aún no hay categorías. ¡Crea una!',
                 style: AppTypography.bodyLarge.copyWith(
                   color: AppColors.textSecondary,
                 ),
@@ -339,7 +248,14 @@ class _TasksScreenState extends State<TasksScreen> {
         }
 
         return Column(
-          children: tasks.map((task) => _TaskTile(task: task)).toList(),
+          children: categories.map((cat) {
+            final catTasks = taskProvider.tasks.where((t) => t.category == cat.name).toList();
+            return _CategoryListTile(
+              category: cat,
+              tasks: catTasks,
+              onAddTask: () => _showAddTaskDialog(initialCategory: cat.name),
+            );
+          }).toList(),
         );
       },
     );
@@ -527,13 +443,154 @@ class _TasksScreenState extends State<TasksScreen> {
     return '';
   }
 
-  // ── Dialog ──
-  void _showAddTaskDialog() {
+  // ── Dialogs ──
+  void _showAddCategoryDialog() {
+    final titleController = TextEditingController();
+    int selectedColor = 0xFF22C55E; // Default Green
+    int? selectedIcon; // Default nil
+
+    final colors = [
+      0xFF22C55E, // Green
+      0xFF3B82F6, // Blue
+      0xFFEF4444, // Red
+      0xFFF59E0B, // Orange
+      0xFF8B5CF6, // Purple
+      0xFFEC4899, // Pink
+      0xFF06B6D4, // Cyan
+    ];
+
+    final icons = [
+      Icons.school.codePoint,
+      Icons.person.codePoint,
+      Icons.work.codePoint,
+      Icons.menu_book.codePoint,
+      Icons.computer.codePoint,
+      Icons.sports_esports.codePoint,
+      Icons.music_note.codePoint,
+      Icons.fitness_center.codePoint,
+      Icons.flight.codePoint,
+      Icons.palette.codePoint,
+      Icons.shopping_bag.codePoint,
+    ];
+
+    showDialog(
+      context: context,
+      builder: (ctx) {
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            return AlertDialog(
+              backgroundColor: AppColors.surface,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+              title: Text('Nueva Categoría', style: AppTypography.h3),
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    TextField(
+                      controller: titleController,
+                      decoration: const InputDecoration(
+                        hintText: 'Nombre de la categoría',
+                      ),
+                      style: AppTypography.bodyLarge,
+                    ),
+                    const SizedBox(height: 20),
+                    Text('Color', style: AppTypography.bodySmall),
+                    const SizedBox(height: 12),
+                    Wrap(
+                      spacing: 12,
+                      runSpacing: 12,
+                      children: colors.map((c) {
+                        final isSelected = selectedColor == c;
+                        return GestureDetector(
+                          onTap: () => setDialogState(() => selectedColor = c),
+                          child: Container(
+                            width: 36,
+                            height: 36,
+                            decoration: BoxDecoration(
+                              color: Color(c),
+                              shape: BoxShape.circle,
+                              border: isSelected
+                                  ? Border.all(color: Colors.white, width: 3)
+                                  : null,
+                            ),
+                            child: isSelected
+                                ? const Icon(Icons.check,
+                                    size: 18, color: Colors.white)
+                                : null,
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                    const SizedBox(height: 20),
+                    Text('Ícono (Opcional)', style: AppTypography.bodySmall),
+                    const SizedBox(height: 12),
+                    Wrap(
+                      spacing: 12,
+                      runSpacing: 12,
+                      children: icons.map((iconCode) {
+                        final isSelected = selectedIcon == iconCode;
+                        return GestureDetector(
+                          onTap: () => setDialogState(() => selectedIcon = (isSelected ? null : iconCode)),
+                          child: Container(
+                            width: 36,
+                            height: 36,
+                            decoration: BoxDecoration(
+                              color: AppColors.surfaceLight,
+                              borderRadius: BorderRadius.circular(8),
+                              border: isSelected
+                                  ? Border.all(color: AppColors.primary, width: 2)
+                                  : Border.all(color: Colors.transparent, width: 2),
+                            ),
+                            child: Icon(
+                              IconData(iconCode, fontFamily: 'MaterialIcons'),
+                              size: 20,
+                              color: isSelected ? AppColors.primary : Colors.white70,
+                            ),
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(ctx),
+                  child: const Text('Cancelar'),
+                ),
+                ElevatedButton(
+                  onPressed: () {
+                    final title = titleController.text.trim();
+                    if (title.isEmpty) return;
+
+                    final cat = CategoryModel(
+                      id: const Uuid().v4(),
+                      name: title,
+                      colorValue: selectedColor,
+                      iconCodePoint: selectedIcon,
+                    );
+
+                    context.read<CategoryProvider>().addCategory(cat);
+                    Navigator.pop(ctx);
+                  },
+                  child: const Text('Crear Categoría'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
+  void _showAddTaskDialog({required String initialCategory}) {
     final titleController = TextEditingController();
     final descriptionController = TextEditingController();
     String selectedPriority = 'MEDIA';
     int pomodorosTarget = 1;
-    String? selectedCategory = 'Universidad';
     DateTime? selectedDueDate;
     TimeOfDay? selectedDueTime;
 
@@ -572,7 +629,7 @@ class _TasksScreenState extends State<TasksScreen> {
                     Text('Prioridad', style: AppTypography.bodySmall),
                     const SizedBox(height: 8),
                     DropdownButtonFormField<String>(
-                      initialValue: selectedPriority,
+                      value: selectedPriority,
                       dropdownColor: AppColors.surfaceLight,
                       items:
                           ['ALTA PRIORIDAD', 'MEDIA', 'BAJA'].map((p) {
@@ -581,22 +638,6 @@ class _TasksScreenState extends State<TasksScreen> {
                       onChanged: (val) {
                         if (val != null) {
                           setDialogState(() => selectedPriority = val);
-                        }
-                      },
-                    ),
-                    const SizedBox(height: 20),
-                    Text('Categoría', style: AppTypography.bodySmall),
-                    const SizedBox(height: 8),
-                    DropdownButtonFormField<String>(
-                      initialValue: selectedCategory,
-                      dropdownColor: AppColors.surfaceLight,
-                      items:
-                          ['Universidad', 'Personal', 'Trabajo'].map((c) {
-                            return DropdownMenuItem(value: c, child: Text(c));
-                          }).toList(),
-                      onChanged: (val) {
-                        if (val != null) {
-                          setDialogState(() => selectedCategory = val);
                         }
                       },
                     ),
@@ -746,7 +787,7 @@ class _TasksScreenState extends State<TasksScreen> {
                       id: const Uuid().v4(),
                       title: title,
                       description: descriptionController.text.trim(),
-                      category: selectedCategory,
+                      category: initialCategory,
                       priority: selectedPriority,
                       priorityColorValue: colorValue,
                       pomodorosTarget: pomodorosTarget,
@@ -771,13 +812,120 @@ class _TasksScreenState extends State<TasksScreen> {
 // PRIVATE WIDGETS
 // ═══════════════════════════════════════════════════
 
-// ── Category Card ──
-class _CategoryCard extends StatelessWidget {
-  final _CategoryData data;
-  const _CategoryCard({required this.data});
+// ── Category List Tile ──
+class _CategoryListTile extends StatelessWidget {
+  final CategoryModel category;
+  final List<TaskModel> tasks;
+  final VoidCallback onAddTask;
+
+  const _CategoryListTile({
+    required this.category,
+    required this.tasks,
+    required this.onAddTask,
+  });
 
   @override
   Widget build(BuildContext context) {
+    final pendingCount = tasks.where((t) => !t.isCompleted).length;
+    final color = Color(category.colorValue);
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: GlassCard(
+        padding: const EdgeInsets.all(0),
+        child: Theme(
+          data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+          child: ExpansionTile(
+            collapsedIconColor: AppColors.textSecondary,
+            iconColor: color,
+            title: Row(
+              children: [
+                Container(
+                  width: 32,
+                  height: 32,
+                  decoration: BoxDecoration(
+                    color: color.withValues(alpha: 0.3),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Center(
+                    child: category.iconCodePoint != null
+                        ? Icon(
+                            IconData(category.iconCodePoint!, fontFamily: 'MaterialIcons'),
+                            size: 16,
+                            color: color,
+                          )
+                        : Text(
+                            category.name.isNotEmpty ? category.name[0].toUpperCase() : 'C',
+                            style: TextStyle(color: color, fontWeight: FontWeight.bold),
+                          ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    category.name,
+                    style: AppTypography.labelLarge.copyWith(fontSize: 16),
+                  ),
+                ),
+                Text(
+                  '$pendingCount PENDIENTES',
+                  style: AppTypography.labelSmall.copyWith(color: AppColors.textSecondary),
+                ),
+              ],
+            ),
+            children: [
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                child: Column(
+                  children: [
+                    if (tasks.isEmpty)
+                      Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 8),
+                        child: Text('Aún no hay tareas', style: AppTypography.bodySmall),
+                      )
+                    else
+                      ...tasks.map((t) => _TaskTile(task: t)),
+                    const SizedBox(height: 8),
+                    SizedBox(
+                      width: double.infinity,
+                      child: TextButton.icon(
+                        icon: const Icon(Icons.add, size: 18),
+                        label: const Text('Agregar Tarea'),
+                        style: TextButton.styleFrom(
+                          foregroundColor: color,
+                          alignment: Alignment.centerLeft,
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                        ),
+                        onPressed: onAddTask,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ── Category Card ──
+class _CategoryCard extends StatelessWidget {
+  final CategoryModel category;
+  final int pending;
+  final int total;
+
+  const _CategoryCard({
+    required this.category,
+    required this.pending,
+    required this.total,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final color = Color(category.colorValue);
+    
     return GlassCard(
       padding: const EdgeInsets.all(16),
       child: Column(
@@ -790,22 +938,35 @@ class _CategoryCard extends StatelessWidget {
                 width: 40,
                 height: 40,
                 decoration: BoxDecoration(
-                  color: data.color.withAlpha(30),
+                  color: color.withAlpha(30),
                   borderRadius: BorderRadius.circular(10),
                 ),
-                child: Icon(data.icon, color: data.color, size: 22),
+                child: Center(
+                  child: category.iconCodePoint != null
+                      ? Icon(
+                          IconData(category.iconCodePoint!, fontFamily: 'MaterialIcons'),
+                          size: 20,
+                          color: color,
+                        )
+                      : Text(
+                          category.name.isNotEmpty ? category.name[0].toUpperCase() : 'C',
+                          style: TextStyle(color: color, fontSize: 20, fontWeight: FontWeight.bold),
+                        ),
+                ),
               ),
               Icon(Icons.more_horiz, color: AppColors.textTertiary, size: 20),
             ],
           ),
           const SizedBox(height: 16),
           Text(
-            data.name,
+            category.name,
             style: AppTypography.labelLarge.copyWith(fontSize: 15),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
           ),
           const SizedBox(height: 4),
           Text(
-            '${data.pending} TAREAS PENDIENTES',
+            '$pending TAREAS PENDIENTES',
             style: AppTypography.labelSmall.copyWith(fontSize: 10),
           ),
           const SizedBox(height: 12),
@@ -813,13 +974,10 @@ class _CategoryCard extends StatelessWidget {
           ClipRRect(
             borderRadius: BorderRadius.circular(4),
             child: LinearProgressIndicator(
-              value:
-                  data.total == 0
-                      ? 0.0
-                      : ((data.total - data.pending) / data.total),
+              value: total == 0 ? 0.0 : ((total - pending) / total),
               minHeight: 4,
               backgroundColor: AppColors.surfaceLight,
-              valueColor: AlwaysStoppedAnimation<Color>(data.color),
+              valueColor: AlwaysStoppedAnimation<Color>(color),
             ),
           ),
         ],
@@ -1082,18 +1240,4 @@ class _DonutChartPainter extends CustomPainter {
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
 
-class _CategoryData {
-  final String name;
-  final IconData icon;
-  final int pending;
-  final int total;
-  final Color color;
 
-  _CategoryData({
-    required this.name,
-    required this.icon,
-    required this.pending,
-    required this.total,
-    required this.color,
-  });
-}

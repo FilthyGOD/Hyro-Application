@@ -1,4 +1,5 @@
 import 'package:hive/hive.dart';
+import 'subtask_model.dart';
 
 part 'task_model.g.dart';
 
@@ -40,6 +41,15 @@ class TaskModel extends HiveObject {
   @HiveField(11)
   DateTime? dueDate;
 
+  @HiveField(12)
+  String? notes;
+
+  @HiveField(13)
+  List<SubTaskModel>? subtasks;
+
+  @HiveField(14)
+  List<String>? attachedDocumentUrls;
+
   TaskModel({
     required this.id,
     required this.title,
@@ -53,6 +63,9 @@ class TaskModel extends HiveObject {
     DateTime? createdAt,
     this.completedAt,
     this.dueDate,
+    this.notes,
+    this.subtasks,
+    this.attachedDocumentUrls,
   }) : createdAt = createdAt ?? DateTime.now();
 
   TaskModel copyWith({
@@ -66,6 +79,9 @@ class TaskModel extends HiveObject {
     int? priorityColorValue,
     DateTime? completedAt,
     DateTime? dueDate,
+    String? notes,
+    List<SubTaskModel>? subtasks,
+    List<String>? attachedDocumentUrls,
   }) {
     return TaskModel(
       id: id,
@@ -80,6 +96,9 @@ class TaskModel extends HiveObject {
       createdAt: createdAt,
       completedAt: completedAt ?? this.completedAt,
       dueDate: dueDate ?? this.dueDate,
+      notes: notes ?? this.notes,
+      subtasks: subtasks ?? this.subtasks,
+      attachedDocumentUrls: attachedDocumentUrls ?? this.attachedDocumentUrls,
     );
   }
 }

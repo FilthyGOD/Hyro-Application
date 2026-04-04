@@ -10,6 +10,7 @@ import 'tasks_provider.dart';
 import '../stats/stats_provider.dart';
 import '../../providers/ui_provider.dart';
 import '../categories/category_provider.dart';
+import 'widgets/task_details_sheet.dart';
 import '../../data/models/category_model.dart';
 
 class TasksScreen extends StatefulWidget {
@@ -1026,10 +1027,18 @@ class _TaskTile extends StatelessWidget {
             const SizedBox(width: 16),
             // Content Column
             Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
+              child: GestureDetector(
+                onTap: () {
+                  showDialog(
+                    context: context,
+                    builder: (_) => TaskDetailsDialog(task: task),
+                  );
+                },
+                behavior: HitTestBehavior.opaque,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
                     task.title,
                     style: AppTypography.bodyMedium.copyWith(
                       fontWeight: FontWeight.w600,
@@ -1122,6 +1131,7 @@ class _TaskTile extends StatelessWidget {
                 ],
               ),
             ),
+          ),
           ],
         ),
       ),

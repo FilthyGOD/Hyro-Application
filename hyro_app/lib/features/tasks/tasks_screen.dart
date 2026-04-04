@@ -22,6 +22,7 @@ class TasksScreen extends StatefulWidget {
 class _TasksScreenState extends State<TasksScreen> {
   // ── Demo data ──
   // ── Categories will be dynamic ──
+  String? _selectedCategoryName;
 
   @override
   Widget build(BuildContext context) {
@@ -49,68 +50,58 @@ class _TasksScreenState extends State<TasksScreen> {
         builder: (context, constraints) {
           final isLargeScreen = constraints.maxWidth > 800;
 
-          return Padding(
-            padding:
-                isLargeScreen
-                    ? const EdgeInsets.only(
+          return SingleChildScrollView(
+            child: Padding(
+              padding: isLargeScreen
+                  ? const EdgeInsets.only(
                       left: 72,
                       top: 32,
                       right: 32,
                       bottom: 32,
                     )
-                    : const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
-            child:
-                isLargeScreen
-                    ? Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Expanded(flex: 65, child: _buildLeftContent()),
-                        const SizedBox(width: 32),
-                        SizedBox(width: 320, child: _buildRightContent()),
-                      ],
-                    )
-                    : SingleChildScrollView(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          _buildLeftContent(),
-                          const SizedBox(height: 32),
-                          _buildRightContent(),
-                        ],
-                      ),
-                    ),
+                  : const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildHeader(isMobile: !isLargeScreen),
+                  const SizedBox(height: 32),
+                  _buildTopCards(isLargeScreen: isLargeScreen),
+                  const SizedBox(height: 32),
+                  _buildCategoryCards(),
+                  const SizedBox(height: 32),
+                  _buildCategoriesHeader(),
+                  const SizedBox(height: 16),
+                  _buildCategoryList(),
+                  const SizedBox(height: 80),
+                ],
+              ),
+            ),
           );
         },
       ),
     );
   }
 
-  // ═══════════════════════════════════════════════
-  // LEFT CONTENT
-  // ═══════════════════════════════════════════════
-
-  Widget _buildLeftContent() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // ── Header ──
-        LayoutBuilder(
-          builder: (context, constraints) {
-            final isMobile = MediaQuery.of(context).size.width < 800;
-            return _buildHeader(isMobile: isMobile);
-          },
-        ),
-        const SizedBox(height: 24),
-        // ── Category Cards ──
-        _buildCategoryCards(),
-        const SizedBox(height: 32),
-        // ── Categories Header ──
-        _buildCategoriesHeader(),
-        const SizedBox(height: 16),
-        // ── Categories List ──
-        _buildCategoryList(),
-      ],
-    );
+  Widget _buildTopCards({required bool isLargeScreen}) {
+    if (isLargeScreen) {
+      return Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(child: _buildAnalyticsCard()),
+          const SizedBox(width: 24),
+          Expanded(child: _buildUpcomingCard()),
+        ],
+      );
+    } else {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          _buildAnalyticsCard(),
+          const SizedBox(height: 16),
+          _buildUpcomingCard(),
+        ],
+      );
+    }
   }
 
   Widget _buildHeader({required bool isMobile}) {
@@ -196,14 +187,27 @@ class _TasksScreenState extends State<TasksScreen> {
               final pending = tasks.where((t) => !t.isCompleted).length;
               final total = tasks.length;
               
+              final isSelected = _selectedCategoryName == cat.name || 
+                                 (_selectedCategoryName == null && cat == categories.first);
+              
               return Padding(
                 padding: const EdgeInsets.only(right: 16),
-                child: SizedBox(
-                  width: 160,
-                  child: _CategoryCard(
-                    category: cat,
-                    pending: pending,
-                    total: total,
+                child: GestureDetector(
+                  onTap: () {
+                    setState(() {
+                      _selectedCategoryName = cat.name;
+                    });
+                  },
+                  child: Opacity(
+                    opacity: isSelected ? 1.0 : 0.5,
+                    child: SizedBox(
+                      width: 160,
+                      child: _CategoryCard(
+                        category: cat,
+                        pending: pending,
+                        total: total,
+                      ),
+                    ),
                   ),
                 ),
               );
@@ -247,36 +251,26 @@ class _TasksScreenState extends State<TasksScreen> {
           );
         }
 
-        return Column(
-          children: categories.map((cat) {
-            final catTasks = taskProvider.tasks.where((t) => t.category == cat.name).toList();
-            return _CategoryListTile(
-              category: cat,
-              tasks: catTasks,
-              onAddTask: () => _showAddTaskDialog(initialCategory: cat.name),
-            );
-          }).toList(),
+        final selectedCatName = _selectedCategoryName ?? categories.first.name;
+        final selectedCat = categories.cast<CategoryModel?>().firstWhere(
+          (c) => c!.name == selectedCatName, 
+          orElse: () => categories.first
+        );
+
+        if (selectedCat == null) return const SizedBox.shrink();
+
+        final catTasks = taskProvider.tasks.where((t) => t.category == selectedCat.name).toList();
+        return _CategoryListTile(
+          key: ValueKey(selectedCat.id),
+          category: selectedCat,
+          tasks: catTasks,
+          onAddTask: () => _showAddTaskDialog(initialCategory: selectedCat.name),
         );
       },
     );
   }
 
-  // ═══════════════════════════════════════════════
-  // RIGHT CONTENT
-  // ═══════════════════════════════════════════════
 
-  Widget _buildRightContent() {
-    return ListView(
-      shrinkWrap: true,
-      physics: const ClampingScrollPhysics(),
-      children: [
-        _buildAnalyticsCard(),
-        const SizedBox(height: 16),
-        _buildUpcomingCard(),
-        const SizedBox(height: 80),
-      ],
-    );
-  }
 
   Widget _buildAnalyticsCard() {
     return Consumer<TaskProvider>(
@@ -819,6 +813,7 @@ class _CategoryListTile extends StatelessWidget {
   final VoidCallback onAddTask;
 
   const _CategoryListTile({
+    super.key,
     required this.category,
     required this.tasks,
     required this.onAddTask,
@@ -836,6 +831,7 @@ class _CategoryListTile extends StatelessWidget {
         child: Theme(
           data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
           child: ExpansionTile(
+            initiallyExpanded: true,
             collapsedIconColor: AppColors.textSecondary,
             iconColor: color,
             title: Row(

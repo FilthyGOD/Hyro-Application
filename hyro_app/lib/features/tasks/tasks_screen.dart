@@ -919,6 +919,41 @@ class _CategoryCard extends StatelessWidget {
     required this.total,
   });
 
+  void _showDeleteCategoryDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (ctx) {
+        return AlertDialog(
+          backgroundColor: AppColors.surface,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          title: Text('Eliminar Categoría', style: AppTypography.h3),
+          content: Text(
+            '¿Estás seguro de que deseas eliminar "${category.name}"?\n\nLas tareas asociadas no serán eliminadas.',
+            style: AppTypography.bodyMedium.copyWith(color: AppColors.textSecondary),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text('Cancelar'),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFFEF4444),
+              ),
+              onPressed: () {
+                context.read<CategoryProvider>().deleteCategory(category.id);
+                Navigator.pop(ctx);
+              },
+              child: const Text('Eliminar', style: TextStyle(color: Colors.white)),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final color = Color(category.colorValue);
@@ -951,7 +986,34 @@ class _CategoryCard extends StatelessWidget {
                         ),
                 ),
               ),
-              Icon(Icons.more_horiz, color: AppColors.textTertiary, size: 20),
+              PopupMenuButton<String>(
+                icon: const Icon(Icons.more_horiz, color: AppColors.textTertiary, size: 20),
+                color: AppColors.surface,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  side: const BorderSide(color: AppColors.cardBorder),
+                ),
+                onSelected: (value) {
+                  if (value == 'delete') {
+                    _showDeleteCategoryDialog(context);
+                  }
+                },
+                itemBuilder: (context) => [
+                  PopupMenuItem<String>(
+                    value: 'delete',
+                    child: Row(
+                      children: [
+                        const Icon(Icons.delete_outline_rounded, color: Color(0xFFEF4444), size: 18),
+                        const SizedBox(width: 10),
+                        Text(
+                          'Eliminar categoría',
+                          style: AppTypography.bodyMedium.copyWith(color: const Color(0xFFEF4444)),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
             ],
           ),
           const SizedBox(height: 16),
@@ -987,6 +1049,41 @@ class _CategoryCard extends StatelessWidget {
 class _TaskTile extends StatelessWidget {
   final TaskModel task;
   const _TaskTile({required this.task});
+
+  void _showDeleteTaskDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (ctx) {
+        return AlertDialog(
+          backgroundColor: AppColors.surface,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          title: Text('Eliminar Actividad', style: AppTypography.h3),
+          content: Text(
+            '¿Estás seguro de que deseas eliminar "${task.title}"?',
+            style: AppTypography.bodyMedium.copyWith(color: AppColors.textSecondary),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text('Cancelar'),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFFEF4444),
+              ),
+              onPressed: () {
+                context.read<TaskProvider>().deleteTask(task.id);
+                Navigator.pop(ctx);
+              },
+              child: const Text('Eliminar', style: TextStyle(color: Colors.white)),
+            ),
+          ],
+        );
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -1131,6 +1228,36 @@ class _TaskTile extends StatelessWidget {
                 ],
               ),
             ),
+          ),
+          // Delete button
+          PopupMenuButton<String>(
+            icon: const Icon(Icons.more_vert_rounded, color: AppColors.textTertiary, size: 18),
+            color: AppColors.surface,
+            padding: EdgeInsets.zero,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+              side: const BorderSide(color: AppColors.cardBorder),
+            ),
+            onSelected: (value) {
+              if (value == 'delete') {
+                _showDeleteTaskDialog(context);
+              }
+            },
+            itemBuilder: (context) => [
+              PopupMenuItem<String>(
+                value: 'delete',
+                child: Row(
+                  children: [
+                    const Icon(Icons.delete_outline_rounded, color: Color(0xFFEF4444), size: 18),
+                    const SizedBox(width: 10),
+                    Text(
+                      'Eliminar actividad',
+                      style: AppTypography.bodyMedium.copyWith(color: const Color(0xFFEF4444)),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
           ],
         ),

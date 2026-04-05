@@ -34,6 +34,12 @@ class _MainLayoutState extends State<MainLayout> {
   // State to control sidebar visibility on desktop/tablet
   bool _isDesktopSidebarVisible = true;
 
+  // Mobile bottom nav order: Tienda(0), Estads(1), Enfoque(2), Tareas(3), Perfil(4)
+  // Maps mobile nav index → screen index
+  static const _mobileNavToScreen = [3, 2, 0, 1, 4];
+  // Maps screen index → mobile nav index
+  static const _screenToMobileNav = {0: 2, 1: 3, 2: 1, 3: 0, 4: 4};
+
   late final SpotifyAuthService _spotifyAuthService;
   late final SpotifyPlayerService _spotifyPlayerService;
 
@@ -203,16 +209,26 @@ class _MainLayoutState extends State<MainLayout> {
               child: BottomNavigationBar(
           backgroundColor: AppColors.surface,
           type: BottomNavigationBarType.fixed,
-          currentIndex: widget.selectedIndex < 5 ? widget.selectedIndex : 0,
+          currentIndex: _screenToMobileNav[widget.selectedIndex] ?? 0,
           selectedItemColor: AppColors.primary,
           unselectedItemColor: AppColors.textSecondary,
           selectedFontSize: 11,
           unselectedFontSize: 11,
           showUnselectedLabels: true,
           onTap: (index) {
-            widget.onNavigate(index);
+            widget.onNavigate(_mobileNavToScreen[index]);
           },
           items: const [
+            BottomNavigationBarItem(
+              icon: Icon(Icons.storefront_outlined),
+              activeIcon: Icon(Icons.storefront),
+              label: 'Tienda',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.bar_chart_outlined),
+              activeIcon: Icon(Icons.bar_chart),
+              label: 'Estads',
+            ),
             BottomNavigationBarItem(
               icon: Icon(Icons.timer_outlined),
               activeIcon: Icon(Icons.timer),
@@ -222,16 +238,6 @@ class _MainLayoutState extends State<MainLayout> {
               icon: Icon(Icons.check_circle_outline),
               activeIcon: Icon(Icons.check_circle),
               label: 'Tareas',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.bar_chart_outlined),
-              activeIcon: Icon(Icons.bar_chart),
-              label: 'Estads', /* Shortened for fit */
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.storefront_outlined),
-              activeIcon: Icon(Icons.storefront),
-              label: 'Tienda',
             ),
             BottomNavigationBarItem(
               icon: Icon(Icons.person_outline),

@@ -9,17 +9,17 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../data/models/task_model.dart';
+import '../../../data/models/tarea_nota_model.dart';
+import '../../../data/models/tarea_card_model.dart';
+import '../../../data/repositories/note_repository.dart';
+import '../../../data/repositories/card_repository.dart';
+import '../../../data/local/note_local_ds.dart';
+import '../../../data/local/card_local_ds.dart';
+import '../../../data/remote/note_remote_ds.dart';
+import '../../../data/remote/card_remote_ds.dart';
+import '../../../providers/auth_provider.dart';
 import '../tasks_provider.dart';
 import '../../../shared/widgets/glass_card.dart';
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Simple in-memory flashcard model (not persisted to Hive yet)
-// ─────────────────────────────────────────────────────────────────────────────
-class _Flashcard {
-  String front;
-  String back;
-  _Flashcard({required this.front, required this.back});
-}
 
 class TaskDetailsDialog extends StatefulWidget {
   final TaskModel task;
@@ -40,15 +40,18 @@ class _TaskDetailsDialogState extends State<TaskDetailsDialog>
   bool _isUploadingDocument = false;
   int _selectedTab = 1; // Start on Chat tab
 
-  // Flashcard state
-  final List<_Flashcard> _flashcards = [];
+  // Flashcard state — backed by CardRepository
+  final List<TareaCardModel> _flashcards = [];
   late TextEditingController _cardFrontController;
   late TextEditingController _cardBackController;
   int? _previewIndex;
   bool _previewShowBack = false;
 
-  // Chat messages (local in-memory notes list)
-  final List<String> _chatMessages = [];
+  // Notes — backed by NoteRepository
+  final List<TareaNotaModel> _chatNotes = [];
+
+  late NoteRepository _noteRepo;
+  late CardRepository _cardRepo;
 
   @override
   void initState() {
@@ -60,9 +63,37 @@ class _TaskDetailsDialogState extends State<TaskDetailsDialog>
     _cardFrontController = TextEditingController();
     _cardBackController = TextEditingController();
 
-    // Load existing notes into chat messages
-    if (_currentTask.notes != null && _currentTask.notes!.trim().isNotEmpty) {
-      _chatMessages.add(_currentTask.notes!.trim());
+    // Build repositories
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final auth = context.read<AuthProvider>();
+      final supabaseClient = Supabase.instance.client;
+      _noteRepo = NoteRepository(
+        local: NoteLocalDataSource(),
+        remote: NoteRemoteDataSource(supabaseClient),
+        isAuthenticated: () => auth.isAuthenticated,
+        getUserId: () => auth.supabaseUserId,
+      );
+      _cardRepo = CardRepository(
+        local: CardLocalDataSource(),
+        remote: CardRemoteDataSource(supabaseClient),
+        isAuthenticated: () => auth.isAuthenticated,
+      );
+      _loadNotesAndCards();
+    });
+  }
+
+  void _loadNotesAndCards() {
+    final notes = _noteRepo.getNotesForTask(_currentTask.id);
+    final cards = _cardRepo.getCardsForTask(_currentTask.id);
+    if (mounted) {
+      setState(() {
+        _chatNotes
+          ..clear()
+          ..addAll(notes);
+        _flashcards
+          ..clear()
+          ..addAll(cards);
+      });
     }
   }
 
@@ -77,8 +108,8 @@ class _TaskDetailsDialogState extends State<TaskDetailsDialog>
   }
 
   void _saveTask() {
-    // Rebuild notes from chat messages
-    final allNotes = _chatMessages.join('\n---\n');
+    // Rebuild notes from chat note models
+    final allNotes = _chatNotes.map((n) => n.contenido).join('\n---\n');
     final updated = _currentTask.copyWith(notes: allNotes);
     context.read<TaskProvider>().updateTask(updated);
   }
@@ -147,8 +178,15 @@ class _TaskDetailsDialogState extends State<TaskDetailsDialog>
   void _sendChatMessage() {
     final text = _chatInputController.text.trim();
     if (text.isEmpty) return;
+    final nota = TareaNotaModel(
+      id: const Uuid().v4(),
+      tareaId: _currentTask.id,
+      usuarioId: '',
+      contenido: text,
+    );
+    _noteRepo.addNote(nota);
     setState(() {
-      _chatMessages.add(text);
+      _chatNotes.add(nota);
     });
     _chatInputController.clear();
     _saveTask();
@@ -161,14 +199,23 @@ class _TaskDetailsDialogState extends State<TaskDetailsDialog>
     final back = _cardBackController.text.trim();
     if (front.isEmpty || back.isEmpty) return;
 
+    final card = TareaCardModel(
+      id: const Uuid().v4(),
+      tareaId: _currentTask.id,
+      frente: front,
+      reverso: back,
+    );
+    _cardRepo.addCard(card);
     setState(() {
-      _flashcards.add(_Flashcard(front: front, back: back));
+      _flashcards.add(card);
       _cardFrontController.clear();
       _cardBackController.clear();
     });
   }
 
   void _removeFlashcard(int index) {
+    final card = _flashcards[index];
+    _cardRepo.deleteCard(card.id);
     setState(() {
       _flashcards.removeAt(index);
       if (_previewIndex == index) {
@@ -497,7 +544,7 @@ class _TaskDetailsDialogState extends State<TaskDetailsDialog>
         children: [
           // Messages area
           Expanded(
-            child: _chatMessages.isEmpty
+            child: _chatNotes.isEmpty
                 ? Center(
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
@@ -519,9 +566,9 @@ class _TaskDetailsDialogState extends State<TaskDetailsDialog>
                 : ListView.builder(
                     padding: const EdgeInsets.symmetric(
                         horizontal: 16, vertical: 12),
-                    itemCount: _chatMessages.length,
+                    itemCount: _chatNotes.length,
                     itemBuilder: (context, index) =>
-                        _buildChatBubble(_chatMessages[index], index),
+                        _buildChatBubble(_chatNotes[index].contenido, index),
                   ),
           ),
 
@@ -584,8 +631,10 @@ class _TaskDetailsDialogState extends State<TaskDetailsDialog>
                   const SizedBox(width: 8),
                   // Delete button
                   _chatActionIcon(Icons.delete_outline_rounded, () {
+                    final nota = _chatNotes[index];
+                    _noteRepo.deleteNote(nota.id);
                     setState(() {
-                      _chatMessages.removeAt(index);
+                      _chatNotes.removeAt(index);
                     });
                     _saveTask();
                   }),
@@ -861,7 +910,7 @@ class _TaskDetailsDialogState extends State<TaskDetailsDialog>
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    card.front,
+                    card.frente,
                     style: AppTypography.bodyMedium.copyWith(
                       color: AppColors.textPrimary,
                       fontWeight: FontWeight.w500,
@@ -871,7 +920,7 @@ class _TaskDetailsDialogState extends State<TaskDetailsDialog>
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    card.back,
+                    card.reverso,
                     style: AppTypography.bodySmall.copyWith(
                       color: AppColors.textTertiary,
                       fontSize: 10,
@@ -981,7 +1030,7 @@ class _TaskDetailsDialogState extends State<TaskDetailsDialog>
                     ),
                     const SizedBox(height: 16),
                     Text(
-                      _previewShowBack ? card.back : card.front,
+                      _previewShowBack ? card.reverso : card.frente,
                       textAlign: TextAlign.center,
                       style: AppTypography.h3.copyWith(
                         fontSize: 18,

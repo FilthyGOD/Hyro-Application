@@ -1,44 +1,44 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'category_model.dart';
+part of 'tarea_card_model.dart';
 
 // **************************************************************************
 // TypeAdapterGenerator
 // **************************************************************************
 
-class CategoryModelAdapter extends TypeAdapter<CategoryModel> {
+class TareaCardModelAdapter extends TypeAdapter<TareaCardModel> {
   @override
-  final int typeId = 3;
+  final int typeId = 6;
 
   @override
-  CategoryModel read(BinaryReader reader) {
+  TareaCardModel read(BinaryReader reader) {
     final numOfFields = reader.readByte();
     final fields = <int, dynamic>{
       for (int i = 0; i < numOfFields; i++) reader.readByte(): reader.read(),
     };
-    return CategoryModel(
+    return TareaCardModel(
       id: fields[0] as String,
-      name: fields[1] as String,
-      colorValue: fields[2] as int,
-      iconCodePoint: fields[3] as int?,
-      usuarioId: fields[4] as String?,
+      tareaId: fields[1] as String,
+      frente: fields[2] as String,
+      reverso: fields[3] as String,
+      creadoEn: fields[4] as DateTime?,
     );
   }
 
   @override
-  void write(BinaryWriter writer, CategoryModel obj) {
+  void write(BinaryWriter writer, TareaCardModel obj) {
     writer
       ..writeByte(5)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
-      ..write(obj.name)
+      ..write(obj.tareaId)
       ..writeByte(2)
-      ..write(obj.colorValue)
+      ..write(obj.frente)
       ..writeByte(3)
-      ..write(obj.iconCodePoint)
+      ..write(obj.reverso)
       ..writeByte(4)
-      ..write(obj.usuarioId);
+      ..write(obj.creadoEn);
   }
 
   @override
@@ -47,7 +47,7 @@ class CategoryModelAdapter extends TypeAdapter<CategoryModel> {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      other is CategoryModelAdapter &&
+      other is TareaCardModelAdapter &&
           runtimeType == other.runtimeType &&
           typeId == other.typeId;
 }

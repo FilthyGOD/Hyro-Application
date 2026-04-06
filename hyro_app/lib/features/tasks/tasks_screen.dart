@@ -184,7 +184,7 @@ class _TasksScreenState extends State<TasksScreen> {
           physics: const BouncingScrollPhysics(),
           child: Row(
             children: categories.map((cat) {
-              final tasks = taskProvider.tasks.where((t) => t.category == cat.name);
+              final tasks = taskProvider.tasks.where((t) => t.category == cat.name || t.categoryId == cat.id);
               final pending = tasks.where((t) => !t.isCompleted).length;
               final total = tasks.length;
               
@@ -260,12 +260,12 @@ class _TasksScreenState extends State<TasksScreen> {
 
         if (selectedCat == null) return const SizedBox.shrink();
 
-        final catTasks = taskProvider.tasks.where((t) => t.category == selectedCat.name).toList();
+        final catTasks = taskProvider.tasks.where((t) => t.category == selectedCat.name || t.categoryId == selectedCat.id).toList();
         return _CategoryListTile(
           key: ValueKey(selectedCat.id),
           category: selectedCat,
           tasks: catTasks,
-          onAddTask: () => _showAddTaskDialog(initialCategory: selectedCat.name),
+          onAddTask: () => _showAddTaskDialog(initialCategory: selectedCat.name, categoryId: selectedCat.id),
         );
       },
     );
@@ -581,7 +581,7 @@ class _TasksScreenState extends State<TasksScreen> {
     );
   }
 
-  void _showAddTaskDialog({required String initialCategory}) {
+  void _showAddTaskDialog({required String initialCategory, String? categoryId}) {
     final titleController = TextEditingController();
     final descriptionController = TextEditingController();
     String selectedPriority = 'MEDIA';
@@ -778,11 +778,18 @@ class _TasksScreenState extends State<TasksScreen> {
                       );
                     }
 
+                    final categories = context.read<CategoryProvider>().categories;
+                    final matchedCat = categories.cast<CategoryModel?>().firstWhere(
+                      (c) => c!.name == initialCategory,
+                      orElse: () => null,
+                    );
+
                     final task = TaskModel(
                       id: const Uuid().v4(),
                       title: title,
                       description: descriptionController.text.trim(),
                       category: initialCategory,
+                      categoryId: categoryId ?? matchedCat?.id,
                       priority: selectedPriority,
                       priorityColorValue: colorValue,
                       pomodorosTarget: pomodorosTarget,

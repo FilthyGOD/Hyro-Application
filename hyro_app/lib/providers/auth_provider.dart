@@ -2,11 +2,23 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:isar/isar.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:google_sign_in/google_sign_in.dart'; // <-- Nuevo import
+import 'package:google_sign_in/google_sign_in.dart';
 import 'package:hyro_app/models/user_profile.dart';
 import 'dart:io' show Platform;
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:app_links/app_links.dart';
+import 'package:hyro_app/data/sync/sync_service.dart';
+import 'package:hyro_app/data/local/task_local_ds.dart';
+import 'package:hyro_app/data/local/category_local_ds.dart';
+import 'package:hyro_app/data/local/note_local_ds.dart';
+import 'package:hyro_app/data/local/source_local_ds.dart';
+import 'package:hyro_app/data/local/card_local_ds.dart';
+import 'package:hyro_app/data/remote/task_remote_ds.dart';
+import 'package:hyro_app/data/remote/category_remote_ds.dart';
+import 'package:hyro_app/data/remote/note_remote_ds.dart';
+import 'package:hyro_app/data/remote/source_remote_ds.dart';
+import 'package:hyro_app/data/remote/card_remote_ds.dart';
+import 'package:hyro_app/data/remote/file_storage_service.dart';
 
 class AuthProvider extends ChangeNotifier {
   final Isar isar;
@@ -102,7 +114,7 @@ class AuthProvider extends ChangeNotifier {
       await isar.userProfiles.put(user);
     });
 
-    // 3. Sincronizar datos locales a Supabase (solo tiene efecto la primera vez)
+    // 3. Sincronizar gamificación a Supabase (solo tiene efecto la primera vez)
     try {
       await Supabase.instance.client.rpc('sincronizar_perfil_local', params: {
         'p_nivel': localNivel,
@@ -110,9 +122,44 @@ class AuthProvider extends ChangeNotifier {
         'p_monedas': localMonedas,
         'p_compras_ids': localCompras,
       });
-      debugPrint('✅ Datos locales sincronizados a Supabase (nivel: $localNivel, xp: $localExp, monedas: $localMonedas, compras: $localCompras)');
+      debugPrint('✅ Gamificación sincronizada (nivel: $localNivel, xp: $localExp, monedas: $localMonedas, compras: $localCompras)');
     } catch (e) {
-      debugPrint('⚠️ Error sincronizando datos locales a Supabase: $e');
+      debugPrint('⚠️ Error sincronizando gamificación: $e');
+    }
+
+    // 4. Sincronizar tareas, categorías, notas, PDFs y flashcards
+    try {
+      final supabaseClient = Supabase.instance.client;
+      final syncService = SyncService(
+        categoryLocal: CategoryLocalDataSource(),
+        taskLocal: TaskLocalDataSource(),
+        noteLocal: NoteLocalDataSource(),
+        sourceLocal: SourceLocalDataSource(),
+        cardLocal: CardLocalDataSource(),
+        categoryRemote: CategoryRemoteDataSource(supabaseClient),
+        taskRemote: TaskRemoteDataSource(supabaseClient),
+        noteRemote: NoteRemoteDataSource(supabaseClient),
+        sourceRemote: SourceRemoteDataSource(supabaseClient),
+        cardRemote: CardRemoteDataSource(supabaseClient),
+        fileStorage: FileStorageService(supabaseClient),
+      );
+
+      final syncResult = await syncService.syncAllToRemote(supabaseUser.id);
+      if (syncResult.success) {
+        debugPrint('✅ Datos de tareas sincronizados: $syncResult');
+      } else {
+        debugPrint('⚠️ Sync parcial: ${syncResult.errors}');
+      }
+
+      // Pull remote data → local (for multi-device scenarios)
+      final pullResult = await syncService.pullFromRemote(supabaseUser.id);
+      if (pullResult.success) {
+        debugPrint('✅ Datos remotos descargados: $pullResult');
+      } else {
+        debugPrint('⚠️ Pull parcial: ${pullResult.errors}');
+      }
+    } catch (e) {
+      debugPrint('⚠️ Error sincronizando datos de tareas: $e');
     }
 
     _currentUser = user;

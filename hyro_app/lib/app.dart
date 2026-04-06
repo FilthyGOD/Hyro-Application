@@ -118,7 +118,10 @@ class AppShellState extends State<AppShell> with WidgetsBindingObserver {
     if (_lastUserId != currentUserId || _lastIsGuest != currentIsGuest) {
       _lastUserId = currentUserId;
       _lastIsGuest = currentIsGuest;
-      _loadGamificationData();
+      // Defer to avoid calling notifyListeners() during the build phase
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _loadGamificationData();
+      });
     }
   }
 
@@ -156,7 +159,10 @@ class AppShellState extends State<AppShell> with WidgetsBindingObserver {
     super.didChangeDependencies();
     if (!_initialized) {
       _initialized = true;
-      _loadGamificationData();
+      // Defer to avoid calling notifyListeners() during the build phase
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _loadGamificationData();
+      });
     }
   }
 
@@ -165,6 +171,19 @@ class AppShellState extends State<AppShell> with WidgetsBindingObserver {
     context.read<TimerCubit>().authProvider = widget.authProvider;
 
     final userId = widget.authProvider.supabaseUserId;
+    final isAuth = widget.authProvider.isAuthenticated;
+
+    // Wire auth state into task & category providers so they
+    // can dual-write to Supabase when the user is authenticated
+    final taskProvider = context.read<TaskProvider>();
+    taskProvider.isAuthenticated = () => isAuth;
+    taskProvider.getUserId = () => userId;
+    await taskProvider.reload();
+
+    final categoryProvider = context.read<CategoryProvider>();
+    categoryProvider.isAuthenticated = () => isAuth;
+    categoryProvider.getUserId = () => userId;
+    await categoryProvider.reload();
     
     final profileProvider = context.read<ProfileProvider>();
     final shopProvider = context.read<ShopProvider>();

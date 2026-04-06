@@ -6,6 +6,10 @@ import 'app.dart';
 import 'data/models/task_model.dart';
 import 'data/models/daily_stats.dart';
 import 'data/models/category_model.dart';
+import 'data/models/subtask_model.dart';
+import 'data/models/tarea_nota_model.dart';
+import 'data/models/tarea_fuente_model.dart';
+import 'data/models/tarea_card_model.dart';
 import 'package:isar/isar.dart';
 import 'package:path_provider/path_provider.dart';
 import 'models/user_profile.dart';
@@ -71,12 +75,19 @@ void main(List<String> args) async {
 
   await Hive.initFlutter();
   Hive.registerAdapter(TaskModelAdapter());
+  Hive.registerAdapter(SubTaskModelAdapter());
   Hive.registerAdapter(DailyStatsAdapter());
   Hive.registerAdapter(CategoryModelAdapter());
+  Hive.registerAdapter(TareaNotaModelAdapter());
+  Hive.registerAdapter(TareaFuenteModelAdapter());
+  Hive.registerAdapter(TareaCardModelAdapter());
 
   await Hive.openBox<TaskModel>('tasksBox');
   await Hive.openBox<DailyStats>('statsBox');
   await Hive.openBox<CategoryModel>('categoriesBox');
+  await Hive.openBox<TareaNotaModel>('notasBox');
+  await Hive.openBox<TareaFuenteModel>('fuentesBox');
+  await Hive.openBox<TareaCardModel>('cardsBox');
 
   final dir = await getApplicationDocumentsDirectory();
   final isar = await Isar.open([UserProfileSchema], directory: dir.path);

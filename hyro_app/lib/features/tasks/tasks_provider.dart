@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import '../../data/models/task_model.dart';
 import '../../data/repositories/task_repository.dart';
+import '../../data/local/task_local_ds.dart';
+import '../../data/remote/task_remote_ds.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class TaskProvider extends ChangeNotifier {
-  final TaskRepository _repository = TaskRepository();
+  late final TaskRepository _repository;
 
   List<TaskModel> _tasks = [];
   bool _isLoading = false;
@@ -11,8 +14,19 @@ class TaskProvider extends ChangeNotifier {
   List<TaskModel> get tasks => _tasks;
   bool get isLoading => _isLoading;
 
+  /// Auth state callbacks - set externally by AppShell
+  bool Function() isAuthenticated = () => false;
+  String? Function() getUserId = () => null;
+
   TaskProvider() {
-    _loadTasks();
+    _repository = TaskRepository(
+      local: TaskLocalDataSource(),
+      remote: TaskRemoteDataSource(Supabase.instance.client),
+      isAuthenticated: () => isAuthenticated(),
+      getUserId: () => getUserId(),
+    );
+    // Defer to after the build frame to avoid notifyListeners() during build
+    WidgetsBinding.instance.addPostFrameCallback((_) => _loadTasks());
   }
 
   Future<void> _loadTasks() async {
@@ -20,9 +34,27 @@ class TaskProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      _tasks = await _repository.getTasks();
+      _tasks = _repository.getTasks();
     } catch (e) {
       debugPrint('Error loading tasks: $e');
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  /// Reload tasks — if authenticated, first pull from Supabase, then read from local.
+  Future<void> reload() async {
+    _isLoading = true;
+    notifyListeners();
+
+    try {
+      if (isAuthenticated()) {
+        await _repository.pullRemoteToLocal();
+      }
+      _tasks = _repository.getTasks();
+    } catch (e) {
+      debugPrint('Error reloading tasks: $e');
     } finally {
       _isLoading = false;
       notifyListeners();
@@ -90,7 +122,6 @@ class TaskProvider extends ChangeNotifier {
   }
 
   List<TaskModel> get filteredTasks {
-    // Add logic here if we want filtering by status, priority, etc.
     return _tasks;
   }
 }

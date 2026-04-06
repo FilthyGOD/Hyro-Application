@@ -32,13 +32,15 @@ class TaskModelAdapter extends TypeAdapter<TaskModel> {
       notes: fields[12] as String?,
       subtasks: (fields[13] as List?)?.cast<SubTaskModel>(),
       attachedDocumentUrls: (fields[14] as List?)?.cast<String>(),
+      categoryId: fields[15] as String?,
+      usuarioId: fields[16] as String?,
     );
   }
 
   @override
   void write(BinaryWriter writer, TaskModel obj) {
     writer
-      ..writeByte(15)
+      ..writeByte(17)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
@@ -68,7 +70,11 @@ class TaskModelAdapter extends TypeAdapter<TaskModel> {
       ..writeByte(13)
       ..write(obj.subtasks)
       ..writeByte(14)
-      ..write(obj.attachedDocumentUrls);
+      ..write(obj.attachedDocumentUrls)
+      ..writeByte(15)
+      ..write(obj.categoryId)
+      ..writeByte(16)
+      ..write(obj.usuarioId);
   }
 
   @override

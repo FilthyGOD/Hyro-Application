@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 // unused import removed
 import '../../core/theme/app_typography.dart';
-import '../../core/utils/responsive.dart';
 import 'bloc/timer_cubit.dart';
 import 'bloc/timer_state.dart';
 import 'widgets/circular_timer.dart';

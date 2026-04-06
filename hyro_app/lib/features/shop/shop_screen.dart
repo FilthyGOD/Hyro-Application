@@ -117,12 +117,13 @@ class _ShopScreenState extends State<ShopScreen>
       final selectedId = _selectedItem[currentCategory];
 
       if (selectedId != null && selectedId >= 0) {
-        if (currentCategory == _CosmeticCategory.sombrero)
+        if (currentCategory == _CosmeticCategory.sombrero) {
           mascot.previewSombrero(selectedId);
-        else if (currentCategory == _CosmeticCategory.cara)
+        } else if (currentCategory == _CosmeticCategory.cara) {
           mascot.previewCara(selectedId);
-        else if (currentCategory == _CosmeticCategory.cuerpo)
+        } else if (currentCategory == _CosmeticCategory.cuerpo) {
           mascot.previewCuerpo(selectedId);
+        }
       }
     }
   }
@@ -134,12 +135,13 @@ class _ShopScreenState extends State<ShopScreen>
     final mascot = context.read<MascotController>();
     mascot.restoreEquippedState();
 
-    if (cat == _CosmeticCategory.sombrero)
+    if (cat == _CosmeticCategory.sombrero) {
       mascot.previewSombrero(id);
-    else if (cat == _CosmeticCategory.cara)
+    } else if (cat == _CosmeticCategory.cara) {
       mascot.previewCara(id);
-    else if (cat == _CosmeticCategory.cuerpo)
+    } else if (cat == _CosmeticCategory.cuerpo) {
       mascot.previewCuerpo(id);
+    }
   }
 
   Future<void> _onBuy(_CosmeticCategory cat, int itemId) async {
@@ -155,6 +157,7 @@ class _ShopScreenState extends State<ShopScreen>
     if (success && mounted) {
       // Refresh profile to get updated coin count
       await profile.loadProfile(userId);
+      if (!mounted) return;
 
       final mascot = context.read<MascotController>();
       mascot.triggerCompra(itemId);

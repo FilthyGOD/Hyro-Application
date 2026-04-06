@@ -1,6 +1,6 @@
 import 'package:hive/hive.dart';
 
-// part 'user_model.g.dart'; // TODO: uncomment after running build_runner
+part 'user_model.g.dart';
 
 @HiveType(typeId: 2)
 class UserModel extends HiveObject {

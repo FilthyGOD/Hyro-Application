@@ -7,7 +7,6 @@ import '../../core/services/spotify/spotify_auth_service.dart';
 import '../../core/services/spotify/spotify_player_service.dart';
 import '../widgets/animated_background.dart';
 import 'package:provider/provider.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../providers/ui_provider.dart';
 import '../../features/focus/bloc/timer_cubit.dart';
 
@@ -117,7 +116,7 @@ class _MainLayoutState extends State<MainLayout> {
                         _isDesktopSidebarVisible = false;
                       });
                     },
-                    child: Container(color: Colors.black.withOpacity(0.3)),
+                    child: Container(color: Colors.black.withValues(alpha: 0.3)),
                   ),
                 ),
               if (!_isDesktopSidebarVisible && !isTimerRunning)
@@ -185,7 +184,7 @@ class _MainLayoutState extends State<MainLayout> {
               child: SafeArea(
                 child: Container(
                   decoration: BoxDecoration(
-                    color: Colors.black.withOpacity(0.3),
+                    color: Colors.black.withValues(alpha: 0.3),
                     shape: BoxShape.circle,
                   ),
                   child: IconButton(
@@ -261,12 +260,12 @@ class _MainLayoutState extends State<MainLayout> {
             width: 48,
             height: 48,
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.15),
+              color: Colors.white.withValues(alpha: 0.15),
               shape: BoxShape.circle,
-              border: Border.all(color: Colors.white.withOpacity(0.25), width: 1.5),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.25), width: 1.5),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.15),
+                  color: Colors.black.withValues(alpha: 0.15),
                   blurRadius: 10,
                   offset: const Offset(0, 4),
                 ),

@@ -326,6 +326,44 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
+  /// Real email/password Login with Supabase
+  Future<void> signInWithEmail(String email, String password) async {
+    _isLoading = true;
+    notifyListeners();
+
+    try {
+      await Supabase.instance.client.auth.signInWithPassword(
+        email: email,
+        password: password,
+      );
+      // _listenAuthChanges will handle syncing when session starts
+    } catch (e) {
+      _isLoading = false;
+      notifyListeners();
+      rethrow;
+    }
+  }
+
+  /// Real email/password Signup with Supabase
+  Future<void> signUpWithEmail(String email, String password, String name) async {
+    _isLoading = true;
+    notifyListeners();
+
+    try {
+      await Supabase.instance.client.auth.signUp(
+        email: email,
+        password: password,
+        data: {'full_name': name},
+      );
+      _isLoading = false;
+      notifyListeners();
+    } catch (e) {
+      _isLoading = false;
+      notifyListeners();
+      rethrow;
+    }
+  }
+
   /// Local email login (existing behavior).
   Future<void> loginPersonal(String email, String name) async {
     _isLoading = true;

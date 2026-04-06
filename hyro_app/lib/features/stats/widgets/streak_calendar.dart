@@ -140,7 +140,7 @@ class StreakCalendar extends StatelessWidget {
       bgColor = Colors.orange; // Streak color
       textColor = Colors.white;
     } else if (isToday) {
-      bgColor = AppColors.primary.withOpacity(0.4);
+      bgColor = AppColors.primary.withValues(alpha: 0.4);
       textColor = Colors.white;
     }
 

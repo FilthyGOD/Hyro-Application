@@ -7,16 +7,16 @@ import 'package:hyro_app/providers/auth_provider.dart';
 import '../../shared/widgets/animated_background.dart';
 import '../../features/mascot/mascot_controller.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'register_screen.dart';
 
-class LoginScreen extends StatefulWidget {
-  const LoginScreen({super.key});
+class RegisterScreen extends StatefulWidget {
+  const RegisterScreen({super.key});
 
   @override
-  State<LoginScreen> createState() => _LoginScreenState();
+  State<RegisterScreen> createState() => _RegisterScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen> {
+class _RegisterScreenState extends State<RegisterScreen> {
+  final _nameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _isLoading = false;
@@ -27,7 +27,6 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   void initState() {
     super.initState();
-    // Fire saludo on the first frame after the widget is built
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _fireInitialSaludo();
     });
@@ -40,7 +39,6 @@ class _LoginScreenState extends State<LoginScreen> {
     final mascot = context.read<MascotController>();
     if (mascot.isLoaded) {
       mascot.triggerSaludo();
-      // After the greeting animation completes (~3s), go back to movimiento_suave
       Future.delayed(const Duration(seconds: 3), () {
         if (mounted) {
           mascot.triggerVolver();
@@ -48,7 +46,6 @@ class _LoginScreenState extends State<LoginScreen> {
         }
       });
     } else {
-      // If not loaded yet, listen for load then fire
       void listener() {
         if (mascot.isLoaded && mounted) {
           mascot.removeListener(listener);
@@ -61,19 +58,18 @@ class _LoginScreenState extends State<LoginScreen> {
           });
         }
       }
-
       mascot.addListener(listener);
     }
   }
 
   void _startGreetingLoop() {
     _greetingTimer?.cancel();
-    final delay = Duration(seconds: 12 + _random.nextInt(9)); // 12-20s
+    final delay = Duration(seconds: 12 + _random.nextInt(9)); 
     _greetingTimer = Timer(delay, () {
       if (mounted) {
         final mascot = context.read<MascotController>();
         mascot.triggerSaludo();
-        _startGreetingLoop(); // schedule next
+        _startGreetingLoop();
       }
     });
   }
@@ -81,51 +77,65 @@ class _LoginScreenState extends State<LoginScreen> {
   void _onMascotTap() {
     final mascot = context.read<MascotController>();
     mascot.triggerSaludo();
-    // Reset the greeting loop timer
     _startGreetingLoop();
   }
 
-  void _login() async {
+  void _register() async {
+    final name = _nameController.text.trim();
     final email = _emailController.text.trim();
     final password = _passwordController.text;
 
-    if (email.isEmpty || password.isEmpty) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Por favor completa todos los campos')),
-        );
-      }
+    if (name.isEmpty || email.isEmpty || password.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Por favor completa todos los campos')),
+      );
       return;
     }
 
     setState(() => _isLoading = true);
 
     final auth = context.read<AuthProvider>();
-
+    
     try {
-      await auth.signInWithEmail(email, password);
-
+      await auth.signUpWithEmail(email, password, name);
+      
       if (mounted) {
         setState(() => _isLoading = false);
-        if (auth.isAuthenticated &&
-            !auth.isGuest &&
-            Navigator.of(context).canPop()) {
-          Navigator.of(context).pop();
-        }
+        // Show dialog telling user to check email
+        showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            backgroundColor: const Color(0xFF191D32),
+            title: const Text('¡Cuenta creada!', style: TextStyle(color: Colors.white)),
+            content: const Text(
+              'Hemos enviado un enlace de confirmación a tu correo. Por favor, revísalo para verificar tu cuenta y poder iniciar sesión.',
+              style: TextStyle(color: Colors.white70),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop(); // Close dialog
+                  Navigator.of(context).pop(); // Go back to Login Screen
+                },
+                child: const Text('Entendido', style: TextStyle(color: Color(0xFF3CDCF8))),
+              )
+            ],
+          ),
+        );
       }
     } on AuthException catch (e) {
       if (mounted) {
         setState(() => _isLoading = false);
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Error: ${e.message}')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: ${e.message}')),
+        );
       }
     } catch (e) {
       if (mounted) {
         setState(() => _isLoading = false);
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Error al iniciar sesión: $e')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error al crear cuenta: $e')),
+        );
       }
     }
   }
@@ -133,6 +143,7 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   void dispose() {
     _greetingTimer?.cancel();
+    _nameController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
@@ -141,7 +152,7 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF101422), // Deep navy from designs
+      backgroundColor: const Color(0xFF101422),
       body: SafeArea(
         child: Stack(
           children: [
@@ -155,15 +166,14 @@ class _LoginScreenState extends State<LoginScreen> {
                 }
               },
             ),
-            if (Navigator.of(context).canPop())
-              Positioned(
-                top: 16,
-                left: 16,
-                child: IconButton(
-                  icon: const Icon(Icons.close, color: Colors.white, size: 30),
-                  onPressed: () => Navigator.of(context).pop(),
-                ),
+            Positioned(
+              top: 16,
+              left: 16,
+              child: IconButton(
+                icon: const Icon(Icons.arrow_back, color: Colors.white, size: 30),
+                onPressed: () => Navigator.of(context).pop(),
               ),
+            ),
           ],
         ),
       ),
@@ -182,7 +192,7 @@ class _LoginScreenState extends State<LoginScreen> {
             children: [
               const SizedBox(height: 16),
               const Text(
-                'Comencemos',
+                'Crea tu Cuenta',
                 style: TextStyle(
                   fontSize: 32,
                   fontWeight: FontWeight.bold,
@@ -207,10 +217,17 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                     child: Column(
                       children: [
-                        const SizedBox(height: 56), // Space for avatar
+                        const SizedBox(height: 56),
+                        _buildInputField(
+                          label: 'NOMBRE',
+                          hint: 'Tu nombre',
+                          controller: _nameController,
+                          prefixIcon: Icons.person_outline,
+                        ),
+                        const SizedBox(height: 24),
                         _buildInputField(
                           label: 'EMAIL',
-                          hint: 'user@Hyro.com',
+                          hint: 'user@ejemplo.com',
                           controller: _emailController,
                           prefixIcon: Icons.alternate_email,
                         ),
@@ -221,15 +238,14 @@ class _LoginScreenState extends State<LoginScreen> {
                           controller: _passwordController,
                           prefixIcon: Icons.lock_outline,
                           isPassword: true,
-                          actionText: 'Olvide mi contraseña',
                         ),
                         const SizedBox(height: 32),
                         _buildGradientButton(
-                          text: 'Iniciar Sesión',
-                          onPressed: _login,
+                          text: 'Registrarse',
+                          onPressed: _register,
                         ),
                         const SizedBox(height: 32),
-                        _buildDivider('INGRESAR CON'),
+                        _buildDivider('O REGÍSTRATE CON'),
                         const SizedBox(height: 24),
                         Row(
                           children: [
@@ -260,9 +276,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                           boxShadow: [
                             BoxShadow(
-                              color: const Color(
-                                0xFF3CDCF8,
-                              ).withValues(alpha: 0.3),
+                              color: const Color(0xFF3CDCF8).withOpacity(0.3),
                               blurRadius: 20,
                               spreadRadius: 2,
                             ),
@@ -303,7 +317,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 ],
               ),
               const SizedBox(height: 32),
-              _buildSignUpText(isMobile: true),
+              _buildLoginText(isMobile: true),
             ],
           ),
         ),
@@ -314,7 +328,6 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget _buildDesktopLayout() {
     return Row(
       children: [
-        // Left Side
         Expanded(
           flex: 4,
           child: Container(
@@ -333,19 +346,19 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                     children: [
                       TextSpan(
-                        text: 'Eleva tu\n',
+                        text: 'A un paso\nde la\n',
                         style: TextStyle(color: Colors.white),
                       ),
                       TextSpan(
-                        text: 'potencial.',
+                        text: 'excelencia.',
                         style: TextStyle(color: Color(0xFF3CDCF8)),
-                      ), // Cyan
+                      ),
                     ],
                   ),
                 ),
                 const SizedBox(height: 24),
                 const Text(
-                  'Domina tu tiempo, organiza tus tareas\ny alcanza tus metas con Hyro.',
+                  'Únete a miles de personas que están\nmejorando sus vidas con Hyro.',
                   style: TextStyle(
                     fontSize: 20,
                     color: Colors.white70,
@@ -357,21 +370,20 @@ class _LoginScreenState extends State<LoginScreen> {
             ),
           ),
         ),
-        // Right Side
         Expanded(
           flex: 5,
           child: Container(
-            color: Colors.transparent, // Let animated background show through
+            color: Colors.transparent,
             child: Center(
               child: Container(
                 constraints: const BoxConstraints(maxWidth: 450),
                 padding: const EdgeInsets.all(48.0),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF191D32).withValues(alpha: 0.85),
+                  color: const Color(0xFF191D32).withOpacity(0.85),
                   borderRadius: BorderRadius.circular(24),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.2),
+                      color: Colors.black.withOpacity(0.2),
                       blurRadius: 40,
                       offset: const Offset(0, 20),
                     ),
@@ -382,7 +394,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const Text(
-                      'Bienvenido',
+                      'Únete a Hyro',
                       style: TextStyle(
                         fontSize: 28,
                         fontWeight: FontWeight.bold,
@@ -391,13 +403,21 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                     const SizedBox(height: 8),
                     const Text(
-                      'Por favor ingresa tus credenciales para continuar',
+                      'Ingresa tus datos para registrarte',
                       style: TextStyle(color: Colors.white54, fontSize: 13),
                     ),
                     const SizedBox(height: 40),
                     _buildInputField(
-                      label: 'EMAIL O USUARIO',
-                      hint: 'user@Hyro.com',
+                      label: 'NOMBRE',
+                      hint: 'Tu nombre',
+                      controller: _nameController,
+                      prefixIcon: Icons.person_outline,
+                      isDesktop: true,
+                    ),
+                    const SizedBox(height: 24),
+                    _buildInputField(
+                      label: 'EMAIL',
+                      hint: 'user@ejemplo.com',
                       controller: _emailController,
                       prefixIcon: Icons.alternate_email,
                       isDesktop: true,
@@ -409,17 +429,16 @@ class _LoginScreenState extends State<LoginScreen> {
                       controller: _passwordController,
                       prefixIcon: Icons.lock_outline,
                       isPassword: true,
-                      actionText: 'Olvide mi contraseña',
                       isDesktop: true,
                     ),
                     const SizedBox(height: 32),
                     _buildGradientButton(
-                      text: 'Iniciar Sesión',
-                      onPressed: _login,
+                      text: 'Registrarse',
+                      onPressed: _register,
                       isDesktop: true,
                     ),
                     const SizedBox(height: 32),
-                    _buildDivider('INGRESAR CON'),
+                    _buildDivider('O REGÍSTRATE CON'),
                     const SizedBox(height: 24),
                     Row(
                       children: [
@@ -433,7 +452,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       ],
                     ),
                     const SizedBox(height: 48),
-                    Center(child: _buildSignUpText(isMobile: false)),
+                    Center(child: _buildLoginText(isMobile: false)),
                   ],
                 ),
               ),
@@ -450,7 +469,6 @@ class _LoginScreenState extends State<LoginScreen> {
     required TextEditingController controller,
     required IconData prefixIcon,
     bool isPassword = false,
-    String? actionText,
     bool isDesktop = false,
   }) {
     final labelColor = isDesktop ? Colors.white54 : Colors.white60;
@@ -458,28 +476,14 @@ class _LoginScreenState extends State<LoginScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              label,
-              style: TextStyle(
-                color: labelColor,
-                fontSize: isDesktop ? 10 : 13,
-                letterSpacing: isDesktop ? 1.0 : 0.0,
-                fontWeight: isDesktop ? FontWeight.bold : FontWeight.w500,
-              ),
-            ),
-            if (actionText != null)
-              Text(
-                actionText,
-                style: TextStyle(
-                  color: const Color(0xFF3CDCF8),
-                  fontSize: isDesktop ? 12 : 13,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-          ],
+        Text(
+          label,
+          style: TextStyle(
+            color: labelColor,
+            fontSize: isDesktop ? 10 : 13,
+            letterSpacing: isDesktop ? 1.0 : 0.0,
+            fontWeight: isDesktop ? FontWeight.bold : FontWeight.w500,
+          ),
         ),
         const SizedBox(height: 8),
         TextField(
@@ -494,31 +498,25 @@ class _LoginScreenState extends State<LoginScreen> {
               color: const Color(0xFF3CDCF8),
               size: 18,
             ),
-            suffixIcon:
-                isPassword
-                    ? const Icon(
-                      Icons.remove_red_eye_outlined,
-                      color: Colors.white38,
-                      size: 18,
-                    )
-                    : null,
+            suffixIcon: isPassword
+                ? const Icon(
+                    Icons.remove_red_eye_outlined,
+                    color: Colors.white38,
+                    size: 18,
+                  )
+                : null,
             filled: true,
-            fillColor:
-                isDesktop
-                    ? const Color(0xFF141725)
-                    : Colors.white.withValues(alpha: 0.0),
+            fillColor: isDesktop
+                ? const Color(0xFF141725)
+                : Colors.white.withOpacity(0.0),
             contentPadding: const EdgeInsets.symmetric(vertical: 18),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(16),
-              borderSide: BorderSide(
-                color: Colors.white.withValues(alpha: 0.08),
-              ),
+              borderSide: BorderSide(color: Colors.white.withOpacity(0.08)),
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(16),
-              borderSide: BorderSide(
-                color: Colors.white.withValues(alpha: 0.08),
-              ),
+              borderSide: BorderSide(color: Colors.white.withOpacity(0.08)),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(16),
@@ -538,20 +536,19 @@ class _LoginScreenState extends State<LoginScreen> {
     required VoidCallback onPressed,
     bool isDesktop = false,
   }) {
-    // Only gradient button in both images, maybe desktop is slightly different but mostly same
     return Container(
       width: double.infinity,
       height: 56,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(12),
         gradient: const LinearGradient(
-          colors: [Color(0xFF3CDCF8), Color(0xFFCC88FF)], // Cyan to purple
+          colors: [Color(0xFF3CDCF8), Color(0xFFCC88FF)], 
           begin: Alignment.centerLeft,
           end: Alignment.centerRight,
         ),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF3CDCF8).withValues(alpha: 0.3),
+            color: const Color(0xFF3CDCF8).withOpacity(0.3),
             blurRadius: 20,
             offset: const Offset(0, 8),
           ),
@@ -566,25 +563,24 @@ class _LoginScreenState extends State<LoginScreen> {
             borderRadius: BorderRadius.circular(12),
           ),
         ),
-        child:
-            _isLoading
-                ? const SizedBox(
-                  width: 24,
-                  height: 24,
-                  child: CircularProgressIndicator(
-                    color: Colors.white,
-                    strokeWidth: 2,
-                  ),
-                )
-                : Text(
-                  text,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    letterSpacing: 0.5,
-                    color: Colors.white,
-                  ),
+        child: _isLoading
+            ? const SizedBox(
+                width: 24,
+                height: 24,
+                child: CircularProgressIndicator(
+                  color: Colors.white,
+                  strokeWidth: 2,
                 ),
+              )
+            : Text(
+                text,
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 0.5,
+                  color: Colors.white,
+                ),
+              ),
       ),
     );
   }
@@ -592,20 +588,20 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget _buildDivider(String text) {
     return Row(
       children: [
-        Expanded(child: Divider(color: Colors.white.withValues(alpha: 0.08))),
+        Expanded(child: Divider(color: Colors.white.withOpacity(0.08))),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16.0),
           child: Text(
             text,
             style: TextStyle(
-              color: Colors.white.withValues(alpha: 0.4),
+              color: Colors.white.withOpacity(0.4),
               fontSize: 11,
               letterSpacing: 1.2,
               fontWeight: FontWeight.bold,
             ),
           ),
         ),
-        Expanded(child: Divider(color: Colors.white.withValues(alpha: 0.08))),
+        Expanded(child: Divider(color: Colors.white.withOpacity(0.08))),
       ],
     );
   }
@@ -619,7 +615,7 @@ class _LoginScreenState extends State<LoginScreen> {
       if (auth.isAuthenticated &&
           !auth.isGuest &&
           Navigator.of(context).canPop()) {
-        Navigator.of(context).pop();
+        Navigator.of(context).pop(); 
       }
     }
   }
@@ -630,8 +626,7 @@ class _LoginScreenState extends State<LoginScreen> {
     bool isDesktop = false,
   }) {
     return OutlinedButton.icon(
-      onPressed:
-          text == 'Google' ? (_isLoading ? null : _signInWithGoogle) : () {},
+      onPressed: text == 'Google' ? (_isLoading ? null : _signInWithGoogle) : () {},
       icon: Container(
         padding: const EdgeInsets.all(2),
         decoration: const BoxDecoration(
@@ -651,25 +646,23 @@ class _LoginScreenState extends State<LoginScreen> {
       style: OutlinedButton.styleFrom(
         padding: const EdgeInsets.symmetric(vertical: 16),
         side: BorderSide(
-          color: Colors.white.withValues(alpha: isDesktop ? 0.0 : 0.08),
-        ), // Desktop has no border, just background
+          color: Colors.white.withOpacity(isDesktop ? 0.0 : 0.08),
+        ), 
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        backgroundColor:
-            isDesktop
-                ? const Color(0xFF141725)
-                : Colors.white.withValues(alpha: 0.02),
+        backgroundColor: isDesktop
+            ? const Color(0xFF141725)
+            : Colors.white.withOpacity(0.02),
       ),
     );
   }
 
-  Widget _buildSignUpText({required bool isMobile}) {
+  Widget _buildLoginText({required bool isMobile}) {
     final textColor = Colors.white54;
-    final actionColor =
-        isMobile
-            ? const Color(0xFF3CDCF8)
-            : const Color(0xFFCC88FF); // Mobile uses Cyan, Desktop uses Purple
-    final prefix = isMobile ? "¿No tienes una cuenta? " : "¿Nuevo en Hyro? ";
-    final suffix = isMobile ? "Regístrate" : "Crear una cuenta";
+    final actionColor = isMobile
+        ? const Color(0xFF3CDCF8)
+        : const Color(0xFFCC88FF); 
+    const prefix = "¿Ya tienes una cuenta? ";
+    const suffix = "Iniciar sesión";
 
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
@@ -677,9 +670,7 @@ class _LoginScreenState extends State<LoginScreen> {
         Text(prefix, style: TextStyle(color: textColor, fontSize: 13)),
         GestureDetector(
           onTap: () {
-            Navigator.of(context).push(
-              MaterialPageRoute(builder: (context) => const RegisterScreen()),
-            );
+            Navigator.of(context).pop();
           },
           child: Text(
             suffix,

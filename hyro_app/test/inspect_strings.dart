@@ -8,6 +8,7 @@ void main() {
       sb.writeCharCode(b);
     } else {
       if (sb.length > 3) {
+        // ignore: avoid_print
         print(sb.toString());
       }
       sb.clear();

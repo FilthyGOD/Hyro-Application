@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:rive/rive.dart' hide Animation;
 import '../../../core/theme/app_typography.dart';
 import '../bloc/timer_cubit.dart';

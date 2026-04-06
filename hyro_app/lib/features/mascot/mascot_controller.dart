@@ -4,6 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:rive/rive.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+// ignore_for_file: deprecated_member_use
+
+
 /// Centralized controller for the Rive mascot animation.
 /// Shared between FocusScreen (idle/studying) and ShopScreen (purchase/equip).
 class MascotController extends ChangeNotifier {
@@ -54,7 +57,7 @@ class MascotController extends ChangeNotifier {
       equippedCara = prefs.getInt('equipped_cara') ?? 200;
       equippedCuerpo = prefs.getInt('equipped_cuerpo') ?? 300;
     } catch (e) {
-      print('Error loading prefs: $e');
+      debugPrint('Error loading prefs: $e');
     }
     await _loadRiveFile();
   }
@@ -66,7 +69,7 @@ class MascotController extends ChangeNotifier {
     );
 
     if (file == null) {
-      print('ERROR: Could not load Rive file jairo42.riv');
+      debugPrint('ERROR: Could not load Rive file jairo42.riv');
       return;
     }
 
@@ -98,11 +101,11 @@ class MascotController extends ChangeNotifier {
     _unidades = sm.number('unidades');
     _decenas = sm.number('decenas');
 
-    if (_sombrero == null) print('WARNING: Rive input "sombrero" not found!');
-    if (_cara == null) print('WARNING: Rive input "cara" not found!');
-    if (_cuerpo == null) print('WARNING: Rive input "cuerpo" not found!');
-    if (_unidades == null) print('WARNING: Rive input "unidades" not found!');
-    if (_decenas == null) print('WARNING: Rive input "decenas" not found!');
+    if (_sombrero == null) debugPrint('WARNING: Rive input "sombrero" not found!');
+    if (_cara == null) debugPrint('WARNING: Rive input "cara" not found!');
+    if (_cuerpo == null) debugPrint('WARNING: Rive input "cuerpo" not found!');
+    if (_unidades == null) debugPrint('WARNING: Rive input "unidades" not found!');
+    if (_decenas == null) debugPrint('WARNING: Rive input "decenas" not found!');
 
     notifyListeners();
 
@@ -205,7 +208,7 @@ class MascotController extends ChangeNotifier {
   }
 
   Future<void> setSombrero(int id) async {
-    print('Sending sombrero ID $id to Rive');
+    debugPrint('Sending sombrero ID $id to Rive');
     equippedSombrero = id;
     _sombrero?.value = id.toDouble();
     try {
@@ -219,7 +222,7 @@ class MascotController extends ChangeNotifier {
   }
 
   Future<void> setCara(int id) async {
-    print('Sending cara ID $id to Rive');
+    debugPrint('Sending cara ID $id to Rive');
     equippedCara = id;
     _cara?.value = id.toDouble();
     try {
@@ -233,7 +236,7 @@ class MascotController extends ChangeNotifier {
   }
 
   Future<void> setCuerpo(int id) async {
-    print('Sending cuerpo ID $id to Rive');
+    debugPrint('Sending cuerpo ID $id to Rive');
     equippedCuerpo = id;
     _cuerpo?.value = id.toDouble();
     try {

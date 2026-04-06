@@ -317,12 +317,12 @@ class _MilestoneItem extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.surfaceLight.withOpacity(0.5),
+        color: AppColors.surfaceLight.withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
           color:
               isCompleted
-                  ? AppColors.primary.withOpacity(0.3)
+                  ? AppColors.primary.withValues(alpha: 0.3)
                   : Colors.transparent,
         ),
       ),
@@ -333,8 +333,8 @@ class _MilestoneItem extends StatelessWidget {
             decoration: BoxDecoration(
               color:
                   isCompleted
-                      ? AppColors.primary.withOpacity(0.1)
-                      : Colors.white.withOpacity(0.05),
+                      ? AppColors.primary.withValues(alpha: 0.1)
+                      : Colors.white.withValues(alpha: 0.05),
               shape: BoxShape.circle,
             ),
             child: Icon(
@@ -364,7 +364,7 @@ class _MilestoneItem extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(4),
               decoration: BoxDecoration(
-                color: AppColors.primary.withOpacity(0.2),
+                color: AppColors.primary.withValues(alpha: 0.2),
                 shape: BoxShape.circle,
               ),
               child: const Icon(

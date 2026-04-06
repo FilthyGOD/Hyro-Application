@@ -1,6 +1,6 @@
 import 'package:hive/hive.dart';
 
-// part 'pomodoro_session.g.dart'; // TODO: uncomment after running build_runner
+part 'pomodoro_session.g.dart';
 
 @HiveType(typeId: 1)
 class PomodoroSession extends HiveObject {

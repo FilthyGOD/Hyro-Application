@@ -48,8 +48,8 @@ class AppTypography {
     letterSpacing: -3,
     color: Colors.white,
     shadows: [
-      Shadow(color: Colors.white.withOpacity(0.5), blurRadius: 16),
-      Shadow(color: const Color(0xFF3B82F6).withOpacity(0.5), blurRadius: 32),
+      Shadow(color: Colors.white.withValues(alpha: 0.5), blurRadius: 16),
+      Shadow(color: const Color(0xFF3B82F6).withValues(alpha: 0.5), blurRadius: 32),
     ],
   );
 

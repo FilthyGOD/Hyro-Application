@@ -171,9 +171,11 @@ class AppShellState extends State<AppShell> with WidgetsBindingObserver {
     
     await profileProvider.loadProfile(userId);
     await shopProvider.loadShop(userId);
+    if (!mounted) return;
 
     final missionsProvider = context.read<MissionsProvider>();
     await missionsProvider.initialize();
+    if (!mounted) return;
 
     // SM starts in cargando → transition to movimiento_suave
     final mascot = context.read<MascotController>();

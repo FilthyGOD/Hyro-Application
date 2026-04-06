@@ -241,7 +241,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                           boxShadow: [
                             BoxShadow(
-                              color: const Color(0xFF3CDCF8).withOpacity(0.3),
+                              color: const Color(0xFF3CDCF8).withValues(alpha: 0.3),
                               blurRadius: 20,
                               spreadRadius: 2,
                             ),
@@ -346,11 +346,11 @@ class _LoginScreenState extends State<LoginScreen> {
                 constraints: const BoxConstraints(maxWidth: 450),
                 padding: const EdgeInsets.all(48.0),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF191D32).withOpacity(0.85),
+                  color: const Color(0xFF191D32).withValues(alpha: 0.85),
                   borderRadius: BorderRadius.circular(24),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.2),
+                      color: Colors.black.withValues(alpha: 0.2),
                       blurRadius: 40,
                       offset: const Offset(0, 20),
                     ),
@@ -431,48 +431,6 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  Widget _buildLogo({
-    required bool showText,
-    double size = 32,
-    String labelText = 'Hyro',
-    bool useThinFont = false,
-  }) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        ClipRRect(
-          borderRadius: BorderRadius.circular(size * 0.25),
-          child: Image.asset(
-            'assets/images/app_icon.png',
-            width: size,
-            height: size,
-            fit: BoxFit.cover,
-            errorBuilder: (context, error, stackTrace) {
-              return Icon(
-                Icons.flash_on,
-                size: size,
-                color: const Color(0xFF3CDCF8),
-              );
-            },
-          ),
-        ),
-        if (showText) ...[
-          const SizedBox(width: 12),
-          Text(
-            labelText,
-            style: TextStyle(
-              fontSize: size * 0.75,
-              fontWeight: useThinFont ? FontWeight.w500 : FontWeight.bold,
-              color: Colors.white,
-              letterSpacing: 1.2,
-            ),
-          ),
-        ],
-      ],
-    );
-  }
 
   Widget _buildInputField({
     required String label,
@@ -536,15 +494,15 @@ class _LoginScreenState extends State<LoginScreen> {
             fillColor:
                 isDesktop
                     ? const Color(0xFF141725)
-                    : Colors.white.withOpacity(0.0),
+                    : Colors.white.withValues(alpha: 0.0),
             contentPadding: const EdgeInsets.symmetric(vertical: 18),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(16),
-              borderSide: BorderSide(color: Colors.white.withOpacity(0.08)),
+              borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.08)),
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(16),
-              borderSide: BorderSide(color: Colors.white.withOpacity(0.08)),
+              borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.08)),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(16),
@@ -577,7 +535,7 @@ class _LoginScreenState extends State<LoginScreen> {
         ),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF3CDCF8).withOpacity(0.3),
+            color: const Color(0xFF3CDCF8).withValues(alpha: 0.3),
             blurRadius: 20,
             offset: const Offset(0, 8),
           ),
@@ -618,20 +576,20 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget _buildDivider(String text) {
     return Row(
       children: [
-        Expanded(child: Divider(color: Colors.white.withOpacity(0.08))),
+        Expanded(child: Divider(color: Colors.white.withValues(alpha: 0.08))),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16.0),
           child: Text(
             text,
             style: TextStyle(
-              color: Colors.white.withOpacity(0.4),
+              color: Colors.white.withValues(alpha: 0.4),
               fontSize: 11,
               letterSpacing: 1.2,
               fontWeight: FontWeight.bold,
             ),
           ),
         ),
-        Expanded(child: Divider(color: Colors.white.withOpacity(0.08))),
+        Expanded(child: Divider(color: Colors.white.withValues(alpha: 0.08))),
       ],
     );
   }
@@ -677,13 +635,13 @@ class _LoginScreenState extends State<LoginScreen> {
       style: OutlinedButton.styleFrom(
         padding: const EdgeInsets.symmetric(vertical: 16),
         side: BorderSide(
-          color: Colors.white.withOpacity(isDesktop ? 0.0 : 0.08),
+          color: Colors.white.withValues(alpha: isDesktop ? 0.0 : 0.08),
         ), // Desktop has no border, just background
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         backgroundColor:
             isDesktop
                 ? const Color(0xFF141725)
-                : Colors.white.withOpacity(0.02),
+                : Colors.white.withValues(alpha: 0.02),
       ),
     );
   }

@@ -281,7 +281,7 @@ class _TasksScreenState extends State<TasksScreen> {
         final completed = tasks.where((t) => t.isCompleted).length;
         final pending = total - completed;
         final percentage = total == 0 ? 0.0 : (completed / total);
-        final percentageStr = (percentage * 100).toInt().toString() + '%';
+        final percentageStr = '${(percentage * 100).toInt()}%';
 
         return GlassCard(
           padding: const EdgeInsets.all(20),
@@ -624,7 +624,7 @@ class _TasksScreenState extends State<TasksScreen> {
                     Text('Prioridad', style: AppTypography.bodySmall),
                     const SizedBox(height: 8),
                     DropdownButtonFormField<String>(
-                      value: selectedPriority,
+                      initialValue: selectedPriority,
                       dropdownColor: AppColors.surfaceLight,
                       items:
                           ['ALTA PRIORIDAD', 'MEDIA', 'BAJA'].map((p) {

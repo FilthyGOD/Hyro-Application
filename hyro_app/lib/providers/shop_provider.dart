@@ -189,8 +189,9 @@ class ShopProvider extends ChangeNotifier {
 
   /// Translate Postgres exceptions into user-friendly messages.
   String _friendlyError(String pgMsg) {
-    if (pgMsg.contains('Monedas insuficientes'))
+    if (pgMsg.contains('Monedas insuficientes')) {
       return 'No tienes suficientes monedas';
+    }
     if (pgMsg.contains('Ya posees')) return 'Ya tienes este objeto';
     if (pgMsg.contains('Objeto no encontrado')) return 'Este objeto no existe';
     return 'Error al procesar la compra';

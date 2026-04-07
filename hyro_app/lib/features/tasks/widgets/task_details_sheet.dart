@@ -11,12 +11,16 @@ import '../../../core/theme/app_typography.dart';
 import '../../../data/models/task_model.dart';
 import '../../../data/models/tarea_nota_model.dart';
 import '../../../data/models/tarea_card_model.dart';
+import '../../../data/models/tarea_fuente_model.dart';
 import '../../../data/repositories/note_repository.dart';
 import '../../../data/repositories/card_repository.dart';
+import '../../../data/repositories/source_repository.dart';
 import '../../../data/local/note_local_ds.dart';
 import '../../../data/local/card_local_ds.dart';
+import '../../../data/local/source_local_ds.dart';
 import '../../../data/remote/note_remote_ds.dart';
 import '../../../data/remote/card_remote_ds.dart';
+import '../../../data/remote/source_remote_ds.dart';
 import '../../../providers/auth_provider.dart';
 import '../tasks_provider.dart';
 import '../../../shared/widgets/glass_card.dart';
@@ -50,8 +54,12 @@ class _TaskDetailsDialogState extends State<TaskDetailsDialog>
   // Notes — backed by NoteRepository
   final List<TareaNotaModel> _chatNotes = [];
 
+  // Fuentes (documents) — backed by SourceRepository
+  final List<TareaFuenteModel> _fuentes = [];
+
   late NoteRepository _noteRepo;
   late CardRepository _cardRepo;
+  late SourceRepository _sourceRepo;
 
   @override
   void initState() {
@@ -78,13 +86,20 @@ class _TaskDetailsDialogState extends State<TaskDetailsDialog>
         remote: CardRemoteDataSource(supabaseClient),
         isAuthenticated: () => auth.isAuthenticated,
       );
-      _loadNotesAndCards();
+      _sourceRepo = SourceRepository(
+        local: SourceLocalDataSource(),
+        remote: SourceRemoteDataSource(supabaseClient),
+        isAuthenticated: () => auth.isAuthenticated,
+        getUserId: () => auth.supabaseUserId,
+      );
+      _loadData();
     });
   }
 
-  void _loadNotesAndCards() {
+  Future<void> _loadData() async {
     final notes = _noteRepo.getNotesForTask(_currentTask.id);
     final cards = _cardRepo.getCardsForTask(_currentTask.id);
+    final sources = _sourceRepo.getSourcesForTask(_currentTask.id);
     if (mounted) {
       setState(() {
         _chatNotes
@@ -93,7 +108,53 @@ class _TaskDetailsDialogState extends State<TaskDetailsDialog>
         _flashcards
           ..clear()
           ..addAll(cards);
+        _fuentes
+          ..clear()
+          ..addAll(sources);
       });
+    }
+
+    // Migrate old attached document URLs to TareaFuenteModel
+    if (_currentTask.attachedDocumentUrls != null &&
+        _currentTask.attachedDocumentUrls!.isNotEmpty) {
+      final oldUrls = List<String>.from(_currentTask.attachedDocumentUrls!);
+      final auth = context.read<AuthProvider>();
+      bool hasMigrated = false;
+
+      for (final url in oldUrls) {
+        // Prevent duplicate migration
+        if (!_fuentes.any((f) => f.rutaArchivo == url)) {
+          final uri = Uri.tryParse(url);
+          final originalName = uri?.pathSegments.last.split('_').skip(1).join('_') ?? 'Documento';
+          final ext = originalName.contains('.')
+              ? originalName.split('.').last.toLowerCase()
+              : null;
+
+          final fuente = TareaFuenteModel(
+            id: const Uuid().v4(),
+            tareaId: _currentTask.id,
+            usuarioId: auth.supabaseUserId ?? '',
+            nombreArchivo: originalName,
+            rutaArchivo: url,
+            tipoArchivo: ext,
+          );
+
+          await _sourceRepo.addSource(fuente);
+          hasMigrated = true;
+          if (mounted) {
+            setState(() {
+              _fuentes.add(fuente);
+            });
+          }
+        }
+      }
+
+      if (hasMigrated && mounted) {
+        setState(() {
+          _currentTask = _currentTask.copyWith(attachedDocumentUrls: []);
+        });
+        _saveTask();
+      }
     }
   }
 
@@ -126,26 +187,50 @@ class _TaskDetailsDialogState extends State<TaskDetailsDialog>
         setState(() => _isUploadingDocument = true);
 
         final file = File(result.files.single.path!);
-        final rawFileName =
-            result.files.single.name.replaceAll(RegExp(r'[^a-zA-Z0-9.\-]'), '_');
-        final fileName = '${const Uuid().v4()}_$rawFileName';
+        final originalName = result.files.single.name;
+        final sanitizedName =
+            originalName.replaceAll(RegExp(r'[^a-zA-Z0-9.\-]'), '_');
+        final fuenteId = const Uuid().v4();
+        final storageName = '${fuenteId}_$sanitizedName';
 
-        await Supabase.instance.client.storage
-            .from('task_documents')
-            .upload(fileName, file);
+        // Determine file extension for tipo_archivo
+        final ext = originalName.contains('.')
+            ? originalName.split('.').last.toLowerCase()
+            : null;
 
-        final publicUrl = Supabase.instance.client.storage
-            .from('task_documents')
-            .getPublicUrl(fileName);
+        // Check if user is authenticated — upload to bucket
+        final auth = context.read<AuthProvider>();
+        String rutaArchivo;
 
-        final urls =
-            List<String>.from(_currentTask.attachedDocumentUrls ?? []);
-        urls.add(publicUrl);
+        if (auth.isAuthenticated) {
+          // Upload to Supabase Storage bucket
+          await Supabase.instance.client.storage
+              .from('task_documents')
+              .upload(storageName, file);
+
+          rutaArchivo = Supabase.instance.client.storage
+              .from('task_documents')
+              .getPublicUrl(storageName);
+        } else {
+          // Guest mode — store local path; will be uploaded during sync
+          rutaArchivo = file.path;
+        }
+
+        // Create the TareaFuenteModel and persist via repository
+        final fuente = TareaFuenteModel(
+          id: fuenteId,
+          tareaId: _currentTask.id,
+          usuarioId: auth.supabaseUserId ?? '',
+          nombreArchivo: originalName,
+          rutaArchivo: rutaArchivo,
+          tipoArchivo: ext,
+        );
+
+        await _sourceRepo.addSource(fuente);
 
         setState(() {
-          _currentTask = _currentTask.copyWith(attachedDocumentUrls: urls);
+          _fuentes.add(fuente);
         });
-        _saveTask();
       }
     } catch (e) {
       debugPrint('Error uploading file: $e');
@@ -153,7 +238,7 @@ class _TaskDetailsDialogState extends State<TaskDetailsDialog>
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-                'Error al subir documento: Asegúrate de tener el bucket "task_documents" en Supabase. Detalles: $e'),
+                'Error al subir documento: $e'),
             backgroundColor: Colors.redAccent,
           ),
         );
@@ -163,14 +248,37 @@ class _TaskDetailsDialogState extends State<TaskDetailsDialog>
     }
   }
 
-  void _removeDocument(String url) {
-    final urls =
-        List<String>.from(_currentTask.attachedDocumentUrls ?? []);
-    urls.remove(url);
-    setState(() {
-      _currentTask = _currentTask.copyWith(attachedDocumentUrls: urls);
-    });
-    _saveTask();
+  Future<void> _removeDocument(TareaFuenteModel fuente) async {
+    try {
+      await _sourceRepo.deleteSource(fuente.id);
+
+      // Try to remove file from bucket if it's a remote URL
+      if (!fuente.isLocal) {
+        try {
+          // Extract the storage path from the public URL
+          final uri = Uri.tryParse(fuente.rutaArchivo);
+          if (uri != null) {
+            final segments = uri.pathSegments;
+            // URL pattern: .../storage/v1/object/public/task_documents/{file}
+            final bucketIdx = segments.indexOf('task_documents');
+            if (bucketIdx != -1 && bucketIdx + 1 < segments.length) {
+              final storagePath = segments.sublist(bucketIdx + 1).join('/');
+              await Supabase.instance.client.storage
+                  .from('task_documents')
+                  .remove([storagePath]);
+            }
+          }
+        } catch (e) {
+          debugPrint('⚠️ Could not remove file from bucket: $e');
+        }
+      }
+
+      setState(() {
+        _fuentes.removeWhere((f) => f.id == fuente.id);
+      });
+    } catch (e) {
+      debugPrint('Error removing document: $e');
+    }
   }
 
   // ── Chat (Notes) ────────────────────────────────────────────────────────
@@ -356,8 +464,6 @@ class _TaskDetailsDialogState extends State<TaskDetailsDialog>
   // ── FUENTES TAB ─────────────────────────────────────────────────────────
 
   Widget _buildFuentesTab() {
-    final docs = _currentTask.attachedDocumentUrls ?? [];
-
     return Padding(
       key: const ValueKey('fuentes'),
       padding: const EdgeInsets.all(16),
@@ -375,7 +481,7 @@ class _TaskDetailsDialogState extends State<TaskDetailsDialog>
                   color: AppColors.textTertiary, size: 16),
               const SizedBox(width: 6),
               Text(
-                '${docs.length} fuente${docs.length != 1 ? 's' : ''}',
+                '${_fuentes.length} fuente${_fuentes.length != 1 ? 's' : ''}',
                 style: AppTypography.bodySmall.copyWith(
                   color: AppColors.textTertiary,
                 ),
@@ -386,7 +492,7 @@ class _TaskDetailsDialogState extends State<TaskDetailsDialog>
 
           // Document list
           Expanded(
-            child: docs.isEmpty
+            child: _fuentes.isEmpty
                 ? Center(
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
@@ -406,10 +512,10 @@ class _TaskDetailsDialogState extends State<TaskDetailsDialog>
                     ),
                   )
                 : ListView.separated(
-                    itemCount: docs.length,
+                    itemCount: _fuentes.length,
                     separatorBuilder: (_, __) => const SizedBox(height: 8),
                     itemBuilder: (context, index) =>
-                        _buildDocumentCard(docs[index]),
+                        _buildDocumentCard(_fuentes[index]),
                   ),
           ),
         ],
@@ -465,10 +571,10 @@ class _TaskDetailsDialogState extends State<TaskDetailsDialog>
     );
   }
 
-  Widget _buildDocumentCard(String url) {
-    final uri = Uri.tryParse(url);
-    final fileName =
-        uri?.pathSegments.last.split('_').skip(1).join('_') ?? 'Documento';
+  Widget _buildDocumentCard(TareaFuenteModel fuente) {
+    final fileName = fuente.nombreArchivo.isNotEmpty
+        ? fuente.nombreArchivo
+        : 'Documento';
     final icon = _iconForExtension(fileName);
     final color = _colorForExtension(fileName);
 
@@ -494,8 +600,19 @@ class _TaskDetailsDialogState extends State<TaskDetailsDialog>
           Expanded(
             child: GestureDetector(
               onTap: () async {
-                if (await canLaunchUrl(Uri.parse(url))) {
-                  await launchUrl(Uri.parse(url));
+                final url = fuente.rutaArchivo;
+                if (fuente.isLocal) {
+                  // Open local file
+                  final localUri = Uri.file(url);
+                  if (await canLaunchUrl(localUri)) {
+                    await launchUrl(localUri);
+                  }
+                } else {
+                  // Open remote URL
+                  final remoteUri = Uri.parse(url);
+                  if (await canLaunchUrl(remoteUri)) {
+                    await launchUrl(remoteUri);
+                  }
                 }
               },
               child: Column(
@@ -512,7 +629,7 @@ class _TaskDetailsDialogState extends State<TaskDetailsDialog>
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    'Toca para abrir',
+                    fuente.isLocal ? 'Archivo local' : 'Toca para abrir',
                     style: AppTypography.bodySmall.copyWith(
                       color: AppColors.textTertiary,
                       fontSize: 10,
@@ -525,7 +642,7 @@ class _TaskDetailsDialogState extends State<TaskDetailsDialog>
           IconButton(
             icon: const Icon(Icons.delete_outline_rounded, size: 18),
             color: AppColors.textTertiary,
-            onPressed: () => _removeDocument(url),
+            onPressed: () => _removeDocument(fuente),
             padding: EdgeInsets.zero,
             constraints: const BoxConstraints(),
           ),

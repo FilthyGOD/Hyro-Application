@@ -5,6 +5,15 @@ subprojects {
                 def pluginName = project.name.replaceAll("[^a-zA-Z0-9_]", "_")
                 project.android.namespace = "com.generated.namespace.${pluginName}"
             }
+            
+            def manifestFile = project.file("src/main/AndroidManifest.xml")
+            if (manifestFile.exists()) {
+                def content = manifestFile.text
+                if (content.contains('package="')) {
+                    def newContent = content.replaceAll(/package="[^"]*"/, "")
+                    manifestFile.text = newContent
+                }
+            }
         }
     }
 }

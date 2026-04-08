@@ -32,9 +32,7 @@ class _TasksScreenState extends State<TasksScreen> {
       floatingActionButton: Consumer<UiProvider>(
         builder: (context, ui, _) {
           return Padding(
-            padding: EdgeInsets.only(
-              bottom: ui.isMusicBarVisible ? 80 : 0,
-            ),
+            padding: EdgeInsets.only(bottom: ui.isMusicBarVisible ? 80 : 0),
             child: FloatingActionButton(
               onPressed: _showAddCategoryDialog,
               backgroundColor: AppColors.timerColor,
@@ -53,14 +51,18 @@ class _TasksScreenState extends State<TasksScreen> {
 
           return SingleChildScrollView(
             child: Padding(
-              padding: isLargeScreen
-                  ? const EdgeInsets.only(
-                      left: 72,
-                      top: 32,
-                      right: 32,
-                      bottom: 32,
-                    )
-                  : const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+              padding:
+                  isLargeScreen
+                      ? const EdgeInsets.only(
+                        left: 72,
+                        top: 32,
+                        right: 32,
+                        bottom: 32,
+                      )
+                      : const EdgeInsets.symmetric(
+                        horizontal: 24,
+                        vertical: 32,
+                      ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -114,7 +116,8 @@ class _TasksScreenState extends State<TasksScreen> {
         return SizedBox(
           width: double.infinity,
           child: Column(
-            crossAxisAlignment: isMobile ? CrossAxisAlignment.center : CrossAxisAlignment.start,
+            crossAxisAlignment:
+                isMobile ? CrossAxisAlignment.center : CrossAxisAlignment.start,
             children: [
               Text(
                 'Mis Pendientes',
@@ -183,36 +186,41 @@ class _TasksScreenState extends State<TasksScreen> {
           scrollDirection: Axis.horizontal,
           physics: const BouncingScrollPhysics(),
           child: Row(
-            children: categories.map((cat) {
-              final tasks = taskProvider.tasks.where((t) => t.category == cat.name || t.categoryId == cat.id);
-              final pending = tasks.where((t) => !t.isCompleted).length;
-              final total = tasks.length;
-              
-              final isSelected = _selectedCategoryName == cat.name || 
-                                 (_selectedCategoryName == null && cat == categories.first);
-              
-              return Padding(
-                padding: const EdgeInsets.only(right: 16),
-                child: GestureDetector(
-                  onTap: () {
-                    setState(() {
-                      _selectedCategoryName = cat.name;
-                    });
-                  },
-                  child: Opacity(
-                    opacity: isSelected ? 1.0 : 0.5,
-                    child: SizedBox(
-                      width: 160,
-                      child: _CategoryCard(
-                        category: cat,
-                        pending: pending,
-                        total: total,
+            children:
+                categories.map((cat) {
+                  final tasks = taskProvider.tasks.where(
+                    (t) => t.category == cat.name || t.categoryId == cat.id,
+                  );
+                  final pending = tasks.where((t) => !t.isCompleted).length;
+                  final total = tasks.length;
+
+                  final isSelected =
+                      _selectedCategoryName == cat.name ||
+                      (_selectedCategoryName == null &&
+                          cat == categories.first);
+
+                  return Padding(
+                    padding: const EdgeInsets.only(right: 16),
+                    child: GestureDetector(
+                      onTap: () {
+                        setState(() {
+                          _selectedCategoryName = cat.name;
+                        });
+                      },
+                      child: Opacity(
+                        opacity: isSelected ? 1.0 : 0.5,
+                        child: SizedBox(
+                          width: 160,
+                          child: _CategoryCard(
+                            category: cat,
+                            pending: pending,
+                            total: total,
+                          ),
+                        ),
                       ),
                     ),
-                  ),
-                ),
-              );
-            }).toList(),
+                  );
+                }).toList(),
           ),
         );
       },
@@ -254,24 +262,33 @@ class _TasksScreenState extends State<TasksScreen> {
 
         final selectedCatName = _selectedCategoryName ?? categories.first.name;
         final selectedCat = categories.cast<CategoryModel?>().firstWhere(
-          (c) => c!.name == selectedCatName, 
-          orElse: () => categories.first
+          (c) => c!.name == selectedCatName,
+          orElse: () => categories.first,
         );
 
         if (selectedCat == null) return const SizedBox.shrink();
 
-        final catTasks = taskProvider.tasks.where((t) => t.category == selectedCat.name || t.categoryId == selectedCat.id).toList();
+        final catTasks =
+            taskProvider.tasks
+                .where(
+                  (t) =>
+                      t.category == selectedCat.name ||
+                      t.categoryId == selectedCat.id,
+                )
+                .toList();
         return _CategoryListTile(
           key: ValueKey(selectedCat.id),
           category: selectedCat,
           tasks: catTasks,
-          onAddTask: () => _showAddTaskDialog(initialCategory: selectedCat.name, categoryId: selectedCat.id),
+          onAddTask:
+              () => _showAddTaskDialog(
+                initialCategory: selectedCat.name,
+                categoryId: selectedCat.id,
+              ),
         );
       },
     );
   }
-
-
 
   Widget _buildAnalyticsCard() {
     return Consumer<TaskProvider>(
@@ -497,27 +514,37 @@ class _TasksScreenState extends State<TasksScreen> {
                     Wrap(
                       spacing: 12,
                       runSpacing: 12,
-                      children: colors.map((c) {
-                        final isSelected = selectedColor == c;
-                        return GestureDetector(
-                          onTap: () => setDialogState(() => selectedColor = c),
-                          child: Container(
-                            width: 36,
-                            height: 36,
-                            decoration: BoxDecoration(
-                              color: Color(c),
-                              shape: BoxShape.circle,
-                              border: isSelected
-                                  ? Border.all(color: Colors.white, width: 3)
-                                  : null,
-                            ),
-                            child: isSelected
-                                ? const Icon(Icons.check,
-                                    size: 18, color: Colors.white)
-                                : null,
-                          ),
-                        );
-                      }).toList(),
+                      children:
+                          colors.map((c) {
+                            final isSelected = selectedColor == c;
+                            return GestureDetector(
+                              onTap:
+                                  () => setDialogState(() => selectedColor = c),
+                              child: Container(
+                                width: 36,
+                                height: 36,
+                                decoration: BoxDecoration(
+                                  color: Color(c),
+                                  shape: BoxShape.circle,
+                                  border:
+                                      isSelected
+                                          ? Border.all(
+                                            color: Colors.white,
+                                            width: 3,
+                                          )
+                                          : null,
+                                ),
+                                child:
+                                    isSelected
+                                        ? const Icon(
+                                          Icons.check,
+                                          size: 18,
+                                          color: Colors.white,
+                                        )
+                                        : null,
+                              ),
+                            );
+                          }).toList(),
                     ),
                     const SizedBox(height: 20),
                     Text('Ícono (Opcional)', style: AppTypography.bodySmall),
@@ -525,28 +552,47 @@ class _TasksScreenState extends State<TasksScreen> {
                     Wrap(
                       spacing: 12,
                       runSpacing: 12,
-                      children: icons.map((iconCode) {
-                        final isSelected = selectedIcon == iconCode;
-                        return GestureDetector(
-                          onTap: () => setDialogState(() => selectedIcon = (isSelected ? null : iconCode)),
-                          child: Container(
-                            width: 36,
-                            height: 36,
-                            decoration: BoxDecoration(
-                              color: AppColors.surfaceLight,
-                              borderRadius: BorderRadius.circular(8),
-                              border: isSelected
-                                  ? Border.all(color: AppColors.primary, width: 2)
-                                  : Border.all(color: Colors.transparent, width: 2),
-                            ),
-                            child: Icon(
-                              IconData(iconCode, fontFamily: 'MaterialIcons'),
-                              size: 20,
-                              color: isSelected ? AppColors.primary : Colors.white70,
-                            ),
-                          ),
-                        );
-                      }).toList(),
+                      children:
+                          icons.map((iconCode) {
+                            final isSelected = selectedIcon == iconCode;
+                            return GestureDetector(
+                              onTap:
+                                  () => setDialogState(
+                                    () =>
+                                        selectedIcon =
+                                            (isSelected ? null : iconCode),
+                                  ),
+                              child: Container(
+                                width: 36,
+                                height: 36,
+                                decoration: BoxDecoration(
+                                  color: AppColors.surfaceLight,
+                                  borderRadius: BorderRadius.circular(8),
+                                  border:
+                                      isSelected
+                                          ? Border.all(
+                                            color: AppColors.primary,
+                                            width: 2,
+                                          )
+                                          : Border.all(
+                                            color: Colors.transparent,
+                                            width: 2,
+                                          ),
+                                ),
+                                child: Icon(
+                                  IconData(
+                                    iconCode,
+                                    fontFamily: 'MaterialIcons',
+                                  ),
+                                  size: 20,
+                                  color:
+                                      isSelected
+                                          ? AppColors.primary
+                                          : Colors.white70,
+                                ),
+                              ),
+                            );
+                          }).toList(),
                     ),
                   ],
                 ),
@@ -581,7 +627,10 @@ class _TasksScreenState extends State<TasksScreen> {
     );
   }
 
-  void _showAddTaskDialog({required String initialCategory, String? categoryId}) {
+  void _showAddTaskDialog({
+    required String initialCategory,
+    String? categoryId,
+  }) {
     final titleController = TextEditingController();
     final descriptionController = TextEditingController();
     String selectedPriority = 'MEDIA';
@@ -778,18 +827,35 @@ class _TasksScreenState extends State<TasksScreen> {
                       );
                     }
 
-                    final categories = context.read<CategoryProvider>().categories;
-                    final matchedCat = categories.cast<CategoryModel?>().firstWhere(
-                      (c) => c!.name == initialCategory,
-                      orElse: () => null,
-                    );
+                    final categories =
+                        context.read<CategoryProvider>().categories;
+                    
+                    String? resolvedCatName = initialCategory;
+                    String? resolvedCatId = categoryId;
+                    
+                    if (resolvedCatId == 'all' || resolvedCatName == 'Todas') {
+                      if (categories.isNotEmpty) {
+                        resolvedCatName = categories.first.name;
+                        resolvedCatId = categories.first.id;
+                      } else {
+                        resolvedCatName = null;
+                        resolvedCatId = null;
+                      }
+                    }
+
+                    final matchedCat = categories
+                        .cast<CategoryModel?>()
+                        .firstWhere(
+                          (c) => c?.name == resolvedCatName,
+                          orElse: () => null,
+                        );
 
                     final task = TaskModel(
                       id: const Uuid().v4(),
                       title: title,
                       description: descriptionController.text.trim(),
-                      category: initialCategory,
-                      categoryId: categoryId ?? matchedCat?.id,
+                      category: resolvedCatName,
+                      categoryId: resolvedCatId ?? matchedCat?.id,
                       priority: selectedPriority,
                       priorityColorValue: colorValue,
                       pomodorosTarget: pomodorosTarget,
@@ -852,16 +918,25 @@ class _CategoryListTile extends StatelessWidget {
                     shape: BoxShape.circle,
                   ),
                   child: Center(
-                    child: category.iconCodePoint != null
-                        ? Icon(
-                            IconData(category.iconCodePoint!, fontFamily: 'MaterialIcons'),
-                            size: 16,
-                            color: color,
-                          )
-                        : Text(
-                            category.name.isNotEmpty ? category.name[0].toUpperCase() : 'C',
-                            style: TextStyle(color: color, fontWeight: FontWeight.bold),
-                          ),
+                    child:
+                        category.iconCodePoint != null
+                            ? Icon(
+                              IconData(
+                                category.iconCodePoint!,
+                                fontFamily: 'MaterialIcons',
+                              ),
+                              size: 16,
+                              color: color,
+                            )
+                            : Text(
+                              category.name.isNotEmpty
+                                  ? category.name[0].toUpperCase()
+                                  : 'C',
+                              style: TextStyle(
+                                color: color,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -873,19 +948,27 @@ class _CategoryListTile extends StatelessWidget {
                 ),
                 Text(
                   '$pendingCount PENDIENTES',
-                  style: AppTypography.labelSmall.copyWith(color: AppColors.textSecondary),
+                  style: AppTypography.labelSmall.copyWith(
+                    color: AppColors.textSecondary,
+                  ),
                 ),
               ],
             ),
             children: [
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
+                ),
                 child: Column(
                   children: [
                     if (tasks.isEmpty)
                       Padding(
                         padding: const EdgeInsets.symmetric(vertical: 8),
-                        child: Text('Aún no hay tareas', style: AppTypography.bodySmall),
+                        child: Text(
+                          'Aún no hay tareas',
+                          style: AppTypography.bodySmall,
+                        ),
                       )
                     else
                       ...tasks.map((t) => _TaskTile(task: t)),
@@ -938,7 +1021,9 @@ class _CategoryCard extends StatelessWidget {
           title: Text('Eliminar Categoría', style: AppTypography.h3),
           content: Text(
             '¿Estás seguro de que deseas eliminar "${category.name}"?\n\nLas tareas asociadas no serán eliminadas.',
-            style: AppTypography.bodyMedium.copyWith(color: AppColors.textSecondary),
+            style: AppTypography.bodyMedium.copyWith(
+              color: AppColors.textSecondary,
+            ),
           ),
           actions: [
             TextButton(
@@ -953,7 +1038,10 @@ class _CategoryCard extends StatelessWidget {
                 context.read<CategoryProvider>().deleteCategory(category.id);
                 Navigator.pop(ctx);
               },
-              child: const Text('Eliminar', style: TextStyle(color: Colors.white)),
+              child: const Text(
+                'Eliminar',
+                style: TextStyle(color: Colors.white),
+              ),
             ),
           ],
         );
@@ -964,7 +1052,7 @@ class _CategoryCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final color = Color(category.colorValue);
-    
+
     return GlassCard(
       padding: const EdgeInsets.all(16),
       child: Column(
@@ -981,20 +1069,34 @@ class _CategoryCard extends StatelessWidget {
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Center(
-                  child: category.iconCodePoint != null
-                      ? Icon(
-                          IconData(category.iconCodePoint!, fontFamily: 'MaterialIcons'),
-                          size: 20,
-                          color: color,
-                        )
-                      : Text(
-                          category.name.isNotEmpty ? category.name[0].toUpperCase() : 'C',
-                          style: TextStyle(color: color, fontSize: 20, fontWeight: FontWeight.bold),
-                        ),
+                  child:
+                      category.iconCodePoint != null
+                          ? Icon(
+                            IconData(
+                              category.iconCodePoint!,
+                              fontFamily: 'MaterialIcons',
+                            ),
+                            size: 20,
+                            color: color,
+                          )
+                          : Text(
+                            category.name.isNotEmpty
+                                ? category.name[0].toUpperCase()
+                                : 'C',
+                            style: TextStyle(
+                              color: color,
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
                 ),
               ),
               PopupMenuButton<String>(
-                icon: const Icon(Icons.more_horiz, color: AppColors.textTertiary, size: 20),
+                icon: const Icon(
+                  Icons.more_horiz,
+                  color: AppColors.textTertiary,
+                  size: 20,
+                ),
                 color: AppColors.surface,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
@@ -1005,21 +1107,28 @@ class _CategoryCard extends StatelessWidget {
                     _showDeleteCategoryDialog(context);
                   }
                 },
-                itemBuilder: (context) => [
-                  PopupMenuItem<String>(
-                    value: 'delete',
-                    child: Row(
-                      children: [
-                        const Icon(Icons.delete_outline_rounded, color: Color(0xFFEF4444), size: 18),
-                        const SizedBox(width: 10),
-                        Text(
-                          'Eliminar categoría',
-                          style: AppTypography.bodyMedium.copyWith(color: const Color(0xFFEF4444)),
+                itemBuilder:
+                    (context) => [
+                      PopupMenuItem<String>(
+                        value: 'delete',
+                        child: Row(
+                          children: [
+                            const Icon(
+                              Icons.delete_outline_rounded,
+                              color: Color(0xFFEF4444),
+                              size: 18,
+                            ),
+                            const SizedBox(width: 10),
+                            Text(
+                              'Eliminar categoría',
+                              style: AppTypography.bodyMedium.copyWith(
+                                color: const Color(0xFFEF4444),
+                              ),
+                            ),
+                          ],
                         ),
-                      ],
-                    ),
-                  ),
-                ],
+                      ),
+                    ],
               ),
             ],
           ),
@@ -1069,7 +1178,9 @@ class _TaskTile extends StatelessWidget {
           title: Text('Eliminar Actividad', style: AppTypography.h3),
           content: Text(
             '¿Estás seguro de que deseas eliminar "${task.title}"?',
-            style: AppTypography.bodyMedium.copyWith(color: AppColors.textSecondary),
+            style: AppTypography.bodyMedium.copyWith(
+              color: AppColors.textSecondary,
+            ),
           ),
           actions: [
             TextButton(
@@ -1084,7 +1195,10 @@ class _TaskTile extends StatelessWidget {
                 context.read<TaskProvider>().deleteTask(task.id);
                 Navigator.pop(ctx);
               },
-              child: const Text('Eliminar', style: TextStyle(color: Colors.white)),
+              child: const Text(
+                'Eliminar',
+                style: TextStyle(color: Colors.white),
+              ),
             ),
           ],
         );
@@ -1143,129 +1257,143 @@ class _TaskTile extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                    task.title,
-                    style: AppTypography.bodyMedium.copyWith(
-                      fontWeight: FontWeight.w600,
-                      decoration:
-                          task.isCompleted ? TextDecoration.lineThrough : null,
-                      color:
-                          task.isCompleted
-                              ? AppColors.textTertiary
-                              : Colors.white,
-                    ),
-                  ),
-                  const SizedBox(height: 6),
-                  if (task.description != null && task.description!.isNotEmpty)
-                    Row(
-                      children: [
-                        Icon(
-                          Icons.schedule,
-                          size: 14,
-                          color: AppColors.textTertiary,
-                        ),
-                        const SizedBox(width: 6),
-                        Expanded(
-                          child: Text(
-                            task.description!,
-                            style: AppTypography.labelSmall.copyWith(
-                              color: AppColors.textTertiary,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                      ],
-                    ),
-                  // Priority and Pomodoros Row
-                  Wrap(
-                    alignment: WrapAlignment.spaceBetween,
-                    crossAxisAlignment: WrapCrossAlignment.center,
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: [
-                      // Priority badge
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 10,
-                          vertical: 4,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Color(
-                            task.priorityColorValue,
-                          ).withValues(alpha: 0.15),
-                          borderRadius: BorderRadius.circular(6),
-                          border: Border.all(
-                            color: Color(
-                              task.priorityColorValue,
-                            ).withValues(alpha: 0.3),
-                          ),
-                        ),
-                        child: Text(
-                          task.priority,
-                          style: AppTypography.labelSmall.copyWith(
-                            color: Color(task.priorityColorValue),
-                            fontWeight: FontWeight.w700,
-                            letterSpacing: 0.5,
-                          ),
-                        ),
+                      task.title,
+                      style: AppTypography.bodyMedium.copyWith(
+                        fontWeight: FontWeight.w600,
+                        decoration:
+                            task.isCompleted
+                                ? TextDecoration.lineThrough
+                                : null,
+                        color:
+                            task.isCompleted
+                                ? AppColors.textTertiary
+                                : Colors.white,
                       ),
-                      // Pomodoro count
+                    ),
+                    const SizedBox(height: 6),
+                    if (task.description != null &&
+                        task.description!.isNotEmpty)
                       Row(
-                        mainAxisSize: MainAxisSize.min,
                         children: [
                           Icon(
-                            Icons.local_fire_department,
-                            size: 16,
-                            color: AppColors.primary,
+                            Icons.schedule,
+                            size: 14,
+                            color: AppColors.textTertiary,
                           ),
-                          const SizedBox(width: 4),
-                          Flexible(
+                          const SizedBox(width: 6),
+                          Expanded(
                             child: Text(
-                              '${task.pomodorosTarget} Pomodoros',
+                              task.description!,
                               style: AppTypography.labelSmall.copyWith(
-                                color: AppColors.textSecondary,
+                                color: AppColors.textTertiary,
                               ),
+                              maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                             ),
                           ),
                         ],
                       ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ),
-          // Delete button
-          PopupMenuButton<String>(
-            icon: const Icon(Icons.more_vert_rounded, color: AppColors.textTertiary, size: 18),
-            color: AppColors.surface,
-            padding: EdgeInsets.zero,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-              side: const BorderSide(color: AppColors.cardBorder),
-            ),
-            onSelected: (value) {
-              if (value == 'delete') {
-                _showDeleteTaskDialog(context);
-              }
-            },
-            itemBuilder: (context) => [
-              PopupMenuItem<String>(
-                value: 'delete',
-                child: Row(
-                  children: [
-                    const Icon(Icons.delete_outline_rounded, color: Color(0xFFEF4444), size: 18),
-                    const SizedBox(width: 10),
-                    Text(
-                      'Eliminar actividad',
-                      style: AppTypography.bodyMedium.copyWith(color: const Color(0xFFEF4444)),
+                    // Priority and Pomodoros Row
+                    Wrap(
+                      alignment: WrapAlignment.spaceBetween,
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: [
+                        // Priority badge
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Color(
+                              task.priorityColorValue,
+                            ).withValues(alpha: 0.15),
+                            borderRadius: BorderRadius.circular(6),
+                            border: Border.all(
+                              color: Color(
+                                task.priorityColorValue,
+                              ).withValues(alpha: 0.3),
+                            ),
+                          ),
+                          child: Text(
+                            task.priority,
+                            style: AppTypography.labelSmall.copyWith(
+                              color: Color(task.priorityColorValue),
+                              fontWeight: FontWeight.w700,
+                              letterSpacing: 0.5,
+                            ),
+                          ),
+                        ),
+                        // Pomodoro count
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              Icons.local_fire_department,
+                              size: 16,
+                              color: AppColors.primary,
+                            ),
+                            const SizedBox(width: 4),
+                            Flexible(
+                              child: Text(
+                                '${task.pomodorosTarget} Pomodoros',
+                                style: AppTypography.labelSmall.copyWith(
+                                  color: AppColors.textSecondary,
+                                ),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
                     ),
                   ],
                 ),
               ),
-            ],
-          ),
+            ),
+            // Delete button
+            PopupMenuButton<String>(
+              icon: const Icon(
+                Icons.more_vert_rounded,
+                color: AppColors.textTertiary,
+                size: 18,
+              ),
+              color: AppColors.surface,
+              padding: EdgeInsets.zero,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+                side: const BorderSide(color: AppColors.cardBorder),
+              ),
+              onSelected: (value) {
+                if (value == 'delete') {
+                  _showDeleteTaskDialog(context);
+                }
+              },
+              itemBuilder:
+                  (context) => [
+                    PopupMenuItem<String>(
+                      value: 'delete',
+                      child: Row(
+                        children: [
+                          const Icon(
+                            Icons.delete_outline_rounded,
+                            color: Color(0xFFEF4444),
+                            size: 18,
+                          ),
+                          const SizedBox(width: 10),
+                          Text(
+                            'Eliminar actividad',
+                            style: AppTypography.bodyMedium.copyWith(
+                              color: const Color(0xFFEF4444),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+            ),
           ],
         ),
       ),
@@ -1379,5 +1507,3 @@ class _DonutChartPainter extends CustomPainter {
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
-
-

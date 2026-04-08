@@ -175,15 +175,15 @@ class AppShellState extends State<AppShell> with WidgetsBindingObserver {
 
     // Wire auth state into task & category providers so they
     // can dual-write to Supabase when the user is authenticated
-    final taskProvider = context.read<TaskProvider>();
-    taskProvider.isAuthenticated = () => isAuth;
-    taskProvider.getUserId = () => userId;
-    await taskProvider.reload();
-
     final categoryProvider = context.read<CategoryProvider>();
     categoryProvider.isAuthenticated = () => isAuth;
     categoryProvider.getUserId = () => userId;
     await categoryProvider.reload();
+
+    final taskProvider = context.read<TaskProvider>();
+    taskProvider.isAuthenticated = () => isAuth;
+    taskProvider.getUserId = () => userId;
+    await taskProvider.reload();
     
     final profileProvider = context.read<ProfileProvider>();
     final shopProvider = context.read<ShopProvider>();

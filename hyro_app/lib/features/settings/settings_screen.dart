@@ -149,6 +149,29 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   value: true, // App uses hardcoded dark theme for now
                   onChanged: (v) {},
                 ),
+                const Divider(height: 24),
+                _ToggleSetting(
+                  label: 'Focus Quiz',
+                  subtitle: 'Preguntas automáticas para mantener el enfoque',
+                  value: settings.focusQuizEnabled,
+                  onChanged: (v) {
+                    settings.setFocusQuizEnabled(v);
+                    context.read<TimerCubit>().refreshIfIdle();
+                  },
+                ),
+                if (settings.focusQuizEnabled) ...[
+                   const SizedBox(height: 16),
+                   _SliderSetting(
+                     label: 'Intervalo del Quiz',
+                     value: settings.focusQuizIntervalMinutes,
+                     min: 1,
+                     max: 15,
+                     suffix: 'min',
+                     onChanged: (v) {
+                        settings.setFocusQuizIntervalMinutes(v);
+                     },
+                   ),
+                ],
               ],
             ),
           ),

@@ -17,6 +17,9 @@ import '../stats/stats_provider.dart';
 import '../mascot/mascot_controller.dart';
 import '../settings/settings_provider.dart';
 import '../../providers/ui_provider.dart';
+import 'widgets/focus_quiz_dialog.dart';
+import '../../data/local/card_local_ds.dart';
+import '../../data/local/note_local_ds.dart';
 
 /// The main Focus screen with the Pomodoro timer and sidebar widgets.
 class FocusScreen extends StatelessWidget {
@@ -25,10 +28,31 @@ class FocusScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocListener<TimerCubit, TimerState>(
-      listenWhen: (prev, curr) => prev.status != curr.status,
+      listenWhen: (prev, curr) => (prev.status != curr.status) || (prev.quizDue != curr.quizDue),
       listener: (context, state) {
         final mascot = context.read<MascotController>();
-        if (state.isRunning && state.mode == TimerMode.pomodoro) {
+        if (state.quizDue && state.isRunning) {
+           final cardLocal = CardLocalDataSource();
+           final noteLocal = NoteLocalDataSource();
+           final cards = cardLocal.getCardsForTask(state.activeTaskId!);
+           final notes = noteLocal.getNotesForTask(state.activeTaskId!);
+           
+           if (cards.isNotEmpty || notes.isNotEmpty) {
+             context.read<TimerCubit>().pause();
+             showDialog(
+                context: context,
+                barrierDismissible: false,
+                builder: (_) => FocusQuizDialog(flashcards: cards, notas: notes),
+             ).then((_) {
+                 // only resume if it's currently paused
+                 if (context.read<TimerCubit>().state.isPaused) {
+                    context.read<TimerCubit>().resume();
+                 }
+             });
+           } else {
+             context.read<TimerCubit>().acknowledgeQuiz();
+           }
+        } else if (state.isRunning && state.mode == TimerMode.pomodoro) {
           mascot.triggerEstudiando();
         } else if (state.isRunning &&
             (state.mode == TimerMode.shortBreak ||
@@ -169,6 +193,14 @@ class _DesktopLayout extends StatelessWidget {
                                                 color: AppColors.primary,
                                               ),
                                           textAlign: TextAlign.center,
+                                        ),
+                                      ),
+                                    if (state.isRunning && state.quizTotalCount > 0)
+                                      Padding(
+                                        padding: const EdgeInsets.only(bottom: 8),
+                                        child: Text(
+                                          'Quiz: ${state.quizCorrectCount}/${state.quizTotalCount} ✅',
+                                          style: AppTypography.bodySmall.copyWith(color: AppColors.breakGreen),
                                         ),
                                       ),
                                     const SizedBox(height: 16),
@@ -355,6 +387,15 @@ class _MobileLayout extends StatelessWidget {
                     textAlign: TextAlign.center,
                   ),
                 ),
+              if (state.isRunning && state.quizTotalCount > 0)
+                 Padding(
+                   padding: const EdgeInsets.only(bottom: 8),
+                   child: Text(
+                     'Quiz: ${state.quizCorrectCount}/${state.quizTotalCount} ✅',
+                     style: AppTypography.bodySmall.copyWith(color: AppColors.breakGreen),
+                     textAlign: TextAlign.center,
+                   ),
+                 ),
               const SizedBox(height: 8),
               TimerControls(
                 isRunning: state.isRunning,

@@ -83,6 +83,12 @@ class _CompletedSessionViewState extends State<CompletedSessionView> {
                       _buildStatCard('TIEMPO', '${pomodoroMins}m Enfoque', context),
                       _buildStatCard('PROGRESO', '+10 XP', context),
                       _buildStatCard('RACHA', '$streak Días de Racha', context),
+                      if (context.read<TimerCubit>().state.quizTotalCount > 0)
+                        _buildStatCard(
+                           'QUIZ',
+                           '${context.read<TimerCubit>().state.quizCorrectCount}/${context.read<TimerCubit>().state.quizTotalCount} ✅',
+                           context,
+                        ),
                     ],
                   ),
                   const SizedBox(height: 32),

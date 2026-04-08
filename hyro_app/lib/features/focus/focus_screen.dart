@@ -39,12 +39,16 @@ class FocusScreen extends StatelessWidget {
            
            if (cards.isNotEmpty || notes.isNotEmpty) {
              context.read<TimerCubit>().pause();
+             mascot.triggerPensando();
+
              showDialog(
                 context: context,
                 barrierDismissible: false,
                 builder: (_) => FocusQuizDialog(flashcards: cards, notas: notes),
              ).then((_) {
+                 mascot.resumeEstudio();
                  // only resume if it's currently paused
+                 if (!context.mounted) return;
                  if (context.read<TimerCubit>().state.isPaused) {
                     context.read<TimerCubit>().resume();
                  }

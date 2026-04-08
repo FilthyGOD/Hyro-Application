@@ -7,6 +7,8 @@ import '../../../data/models/tarea_card_model.dart';
 import '../../../data/models/tarea_nota_model.dart';
 import '../bloc/timer_cubit.dart';
 import '../../../shared/widgets/glass_card.dart';
+import '../../mascot/mascot_controller.dart';
+import 'package:rive/rive.dart' hide Animation;
 
 class FocusQuizDialog extends StatefulWidget {
   final List<TareaCardModel> flashcards;
@@ -28,7 +30,7 @@ class _FocusQuizDialogState extends State<FocusQuizDialog> {
   TareaNotaModel? _selectedNote;
   String? _hiddenWord;
   String? _displayNote;
-  
+
   final TextEditingController _inputController = TextEditingController();
   bool _revealed = false;
   bool _isCorrect = false;
@@ -51,7 +53,8 @@ class _FocusQuizDialogState extends State<FocusQuizDialog> {
     }
 
     if (_isFlashcard && hasCards) {
-      _selectedCard = widget.flashcards[random.nextInt(widget.flashcards.length)];
+      _selectedCard =
+          widget.flashcards[random.nextInt(widget.flashcards.length)];
     } else if (hasNotes) {
       _selectedNote = widget.notas[random.nextInt(widget.notas.length)];
       _prepareNoteQuestion();
@@ -62,15 +65,15 @@ class _FocusQuizDialogState extends State<FocusQuizDialog> {
     final text = _selectedNote!.contenido;
     final words = text.split(RegExp(r'\s+'));
     final candidateWords = words.where((w) => w.length > 4).toList();
-    
+
     if (candidateWords.isEmpty) {
-       if (words.isNotEmpty) {
-           _hiddenWord = words.last;
-           _displayNote = text.replaceFirst(_hiddenWord!, '___');
-       } else {
-           _hiddenWord = '';
-           _displayNote = '___';
-       }
+      if (words.isNotEmpty) {
+        _hiddenWord = words.last;
+        _displayNote = text.replaceFirst(_hiddenWord!, '___');
+      } else {
+        _hiddenWord = '';
+        _displayNote = '___';
+      }
     } else {
       _hiddenWord = candidateWords[Random().nextInt(candidateWords.length)];
       _displayNote = text.replaceFirst(_hiddenWord!, '___');
@@ -80,11 +83,13 @@ class _FocusQuizDialogState extends State<FocusQuizDialog> {
 
   void _checkAnswer() {
     if (_revealed) return;
-    
+
     final answer = _inputController.text.trim().toLowerCase();
     if (_isFlashcard) {
       final expected = _selectedCard!.reverso.trim().toLowerCase();
-      _isCorrect = answer.isNotEmpty && (expected.contains(answer) || answer.contains(expected));
+      _isCorrect =
+          answer.isNotEmpty &&
+          (expected.contains(answer) || answer.contains(expected));
     } else {
       final expected = _hiddenWord?.toLowerCase() ?? '';
       _isCorrect = answer.isNotEmpty && expected == answer;
@@ -133,13 +138,38 @@ class _FocusQuizDialogState extends State<FocusQuizDialog> {
           children: [
             Row(
               children: [
-                const Icon(Icons.psychology_alt_rounded, color: AppColors.primary, size: 28),
+                const Icon(
+                  Icons.psychology_alt_rounded,
+                  color: AppColors.primary,
+                  size: 28,
+                ),
                 const SizedBox(width: 12),
                 Text('Verificación de Enfoque', style: AppTypography.h3),
               ],
             ),
-            const SizedBox(height: 24),
-            
+            const SizedBox(height: 16),
+            Consumer<MascotController>(
+              builder: (context, mascot, _) {
+                if (!mascot.isLoaded) return const SizedBox();
+                return SizedBox(
+                  height: 140,
+                  child: Center(
+                    child: Transform.scale(
+                      scale: 1.5,
+                      child: Transform.translate(
+                         offset: const Offset(0, 10),
+                         child: RiveWidget(
+                           controller: mascot.controller!,
+                           fit: Fit.contain,
+                         ),
+                      ),
+                    ),
+                  ),
+                );
+              },
+            ),
+            const SizedBox(height: 16),
+
             if (_isFlashcard) ...[
               Text('Frente de la tarjeta:', style: AppTypography.labelSmall),
               const SizedBox(height: 8),
@@ -150,12 +180,15 @@ class _FocusQuizDialogState extends State<FocusQuizDialog> {
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(color: AppColors.cardBorder),
                 ),
-                child: Text(_selectedCard!.frente, style: AppTypography.bodyLarge),
+                child: Text(
+                  _selectedCard!.frente,
+                  style: AppTypography.bodyLarge,
+                ),
               ),
             ] else ...[
               Text('Completa la nota:', style: AppTypography.labelSmall),
               const SizedBox(height: 8),
-               Container(
+              Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
                   color: AppColors.surfaceLight,
@@ -165,9 +198,9 @@ class _FocusQuizDialogState extends State<FocusQuizDialog> {
                 child: Text(_displayNote ?? '', style: AppTypography.bodyLarge),
               ),
             ],
-            
+
             const SizedBox(height: 24),
-            
+
             if (!_revealed) ...[
               TextField(
                 controller: _inputController,
@@ -186,7 +219,10 @@ class _FocusQuizDialogState extends State<FocusQuizDialog> {
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: AppColors.primary, width: 2),
+                    borderSide: const BorderSide(
+                      color: AppColors.primary,
+                      width: 2,
+                    ),
                   ),
                 ),
                 style: AppTypography.bodyLarge,
@@ -207,10 +243,18 @@ class _FocusQuizDialogState extends State<FocusQuizDialog> {
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppColors.primary,
                       foregroundColor: AppColors.background,
-                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 24,
+                        vertical: 12,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
                     ),
-                    child: const Text('Responder', style: TextStyle(fontWeight: FontWeight.bold)),
+                    child: const Text(
+                      'Responder',
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
                   ),
                 ],
               ),
@@ -218,25 +262,39 @@ class _FocusQuizDialogState extends State<FocusQuizDialog> {
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: _isCorrect ? AppColors.breakGreen.withValues(alpha: 0.3) : const Color(0xFFEF4444).withValues(alpha: 0.3),
+                  color:
+                      _isCorrect
+                          ? AppColors.breakGreen.withValues(alpha: 0.3)
+                          : const Color(0xFFEF4444).withValues(alpha: 0.3),
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(
-                    color: _isCorrect ? AppColors.breakGreen : const Color(0xFFEF4444),
+                    color:
+                        _isCorrect
+                            ? AppColors.breakGreen
+                            : const Color(0xFFEF4444),
                     width: 2,
                   ),
                 ),
                 child: Column(
                   children: [
                     Icon(
-                      _isCorrect ? Icons.check_circle_rounded : Icons.cancel_rounded,
-                      color: _isCorrect ? AppColors.breakGreen : const Color(0xFFEF4444),
+                      _isCorrect
+                          ? Icons.check_circle_rounded
+                          : Icons.cancel_rounded,
+                      color:
+                          _isCorrect
+                              ? AppColors.breakGreen
+                              : const Color(0xFFEF4444),
                       size: 48,
                     ),
                     const SizedBox(height: 12),
                     Text(
                       _isCorrect ? '¡Correcto!' : 'Incorrecto',
                       style: AppTypography.h3.copyWith(
-                        color: _isCorrect ? AppColors.breakGreen : const Color(0xFFEF4444),
+                        color:
+                            _isCorrect
+                                ? AppColors.breakGreen
+                                : const Color(0xFFEF4444),
                       ),
                     ),
                     if (!_isCorrect) ...[
@@ -246,8 +304,12 @@ class _FocusQuizDialogState extends State<FocusQuizDialog> {
                         style: AppTypography.labelSmall,
                       ),
                       Text(
-                        _isFlashcard ? _selectedCard!.reverso : (_hiddenWord ?? ''),
-                        style: AppTypography.bodyLarge.copyWith(fontWeight: FontWeight.bold),
+                        _isFlashcard
+                            ? _selectedCard!.reverso
+                            : (_hiddenWord ?? ''),
+                        style: AppTypography.bodyLarge.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
                         textAlign: TextAlign.center,
                       ),
                     ],

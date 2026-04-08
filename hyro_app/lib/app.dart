@@ -311,7 +311,8 @@ class AppShellState extends State<AppShell> with WidgetsBindingObserver {
                 (timerState.mode == TimerMode.shortBreak ||
                  timerState.mode == TimerMode.longBreak);
                  
-            final isVisible = (_selectedIndex == 0 || _selectedIndex == 1) && !isPomodoroFinished;
+            final isQuizActive = timerState.quizDue;
+            final isVisible = (_selectedIndex == 0 || _selectedIndex == 1) && !isPomodoroFinished && !isQuizActive;
             return FloatingMascot(visible: isVisible);
           },
         ),

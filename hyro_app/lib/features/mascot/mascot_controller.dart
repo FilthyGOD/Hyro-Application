@@ -6,7 +6,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 // ignore_for_file: deprecated_member_use
 
-
 /// Centralized controller for the Rive mascot animation.
 /// Shared between FocusScreen (idle/studying) and ShopScreen (purchase/equip).
 class MascotController extends ChangeNotifier {
@@ -22,6 +21,7 @@ class MascotController extends ChangeNotifier {
   TriggerInput? _triggerCargando;
   TriggerInput? _triggerRacha;
   TriggerInput? _triggerFestejo;
+  TriggerInput? _triggerPensando;
 
   // Inputs
   NumberInput? _shopItemId;
@@ -64,12 +64,12 @@ class MascotController extends ChangeNotifier {
 
   Future<void> _loadRiveFile() async {
     final file = await File.asset(
-      'assets/mascot/jairo42.riv',
+      'assets/mascot/jairo43.riv',
       riveFactory: Factory.flutter,
     );
 
     if (file == null) {
-      debugPrint('ERROR: Could not load Rive file jairo42.riv');
+      debugPrint('ERROR: Could not load Rive file jairo43.riv');
       return;
     }
 
@@ -92,6 +92,7 @@ class MascotController extends ChangeNotifier {
     _triggerCargando = sm.trigger('trigger_cargando');
     _triggerRacha = sm.trigger('trigger_racha');
     _triggerFestejo = sm.trigger('trigger_festejo');
+    _triggerPensando = sm.trigger('trigger_pensando');
 
     // Resolve number inputs
     _shopItemId = sm.number('shop_item_id');
@@ -101,11 +102,14 @@ class MascotController extends ChangeNotifier {
     _unidades = sm.number('unidades');
     _decenas = sm.number('decenas');
 
-    if (_sombrero == null) debugPrint('WARNING: Rive input "sombrero" not found!');
+    if (_sombrero == null)
+      debugPrint('WARNING: Rive input "sombrero" not found!');
     if (_cara == null) debugPrint('WARNING: Rive input "cara" not found!');
     if (_cuerpo == null) debugPrint('WARNING: Rive input "cuerpo" not found!');
-    if (_unidades == null) debugPrint('WARNING: Rive input "unidades" not found!');
-    if (_decenas == null) debugPrint('WARNING: Rive input "decenas" not found!');
+    if (_unidades == null)
+      debugPrint('WARNING: Rive input "unidades" not found!');
+    if (_decenas == null)
+      debugPrint('WARNING: Rive input "decenas" not found!');
 
     notifyListeners();
 
@@ -147,6 +151,20 @@ class MascotController extends ChangeNotifier {
     _unidades?.value = 0;
     _decenas?.value = 0;
     _triggerEstudiando?.fire();
+  }
+
+  Future<void> triggerPensando() async {
+    _cancelIdleLoop();
+    _triggerVolver?.fire();
+    await Future.delayed(const Duration(milliseconds: 550));
+    _isStudying = true;
+    _triggerPensando?.fire();
+  }
+
+  Future<void> resumeEstudio() async {
+    _triggerVolver?.fire();
+    await Future.delayed(const Duration(milliseconds: 50));
+    triggerEstudiando();
   }
 
   void triggerHueva() {
@@ -266,6 +284,7 @@ class MascotController extends ChangeNotifier {
     _triggerCargando?.dispose();
     _triggerRacha?.dispose();
     _triggerFestejo?.dispose();
+    _triggerPensando?.dispose();
     _shopItemId?.dispose();
     _sombrero?.dispose();
     _cara?.dispose();

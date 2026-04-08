@@ -12,6 +12,7 @@ import 'timer_state.dart';
 /// Cubit that manages the Pomodoro timer logic.
 class TimerCubit extends Cubit<TimerState> {
   Timer? _timer;
+  int _secondsSinceLastQuiz = 0;
   final StatsProvider? statsProvider;
   final SettingsProvider? settingsProvider;
   final ProfileProvider? profileProvider;
@@ -37,6 +38,7 @@ class TimerCubit extends Cubit<TimerState> {
       status: TimerStatus.running,
       activeTaskId: taskId ?? state.activeTaskId,
       activeTaskTitle: taskTitle ?? state.activeTaskTitle,
+      quizDue: false,
     ));
     _timer?.cancel();
     _timer = Timer.periodic(const Duration(seconds: 1), (_) => _tick());
@@ -57,6 +59,7 @@ class TimerCubit extends Cubit<TimerState> {
   /// Reset the timer to the beginning of the current mode.
   void reset() {
     _timer?.cancel();
+    _secondsSinceLastQuiz = 0;
     final totalSec = _durationForMode(state.mode) * 60;
     emit(
       state.copyWith(
@@ -77,6 +80,7 @@ class TimerCubit extends Cubit<TimerState> {
   /// Stop the timer completely and go back to idle pomodoro.
   void stop() {
     _timer?.cancel();
+    _secondsSinceLastQuiz = 0;
     final totalSec = (settingsProvider?.pomodoroDuration.toInt() ?? PomodoroConstants.pomodoroDuration) * 60;
     emit(
       TimerState(
@@ -110,10 +114,43 @@ class TimerCubit extends Cubit<TimerState> {
   void _tick() {
     if (state.remainingSeconds <= 1) {
       _timer?.cancel();
+      _secondsSinceLastQuiz = 0;
       _onTimerFinished();
     } else {
-      emit(state.copyWith(remainingSeconds: state.remainingSeconds - 1));
+      _secondsSinceLastQuiz++;
+
+      // Check if quiz is due (only during pomodoro mode, quiz enabled, and has a task)
+      final quizEnabled = settingsProvider?.focusQuizEnabled ?? false;
+      final quizInterval = ((settingsProvider?.focusQuizIntervalMinutes ?? 5) * 60).toInt();
+      bool triggerQuiz = false;
+
+      if (quizEnabled &&
+          state.mode == TimerMode.pomodoro &&
+          state.activeTaskId != null &&
+          !state.quizDue &&
+          _secondsSinceLastQuiz >= quizInterval) {
+        triggerQuiz = true;
+        _secondsSinceLastQuiz = 0;
+      }
+
+      emit(state.copyWith(
+        remainingSeconds: state.remainingSeconds - 1,
+        quizDue: triggerQuiz ? true : null,
+      ));
     }
+  }
+
+  /// Called by the FocusScreen after the quiz dialog is shown.
+  void acknowledgeQuiz() {
+    emit(state.copyWith(quizDue: false));
+  }
+
+  /// Records the result of a quiz question.
+  void recordQuizResult(bool isCorrect) {
+    emit(state.copyWith(
+      quizCorrectCount: state.quizCorrectCount + (isCorrect ? 1 : 0),
+      quizTotalCount: state.quizTotalCount + 1,
+    ));
   }
 
   void _onTimerFinished() {
@@ -155,6 +192,8 @@ class TimerCubit extends Cubit<TimerState> {
           totalFocusMinutes: newFocusMinutes,
           activeTaskId: state.activeTaskId,
           activeTaskTitle: state.activeTaskTitle,
+          quizCorrectCount: state.quizCorrectCount,
+          quizTotalCount: state.quizTotalCount,
         ),
       );
     } else {

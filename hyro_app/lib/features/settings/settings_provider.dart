@@ -11,6 +11,8 @@ class SettingsProvider extends ChangeNotifier {
   bool _autoPauseTimer = true;
   bool _strictMode = false;
   bool _hideFocusCards = false;
+  bool _focusQuizEnabled = true;
+  double _focusQuizIntervalMinutes = 5;
 
   double get pomodoroDuration => _pomodoroDuration;
   double get shortBreakDuration => _shortBreakDuration;
@@ -20,6 +22,8 @@ class SettingsProvider extends ChangeNotifier {
   bool get autoPauseTimer => _autoPauseTimer;
   bool get strictMode => _strictMode;
   bool get hideFocusCards => _hideFocusCards;
+  bool get focusQuizEnabled => _focusQuizEnabled;
+  double get focusQuizIntervalMinutes => _focusQuizIntervalMinutes;
 
   double get timerSizeMultiplier {
     switch (_timerSize) {
@@ -75,6 +79,18 @@ class SettingsProvider extends ChangeNotifier {
   void setHideFocusCards(bool value) {
     if (_hideFocusCards == value) return;
     _hideFocusCards = value;
+    notifyListeners();
+  }
+
+  void setFocusQuizEnabled(bool value) {
+    if (_focusQuizEnabled == value) return;
+    _focusQuizEnabled = value;
+    notifyListeners();
+  }
+
+  void setFocusQuizIntervalMinutes(double value) {
+    if (_focusQuizIntervalMinutes == value) return;
+    _focusQuizIntervalMinutes = value;
     notifyListeners();
   }
 }

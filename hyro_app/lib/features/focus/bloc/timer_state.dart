@@ -13,6 +13,9 @@ class TimerState extends Equatable {
   final int totalFocusMinutes;
   final String? activeTaskId;
   final String? activeTaskTitle;
+  final bool quizDue;
+  final int quizCorrectCount;
+  final int quizTotalCount;
 
   const TimerState({
     this.status = TimerStatus.idle,
@@ -23,6 +26,9 @@ class TimerState extends Equatable {
     this.totalFocusMinutes = 0,
     this.activeTaskId,
     this.activeTaskTitle,
+    this.quizDue = false,
+    this.quizCorrectCount = 0,
+    this.quizTotalCount = 0,
   });
 
   double get progress =>
@@ -42,6 +48,9 @@ class TimerState extends Equatable {
     int? totalFocusMinutes,
     String? activeTaskId,
     String? activeTaskTitle,
+    bool? quizDue,
+    int? quizCorrectCount,
+    int? quizTotalCount,
   }) {
     return TimerState(
       status: status ?? this.status,
@@ -52,6 +61,9 @@ class TimerState extends Equatable {
       totalFocusMinutes: totalFocusMinutes ?? this.totalFocusMinutes,
       activeTaskId: activeTaskId ?? this.activeTaskId,
       activeTaskTitle: activeTaskTitle ?? this.activeTaskTitle,
+      quizDue: quizDue ?? this.quizDue,
+      quizCorrectCount: quizCorrectCount ?? this.quizCorrectCount,
+      quizTotalCount: quizTotalCount ?? this.quizTotalCount,
     );
   }
 
@@ -65,5 +77,8 @@ class TimerState extends Equatable {
     totalFocusMinutes,
     activeTaskId,
     activeTaskTitle,
+    quizDue,
+    quizCorrectCount,
+    quizTotalCount,
   ];
 }

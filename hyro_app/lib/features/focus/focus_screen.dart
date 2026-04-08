@@ -12,8 +12,8 @@ import 'widgets/completed_session_view.dart';
 import '../../core/theme/app_colors.dart';
 import 'widgets/mini_task_list.dart';
 import 'widgets/activity_chart.dart';
+import 'widgets/task_selection_dialog.dart';
 import '../stats/stats_provider.dart';
-import '../tasks/tasks_provider.dart';
 import '../mascot/mascot_controller.dart';
 import '../settings/settings_provider.dart';
 import '../../providers/ui_provider.dart';
@@ -463,73 +463,16 @@ class _MobileLayout extends StatelessWidget {
 }
 
 void _handleStart(BuildContext context, TimerCubit cubit) {
-  final taskProvider = context.read<TaskProvider>();
-  final pendingTasks = taskProvider.tasks.where((t) => !t.isCompleted).toList();
-
-  if (pendingTasks.isEmpty) {
-    cubit.start();
-    return;
-  }
-
-  showDialog<String?>(
+  showDialog<dynamic>(
     context: context,
-    builder: (ctx) {
-      return Dialog(
-        backgroundColor: AppColors.surface,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Text(
-                'Selecciona una tarea para enfocarte',
-                style: AppTypography.h3,
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 16),
-              Flexible(
-                child: ListView.builder(
-                  shrinkWrap: true,
-                  itemCount: pendingTasks.length,
-                  itemBuilder: (context, index) {
-                    final task = pendingTasks[index];
-                    return ListTile(
-                      leading: Icon(
-                        Icons.check_circle_outline,
-                        color: Color(task.priorityColorValue),
-                      ),
-                      title: Text(task.title, style: AppTypography.bodyMedium),
-                      subtitle: Text(
-                        '${task.pomodorosCompleted} / ${task.pomodorosTarget} Pomodoros',
-                        style: TextStyle(color: Colors.white54, fontSize: 12),
-                      ),
-                      onTap: () => Navigator.pop(ctx, task.id),
-                    );
-                  },
-                ),
-              ),
-              const Divider(color: AppColors.cardBorder),
-              ListTile(
-                leading: const Icon(Icons.play_arrow, color: Colors.white54),
-                title: const Text(
-                  'Empezar sin tarea',
-                  style: TextStyle(color: Colors.white54),
-                ),
-                onTap: () => Navigator.pop(ctx, 'NO_TASK'),
-              ),
-            ],
-          ),
-        ),
-      );
-    },
-  ).then((taskId) {
-    if (taskId == 'NO_TASK') {
+    builder: (ctx) => const TaskSelectionDialog(),
+  ).then((result) {
+    if (result == 'NO_TASK') {
       cubit.start();
-    } else if (taskId != null) {
-      final task = pendingTasks.firstWhere((t) => t.id == taskId);
-      cubit.start(taskId: task.id, taskTitle: task.title);
+    } else if (result != null && result is Map) {
+      final taskId = result['id'] as String;
+      final taskTitle = result['title'] as String;
+      cubit.start(taskId: taskId, taskTitle: taskTitle);
     }
   });
 }

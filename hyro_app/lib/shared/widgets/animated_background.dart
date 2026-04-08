@@ -64,7 +64,7 @@ class _AnimatedBackgroundState extends State<AnimatedBackground>
               );
             },
           ),
-          
+
           // Secondary color (Vibrant Violet) blob
           AnimatedBuilder(
             animation: _controller,
@@ -120,9 +120,7 @@ class _AnimatedBackgroundState extends State<AnimatedBackground>
           Positioned.fill(
             child: BackdropFilter(
               filter: ImageFilter.blur(sigmaX: 80, sigmaY: 80),
-              child: Container(
-                color: Colors.transparent,
-              ),
+              child: Container(color: Colors.transparent),
             ),
           ),
         ],

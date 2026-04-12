@@ -292,7 +292,7 @@ class _ShopScreenState extends State<ShopScreen>
                 children: [
                   TabBar(
                     controller: _tabController,
-                    indicatorColor: AppColors.primary,
+                    indicatorColor: AppColors.timerColor,
                     labelColor: AppColors.textPrimary,
                     unselectedLabelColor: AppColors.textSecondary,
                     labelStyle: AppTypography.labelLarge,
@@ -356,13 +356,13 @@ class _ShopScreenState extends State<ShopScreen>
                         decoration: BoxDecoration(
                           color:
                               isSelected
-                                  ? AppColors.primary.withAlpha(30)
+                                  ? AppColors.timerColor.withAlpha(30)
                                   : AppColors.surfaceLight,
                           borderRadius: BorderRadius.circular(16),
                           border: Border.all(
                             color:
                                 isSelected
-                                    ? AppColors.primary
+                                    ? AppColors.timerColor
                                     : AppColors.cardBorder,
                             width: isSelected ? 2 : 1,
                           ),
@@ -461,10 +461,10 @@ class _ShopScreenState extends State<ShopScreen>
     // Not owned — show price and buy button
     final items = _itemsForCategory(shop, category);
     final itemIdx = items.indexWhere((i) => i.id == selected);
-    
+
     // If the selected/equipped item is not in the current catalog (e.g. from old prefs), hide button.
     if (itemIdx == -1) return const SizedBox.shrink();
-    
+
     final item = items[itemIdx];
     return _ShopButton(
       label: _isPurchasing ? 'Comprando...' : 'Comprar · ${item.precio} 🪙',

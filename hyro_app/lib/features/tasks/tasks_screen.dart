@@ -497,104 +497,108 @@ class _TasksScreenState extends State<TasksScreen> {
               ),
               title: Text('Nueva Categoría', style: AppTypography.h3),
               content: SingleChildScrollView(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    TextField(
-                      controller: titleController,
-                      decoration: const InputDecoration(
-                        hintText: 'Nombre de la categoría',
+                child: SizedBox(
+                  width: 400,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      TextField(
+                        controller: titleController,
+                        decoration: const InputDecoration(
+                          hintText: 'Nombre de la categoría',
+                        ),
+                        style: AppTypography.bodyLarge,
                       ),
-                      style: AppTypography.bodyLarge,
-                    ),
-                    const SizedBox(height: 20),
-                    Text('Color', style: AppTypography.bodySmall),
-                    const SizedBox(height: 12),
-                    Wrap(
-                      spacing: 12,
-                      runSpacing: 12,
-                      children:
-                          colors.map((c) {
-                            final isSelected = selectedColor == c;
-                            return GestureDetector(
-                              onTap:
-                                  () => setDialogState(() => selectedColor = c),
-                              child: Container(
-                                width: 36,
-                                height: 36,
-                                decoration: BoxDecoration(
-                                  color: Color(c),
-                                  shape: BoxShape.circle,
-                                  border:
+                      const SizedBox(height: 20),
+                      Text('Color', style: AppTypography.bodySmall),
+                      const SizedBox(height: 12),
+                      Wrap(
+                        spacing: 12,
+                        runSpacing: 12,
+                        children:
+                            colors.map((c) {
+                              final isSelected = selectedColor == c;
+                              return GestureDetector(
+                                onTap:
+                                    () =>
+                                        setDialogState(() => selectedColor = c),
+                                child: Container(
+                                  width: 36,
+                                  height: 36,
+                                  decoration: BoxDecoration(
+                                    color: Color(c),
+                                    shape: BoxShape.circle,
+                                    border:
+                                        isSelected
+                                            ? Border.all(
+                                              color: Colors.white,
+                                              width: 3,
+                                            )
+                                            : null,
+                                  ),
+                                  child:
                                       isSelected
-                                          ? Border.all(
+                                          ? const Icon(
+                                            Icons.check,
+                                            size: 18,
                                             color: Colors.white,
-                                            width: 3,
                                           )
                                           : null,
                                 ),
-                                child:
-                                    isSelected
-                                        ? const Icon(
-                                          Icons.check,
-                                          size: 18,
-                                          color: Colors.white,
-                                        )
-                                        : null,
-                              ),
-                            );
-                          }).toList(),
-                    ),
-                    const SizedBox(height: 20),
-                    Text('Ícono (Opcional)', style: AppTypography.bodySmall),
-                    const SizedBox(height: 12),
-                    Wrap(
-                      spacing: 12,
-                      runSpacing: 12,
-                      children:
-                          icons.map((iconCode) {
-                            final isSelected = selectedIcon == iconCode;
-                            return GestureDetector(
-                              onTap:
-                                  () => setDialogState(
-                                    () =>
-                                        selectedIcon =
-                                            (isSelected ? null : iconCode),
+                              );
+                            }).toList(),
+                      ),
+                      const SizedBox(height: 20),
+                      Text('Ícono (Opcional)', style: AppTypography.bodySmall),
+                      const SizedBox(height: 12),
+                      Wrap(
+                        spacing: 12,
+                        runSpacing: 12,
+                        children:
+                            icons.map((iconCode) {
+                              final isSelected = selectedIcon == iconCode;
+                              return GestureDetector(
+                                onTap:
+                                    () => setDialogState(
+                                      () =>
+                                          selectedIcon =
+                                              (isSelected ? null : iconCode),
+                                    ),
+                                child: Container(
+                                  width: 36,
+                                  height: 36,
+                                  decoration: BoxDecoration(
+                                    color: AppColors.surfaceLight,
+                                    borderRadius: BorderRadius.circular(8),
+                                    border:
+                                        isSelected
+                                            ? Border.all(
+                                              color: AppColors.primary,
+                                              width: 2,
+                                            )
+                                            : Border.all(
+                                              color: Colors.transparent,
+                                              width: 2,
+                                            ),
                                   ),
-                              child: Container(
-                                width: 36,
-                                height: 36,
-                                decoration: BoxDecoration(
-                                  color: AppColors.surfaceLight,
-                                  borderRadius: BorderRadius.circular(8),
-                                  border:
-                                      isSelected
-                                          ? Border.all(
-                                            color: AppColors.primary,
-                                            width: 2,
-                                          )
-                                          : Border.all(
-                                            color: Colors.transparent,
-                                            width: 2,
-                                          ),
-                                ),
-                                child: Icon(
-                                  IconData(
-                                    iconCode,
-                                    fontFamily: 'MaterialIcons',
+                                  child: Icon(
+                                    IconData(
+                                      iconCode,
+                                      fontFamily: 'MaterialIcons',
+                                    ),
+                                    size: 20,
+                                    color:
+                                        isSelected
+                                            ? AppColors.primary
+                                            : Colors.white70,
                                   ),
-                                  size: 20,
-                                  color:
-                                      isSelected
-                                          ? AppColors.primary
-                                          : Colors.white70,
                                 ),
-                              ),
-                            );
-                          }).toList(),
-                    ),
-                  ],
+                              );
+                            }).toList(),
+                      ),
+                    ],
+                  ),
                 ),
               ),
               actions: [
@@ -650,149 +654,158 @@ class _TasksScreenState extends State<TasksScreen> {
               ),
               title: Text('Nueva Tarea', style: AppTypography.h3),
               content: SingleChildScrollView(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    TextField(
-                      controller: titleController,
-                      decoration: const InputDecoration(
-                        hintText: 'Título de la tarea',
+                child: SizedBox(
+                  width: 400,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      TextField(
+                        controller: titleController,
+                        decoration: const InputDecoration(
+                          hintText: 'Título de la tarea',
+                        ),
+                        style: AppTypography.bodyLarge,
                       ),
-                      style: AppTypography.bodyLarge,
-                    ),
-                    const SizedBox(height: 12),
-                    TextField(
-                      controller: descriptionController,
-                      decoration: const InputDecoration(
-                        hintText: 'Descripción (opcional)',
+                      const SizedBox(height: 12),
+                      TextField(
+                        controller: descriptionController,
+                        decoration: const InputDecoration(
+                          hintText: 'Descripción (opcional)',
+                        ),
+                        style: AppTypography.bodyLarge,
                       ),
-                      style: AppTypography.bodyLarge,
-                    ),
-                    const SizedBox(height: 20),
-                    Text('Prioridad', style: AppTypography.bodySmall),
-                    const SizedBox(height: 8),
-                    DropdownButtonFormField<String>(
-                      initialValue: selectedPriority,
-                      dropdownColor: AppColors.surfaceLight,
-                      items:
-                          ['ALTA PRIORIDAD', 'MEDIA', 'BAJA'].map((p) {
-                            return DropdownMenuItem(value: p, child: Text(p));
-                          }).toList(),
-                      onChanged: (val) {
-                        if (val != null) {
-                          setDialogState(() => selectedPriority = val);
-                        }
-                      },
-                    ),
-                    const SizedBox(height: 20),
-                    Text(
-                      'Fecha de Vencimiento (Opcional)',
-                      style: AppTypography.bodySmall,
-                    ),
-                    const SizedBox(height: 8),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: InkWell(
-                            onTap: () async {
-                              final date = await showDatePicker(
-                                context: context,
-                                initialDate: selectedDueDate ?? DateTime.now(),
-                                firstDate: DateTime.now(),
-                                lastDate: DateTime.now().add(
-                                  const Duration(days: 365),
-                                ),
-                              );
-                              if (date != null) {
-                                setDialogState(() => selectedDueDate = date);
-                              }
-                            },
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 12,
-                                vertical: 12,
-                              ),
-                              decoration: BoxDecoration(
-                                color: AppColors.surfaceLight,
-                                borderRadius: BorderRadius.circular(8),
-                                border: Border.all(color: AppColors.cardBorder),
-                              ),
-                              child: Text(
-                                selectedDueDate != null
-                                    ? '${selectedDueDate!.day}/${selectedDueDate!.month}/${selectedDueDate!.year}'
-                                    : 'Seleccionar Fecha',
-                                style: AppTypography.bodyMedium,
-                              ),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: InkWell(
-                            onTap: () async {
-                              final time = await showTimePicker(
-                                context: context,
-                                initialTime: selectedDueTime ?? TimeOfDay.now(),
-                              );
-                              if (time != null) {
-                                setDialogState(() => selectedDueTime = time);
-                              }
-                            },
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 12,
-                                vertical: 12,
-                              ),
-                              decoration: BoxDecoration(
-                                color: AppColors.surfaceLight,
-                                borderRadius: BorderRadius.circular(8),
-                                border: Border.all(color: AppColors.cardBorder),
-                              ),
-                              child: Text(
-                                selectedDueTime != null
-                                    ? selectedDueTime!.format(context)
-                                    : 'Seleccionar Hora',
-                                style: AppTypography.bodyMedium,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 20),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          'Pomodoros requeridos:',
-                          style: AppTypography.bodySmall,
-                        ),
-                        Row(
-                          children: [
-                            IconButton(
-                              icon: const Icon(Icons.remove_circle_outline),
-                              onPressed: () {
-                                if (pomodorosTarget > 1) {
-                                  setDialogState(() => pomodorosTarget--);
+                      const SizedBox(height: 20),
+                      Text('Prioridad', style: AppTypography.bodySmall),
+                      const SizedBox(height: 8),
+                      DropdownButtonFormField<String>(
+                        initialValue: selectedPriority,
+                        dropdownColor: AppColors.surfaceLight,
+                        items:
+                            ['ALTA PRIORIDAD', 'MEDIA', 'BAJA'].map((p) {
+                              return DropdownMenuItem(value: p, child: Text(p));
+                            }).toList(),
+                        onChanged: (val) {
+                          if (val != null) {
+                            setDialogState(() => selectedPriority = val);
+                          }
+                        },
+                      ),
+                      const SizedBox(height: 20),
+                      Text(
+                        'Fecha de Vencimiento (Opcional)',
+                        style: AppTypography.bodySmall,
+                      ),
+                      const SizedBox(height: 8),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: InkWell(
+                              onTap: () async {
+                                final date = await showDatePicker(
+                                  context: context,
+                                  initialDate:
+                                      selectedDueDate ?? DateTime.now(),
+                                  firstDate: DateTime.now(),
+                                  lastDate: DateTime.now().add(
+                                    const Duration(days: 365),
+                                  ),
+                                );
+                                if (date != null) {
+                                  setDialogState(() => selectedDueDate = date);
                                 }
                               },
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 12,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: AppColors.surfaceLight,
+                                  borderRadius: BorderRadius.circular(8),
+                                  border: Border.all(
+                                    color: AppColors.cardBorder,
+                                  ),
+                                ),
+                                child: Text(
+                                  selectedDueDate != null
+                                      ? '${selectedDueDate!.day}/${selectedDueDate!.month}/${selectedDueDate!.year}'
+                                      : 'Seleccionar Fecha',
+                                  style: AppTypography.bodyMedium,
+                                ),
+                              ),
                             ),
-                            Text(
-                              '$pomodorosTarget',
-                              style: AppTypography.bodyLarge,
-                            ),
-                            IconButton(
-                              icon: const Icon(Icons.add_circle_outline),
-                              onPressed: () {
-                                setDialogState(() => pomodorosTarget++);
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: InkWell(
+                              onTap: () async {
+                                final time = await showTimePicker(
+                                  context: context,
+                                  initialTime:
+                                      selectedDueTime ?? TimeOfDay.now(),
+                                );
+                                if (time != null) {
+                                  setDialogState(() => selectedDueTime = time);
+                                }
                               },
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 12,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: AppColors.surfaceLight,
+                                  borderRadius: BorderRadius.circular(8),
+                                  border: Border.all(
+                                    color: AppColors.cardBorder,
+                                  ),
+                                ),
+                                child: Text(
+                                  selectedDueTime != null
+                                      ? selectedDueTime!.format(context)
+                                      : 'Seleccionar Hora',
+                                  style: AppTypography.bodyMedium,
+                                ),
+                              ),
                             ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ],
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 20),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            'Pomodoros requeridos:',
+                            style: AppTypography.bodySmall,
+                          ),
+                          Row(
+                            children: [
+                              IconButton(
+                                icon: const Icon(Icons.remove_circle_outline),
+                                onPressed: () {
+                                  if (pomodorosTarget > 1) {
+                                    setDialogState(() => pomodorosTarget--);
+                                  }
+                                },
+                              ),
+                              Text(
+                                '$pomodorosTarget',
+                                style: AppTypography.bodyLarge,
+                              ),
+                              IconButton(
+                                icon: const Icon(Icons.add_circle_outline),
+                                onPressed: () {
+                                  setDialogState(() => pomodorosTarget++);
+                                },
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
               ),
               actions: [
@@ -829,10 +842,10 @@ class _TasksScreenState extends State<TasksScreen> {
 
                     final categories =
                         context.read<CategoryProvider>().categories;
-                    
+
                     String? resolvedCatName = initialCategory;
                     String? resolvedCatId = categoryId;
-                    
+
                     if (resolvedCatId == 'all' || resolvedCatName == 'Todas') {
                       if (categories.isNotEmpty) {
                         resolvedCatName = categories.first.name;
@@ -1333,7 +1346,7 @@ class _TaskTile extends StatelessWidget {
                             Icon(
                               Icons.local_fire_department,
                               size: 16,
-                              color: AppColors.primary,
+                              color: Color(0xFFFFA600),
                             ),
                             const SizedBox(width: 4),
                             Flexible(

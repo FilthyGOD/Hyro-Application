@@ -19,7 +19,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   @override
   Widget build(BuildContext context) {
     final settings = context.watch<SettingsProvider>();
-    
+
     return SingleChildScrollView(
       padding:
           MediaQuery.of(context).size.width < 800
@@ -84,18 +84,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   },
                 ),
                 const SizedBox(height: 16),
-                _SliderSetting(
-                  label: 'Descanso Largo',
-                  value: settings.longBreakDuration,
-                  min: 5,
-                  max: 30,
-                  suffix: 'min',
-                  onChanged: (v) {
-                    settings.setLongBreakDuration(v);
-                    context.read<TimerCubit>().refreshIfIdle();
-                  },
-                ),
-                const SizedBox(height: 16),
                 _TimerSizeSelector(
                   currentSize: settings.timerSize,
                   onSizeChanged: (v) {
@@ -114,13 +102,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text('Preferencias', style: AppTypography.h3),
-                const SizedBox(height: 16),
-                _ToggleSetting(
-                  label: 'Notificaciones',
-                  subtitle: 'Recibe notificaciones al terminar el temporizador',
-                  value: settings.notificationsEnabled,
-                  onChanged: (v) => settings.setNotificationsEnabled(v),
-                ),
                 const Divider(height: 24),
                 _ToggleSetting(
                   label: 'Pausa Automática',
@@ -131,23 +112,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 const Divider(height: 24),
                 _ToggleSetting(
                   label: 'Modo Estricto',
-                  subtitle: 'Bloquea salir de la pantalla mientras el temporizador esté activo',
+                  subtitle:
+                      'Bloquea salir de la pantalla mientras el temporizador esté activo',
                   value: settings.strictMode,
                   onChanged: (v) => settings.setStrictMode(v),
-                ),
-                const Divider(height: 24),
-                _ToggleSetting(
-                  label: 'Ocultar Tarjetas',
-                  subtitle: 'Oculta las tarjetas de tareas y estadísticas en la vista de enfoque',
-                  value: settings.hideFocusCards,
-                  onChanged: (v) => settings.setHideFocusCards(v),
-                ),
-                const Divider(height: 24),
-                _ToggleSetting(
-                  label: 'Modo Oscuro',
-                  subtitle: 'Usar tema oscuro',
-                  value: true, // App uses hardcoded dark theme for now
-                  onChanged: (v) {},
                 ),
                 const Divider(height: 24),
                 _ToggleSetting(
@@ -160,17 +128,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   },
                 ),
                 if (settings.focusQuizEnabled) ...[
-                   const SizedBox(height: 16),
-                   _SliderSetting(
-                     label: 'Intervalo del Quiz',
-                     value: settings.focusQuizIntervalMinutes,
-                     min: 1,
-                     max: 15,
-                     suffix: 'min',
-                     onChanged: (v) {
-                        settings.setFocusQuizIntervalMinutes(v);
-                     },
-                   ),
+                  const SizedBox(height: 16),
+                  _SliderSetting(
+                    label: 'Intervalo del Quiz',
+                    value: settings.focusQuizIntervalMinutes,
+                    min: 1,
+                    max: 15,
+                    suffix: 'min',
+                    onChanged: (v) {
+                      settings.setFocusQuizIntervalMinutes(v);
+                    },
+                  ),
                 ],
               ],
             ),
@@ -217,7 +185,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   builder: (context, ui, _) {
                     return _ToggleSetting(
                       label: 'Barra de Música',
-                      subtitle: 'Mostrar controles de música en la parte inferior',
+                      subtitle:
+                          'Mostrar controles de música en la parte inferior',
                       value: ui.isMusicBarVisible,
                       onChanged: (v) => ui.setMusicBarVisibility(v),
                     );
@@ -375,7 +344,9 @@ class _TimerSizeSelector extends StatelessWidget {
                 }
                 return Colors.white70;
               }),
-              side: WidgetStateProperty.all(const BorderSide(color: AppColors.cardBorder)),
+              side: WidgetStateProperty.all(
+                const BorderSide(color: AppColors.cardBorder),
+              ),
             ),
           ),
         ),

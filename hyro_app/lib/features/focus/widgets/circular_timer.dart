@@ -15,7 +15,7 @@ class CircularTimer extends StatelessWidget {
     super.key,
     required this.remainingSeconds,
     required this.progress,
-    this.label = 'TIEMPO HASTA EL DESCANSO',
+    this.label = '',
     this.size = 300,
   });
 
@@ -50,8 +50,10 @@ class CircularTimer extends StatelessWidget {
                     FormatTime.mmss(remainingSeconds),
                     style: AppTypography.timerDisplay,
                   ),
-                  const SizedBox(height: 4),
-                  Text(label, style: AppTypography.timerLabel),
+                  if (label.isNotEmpty) ...[
+                    const SizedBox(height: 4),
+                    Text(label, style: AppTypography.timerLabel),
+                  ],
                 ],
               ),
             ),

@@ -3,7 +3,7 @@ import 'package:window_manager/window_manager.dart';
 import 'dart:io';
 
 class UiProvider with ChangeNotifier {
-  bool _isMusicBarVisible = true;
+  bool _isMusicBarVisible = false;
   bool _isMusicBarMinimized = false;
   bool _isMiniMode = false;
 
@@ -29,7 +29,7 @@ class UiProvider with ChangeNotifier {
   Future<void> setMiniMode(bool mini) async {
     if (_isMiniMode == mini) return;
     _isMiniMode = mini;
-    
+
     if (!Platform.isAndroid && !Platform.isIOS) {
       if (mini) {
         await windowManager.setAlwaysOnTop(true);

@@ -178,7 +178,6 @@ class _DesktopLayout extends StatelessWidget {
                                     CircularTimer(
                                       remainingSeconds: state.remainingSeconds,
                                       progress: state.progress,
-                                      label: _getTimerLabel(state.mode),
                                       size: timerSize,
                                     ),
                                     const SizedBox(height: 16),
@@ -315,14 +314,7 @@ class _DesktopLayout extends StatelessWidget {
   }
 
   String _getTimerLabel(TimerMode mode) {
-    switch (mode) {
-      case TimerMode.pomodoro:
-        return 'TIEMPO HASTA EL DESCANSO';
-      case TimerMode.shortBreak:
-        return 'DESCANSO CORTO';
-      case TimerMode.longBreak:
-        return 'DESCANSO LARGO';
-    }
+    return '';
   }
 }
 
@@ -364,7 +356,6 @@ class _MobileLayout extends StatelessWidget {
                     return CircularTimer(
                       remainingSeconds: state.remainingSeconds,
                       progress: state.progress,
-                      label: _getTimerLabel(state.mode),
                       size: size,
                     );
                   },
@@ -447,7 +438,6 @@ class _MobileLayout extends StatelessWidget {
                   return CircularTimer(
                     remainingSeconds: state.remainingSeconds,
                     progress: state.progress,
-                    label: _getTimerLabel(state.mode),
                     size: size,
                   );
                 },
@@ -479,14 +469,7 @@ class _MobileLayout extends StatelessWidget {
   }
 
   String _getTimerLabel(TimerMode mode) {
-    switch (mode) {
-      case TimerMode.pomodoro:
-        return 'TIEMPO HASTA EL DESCANSO';
-      case TimerMode.shortBreak:
-        return 'DESCANSO CORTO';
-      case TimerMode.longBreak:
-        return 'DESCANSO LARGO';
-    }
+    return '';
   }
 }
 

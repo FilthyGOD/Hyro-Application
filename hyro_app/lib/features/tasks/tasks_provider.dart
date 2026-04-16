@@ -124,4 +124,21 @@ class TaskProvider extends ChangeNotifier {
   List<TaskModel> get filteredTasks {
     return _tasks;
   }
+
+  /// Delete orphaned tasks that don't belong to any existing category.
+  Future<void> deleteOrphanedTasks(List<String> validCategoryNames, List<String> validCategoryIds) async {
+    final orphans = _tasks.where((t) {
+      final matchesName = t.category != null && validCategoryNames.contains(t.category);
+      final matchesId = t.categoryId != null && validCategoryIds.contains(t.categoryId);
+      return !matchesName && !matchesId;
+    }).toList();
+
+    for (final orphan in orphans) {
+      debugPrint('Deleting orphaned task: ${orphan.title} (${orphan.id})');
+      await _repository.deleteTask(orphan.id);
+    }
+
+    _tasks.removeWhere((t) => orphans.any((o) => o.id == t.id));
+    if (orphans.isNotEmpty) notifyListeners();
+  }
 }

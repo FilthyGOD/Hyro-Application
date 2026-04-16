@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:provider/provider.dart';
 import '../../core/theme/app_typography.dart';
 import 'bloc/timer_cubit.dart';
 import 'bloc/timer_state.dart';
@@ -18,7 +17,6 @@ import '../../providers/ui_provider.dart';
 import 'widgets/focus_quiz_dialog.dart';
 import '../../data/local/card_local_ds.dart';
 import '../../data/local/note_local_ds.dart';
-import '../../data/models/task_model.dart';
 import '../tasks/tasks_provider.dart';
 
 /// The main Focus screen with the Pomodoro timer and sidebar widgets.
@@ -306,10 +304,6 @@ class _DesktopLayout extends StatelessWidget {
       ],
     );
   }
-
-  String _getTimerLabel(TimerMode mode) {
-    return '';
-  }
 }
 
 // ── Mobile: single-column scrollable layout ──
@@ -456,10 +450,6 @@ class _MobileLayout extends StatelessWidget {
         ),
       ),
     );
-  }
-
-  String _getTimerLabel(TimerMode mode) {
-    return '';
   }
 }
 

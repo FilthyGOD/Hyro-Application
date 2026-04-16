@@ -184,6 +184,11 @@ class AppShellState extends State<AppShell> with WidgetsBindingObserver {
     taskProvider.isAuthenticated = () => isAuth;
     taskProvider.getUserId = () => userId;
     await taskProvider.reload();
+
+    // Clean up orphaned tasks that don't belong to any existing category
+    final validNames = categoryProvider.categories.map((c) => c.name).toList();
+    final validIds = categoryProvider.categories.map((c) => c.id).toList();
+    await taskProvider.deleteOrphanedTasks(validNames, validIds);
     
     final profileProvider = context.read<ProfileProvider>();
     final shopProvider = context.read<ShopProvider>();

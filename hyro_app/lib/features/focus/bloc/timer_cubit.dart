@@ -159,11 +159,18 @@ class TimerCubit extends Cubit<TimerState> {
       final focusMinutes = state.totalSeconds ~/ 60;
       final newFocusMinutes = state.totalFocusMinutes + focusMinutes;
 
-      // Tell stats provider to record this session
-      statsProvider?.addFocusSession(focusMinutes);
+      final userId = authProvider?.supabaseUserId;
+      
+      // Tell stats provider to record this session locally and sync to cloud
+      statsProvider?.addFocusSession(focusMinutes, userId);
+
+      Future.microtask(() {
+         // After it updates local StatsBox, we capture the newest real dynamic streak
+         final currentDynamicStreak = statsProvider?.currentStreak ?? 0;
+         profileProvider?.syncDynamicStats(userId, currentDynamicStreak, focusMinutes);
+      });
 
       // ── Gamification hooks ──
-      final userId = authProvider?.supabaseUserId;
       // 10 XP per completed pomodoro (grantXP natively supports local accounts)
       profileProvider?.grantXP(userId, 10);
       // Update mission progress

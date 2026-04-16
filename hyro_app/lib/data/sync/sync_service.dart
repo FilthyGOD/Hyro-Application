@@ -15,6 +15,9 @@ import '../models/category_model.dart';
 import '../models/tarea_nota_model.dart';
 import '../models/tarea_fuente_model.dart';
 import '../models/tarea_card_model.dart';
+import '../models/daily_stats.dart';
+import 'package:hive_flutter/hive_flutter.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'sync_status.dart';
 
 /// Orchestrates the one-time migration of ALL local data to Supabase
@@ -241,6 +244,42 @@ class SyncService {
 
       result.success = true;
       debugPrint('✅ Pull completo: $result');
+
+      // ─── STEP 6: Estadísticas / Sesiones de Enfoque ────────────────
+      debugPrint('⬇️ Pull Step 6/6: Descargando sesiones de enfoque (Stats)...');
+      try {
+        final supabaseClient = Supabase.instance.client;
+        final sesionesMaps = await supabaseClient
+            .from('sesiones_enfoque')
+            .select('duracion_minutos, completada_en')
+            .eq('usuario_id', userId);
+            
+        final statsMap = <String, DailyStats>{};
+        for (final map in sesionesMaps) {
+          final completadaEnStr = map['completada_en'] as String?;
+          if (completadaEnStr == null) continue;
+          final completadaEn = DateTime.parse(completadaEnStr).toLocal();
+          final dateKey = '${completadaEn.year}-${completadaEn.month.toString().padLeft(2, '0')}-${completadaEn.day.toString().padLeft(2, '0')}';
+          final duracion = (map['duracion_minutos'] as num?)?.toInt() ?? 0;
+          
+          if (!statsMap.containsKey(dateKey)) {
+            statsMap[dateKey] = DailyStats(date: dateKey);
+          }
+          statsMap[dateKey]!.focusSessions += 1;
+          statsMap[dateKey]!.focusMinutes += duracion;
+        }
+        
+        if (Hive.isBoxOpen('statsBox')) {
+          final statsBox = Hive.box<DailyStats>('statsBox');
+          await statsBox.clear();
+          for (final stat in statsMap.values) {
+            await statsBox.put(stat.date, stat);
+          }
+        }
+        debugPrint('   ✅ ${statsMap.length} días de estadísticas guardados localmente');
+      } catch (e) {
+        debugPrint('   ⚠️ Error descargando estadísticas: $e');
+      }
     } catch (e) {
       result.success = false;
       result.errors.add('Error descargando datos: $e');

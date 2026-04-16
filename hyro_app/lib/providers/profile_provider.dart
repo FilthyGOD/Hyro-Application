@@ -13,6 +13,14 @@ class ProfileProvider extends ChangeNotifier {
   int nivel = 1;
   int experiencia = 0;
   int monedas = 0;
+  
+  // Offline-first variables
+  int rachaActual = 0;
+  int rachaMaxima = 0;
+  int minutosEnfoqueTotal = 0;
+  int tareasCompletadas = 0;
+  int sesionesMes = 0;
+  
   bool isLoading = false;
   String? _error;
 
@@ -30,25 +38,68 @@ class ProfileProvider extends ChangeNotifier {
     });
 
     try {
-      if (userId == null) {
-        final activeUser = await isar.userProfiles.filter().isActivelyLoggedInEqualTo(true).findFirst();
-        if (activeUser != null) {
-          nivel = activeUser.nivel;
-          experiencia = activeUser.experiencia;
-          monedas = activeUser.monedas;
-        }
-      } else {
-        final response =
-            await _supabase
-                .from('perfiles')
-                .select('nivel, experiencia, monedas')
-                .eq('id', userId)
-                .maybeSingle();
+      // Siempre leemos de local (Isar) primero para Offline-First
+      final activeUser = await isar.userProfiles.filter().isActivelyLoggedInEqualTo(true).findFirst();
+      if (activeUser != null) {
+        nivel = activeUser.nivel;
+        experiencia = activeUser.experiencia;
+        monedas = activeUser.monedas;
+        rachaActual = activeUser.rachaActual;
+        rachaMaxima = activeUser.rachaMaxima;
+        minutosEnfoqueTotal = activeUser.minutosEnfoqueTotal;
+        tareasCompletadas = activeUser.tareasCompletadasTotal;
+        sesionesMes = activeUser.sesionesMes;
+        // Notificamos para que la UI se renderice inmediatamente con datos locales
+        notifyListeners();
+      }
 
-        if (response != null) {
-          nivel = (response['nivel'] as num?)?.toInt() ?? 1;
-          experiencia = (response['experiencia'] as num?)?.toInt() ?? 0;
-          monedas = (response['monedas'] as num?)?.toInt() ?? 0;
+      // Si hay sesión online, intentamos sincronizar desde Supabase
+      if (userId != null) {
+        try {
+          final response = await _supabase
+              .from('perfiles')
+              .select('nivel, experiencia, monedas, racha_actual, racha_maxima, minutos_enfoque_total, tareas_completadas_total')
+              .eq('id', userId)
+              .maybeSingle();
+
+          // Calculamos sesiones del mes
+          final now = DateTime.now();
+          final startOfMonth = DateTime(now.year, now.month, 1).toUtc().toIso8601String();
+          final endOfMonth = DateTime(now.year, now.month + 1, 0, 23, 59, 59).toUtc().toIso8601String();
+          final sessionsCount = await _supabase
+              .from('sesiones_enfoque')
+              .select('id')
+              .gte('completada_en', startOfMonth)
+              .lte('completada_en', endOfMonth)
+              .count(CountOption.exact);
+
+          final countVal = sessionsCount.count ?? 0;
+
+          if (response != null && activeUser != null) {
+            await isar.writeTxn(() async {
+              activeUser.nivel = (response['nivel'] as num?)?.toInt() ?? 1;
+              activeUser.experiencia = (response['experiencia'] as num?)?.toInt() ?? 0;
+              activeUser.monedas = (response['monedas'] as num?)?.toInt() ?? 0;
+              activeUser.rachaActual = (response['racha_actual'] as num?)?.toInt() ?? 0;
+              activeUser.rachaMaxima = (response['racha_maxima'] as num?)?.toInt() ?? 0;
+              activeUser.minutosEnfoqueTotal = (response['minutos_enfoque_total'] as num?)?.toInt() ?? 0;
+              activeUser.tareasCompletadasTotal = (response['tareas_completadas_total'] as num?)?.toInt() ?? 0;
+              activeUser.sesionesMes = countVal;
+              await isar.userProfiles.put(activeUser);
+            });
+            
+            // Actualizamos en memoria
+            nivel = activeUser.nivel;
+            experiencia = activeUser.experiencia;
+            monedas = activeUser.monedas;
+            rachaActual = activeUser.rachaActual;
+            rachaMaxima = activeUser.rachaMaxima;
+            minutosEnfoqueTotal = activeUser.minutosEnfoqueTotal;
+            tareasCompletadas = activeUser.tareasCompletadasTotal;
+            sesionesMes = activeUser.sesionesMes;
+          }
+        } catch (syncError) {
+          debugPrint('Error de sincronización con Supabase (ignorado por Offline-First): $syncError');
         }
       }
     } catch (e) {
@@ -99,6 +150,40 @@ class ProfileProvider extends ChangeNotifier {
         debugPrint(_error);
         notifyListeners();
       });
+    }
+  }
+
+  /// Syncs newly calculated offline-first gamification metrics locally and to Supabase
+  Future<void> syncDynamicStats(String? userId, int dynamicStreak, int newlyAddedMinutes) async {
+    final activeUser = await isar.userProfiles.filter().isActivelyLoggedInEqualTo(true).findFirst();
+    if (activeUser != null) {
+      await isar.writeTxn(() async {
+        activeUser.rachaActual = dynamicStreak;
+        if (dynamicStreak > activeUser.rachaMaxima) {
+          activeUser.rachaMaxima = dynamicStreak;
+        }
+        activeUser.minutosEnfoqueTotal += newlyAddedMinutes;
+        activeUser.sesionesMes += 1;
+        await isar.userProfiles.put(activeUser);
+      });
+
+      rachaActual = activeUser.rachaActual;
+      rachaMaxima = activeUser.rachaMaxima;
+      minutosEnfoqueTotal = activeUser.minutosEnfoqueTotal;
+      sesionesMes = activeUser.sesionesMes;
+      notifyListeners();
+
+      if (userId != null) {
+        try {
+          await _supabase.from('perfiles').update({
+            'racha_actual': rachaActual,
+            'racha_maxima': rachaMaxima,
+            'minutos_enfoque_total': minutosEnfoqueTotal,
+          }).eq('id', userId);
+        } catch (e) {
+          debugPrint('⚠️ Not online to sync profile gamification directly: $e');
+        }
+      }
     }
   }
 

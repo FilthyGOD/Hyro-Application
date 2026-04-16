@@ -28,4 +28,11 @@ class UserProfile {
   int monedas = 0;
   List<int> comprasLocales = [];
   int? itemEquipadoLocal;
+
+  // Offline-first user profile statistics
+  int rachaActual = 0;
+  int rachaMaxima = 0;
+  int minutosEnfoqueTotal = 0;
+  int tareasCompletadasTotal = 0;
+  int sesionesMes = 0;
 }

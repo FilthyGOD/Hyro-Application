@@ -37,34 +37,59 @@ const UserProfileSchema = CollectionSchema(
       name: r'itemEquipadoLocal',
       type: IsarType.long,
     ),
-    r'monedas': PropertySchema(
+    r'minutosEnfoqueTotal': PropertySchema(
       id: 4,
+      name: r'minutosEnfoqueTotal',
+      type: IsarType.long,
+    ),
+    r'monedas': PropertySchema(
+      id: 5,
       name: r'monedas',
       type: IsarType.long,
     ),
     r'name': PropertySchema(
-      id: 5,
+      id: 6,
       name: r'name',
       type: IsarType.string,
     ),
     r'nivel': PropertySchema(
-      id: 6,
+      id: 7,
       name: r'nivel',
       type: IsarType.long,
     ),
+    r'rachaActual': PropertySchema(
+      id: 8,
+      name: r'rachaActual',
+      type: IsarType.long,
+    ),
+    r'rachaMaxima': PropertySchema(
+      id: 9,
+      name: r'rachaMaxima',
+      type: IsarType.long,
+    ),
     r'schoolCode': PropertySchema(
-      id: 7,
+      id: 10,
       name: r'schoolCode',
       type: IsarType.string,
     ),
+    r'sesionesMes': PropertySchema(
+      id: 11,
+      name: r'sesionesMes',
+      type: IsarType.long,
+    ),
+    r'tareasCompletadasTotal': PropertySchema(
+      id: 12,
+      name: r'tareasCompletadasTotal',
+      type: IsarType.long,
+    ),
     r'type': PropertySchema(
-      id: 8,
+      id: 13,
       name: r'type',
       type: IsarType.byte,
       enumMap: _UserProfiletypeEnumValueMap,
     ),
     r'usernameOrEmail': PropertySchema(
-      id: 9,
+      id: 14,
       name: r'usernameOrEmail',
       type: IsarType.string,
     )
@@ -130,12 +155,17 @@ void _userProfileSerialize(
   writer.writeLong(offsets[1], object.experiencia);
   writer.writeBool(offsets[2], object.isActivelyLoggedIn);
   writer.writeLong(offsets[3], object.itemEquipadoLocal);
-  writer.writeLong(offsets[4], object.monedas);
-  writer.writeString(offsets[5], object.name);
-  writer.writeLong(offsets[6], object.nivel);
-  writer.writeString(offsets[7], object.schoolCode);
-  writer.writeByte(offsets[8], object.type.index);
-  writer.writeString(offsets[9], object.usernameOrEmail);
+  writer.writeLong(offsets[4], object.minutosEnfoqueTotal);
+  writer.writeLong(offsets[5], object.monedas);
+  writer.writeString(offsets[6], object.name);
+  writer.writeLong(offsets[7], object.nivel);
+  writer.writeLong(offsets[8], object.rachaActual);
+  writer.writeLong(offsets[9], object.rachaMaxima);
+  writer.writeString(offsets[10], object.schoolCode);
+  writer.writeLong(offsets[11], object.sesionesMes);
+  writer.writeLong(offsets[12], object.tareasCompletadasTotal);
+  writer.writeByte(offsets[13], object.type.index);
+  writer.writeString(offsets[14], object.usernameOrEmail);
 }
 
 UserProfile _userProfileDeserialize(
@@ -150,14 +180,19 @@ UserProfile _userProfileDeserialize(
   object.id = id;
   object.isActivelyLoggedIn = reader.readBool(offsets[2]);
   object.itemEquipadoLocal = reader.readLongOrNull(offsets[3]);
-  object.monedas = reader.readLong(offsets[4]);
-  object.name = reader.readStringOrNull(offsets[5]);
-  object.nivel = reader.readLong(offsets[6]);
-  object.schoolCode = reader.readStringOrNull(offsets[7]);
+  object.minutosEnfoqueTotal = reader.readLong(offsets[4]);
+  object.monedas = reader.readLong(offsets[5]);
+  object.name = reader.readStringOrNull(offsets[6]);
+  object.nivel = reader.readLong(offsets[7]);
+  object.rachaActual = reader.readLong(offsets[8]);
+  object.rachaMaxima = reader.readLong(offsets[9]);
+  object.schoolCode = reader.readStringOrNull(offsets[10]);
+  object.sesionesMes = reader.readLong(offsets[11]);
+  object.tareasCompletadasTotal = reader.readLong(offsets[12]);
   object.type =
-      _UserProfiletypeValueEnumMap[reader.readByteOrNull(offsets[8])] ??
+      _UserProfiletypeValueEnumMap[reader.readByteOrNull(offsets[13])] ??
           UserType.personal;
-  object.usernameOrEmail = reader.readString(offsets[9]);
+  object.usernameOrEmail = reader.readString(offsets[14]);
   return object;
 }
 
@@ -179,15 +214,25 @@ P _userProfileDeserializeProp<P>(
     case 4:
       return (reader.readLong(offset)) as P;
     case 5:
-      return (reader.readStringOrNull(offset)) as P;
-    case 6:
       return (reader.readLong(offset)) as P;
-    case 7:
+    case 6:
       return (reader.readStringOrNull(offset)) as P;
+    case 7:
+      return (reader.readLong(offset)) as P;
     case 8:
+      return (reader.readLong(offset)) as P;
+    case 9:
+      return (reader.readLong(offset)) as P;
+    case 10:
+      return (reader.readStringOrNull(offset)) as P;
+    case 11:
+      return (reader.readLong(offset)) as P;
+    case 12:
+      return (reader.readLong(offset)) as P;
+    case 13:
       return (_UserProfiletypeValueEnumMap[reader.readByteOrNull(offset)] ??
           UserType.personal) as P;
-    case 9:
+    case 14:
       return (reader.readString(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -736,6 +781,62 @@ extension UserProfileQueryFilter
     });
   }
 
+  QueryBuilder<UserProfile, UserProfile, QAfterFilterCondition>
+      minutosEnfoqueTotalEqualTo(int value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'minutosEnfoqueTotal',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<UserProfile, UserProfile, QAfterFilterCondition>
+      minutosEnfoqueTotalGreaterThan(
+    int value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'minutosEnfoqueTotal',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<UserProfile, UserProfile, QAfterFilterCondition>
+      minutosEnfoqueTotalLessThan(
+    int value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'minutosEnfoqueTotal',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<UserProfile, UserProfile, QAfterFilterCondition>
+      minutosEnfoqueTotalBetween(
+    int lower,
+    int upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'minutosEnfoqueTotal',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
   QueryBuilder<UserProfile, UserProfile, QAfterFilterCondition> monedasEqualTo(
       int value) {
     return QueryBuilder.apply(this, (query) {
@@ -993,6 +1094,118 @@ extension UserProfileQueryFilter
   }
 
   QueryBuilder<UserProfile, UserProfile, QAfterFilterCondition>
+      rachaActualEqualTo(int value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'rachaActual',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<UserProfile, UserProfile, QAfterFilterCondition>
+      rachaActualGreaterThan(
+    int value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'rachaActual',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<UserProfile, UserProfile, QAfterFilterCondition>
+      rachaActualLessThan(
+    int value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'rachaActual',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<UserProfile, UserProfile, QAfterFilterCondition>
+      rachaActualBetween(
+    int lower,
+    int upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'rachaActual',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<UserProfile, UserProfile, QAfterFilterCondition>
+      rachaMaximaEqualTo(int value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'rachaMaxima',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<UserProfile, UserProfile, QAfterFilterCondition>
+      rachaMaximaGreaterThan(
+    int value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'rachaMaxima',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<UserProfile, UserProfile, QAfterFilterCondition>
+      rachaMaximaLessThan(
+    int value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'rachaMaxima',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<UserProfile, UserProfile, QAfterFilterCondition>
+      rachaMaximaBetween(
+    int lower,
+    int upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'rachaMaxima',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<UserProfile, UserProfile, QAfterFilterCondition>
       schoolCodeIsNull() {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(const FilterCondition.isNull(
@@ -1142,6 +1355,118 @@ extension UserProfileQueryFilter
       return query.addFilterCondition(FilterCondition.greaterThan(
         property: r'schoolCode',
         value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<UserProfile, UserProfile, QAfterFilterCondition>
+      sesionesMesEqualTo(int value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'sesionesMes',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<UserProfile, UserProfile, QAfterFilterCondition>
+      sesionesMesGreaterThan(
+    int value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'sesionesMes',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<UserProfile, UserProfile, QAfterFilterCondition>
+      sesionesMesLessThan(
+    int value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'sesionesMes',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<UserProfile, UserProfile, QAfterFilterCondition>
+      sesionesMesBetween(
+    int lower,
+    int upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'sesionesMes',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<UserProfile, UserProfile, QAfterFilterCondition>
+      tareasCompletadasTotalEqualTo(int value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'tareasCompletadasTotal',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<UserProfile, UserProfile, QAfterFilterCondition>
+      tareasCompletadasTotalGreaterThan(
+    int value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'tareasCompletadasTotal',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<UserProfile, UserProfile, QAfterFilterCondition>
+      tareasCompletadasTotalLessThan(
+    int value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'tareasCompletadasTotal',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<UserProfile, UserProfile, QAfterFilterCondition>
+      tareasCompletadasTotalBetween(
+    int lower,
+    int upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'tareasCompletadasTotal',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
       ));
     });
   }
@@ -1384,6 +1709,20 @@ extension UserProfileQuerySortBy
     });
   }
 
+  QueryBuilder<UserProfile, UserProfile, QAfterSortBy>
+      sortByMinutosEnfoqueTotal() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'minutosEnfoqueTotal', Sort.asc);
+    });
+  }
+
+  QueryBuilder<UserProfile, UserProfile, QAfterSortBy>
+      sortByMinutosEnfoqueTotalDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'minutosEnfoqueTotal', Sort.desc);
+    });
+  }
+
   QueryBuilder<UserProfile, UserProfile, QAfterSortBy> sortByMonedas() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'monedas', Sort.asc);
@@ -1420,6 +1759,30 @@ extension UserProfileQuerySortBy
     });
   }
 
+  QueryBuilder<UserProfile, UserProfile, QAfterSortBy> sortByRachaActual() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'rachaActual', Sort.asc);
+    });
+  }
+
+  QueryBuilder<UserProfile, UserProfile, QAfterSortBy> sortByRachaActualDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'rachaActual', Sort.desc);
+    });
+  }
+
+  QueryBuilder<UserProfile, UserProfile, QAfterSortBy> sortByRachaMaxima() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'rachaMaxima', Sort.asc);
+    });
+  }
+
+  QueryBuilder<UserProfile, UserProfile, QAfterSortBy> sortByRachaMaximaDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'rachaMaxima', Sort.desc);
+    });
+  }
+
   QueryBuilder<UserProfile, UserProfile, QAfterSortBy> sortBySchoolCode() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'schoolCode', Sort.asc);
@@ -1429,6 +1792,32 @@ extension UserProfileQuerySortBy
   QueryBuilder<UserProfile, UserProfile, QAfterSortBy> sortBySchoolCodeDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'schoolCode', Sort.desc);
+    });
+  }
+
+  QueryBuilder<UserProfile, UserProfile, QAfterSortBy> sortBySesionesMes() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'sesionesMes', Sort.asc);
+    });
+  }
+
+  QueryBuilder<UserProfile, UserProfile, QAfterSortBy> sortBySesionesMesDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'sesionesMes', Sort.desc);
+    });
+  }
+
+  QueryBuilder<UserProfile, UserProfile, QAfterSortBy>
+      sortByTareasCompletadasTotal() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'tareasCompletadasTotal', Sort.asc);
+    });
+  }
+
+  QueryBuilder<UserProfile, UserProfile, QAfterSortBy>
+      sortByTareasCompletadasTotalDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'tareasCompletadasTotal', Sort.desc);
     });
   }
 
@@ -1512,6 +1901,20 @@ extension UserProfileQuerySortThenBy
     });
   }
 
+  QueryBuilder<UserProfile, UserProfile, QAfterSortBy>
+      thenByMinutosEnfoqueTotal() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'minutosEnfoqueTotal', Sort.asc);
+    });
+  }
+
+  QueryBuilder<UserProfile, UserProfile, QAfterSortBy>
+      thenByMinutosEnfoqueTotalDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'minutosEnfoqueTotal', Sort.desc);
+    });
+  }
+
   QueryBuilder<UserProfile, UserProfile, QAfterSortBy> thenByMonedas() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'monedas', Sort.asc);
@@ -1548,6 +1951,30 @@ extension UserProfileQuerySortThenBy
     });
   }
 
+  QueryBuilder<UserProfile, UserProfile, QAfterSortBy> thenByRachaActual() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'rachaActual', Sort.asc);
+    });
+  }
+
+  QueryBuilder<UserProfile, UserProfile, QAfterSortBy> thenByRachaActualDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'rachaActual', Sort.desc);
+    });
+  }
+
+  QueryBuilder<UserProfile, UserProfile, QAfterSortBy> thenByRachaMaxima() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'rachaMaxima', Sort.asc);
+    });
+  }
+
+  QueryBuilder<UserProfile, UserProfile, QAfterSortBy> thenByRachaMaximaDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'rachaMaxima', Sort.desc);
+    });
+  }
+
   QueryBuilder<UserProfile, UserProfile, QAfterSortBy> thenBySchoolCode() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'schoolCode', Sort.asc);
@@ -1557,6 +1984,32 @@ extension UserProfileQuerySortThenBy
   QueryBuilder<UserProfile, UserProfile, QAfterSortBy> thenBySchoolCodeDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'schoolCode', Sort.desc);
+    });
+  }
+
+  QueryBuilder<UserProfile, UserProfile, QAfterSortBy> thenBySesionesMes() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'sesionesMes', Sort.asc);
+    });
+  }
+
+  QueryBuilder<UserProfile, UserProfile, QAfterSortBy> thenBySesionesMesDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'sesionesMes', Sort.desc);
+    });
+  }
+
+  QueryBuilder<UserProfile, UserProfile, QAfterSortBy>
+      thenByTareasCompletadasTotal() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'tareasCompletadasTotal', Sort.asc);
+    });
+  }
+
+  QueryBuilder<UserProfile, UserProfile, QAfterSortBy>
+      thenByTareasCompletadasTotalDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'tareasCompletadasTotal', Sort.desc);
     });
   }
 
@@ -1614,6 +2067,13 @@ extension UserProfileQueryWhereDistinct
     });
   }
 
+  QueryBuilder<UserProfile, UserProfile, QDistinct>
+      distinctByMinutosEnfoqueTotal() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'minutosEnfoqueTotal');
+    });
+  }
+
   QueryBuilder<UserProfile, UserProfile, QDistinct> distinctByMonedas() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'monedas');
@@ -1633,10 +2093,35 @@ extension UserProfileQueryWhereDistinct
     });
   }
 
+  QueryBuilder<UserProfile, UserProfile, QDistinct> distinctByRachaActual() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'rachaActual');
+    });
+  }
+
+  QueryBuilder<UserProfile, UserProfile, QDistinct> distinctByRachaMaxima() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'rachaMaxima');
+    });
+  }
+
   QueryBuilder<UserProfile, UserProfile, QDistinct> distinctBySchoolCode(
       {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'schoolCode', caseSensitive: caseSensitive);
+    });
+  }
+
+  QueryBuilder<UserProfile, UserProfile, QDistinct> distinctBySesionesMes() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'sesionesMes');
+    });
+  }
+
+  QueryBuilder<UserProfile, UserProfile, QDistinct>
+      distinctByTareasCompletadasTotal() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'tareasCompletadasTotal');
     });
   }
 
@@ -1690,6 +2175,13 @@ extension UserProfileQueryProperty
     });
   }
 
+  QueryBuilder<UserProfile, int, QQueryOperations>
+      minutosEnfoqueTotalProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'minutosEnfoqueTotal');
+    });
+  }
+
   QueryBuilder<UserProfile, int, QQueryOperations> monedasProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'monedas');
@@ -1708,9 +2200,34 @@ extension UserProfileQueryProperty
     });
   }
 
+  QueryBuilder<UserProfile, int, QQueryOperations> rachaActualProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'rachaActual');
+    });
+  }
+
+  QueryBuilder<UserProfile, int, QQueryOperations> rachaMaximaProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'rachaMaxima');
+    });
+  }
+
   QueryBuilder<UserProfile, String?, QQueryOperations> schoolCodeProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'schoolCode');
+    });
+  }
+
+  QueryBuilder<UserProfile, int, QQueryOperations> sesionesMesProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'sesionesMes');
+    });
+  }
+
+  QueryBuilder<UserProfile, int, QQueryOperations>
+      tareasCompletadasTotalProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'tareasCompletadasTotal');
     });
   }
 

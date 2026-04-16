@@ -7,7 +7,9 @@ import '../../core/theme/app_typography.dart';
 import '../../shared/widgets/glass_card.dart';
 import 'stats_provider.dart';
 import 'widgets/streak_calendar.dart';
+import 'widgets/streak_calendar.dart';
 import '../../providers/ui_provider.dart';
+import '../../providers/profile_provider.dart';
 import '../mascot/mascot_controller.dart';
 
 class StatsScreen extends StatefulWidget {
@@ -29,7 +31,11 @@ class _StatsScreenState extends State<StatsScreen> {
     // Trigger racha animation on entering stats screen
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final mascot = context.read<MascotController>();
-      final streak = context.read<StatsProvider>().currentStreak;
+      
+      // Use ProfileProvider which correctly syncs 'racha_actual' from Supabase
+      final profileProvider = context.read<ProfileProvider>();
+      final streak = profileProvider.rachaActual;
+      
       mascot.triggerRacha(streak);
     });
   }
@@ -55,9 +61,9 @@ class _StatsScreenState extends State<StatsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<StatsProvider>(
-      builder: (context, statsProvider, child) {
-        final streak = statsProvider.currentStreak;
+    return Consumer2<StatsProvider, ProfileProvider>(
+      builder: (context, statsProvider, profileProvider, child) {
+        final streak = profileProvider.rachaActual;
         final monthStats = statsProvider.getStatsForMonth(
           _displayMonth.year,
           _displayMonth.month,

@@ -413,10 +413,12 @@ class _MobileLayout extends StatelessWidget {
     }
 
     return SingleChildScrollView(
-      padding: const EdgeInsets.symmetric(
-        vertical: 20,
-        horizontal: 20,
-      ).copyWith(top: 64),
+      padding: EdgeInsets.only(
+        top: MediaQuery.of(context).padding.top + 72,
+        bottom: 20,
+        left: 20,
+        right: 20,
+      ),
       child: Container(
         width: double.infinity,
         alignment: Alignment.topCenter,

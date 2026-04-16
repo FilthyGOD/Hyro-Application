@@ -51,18 +51,19 @@ class _TasksScreenState extends State<TasksScreen> {
 
           return SingleChildScrollView(
             child: Padding(
-              padding:
-                  isLargeScreen
-                      ? const EdgeInsets.only(
-                        left: 72,
-                        top: 32,
-                        right: 32,
-                        bottom: 32,
-                      )
-                      : const EdgeInsets.symmetric(
-                        horizontal: 24,
-                        vertical: 32,
-                      ),
+              padding: isLargeScreen
+                  ? const EdgeInsets.only(
+                      left: 72,
+                      top: 32,
+                      right: 32,
+                      bottom: 32,
+                    )
+                  : EdgeInsets.only(
+                      top: MediaQuery.of(context).padding.top + 72,
+                      bottom: 32,
+                      left: 24,
+                      right: 24,
+                    ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [

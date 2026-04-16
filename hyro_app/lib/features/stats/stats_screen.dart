@@ -73,10 +73,14 @@ class _StatsScreenState extends State<StatsScreen> {
         final minutesToday = statsProvider.todaysStats?.focusMinutes ?? 0;
 
         return SingleChildScrollView(
-          padding:
-              MediaQuery.of(context).size.width < 800
-                  ? const EdgeInsets.symmetric(horizontal: 24, vertical: 32)
-                  : const EdgeInsets.all(32),
+          padding: MediaQuery.of(context).size.width < 800
+              ? EdgeInsets.only(
+                  top: MediaQuery.of(context).padding.top + 72,
+                  bottom: 32,
+                  left: 24,
+                  right: 24,
+                )
+              : const EdgeInsets.all(32),
           child: Column(
             crossAxisAlignment:
                 MediaQuery.of(context).size.width < 800

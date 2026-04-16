@@ -23,7 +23,14 @@ class ProfileScreen extends StatelessWidget {
     final missions = context.watch<MissionsProvider>();
 
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(32),
+      padding: MediaQuery.of(context).size.width < 800
+          ? EdgeInsets.only(
+              top: MediaQuery.of(context).padding.top + 72,
+              bottom: 32,
+              left: 24,
+              right: 24,
+            )
+          : const EdgeInsets.all(32),
       child: Column(
         children: [
           const SizedBox(height: 20),
@@ -32,17 +39,17 @@ class ProfileScreen extends StatelessWidget {
             builder: (context, mascot, _) {
               if (!mascot.isLoaded) {
                 return CircleAvatar(
-                  radius: 48,
+                  radius: 72,
                   backgroundColor: AppColors.primary,
                   child: Text(
                     auth.currentUser?.name?.substring(0, 1).toUpperCase() ?? 'H',
-                    style: AppTypography.h1.copyWith(fontSize: 36),
+                    style: AppTypography.h1.copyWith(fontSize: 48),
                   ),
                 );
               }
               return Container(
-                width: 96,
-                height: 96,
+                width: 144,
+                height: 144,
                 decoration: const BoxDecoration(
                   shape: BoxShape.circle,
                   color: AppColors.surfaceLight,

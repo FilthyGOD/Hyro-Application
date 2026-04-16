@@ -200,7 +200,7 @@ class _ShopScreenState extends State<ShopScreen>
 
     return SingleChildScrollView(
       padding: EdgeInsets.only(
-        top: isDesktop ? 32 : 64,
+        top: isDesktop ? 32 : (MediaQuery.of(context).padding.top + 72),
         left: isDesktop ? 72 : 20,
         right: isDesktop ? 32 : 20,
         bottom: 32,

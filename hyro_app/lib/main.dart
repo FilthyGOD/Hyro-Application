@@ -57,11 +57,13 @@ void main(List<String> args) async {
       center: true,
       backgroundColor: Colors.transparent,
       skipTaskbar: false,
-      titleBarStyle: TitleBarStyle.normal,
+      titleBarStyle: TitleBarStyle.hidden,
     );
     await windowManager.waitUntilReadyToShow(windowOptions, () async {
       await windowManager.show();
       await windowManager.focus();
+      await Future.delayed(const Duration(milliseconds: 100));
+      await windowManager.maximize();
     });
   }
 

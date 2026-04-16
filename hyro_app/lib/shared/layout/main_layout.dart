@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:window_manager/window_manager.dart';
+import 'dart:io';
 import '../../core/theme/app_colors.dart';
 import '../../core/utils/responsive.dart';
 import '../widgets/sidebar.dart';
 import '../widgets/spotify_bottom_bar.dart';
+import '../widgets/custom_title_bar.dart';
 import '../../core/services/spotify/spotify_auth_service.dart';
 import '../../core/services/spotify/spotify_player_service.dart';
 import '../widgets/animated_background.dart';
@@ -70,85 +73,104 @@ class _MainLayoutState extends State<MainLayout> {
 
     return Scaffold(
       key: _scaffoldKey,
-      body: LayoutBuilder(
-        builder: (context, constraints) {
-          final sidebarWidth = isTablet ? 72.0 : 220.0;
-          return Stack(
-            children: [
-              // Animated breathing background
-              const Positioned.fill(child: AnimatedBackground()),
-              // Main Content Region
-              Positioned.fill(
-                child: Center(
-                  child: ConstrainedBox(
-                    constraints: const BoxConstraints(maxWidth: 1200),
-                    child: widget.child,
-                  ),
-                ),
-              ),
-              // Floating Spotify Base
-              Positioned(
-                bottom: 24,
-                left: 0,
-                right: 0,
-                child: Center(
-                  child: ConstrainedBox(
-                    constraints: const BoxConstraints(maxWidth: 1200),
-                    child: Consumer<UiProvider>(
-                      builder: (context, ui, _) {
-                        if (!ui.isMusicBarVisible) return const SizedBox.shrink();
-                        if (ui.isMusicBarMinimized) return _buildMinimizedMusicBar(ui);
-                        return SpotifyBottomBar(
-                          authService: _spotifyAuthService,
-                          playerService: _spotifyPlayerService,
-                        );
-                      },
+      body: Column(
+        children: [
+          if (Platform.isWindows || Platform.isMacOS || Platform.isLinux)
+            const CustomTitleBar(),
+          Expanded(
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                final sidebarWidth = isTablet ? 72.0 : 220.0;
+                return Stack(
+                  children: [
+                    // Animated breathing background
+                    const Positioned.fill(child: AnimatedBackground()),
+                    // Main Content Region
+                    Positioned.fill(
+                      child: Center(
+                        child: ConstrainedBox(
+                          constraints: const BoxConstraints(maxWidth: 1200),
+                          child: widget.child,
+                        ),
+                      ),
                     ),
-                  ),
-                ),
-              ),
-              // Optional backdrop for a nicer effect
-              if (_isDesktopSidebarVisible && !isTimerRunning)
-                Positioned.fill(
-                  child: GestureDetector(
-                    onTap: () {
-                      setState(() {
-                        _isDesktopSidebarVisible = false;
-                      });
-                    },
-                    child: Container(color: Colors.black.withValues(alpha: 0.3)),
-                  ),
-                ),
-              if (!_isDesktopSidebarVisible && !isTimerRunning)
-                Positioned(
-                  top: 24,
-                  left: 24,
-                  child: IconButton(
-                    icon: const Icon(Icons.menu, color: Colors.white, size: 28),
-                    onPressed: () {
-                      setState(() {
-                        _isDesktopSidebarVisible = true;
-                      });
-                    },
-                  ),
-                ),
-              // Sliding Sidebar
-              AnimatedPositioned(
-                duration: const Duration(milliseconds: 300),
-                curve: Curves.easeInOut,
-                left: (_isDesktopSidebarVisible && !isTimerRunning) ? 0 : -sidebarWidth,
-                top: 0,
-                bottom: 0,
-                width: sidebarWidth,
-                child: Sidebar(
-                  selectedIndex: widget.selectedIndex,
-                  onItemSelected: widget.onNavigate,
-                  collapsed: isTablet,
-                ),
-              ),
-            ],
-          );
-        },
+                    // Floating Spotify Base
+                    Positioned(
+                      bottom: 24,
+                      left: 0,
+                      right: 0,
+                      child: Center(
+                        child: ConstrainedBox(
+                          constraints: const BoxConstraints(maxWidth: 1200),
+                          child: Consumer<UiProvider>(
+                            builder: (context, ui, _) {
+                              if (!ui.isMusicBarVisible)
+                                return const SizedBox.shrink();
+                              if (ui.isMusicBarMinimized)
+                                return _buildMinimizedMusicBar(ui);
+                              return SpotifyBottomBar(
+                                authService: _spotifyAuthService,
+                                playerService: _spotifyPlayerService,
+                              );
+                            },
+                          ),
+                        ),
+                      ),
+                    ),
+                    // Optional backdrop for a nicer effect
+                    if (_isDesktopSidebarVisible && !isTimerRunning)
+                      Positioned.fill(
+                        child: GestureDetector(
+                          onTap: () {
+                            setState(() {
+                              _isDesktopSidebarVisible = false;
+                            });
+                          },
+                          child: Container(
+                            color: Colors.black.withValues(alpha: 0.3),
+                          ),
+                        ),
+                      ),
+                    if (!_isDesktopSidebarVisible && !isTimerRunning)
+                      Positioned(
+                        top: 24,
+                        left: 24,
+                        child: IconButton(
+                          icon: const Icon(
+                            Icons.menu,
+                            color: Colors.white,
+                            size: 28,
+                          ),
+                          onPressed: () {
+                            setState(() {
+                              _isDesktopSidebarVisible = true;
+                            });
+                          },
+                        ),
+                      ),
+                    // Sliding Sidebar
+                    AnimatedPositioned(
+                      duration: const Duration(milliseconds: 300),
+                      curve: Curves.easeInOut,
+                      left:
+                          (_isDesktopSidebarVisible && !isTimerRunning)
+                              ? 0
+                              : -sidebarWidth,
+                      top: 0,
+                      bottom: 0,
+                      width: sidebarWidth,
+                      child: Sidebar(
+                        selectedIndex: widget.selectedIndex,
+                        onItemSelected: widget.onNavigate,
+                        collapsed: isTablet,
+                      ),
+                    ),
+                  ],
+                );
+              },
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -188,7 +210,11 @@ class _MainLayoutState extends State<MainLayout> {
                     shape: BoxShape.circle,
                   ),
                   child: IconButton(
-                    icon: const Icon(Icons.settings_outlined, color: Colors.white, size: 24),
+                    icon: const Icon(
+                      Icons.settings_outlined,
+                      color: Colors.white,
+                      size: 24,
+                    ),
                     onPressed: () {
                       widget.onNavigate(5);
                     },
@@ -198,54 +224,55 @@ class _MainLayoutState extends State<MainLayout> {
             ),
         ],
       ),
-      bottomNavigationBar: isTimerRunning
-          ? null
-          : Theme(
-              data: Theme.of(context).copyWith(
-                splashColor: Colors.transparent,
-                highlightColor: Colors.transparent,
+      bottomNavigationBar:
+          isTimerRunning
+              ? null
+              : Theme(
+                data: Theme.of(context).copyWith(
+                  splashColor: Colors.transparent,
+                  highlightColor: Colors.transparent,
+                ),
+                child: BottomNavigationBar(
+                  backgroundColor: AppColors.surface,
+                  type: BottomNavigationBarType.fixed,
+                  currentIndex: _screenToMobileNav[widget.selectedIndex] ?? 0,
+                  selectedItemColor: AppColors.primary,
+                  unselectedItemColor: AppColors.textSecondary,
+                  selectedFontSize: 11,
+                  unselectedFontSize: 11,
+                  showUnselectedLabels: true,
+                  onTap: (index) {
+                    widget.onNavigate(_mobileNavToScreen[index]);
+                  },
+                  items: const [
+                    BottomNavigationBarItem(
+                      icon: Icon(Icons.storefront_outlined),
+                      activeIcon: Icon(Icons.storefront),
+                      label: 'Tienda',
+                    ),
+                    BottomNavigationBarItem(
+                      icon: Icon(Icons.bar_chart_outlined),
+                      activeIcon: Icon(Icons.bar_chart),
+                      label: 'Estads',
+                    ),
+                    BottomNavigationBarItem(
+                      icon: Icon(Icons.timer_outlined),
+                      activeIcon: Icon(Icons.timer),
+                      label: 'Enfoque',
+                    ),
+                    BottomNavigationBarItem(
+                      icon: Icon(Icons.check_circle_outline),
+                      activeIcon: Icon(Icons.check_circle),
+                      label: 'Tareas',
+                    ),
+                    BottomNavigationBarItem(
+                      icon: Icon(Icons.person_outline),
+                      activeIcon: Icon(Icons.person),
+                      label: 'Perfil',
+                    ),
+                  ],
+                ),
               ),
-              child: BottomNavigationBar(
-          backgroundColor: AppColors.surface,
-          type: BottomNavigationBarType.fixed,
-          currentIndex: _screenToMobileNav[widget.selectedIndex] ?? 0,
-          selectedItemColor: AppColors.primary,
-          unselectedItemColor: AppColors.textSecondary,
-          selectedFontSize: 11,
-          unselectedFontSize: 11,
-          showUnselectedLabels: true,
-          onTap: (index) {
-            widget.onNavigate(_mobileNavToScreen[index]);
-          },
-          items: const [
-            BottomNavigationBarItem(
-              icon: Icon(Icons.storefront_outlined),
-              activeIcon: Icon(Icons.storefront),
-              label: 'Tienda',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.bar_chart_outlined),
-              activeIcon: Icon(Icons.bar_chart),
-              label: 'Estads',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.timer_outlined),
-              activeIcon: Icon(Icons.timer),
-              label: 'Enfoque',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.check_circle_outline),
-              activeIcon: Icon(Icons.check_circle),
-              label: 'Tareas',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.person_outline),
-              activeIcon: Icon(Icons.person),
-              label: 'Perfil',
-            ),
-          ],
-        ),
-      ),
     );
   }
 
@@ -262,7 +289,10 @@ class _MainLayoutState extends State<MainLayout> {
             decoration: BoxDecoration(
               color: Colors.white.withValues(alpha: 0.15),
               shape: BoxShape.circle,
-              border: Border.all(color: Colors.white.withValues(alpha: 0.25), width: 1.5),
+              border: Border.all(
+                color: Colors.white.withValues(alpha: 0.25),
+                width: 1.5,
+              ),
               boxShadow: [
                 BoxShadow(
                   color: Colors.black.withValues(alpha: 0.15),
@@ -271,10 +301,15 @@ class _MainLayoutState extends State<MainLayout> {
                 ),
               ],
             ),
-            child: const Icon(Icons.arrow_back_ios_new, color: Colors.white, size: 20),
+            child: const Icon(
+              Icons.arrow_back_ios_new,
+              color: Colors.white,
+              size: 20,
+            ),
           ),
         ),
       ),
     );
   }
 }
+

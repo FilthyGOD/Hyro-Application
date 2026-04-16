@@ -139,10 +139,6 @@ class Sidebar extends StatelessWidget {
                         'Usuario',
                         style: AppTypography.labelLarge.copyWith(fontSize: 13),
                       ),
-                      Text(
-                        'Plan Gratis',
-                        style: AppTypography.bodySmall.copyWith(fontSize: 11),
-                      ),
                     ],
                   ),
                 ),

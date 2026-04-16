@@ -7,11 +7,9 @@ import 'bloc/timer_state.dart';
 import 'widgets/circular_timer.dart';
 import 'widgets/timer_controls.dart';
 import 'widgets/mode_selector.dart';
-import 'widgets/session_info_card.dart';
 import 'widgets/completed_session_view.dart';
 import '../../core/theme/app_colors.dart';
 import 'widgets/mini_task_list.dart';
-import 'widgets/activity_chart.dart';
 import 'widgets/task_selection_dialog.dart';
 import '../stats/stats_provider.dart';
 import '../mascot/mascot_controller.dart';
@@ -240,14 +238,7 @@ class _DesktopLayout extends StatelessWidget {
                             320, // Fixed width so data cards aren't stretched
                         child: ListView(
                           children: [
-                            SessionInfoCard(
-                              completedSessions: sessionsToday,
-                              totalFocusMinutes: minutesToday,
-                            ),
-                            const SizedBox(height: 16),
                             const MiniTaskList(),
-                            const SizedBox(height: 16),
-                            const ActivityChart(),
                             const SizedBox(height: 32),
                           ],
                         ),
@@ -441,14 +432,6 @@ class _MobileLayout extends StatelessWidget {
                 style: AppTypography.bodySmall,
               ),
               const SizedBox(height: 24),
-              // Session info
-              if (!settings.hideFocusCards) ...[
-                SessionInfoCard(
-                  completedSessions: sessionsToday,
-                  totalFocusMinutes: minutesToday,
-                ),
-                const SizedBox(height: 24),
-              ],
             ],
             // Timer
             Center(
@@ -485,8 +468,6 @@ class _MobileLayout extends StatelessWidget {
             if (!state.isRunning && !settings.hideFocusCards) ...[
               const SizedBox(height: 24),
               const MiniTaskList(),
-              const SizedBox(height: 16),
-              const ActivityChart(),
             ],
             const SizedBox(height: 80),
           ],

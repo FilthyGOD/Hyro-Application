@@ -7,8 +7,9 @@ import '../../core/theme/app_typography.dart';
 import '../../shared/widgets/glass_card.dart';
 import 'stats_provider.dart';
 import 'widgets/streak_calendar.dart';
-import 'widgets/streak_calendar.dart';
 import '../../providers/ui_provider.dart';
+import '../focus/widgets/session_info_card.dart';
+import '../focus/widgets/activity_chart.dart';
 import '../../providers/profile_provider.dart';
 import '../mascot/mascot_controller.dart';
 
@@ -68,6 +69,8 @@ class _StatsScreenState extends State<StatsScreen> {
           _displayMonth.year,
           _displayMonth.month,
         );
+        final sessionsToday = statsProvider.todaysStats?.focusSessions ?? 0;
+        final minutesToday = statsProvider.todaysStats?.focusMinutes ?? 0;
 
         return SingleChildScrollView(
           padding:
@@ -145,6 +148,43 @@ class _StatsScreenState extends State<StatsScreen> {
                         ),
                         const SizedBox(height: 24),
                         _buildRecentMilestones(statsProvider.totalFocusHours),
+                      ],
+                    );
+                  }
+                },
+              ),
+              const SizedBox(height: 24),
+              LayoutBuilder(
+                builder: (context, constraints) {
+                  final isWide = constraints.maxWidth > 800;
+                  if (isWide) {
+                    return Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Expanded(
+                          flex: 3,
+                          child: ActivityChart(),
+                        ),
+                        const SizedBox(width: 24),
+                        Expanded(
+                          flex: 2,
+                          child: SessionInfoCard(
+                            completedSessions: sessionsToday,
+                            totalFocusMinutes: minutesToday,
+                          ),
+                        ),
+                      ],
+                    );
+                  } else {
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        SessionInfoCard(
+                          completedSessions: sessionsToday,
+                          totalFocusMinutes: minutesToday,
+                        ),
+                        const SizedBox(height: 24),
+                        const ActivityChart(),
                       ],
                     );
                   }

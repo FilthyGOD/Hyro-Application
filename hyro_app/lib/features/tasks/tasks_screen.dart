@@ -737,72 +737,6 @@ class _TasksScreenState extends State<TasksScreen> {
                               ),
                             ),
                           ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: InkWell(
-                              onTap: () async {
-                                final time = await showTimePicker(
-                                  context: context,
-                                  initialTime:
-                                      selectedDueTime ?? TimeOfDay.now(),
-                                );
-                                if (time != null) {
-                                  setDialogState(() => selectedDueTime = time);
-                                }
-                              },
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 12,
-                                  vertical: 12,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: AppColors.surfaceLight,
-                                  borderRadius: BorderRadius.circular(8),
-                                  border: Border.all(
-                                    color: AppColors.cardBorder,
-                                  ),
-                                ),
-                                child: Text(
-                                  selectedDueTime != null
-                                      ? selectedDueTime!.format(context)
-                                      : 'Seleccionar Hora',
-                                  style: AppTypography.bodyMedium,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 20),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            'Pomodoros requeridos:',
-                            style: AppTypography.bodySmall,
-                          ),
-                          Row(
-                            children: [
-                              IconButton(
-                                icon: const Icon(Icons.remove_circle_outline),
-                                onPressed: () {
-                                  if (pomodorosTarget > 1) {
-                                    setDialogState(() => pomodorosTarget--);
-                                  }
-                                },
-                              ),
-                              Text(
-                                '$pomodorosTarget',
-                                style: AppTypography.bodyLarge,
-                              ),
-                              IconButton(
-                                icon: const Icon(Icons.add_circle_outline),
-                                onPressed: () {
-                                  setDialogState(() => pomodorosTarget++);
-                                },
-                              ),
-                            ],
-                          ),
                         ],
                       ),
                     ],
@@ -1222,12 +1156,14 @@ class _TaskTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final priorityColor = Color(task.priorityColorValue);
+
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: GlassCard(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             // Checkbox circle
             GestureDetector(
@@ -1237,7 +1173,6 @@ class _TaskTile extends StatelessWidget {
               child: Container(
                 width: 26,
                 height: 26,
-                margin: const EdgeInsets.only(top: 2),
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   color:
@@ -1256,8 +1191,8 @@ class _TaskTile extends StatelessWidget {
                         : null,
               ),
             ),
-            const SizedBox(width: 16),
-            // Content Column
+            const SizedBox(width: 14),
+            // Title + Priority inline
             Expanded(
               child: GestureDetector(
                 onTap: () {
@@ -1267,107 +1202,74 @@ class _TaskTile extends StatelessWidget {
                   );
                 },
                 behavior: HitTestBehavior.opaque,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                child: Row(
                   children: [
-                    Text(
-                      task.title,
-                      style: AppTypography.bodyMedium.copyWith(
-                        fontWeight: FontWeight.w600,
-                        decoration:
-                            task.isCompleted
-                                ? TextDecoration.lineThrough
-                                : null,
-                        color:
-                            task.isCompleted
-                                ? AppColors.textTertiary
-                                : Colors.white,
+                    Expanded(
+                      child: Text(
+                        task.title,
+                        style: AppTypography.bodyMedium.copyWith(
+                          fontWeight: FontWeight.w600,
+                          decoration:
+                              task.isCompleted
+                                  ? TextDecoration.lineThrough
+                                  : null,
+                          color:
+                              task.isCompleted
+                                  ? AppColors.textTertiary
+                                  : Colors.white,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ),
-                    const SizedBox(height: 6),
-                    if (task.description != null &&
-                        task.description!.isNotEmpty)
-                      Row(
-                        children: [
-                          Icon(
-                            Icons.schedule,
-                            size: 14,
-                            color: AppColors.textTertiary,
-                          ),
-                          const SizedBox(width: 6),
-                          Expanded(
-                            child: Text(
-                              task.description!,
-                              style: AppTypography.labelSmall.copyWith(
-                                color: AppColors.textTertiary,
-                              ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                        ],
+                    const SizedBox(width: 8),
+                    // Priority badge
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 3,
                       ),
-                    // Priority and Pomodoros Row
-                    Wrap(
-                      alignment: WrapAlignment.spaceBetween,
-                      crossAxisAlignment: WrapCrossAlignment.center,
-                      spacing: 8,
-                      runSpacing: 8,
-                      children: [
-                        // Priority badge
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 10,
-                            vertical: 4,
-                          ),
-                          decoration: BoxDecoration(
-                            color: Color(
-                              task.priorityColorValue,
-                            ).withValues(alpha: 0.15),
-                            borderRadius: BorderRadius.circular(6),
-                            border: Border.all(
-                              color: Color(
-                                task.priorityColorValue,
-                              ).withValues(alpha: 0.3),
-                            ),
-                          ),
-                          child: Text(
-                            task.priority,
-                            style: AppTypography.labelSmall.copyWith(
-                              color: Color(task.priorityColorValue),
-                              fontWeight: FontWeight.w700,
-                              letterSpacing: 0.5,
-                            ),
-                          ),
+                      decoration: BoxDecoration(
+                        color: priorityColor.withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(6),
+                        border: Border.all(
+                          color: priorityColor.withValues(alpha: 0.3),
                         ),
-                        // Pomodoro count
-                        Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(
-                              Icons.local_fire_department,
-                              size: 16,
-                              color: Color(0xFFFFA600),
-                            ),
-                            const SizedBox(width: 4),
-                            Flexible(
-                              child: Text(
-                                '${task.pomodorosTarget} Pomodoros',
-                                style: AppTypography.labelSmall.copyWith(
-                                  color: AppColors.textSecondary,
-                                ),
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                          ],
+                      ),
+                      child: Text(
+                        task.priority,
+                        style: AppTypography.labelSmall.copyWith(
+                          color: priorityColor,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: 0.5,
+                          fontSize: 9,
                         ),
-                      ],
+                      ),
                     ),
                   ],
                 ),
               ),
             ),
-            // Delete button
+            const SizedBox(width: 8),
+            // Pomodoro count
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(
+                  Icons.local_fire_department,
+                  size: 16,
+                  color: Color(0xFFFFA600),
+                ),
+                const SizedBox(width: 3),
+                Text(
+                  '${task.pomodorosCompleted}',
+                  style: AppTypography.labelSmall.copyWith(
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+              ],
+            ),
+            // Three dots menu
             PopupMenuButton<String>(
               icon: const Icon(
                 Icons.more_vert_rounded,

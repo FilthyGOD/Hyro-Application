@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-// unused import removed
+import 'package:provider/provider.dart';
 import '../../core/theme/app_typography.dart';
 import 'bloc/timer_cubit.dart';
 import 'bloc/timer_state.dart';
@@ -18,6 +18,8 @@ import '../../providers/ui_provider.dart';
 import 'widgets/focus_quiz_dialog.dart';
 import '../../data/local/card_local_ds.dart';
 import '../../data/local/note_local_ds.dart';
+import '../../data/models/task_model.dart';
+import '../tasks/tasks_provider.dart';
 
 /// The main Focus screen with the Pomodoro timer and sidebar widgets.
 class FocusScreen extends StatelessWidget {
@@ -174,6 +176,13 @@ class _DesktopLayout extends StatelessWidget {
                                 return Column(
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
+                                    if (state.isRunning && state.activeTaskTitle != null) ...[
+                                      _ActiveTaskBadge(
+                                        taskId: state.activeTaskId ?? '',
+                                        title: state.activeTaskTitle!,
+                                      ),
+                                      const SizedBox(height: 24),
+                                    ],
                                     // The content (Timer, Controls, Scroller)
                                     CircularTimer(
                                       remainingSeconds: state.remainingSeconds,
@@ -181,21 +190,6 @@ class _DesktopLayout extends StatelessWidget {
                                       size: timerSize,
                                     ),
                                     const SizedBox(height: 16),
-                                    if (state.isRunning &&
-                                        state.activeTaskTitle != null)
-                                      Padding(
-                                        padding: const EdgeInsets.only(
-                                          bottom: 16,
-                                        ),
-                                        child: Text(
-                                          'Enfocando en: ${state.activeTaskTitle}',
-                                          style: AppTypography.bodySmall
-                                              .copyWith(
-                                                color: AppColors.primary,
-                                              ),
-                                          textAlign: TextAlign.center,
-                                        ),
-                                      ),
                                     if (state.isRunning && state.quizTotalCount > 0)
                                       Padding(
                                         padding: const EdgeInsets.only(bottom: 8),
@@ -346,6 +340,13 @@ class _MobileLayout extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
+              if (state.activeTaskTitle != null) ...[
+                _ActiveTaskBadge(
+                  taskId: state.activeTaskId ?? '',
+                  title: state.activeTaskTitle!,
+                ),
+                const SizedBox(height: 24),
+              ],
               Center(
                 child: LayoutBuilder(
                   builder: (context, constraints) {
@@ -362,17 +363,6 @@ class _MobileLayout extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 16),
-              if (state.activeTaskTitle != null)
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 16),
-                  child: Text(
-                    'Enfocando en: ${state.activeTaskTitle}',
-                    style: AppTypography.bodySmall.copyWith(
-                      color: AppColors.primary,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                ),
               if (state.isRunning && state.quizTotalCount > 0)
                  Padding(
                    padding: const EdgeInsets.only(bottom: 8),
@@ -486,4 +476,56 @@ void _handleStart(BuildContext context, TimerCubit cubit) {
       cubit.start(taskId: taskId, taskTitle: taskTitle);
     }
   });
+}
+
+class _ActiveTaskBadge extends StatelessWidget {
+  final String taskId;
+  final String title;
+
+  const _ActiveTaskBadge({required this.taskId, required this.title});
+
+  @override
+  Widget build(BuildContext context) {
+    Color color = AppColors.primary;
+    try {
+      final tasksProvider = context.watch<TaskProvider>();
+      final task = tasksProvider.tasks.firstWhere((t) => t.id == taskId);
+      color = Color(task.priorityColorValue);
+    } catch (_) {}
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.15),
+        borderRadius: BorderRadius.circular(24),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 8,
+            height: 8,
+            decoration: BoxDecoration(
+              color: color,
+              shape: BoxShape.circle,
+              boxShadow: [
+                BoxShadow(
+                  color: color.withValues(alpha: 0.6),
+                  blurRadius: 6,
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 8),
+          Text(
+            title,
+            style: AppTypography.bodySmall.copyWith(
+              color: Colors.white.withValues(alpha: 0.9),
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }

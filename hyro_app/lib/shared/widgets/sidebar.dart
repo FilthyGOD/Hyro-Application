@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../../providers/auth_provider.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_typography.dart';
 
@@ -75,7 +77,7 @@ class Sidebar extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           // ── User avatar ──
-          if (!collapsed) _buildUserInfo(),
+          if (!collapsed) _buildUserInfo(context),
           const SizedBox(height: 20),
         ],
       ),
@@ -105,8 +107,12 @@ class Sidebar extends StatelessWidget {
     );
   }
 
-  Widget _buildUserInfo() {
+  Widget _buildUserInfo(BuildContext context) {
     final isActive = selectedIndex == 4;
+    final String? rawName = context.watch<AuthProvider>().currentUser?.name;
+    final String userName = (rawName != null && rawName.isNotEmpty) ? rawName : 'Usuario';
+    final String initial = userName.substring(0, 1).toUpperCase();
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Material(
@@ -128,15 +134,18 @@ class Sidebar extends StatelessWidget {
                 CircleAvatar(
                   radius: 16,
                   backgroundColor: AppColors.primary,
-                  child: Text('H', style: AppTypography.labelLarge),
+                  child: Text(initial, style: AppTypography.labelLarge),
                 ),
                 const SizedBox(width: 10),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Text(
-                        'Usuario',
+                        userName,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                         style: AppTypography.labelLarge.copyWith(fontSize: 13),
                       ),
                     ],

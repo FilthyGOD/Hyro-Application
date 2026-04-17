@@ -7,6 +7,7 @@ import 'package:hyro_app/providers/auth_provider.dart';
 import '../../shared/widgets/animated_background.dart';
 import '../../features/mascot/mascot_controller.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../app.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -613,9 +614,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
     if (mounted) {
       setState(() => _isLoading = false);
       if (auth.isAuthenticated &&
-          !auth.isGuest &&
-          Navigator.of(context).canPop()) {
-        Navigator.of(context).pop(); 
+          !auth.isGuest) {
+        Navigator.of(context).popUntil((route) => route.isFirst);
+        appShellKey.currentState?.navigateTo(0);
       }
     }
   }

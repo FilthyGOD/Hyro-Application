@@ -7,6 +7,7 @@ import 'package:hyro_app/providers/auth_provider.dart';
 import '../../shared/widgets/animated_background.dart';
 import '../../features/mascot/mascot_controller.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../app.dart';
 import 'register_screen.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -108,9 +109,9 @@ class _LoginScreenState extends State<LoginScreen> {
       if (mounted) {
         setState(() => _isLoading = false);
         if (auth.isAuthenticated &&
-            !auth.isGuest &&
-            Navigator.of(context).canPop()) {
-          Navigator.of(context).pop();
+            !auth.isGuest) {
+          Navigator.of(context).popUntil((route) => route.isFirst);
+          appShellKey.currentState?.navigateTo(0);
         }
       }
     } on AuthException catch (e) {
@@ -617,9 +618,9 @@ class _LoginScreenState extends State<LoginScreen> {
     if (mounted) {
       setState(() => _isLoading = false);
       if (auth.isAuthenticated &&
-          !auth.isGuest &&
-          Navigator.of(context).canPop()) {
-        Navigator.of(context).pop();
+          !auth.isGuest) {
+        Navigator.of(context).popUntil((route) => route.isFirst);
+        appShellKey.currentState?.navigateTo(0);
       }
     }
   }

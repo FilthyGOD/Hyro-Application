@@ -77,7 +77,7 @@ class HyroApp extends StatelessWidget {
                 return const SplashScreen();
               }
               // Todos entran al shell (invitados o usuarios logueados)
-              return AppShell(authProvider: auth);
+              return AppShell(key: appShellKey, authProvider: auth);
             },
           ),
         ),
@@ -85,6 +85,8 @@ class HyroApp extends StatelessWidget {
     );
   }
 }
+
+final GlobalKey<AppShellState> appShellKey = GlobalKey<AppShellState>();
 
 class AppShell extends StatefulWidget {
   final AuthProvider authProvider;

@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -44,12 +45,10 @@ class _TaskDetailsDialogState extends State<TaskDetailsDialog>
   bool _isUploadingDocument = false;
   int _selectedTab = 1; // Start on Chat tab
 
-  // Flashcard state — backed by CardRepository
+  // Flashcards state — backed by CardRepository
   final List<TareaCardModel> _flashcards = [];
   late TextEditingController _cardFrontController;
   late TextEditingController _cardBackController;
-  int? _previewIndex;
-  bool _previewShowBack = false;
 
   // Notes — backed by NoteRepository
   final List<TareaNotaModel> _chatNotes = [];
@@ -300,6 +299,54 @@ class _TaskDetailsDialogState extends State<TaskDetailsDialog>
     _saveTask();
   }
 
+  void _showEditNoteDialog(int index) {
+    final nota = _chatNotes[index];
+    final controller = TextEditingController(text: nota.contenido);
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          backgroundColor: AppColors.surface,
+          title: Text('Editar Nota', style: AppTypography.labelLarge),
+          content: TextField(
+            controller: controller,
+            maxLines: null,
+            style: AppTypography.bodyMedium.copyWith(color: AppColors.textPrimary),
+            decoration: InputDecoration(
+              filled: true,
+              fillColor: AppColors.surfaceLight,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide.none,
+              ),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text('Cancelar', style: AppTypography.bodyMedium.copyWith(color: AppColors.textTertiary)),
+            ),
+            TextButton(
+              onPressed: () {
+                final newText = controller.text.trim();
+                if (newText.isNotEmpty && newText != nota.contenido) {
+                  final updatedNota = nota.copyWith(contenido: newText);
+                  _noteRepo.updateNote(updatedNota);
+                  setState(() {
+                    _chatNotes[index] = updatedNota;
+                  });
+                  _saveTask();
+                }
+                Navigator.pop(context);
+              },
+              child: Text('Guardar', style: AppTypography.labelLarge.copyWith(color: AppColors.primary)),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   // ── Cards (Flashcards) ──────────────────────────────────────────────────
 
   void _addFlashcard() {
@@ -326,10 +373,6 @@ class _TaskDetailsDialogState extends State<TaskDetailsDialog>
     _cardRepo.deleteCard(card.id);
     setState(() {
       _flashcards.removeAt(index);
-      if (_previewIndex == index) {
-        _previewIndex = null;
-        _previewShowBack = false;
-      }
     });
   }
 
@@ -651,7 +694,7 @@ class _TaskDetailsDialogState extends State<TaskDetailsDialog>
     );
   }
 
-  // ── CHAT TAB ────────────────────────────────────────────────────────────
+  // ── NOTAS TAB ───────────────────────────────────────────────────────────
 
   Widget _buildChatTab() {
     return Padding(
@@ -742,18 +785,46 @@ class _TaskDetailsDialogState extends State<TaskDetailsDialog>
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   // Copy button
-                  _chatActionIcon(Icons.copy_rounded, () {
-                    // Copy to clipboard
+                  _chatActionIcon(Icons.copy_rounded, () async {
+                    await Clipboard.setData(ClipboardData(text: text));
+                    if (mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Nota copiada'), duration: Duration(seconds: 2)),
+                      );
+                    }
                   }),
+                  const SizedBox(width: 8),
+                  // Edit button
+                  _chatActionIcon(Icons.edit_rounded, () => _showEditNoteDialog(index)),
                   const SizedBox(width: 8),
                   // Delete button
                   _chatActionIcon(Icons.delete_outline_rounded, () {
-                    final nota = _chatNotes[index];
-                    _noteRepo.deleteNote(nota.id);
-                    setState(() {
-                      _chatNotes.removeAt(index);
-                    });
-                    _saveTask();
+                    showDialog(
+                      context: context,
+                      builder: (context) => AlertDialog(
+                        backgroundColor: AppColors.surface,
+                        title: Text('Eliminar nota', style: AppTypography.labelLarge),
+                        content: Text('¿Estás seguro de que deseas eliminar esta nota?', style: AppTypography.bodyMedium),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.pop(context),
+                            child: Text('Cancelar', style: AppTypography.bodyMedium.copyWith(color: AppColors.textTertiary)),
+                          ),
+                          TextButton(
+                            onPressed: () {
+                              Navigator.pop(context);
+                              final nota = _chatNotes[index];
+                              _noteRepo.deleteNote(nota.id);
+                              setState(() {
+                                _chatNotes.removeAt(index);
+                              });
+                              _saveTask();
+                            },
+                            child: Text('Eliminar', style: AppTypography.labelLarge.copyWith(color: Colors.redAccent)),
+                          ),
+                        ],
+                      ),
+                    );
                   }),
                 ],
               ),
@@ -858,37 +929,35 @@ class _TaskDetailsDialogState extends State<TaskDetailsDialog>
           ),
           const SizedBox(height: 12),
 
-          // Flashcard list / preview
+          // Flashcard list
           Expanded(
-            child: _previewIndex != null
-                ? _buildCardPreview()
-                : _flashcards.isEmpty
-                    ? Center(
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(Icons.style_outlined,
-                                color:
-                                    AppColors.textTertiary.withAlpha(100),
-                                size: 48),
-                            const SizedBox(height: 12),
-                            Text(
-                              'Crea tarjetas de estudio para\nrepasar el contenido de esta actividad.',
-                              textAlign: TextAlign.center,
-                              style: AppTypography.bodyMedium.copyWith(
-                                color: AppColors.textTertiary,
-                              ),
-                            ),
-                          ],
+            child: _flashcards.isEmpty
+                ? Center(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.style_outlined,
+                            color:
+                                AppColors.textTertiary.withAlpha(100),
+                            size: 48),
+                        const SizedBox(height: 12),
+                        Text(
+                          'Crea tarjetas de estudio para\nrepasar el contenido de esta actividad.',
+                          textAlign: TextAlign.center,
+                          style: AppTypography.bodyMedium.copyWith(
+                            color: AppColors.textTertiary,
+                          ),
                         ),
-                      )
-                    : ListView.separated(
-                        itemCount: _flashcards.length,
-                        separatorBuilder: (_, __) =>
-                            const SizedBox(height: 8),
-                        itemBuilder: (context, index) =>
-                            _buildFlashcardTile(index),
-                      ),
+                      ],
+                    ),
+                  )
+                : ListView.separated(
+                    itemCount: _flashcards.length,
+                    separatorBuilder: (_, __) =>
+                        const SizedBox(height: 8),
+                    itemBuilder: (context, index) =>
+                        _buildFlashcardTile(index),
+                  ),
           ),
         ],
       ),
@@ -994,10 +1063,13 @@ class _TaskDetailsDialogState extends State<TaskDetailsDialog>
     final card = _flashcards[index];
     return GestureDetector(
       onTap: () {
-        setState(() {
-          _previewIndex = index;
-          _previewShowBack = false;
-        });
+        showDialog(
+          context: context,
+          builder: (context) => FlashcardPreviewDialog(
+            cards: _flashcards,
+            initialIndex: index,
+          ),
+        );
       },
       child: Container(
         padding: const EdgeInsets.all(12),
@@ -1064,154 +1136,7 @@ class _TaskDetailsDialogState extends State<TaskDetailsDialog>
     );
   }
 
-  Widget _buildCardPreview() {
-    final card = _flashcards[_previewIndex!];
-    return Column(
-      children: [
-        // Back button
-        Align(
-          alignment: Alignment.centerLeft,
-          child: GestureDetector(
-            onTap: () => setState(() {
-              _previewIndex = null;
-              _previewShowBack = false;
-            }),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Icon(Icons.arrow_back_ios_rounded,
-                    color: AppColors.primary, size: 14),
-                const SizedBox(width: 4),
-                Text(
-                  'Volver a la lista',
-                  style: AppTypography.bodySmall.copyWith(
-                    color: AppColors.primary,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-        const SizedBox(height: 16),
 
-        // Card
-        Expanded(
-          child: GestureDetector(
-            onTap: () {
-              setState(() {
-                _previewShowBack = !_previewShowBack;
-              });
-            },
-            child: AnimatedSwitcher(
-              duration: const Duration(milliseconds: 350),
-              transitionBuilder: (child, animation) {
-                return FadeTransition(opacity: animation, child: child);
-              },
-              child: Container(
-                key: ValueKey(_previewShowBack),
-                width: double.infinity,
-                padding: const EdgeInsets.all(24),
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: _previewShowBack
-                        ? [
-                            const Color(0xFF0F2744),
-                            const Color(0xFF0A1A33),
-                          ]
-                        : [
-                            const Color(0xFF182040),
-                            const Color(0xFF131829),
-                          ],
-                  ),
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(
-                    color: _previewShowBack
-                        ? AppColors.primary.withAlpha(80)
-                        : AppColors.cardBorder,
-                  ),
-                  boxShadow: _previewShowBack
-                      ? AppColors.glowShadow(AppColors.primary, blur: 16)
-                      : null,
-                ),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      _previewShowBack ? 'REVERSO' : 'FRENTE',
-                      style: AppTypography.labelSmall.copyWith(
-                        color: _previewShowBack
-                            ? AppColors.primary
-                            : AppColors.textTertiary,
-                        letterSpacing: 2,
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    Text(
-                      _previewShowBack ? card.reverso : card.frente,
-                      textAlign: TextAlign.center,
-                      maxLines: 5,
-                      overflow: TextOverflow.ellipsis,
-                      style: AppTypography.h3.copyWith(
-                        fontSize: 18,
-                        height: 1.4,
-                      ),
-                    ),
-                    const SizedBox(height: 24),
-                    Text(
-                      'Toca para voltear',
-                      style: AppTypography.bodySmall.copyWith(
-                        color: AppColors.textTertiary,
-                        fontSize: 10,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ),
-
-        const SizedBox(height: 12),
-
-        // Navigation
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            IconButton(
-              onPressed: _previewIndex! > 0
-                  ? () => setState(() {
-                        _previewIndex = _previewIndex! - 1;
-                        _previewShowBack = false;
-                      })
-                  : null,
-              icon: Icon(Icons.chevron_left_rounded,
-                  color: _previewIndex! > 0
-                      ? AppColors.primary
-                      : AppColors.textTertiary),
-            ),
-            Text(
-              '${_previewIndex! + 1} / ${_flashcards.length}',
-              style: AppTypography.bodySmall,
-            ),
-            IconButton(
-              onPressed: _previewIndex! < _flashcards.length - 1
-                  ? () => setState(() {
-                        _previewIndex = _previewIndex! + 1;
-                        _previewShowBack = false;
-                      })
-                  : null,
-              icon: Icon(Icons.chevron_right_rounded,
-                  color: _previewIndex! < _flashcards.length - 1
-                      ? AppColors.primary
-                      : AppColors.textTertiary),
-            ),
-          ],
-        ),
-      ],
-    );
-  }
 
   // ── BOTTOM NAVIGATION BAR ──────────────────────────────────────────────
 
@@ -1238,7 +1163,7 @@ class _TaskDetailsDialogState extends State<TaskDetailsDialog>
           ),
           _buildNavItem(
             icon: Icons.chat_rounded,
-            label: 'Chat',
+            label: 'Notas',
             index: 1,
           ),
           _buildNavItem(
@@ -1285,6 +1210,191 @@ class _TaskDetailsDialogState extends State<TaskDetailsDialog>
                 fontSize: 11,
               ),
             ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class FlashcardPreviewDialog extends StatefulWidget {
+  final List<TareaCardModel> cards;
+  final int initialIndex;
+
+  const FlashcardPreviewDialog({
+    super.key,
+    required this.cards,
+    required this.initialIndex,
+  });
+
+  @override
+  State<FlashcardPreviewDialog> createState() => _FlashcardPreviewDialogState();
+}
+
+class _FlashcardPreviewDialogState extends State<FlashcardPreviewDialog> {
+  late int _currentIndex;
+  bool _showBack = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _currentIndex = widget.initialIndex;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (widget.cards.isEmpty) return const SizedBox.shrink();
+    final card = widget.cards[_currentIndex];
+
+    return Dialog(
+      backgroundColor: Colors.transparent,
+      elevation: 0,
+      insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 400, maxHeight: 500),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Align(
+              alignment: Alignment.centerRight,
+              child: IconButton(
+                icon: const Icon(Icons.close_rounded, color: Colors.white),
+                onPressed: () => Navigator.of(context).pop(),
+              ),
+            ),
+            Expanded(
+              child: GestureDetector(
+                onTap: () {
+                  setState(() {
+                    _showBack = !_showBack;
+                  });
+                },
+                child: AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 350),
+                  transitionBuilder: (child, animation) {
+                    return FadeTransition(opacity: animation, child: child);
+                  },
+                  child: Container(
+                    key: ValueKey(_showBack),
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(24),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: _showBack
+                            ? [
+                                const Color(0xFF0F2744),
+                                const Color(0xFF0A1A33),
+                              ]
+                            : [
+                                const Color(0xFF182040),
+                                const Color(0xFF131829),
+                              ],
+                      ),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(
+                        color: _showBack
+                            ? AppColors.primary.withAlpha(80)
+                            : AppColors.cardBorder,
+                      ),
+                      boxShadow: _showBack
+                          ? AppColors.glowShadow(AppColors.primary, blur: 16)
+                          : null,
+                    ),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          _showBack ? 'REVERSO' : 'FRENTE',
+                          style: AppTypography.labelSmall.copyWith(
+                            color: _showBack
+                                ? AppColors.primary
+                                : AppColors.textTertiary,
+                            letterSpacing: 2,
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        Expanded(
+                          child: Center(
+                            child: SingleChildScrollView(
+                              child: Text(
+                                _showBack ? card.reverso : card.frente,
+                                textAlign: TextAlign.center,
+                                style: AppTypography.h3.copyWith(
+                                  fontSize: 18,
+                                  height: 1.4,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          'Toca para voltear',
+                          style: AppTypography.bodySmall.copyWith(
+                            color: AppColors.textTertiary,
+                            fontSize: 10,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 24),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(
+                  decoration: BoxDecoration(
+                    color: AppColors.surfaceLight,
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      IconButton(
+                        onPressed: _currentIndex > 0
+                            ? () => setState(() {
+                                  _currentIndex--;
+                                  _showBack = false;
+                                })
+                            : null,
+                        icon: Icon(Icons.chevron_left_rounded,
+                            color: _currentIndex > 0
+                                ? AppColors.primary
+                                : AppColors.textTertiary),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 12),
+                        child: Text(
+                          '${_currentIndex + 1} / ${widget.cards.length}',
+                          style: AppTypography.bodyMedium.copyWith(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                      IconButton(
+                        onPressed: _currentIndex < widget.cards.length - 1
+                            ? () => setState(() {
+                                  _currentIndex++;
+                                  _showBack = false;
+                                })
+                            : null,
+                        icon: Icon(Icons.chevron_right_rounded,
+                            color: _currentIndex < widget.cards.length - 1
+                                ? AppColors.primary
+                                : AppColors.textTertiary),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
           ],
         ),
       ),

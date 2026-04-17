@@ -28,8 +28,9 @@ class _FocusQuizDialogState extends State<FocusQuizDialog> {
   late bool _isFlashcard;
   TareaCardModel? _selectedCard;
   TareaNotaModel? _selectedNote;
-  String? _hiddenWord;
-  String? _displayNote;
+  List<String> _hiddenWords = [];
+  String? _displayText;
+  int _difficulty = 1;
 
   final TextEditingController _inputController = TextEditingController();
   bool _revealed = false;
@@ -46,6 +47,8 @@ class _FocusQuizDialogState extends State<FocusQuizDialog> {
     final hasCards = widget.flashcards.isNotEmpty;
     final hasNotes = widget.notas.isNotEmpty;
 
+    _difficulty = random.nextInt(3) + 1;
+
     if (hasCards && hasNotes) {
       _isFlashcard = random.nextBool();
     } else {
@@ -55,45 +58,58 @@ class _FocusQuizDialogState extends State<FocusQuizDialog> {
     if (_isFlashcard && hasCards) {
       _selectedCard =
           widget.flashcards[random.nextInt(widget.flashcards.length)];
+      _prepareFillInTheBlanks(_selectedCard!.reverso);
     } else if (hasNotes) {
       _selectedNote = widget.notas[random.nextInt(widget.notas.length)];
-      _prepareNoteQuestion();
+      _prepareFillInTheBlanks(_selectedNote!.contenido);
     }
   }
 
-  void _prepareNoteQuestion() {
-    final text = _selectedNote!.contenido;
+  void _prepareFillInTheBlanks(String text) {
     final words = text.split(RegExp(r'\s+'));
-    final candidateWords = words.where((w) => w.length > 4).toList();
+    final candidateWords = words
+        .where((w) => w.length > 3 && w.contains(RegExp(r'[a-zA-ZáéíóúÁÉÍÓÚñÑ]')))
+        .toList();
+
+    _hiddenWords.clear();
 
     if (candidateWords.isEmpty) {
       if (words.isNotEmpty) {
-        _hiddenWord = words.last;
-        _displayNote = text.replaceFirst(_hiddenWord!, '___');
+        _hiddenWords.add(words.last);
       } else {
-        _hiddenWord = '';
-        _displayNote = '___';
+        _hiddenWords.add('');
       }
     } else {
-      _hiddenWord = candidateWords[Random().nextInt(candidateWords.length)];
-      _displayNote = text.replaceFirst(_hiddenWord!, '___');
-      _hiddenWord = _hiddenWord!.replaceAll(RegExp(r'[.,;!?]'), '');
+      final distinctCandidates = candidateWords.toSet().toList();
+      distinctCandidates.shuffle();
+
+      int wordsToHide = min(_difficulty, distinctCandidates.length);
+      _hiddenWords = distinctCandidates.take(wordsToHide).toList();
     }
+
+    _displayText = text;
+    for (var word in _hiddenWords) {
+      _displayText = _displayText!.replaceFirst(word, '___');
+    }
+
+    _hiddenWords = _hiddenWords
+        .map((w) => w.replaceAll(RegExp(r'[.,;!?()"\[\]{}]'), ''))
+        .toList();
   }
 
   void _checkAnswer() {
     if (_revealed) return;
 
     final answer = _inputController.text.trim().toLowerCase();
-    if (_isFlashcard) {
-      final expected = _selectedCard!.reverso.trim().toLowerCase();
-      _isCorrect =
-          answer.isNotEmpty &&
-          (expected.contains(answer) || answer.contains(expected));
-    } else {
-      final expected = _hiddenWord?.toLowerCase() ?? '';
-      _isCorrect = answer.isNotEmpty && expected == answer;
+    
+    bool allCorrect = true;
+    for (var word in _hiddenWords) {
+      if (word.isNotEmpty && !answer.contains(word.toLowerCase())) {
+        allCorrect = false;
+        break;
+      }
     }
+    _isCorrect = answer.isNotEmpty && allCorrect;
 
     setState(() {
       _revealed = true;
@@ -185,6 +201,18 @@ class _FocusQuizDialogState extends State<FocusQuizDialog> {
                   style: AppTypography.bodyLarge,
                 ),
               ),
+              const SizedBox(height: 16),
+              Text('Completa el reverso:', style: AppTypography.labelSmall),
+              const SizedBox(height: 8),
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: AppColors.surfaceLight,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: AppColors.cardBorder),
+                ),
+                child: Text(_displayText ?? '', style: AppTypography.bodyLarge),
+              ),
             ] else ...[
               Text('Completa la nota:', style: AppTypography.labelSmall),
               const SizedBox(height: 8),
@@ -195,7 +223,7 @@ class _FocusQuizDialogState extends State<FocusQuizDialog> {
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(color: AppColors.cardBorder),
                 ),
-                child: Text(_displayNote ?? '', style: AppTypography.bodyLarge),
+                child: Text(_displayText ?? '', style: AppTypography.bodyLarge),
               ),
             ],
 
@@ -205,7 +233,9 @@ class _FocusQuizDialogState extends State<FocusQuizDialog> {
               TextField(
                 controller: _inputController,
                 decoration: InputDecoration(
-                  hintText: 'Escribe tu respuesta...',
+                  hintText: _hiddenWords.length > 1
+                      ? 'Escribe las ${_hiddenWords.length} palabras...'
+                      : 'Escribe tu respuesta...',
                   hintStyle: AppTypography.bodyMedium,
                   filled: true,
                   fillColor: AppColors.surface,
@@ -304,9 +334,7 @@ class _FocusQuizDialogState extends State<FocusQuizDialog> {
                         style: AppTypography.labelSmall,
                       ),
                       Text(
-                        _isFlashcard
-                            ? _selectedCard!.reverso
-                            : (_hiddenWord ?? ''),
+                        _hiddenWords.join(', '),
                         style: AppTypography.bodyLarge.copyWith(
                           fontWeight: FontWeight.bold,
                         ),

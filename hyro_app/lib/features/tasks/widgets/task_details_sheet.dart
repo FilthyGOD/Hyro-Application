@@ -915,6 +915,7 @@ class _TaskDetailsDialogState extends State<TaskDetailsDialog>
             controller: _cardFrontController,
             style: AppTypography.bodyMedium.copyWith(
                 color: AppColors.textPrimary),
+            maxLength: 60,
             decoration: InputDecoration(
               hintText: 'Frente — Pregunta o concepto',
               hintStyle: AppTypography.bodySmall.copyWith(
@@ -936,6 +937,7 @@ class _TaskDetailsDialogState extends State<TaskDetailsDialog>
             style: AppTypography.bodyMedium.copyWith(
                 color: AppColors.textPrimary),
             maxLines: 2,
+            maxLength: 150,
             decoration: InputDecoration(
               hintText: 'Reverso — Respuesta o definición',
               hintStyle: AppTypography.bodySmall.copyWith(
@@ -1149,6 +1151,8 @@ class _TaskDetailsDialogState extends State<TaskDetailsDialog>
                     Text(
                       _previewShowBack ? card.reverso : card.frente,
                       textAlign: TextAlign.center,
+                      maxLines: 5,
+                      overflow: TextOverflow.ellipsis,
                       style: AppTypography.h3.copyWith(
                         fontSize: 18,
                         height: 1.4,

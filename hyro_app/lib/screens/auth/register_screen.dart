@@ -59,9 +59,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
           });
         }
       }
+
       mascot.addListener(listener);
     }
-    
+
     // Auth Listener to auto-close RegisterScreen when OAuth completes via external browser (Deep Link)
     final authProvider = context.read<AuthProvider>();
     void authListener() {
@@ -71,12 +72,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
         appShellKey.currentState?.navigateTo(0);
       }
     }
+
     authProvider.addListener(authListener);
   }
 
   void _startGreetingLoop() {
     _greetingTimer?.cancel();
-    final delay = Duration(seconds: 12 + _random.nextInt(9)); 
+    final delay = Duration(seconds: 12 + _random.nextInt(9));
     _greetingTimer = Timer(delay, () {
       if (mounted) {
         final mascot = context.read<MascotController>();
@@ -107,47 +109,54 @@ class _RegisterScreenState extends State<RegisterScreen> {
     setState(() => _isLoading = true);
 
     final auth = context.read<AuthProvider>();
-    
+
     try {
       await auth.signUpWithEmail(email, password, name);
-      
+
       if (mounted) {
         setState(() => _isLoading = false);
         // Show dialog telling user to check email
         showDialog(
           context: context,
-          builder: (context) => AlertDialog(
-            backgroundColor: const Color(0xFF191D32),
-            title: const Text('¡Cuenta creada!', style: TextStyle(color: Colors.white)),
-            content: const Text(
-              'Hemos enviado un enlace de confirmación a tu correo. Por favor, revísalo para verificar tu cuenta y poder iniciar sesión.',
-              style: TextStyle(color: Colors.white70),
-            ),
-            actions: [
-              TextButton(
-                onPressed: () {
-                  Navigator.of(context).pop(); // Close dialog
-                  Navigator.of(context).pop(); // Go back to Login Screen
-                },
-                child: const Text('Entendido', style: TextStyle(color: Color(0xFF3CDCF8))),
-              )
-            ],
-          ),
+          builder:
+              (context) => AlertDialog(
+                backgroundColor: const Color(0xFF191D32),
+                title: const Text(
+                  '¡Cuenta creada!',
+                  style: TextStyle(color: Colors.white),
+                ),
+                content: const Text(
+                  'Hemos enviado un enlace de confirmación a tu correo. Por favor, revísalo para verificar tu cuenta y poder iniciar sesión.',
+                  style: TextStyle(color: Colors.white70),
+                ),
+                actions: [
+                  TextButton(
+                    onPressed: () {
+                      Navigator.of(context).pop(); // Close dialog
+                      Navigator.of(context).pop(); // Go back to Login Screen
+                    },
+                    child: const Text(
+                      'Entendido',
+                      style: TextStyle(color: Color(0xFF3CDCF8)),
+                    ),
+                  ),
+                ],
+              ),
         );
       }
     } on AuthException catch (e) {
       if (mounted) {
         setState(() => _isLoading = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: ${e.message}')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error: ${e.message}')));
       }
     } catch (e) {
       if (mounted) {
         setState(() => _isLoading = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error al crear cuenta: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error al crear cuenta: $e')));
       }
     }
   }
@@ -182,7 +191,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
               top: 16,
               left: 16,
               child: IconButton(
-                icon: const Icon(Icons.arrow_back, color: Colors.white, size: 30),
+                icon: const Icon(
+                  Icons.arrow_back,
+                  color: Colors.white,
+                  size: 30,
+                ),
                 onPressed: () => Navigator.of(context).pop(),
               ),
             ),
@@ -510,17 +523,19 @@ class _RegisterScreenState extends State<RegisterScreen> {
               color: const Color(0xFF3CDCF8),
               size: 18,
             ),
-            suffixIcon: isPassword
-                ? const Icon(
-                    Icons.remove_red_eye_outlined,
-                    color: Colors.white38,
-                    size: 18,
-                  )
-                : null,
+            suffixIcon:
+                isPassword
+                    ? const Icon(
+                      Icons.remove_red_eye_outlined,
+                      color: Colors.white38,
+                      size: 18,
+                    )
+                    : null,
             filled: true,
-            fillColor: isDesktop
-                ? const Color(0xFF141725)
-                : Colors.white.withOpacity(0.0),
+            fillColor:
+                isDesktop
+                    ? const Color(0xFF141725)
+                    : Colors.white.withOpacity(0.0),
             contentPadding: const EdgeInsets.symmetric(vertical: 18),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(16),
@@ -554,7 +569,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(12),
         gradient: const LinearGradient(
-          colors: [Color(0xFF3CDCF8), Color(0xFFCC88FF)], 
+          colors: [Color(0xFF3CDCF8), Color(0xFFCC88FF)],
           begin: Alignment.centerLeft,
           end: Alignment.centerRight,
         ),
@@ -575,24 +590,25 @@ class _RegisterScreenState extends State<RegisterScreen> {
             borderRadius: BorderRadius.circular(12),
           ),
         ),
-        child: _isLoading
-            ? const SizedBox(
-                width: 24,
-                height: 24,
-                child: CircularProgressIndicator(
-                  color: Colors.white,
-                  strokeWidth: 2,
+        child:
+            _isLoading
+                ? const SizedBox(
+                  width: 24,
+                  height: 24,
+                  child: CircularProgressIndicator(
+                    color: Colors.white,
+                    strokeWidth: 2,
+                  ),
+                )
+                : Text(
+                  text,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 0.5,
+                    color: Colors.white,
+                  ),
                 ),
-              )
-            : Text(
-                text,
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  letterSpacing: 0.5,
-                  color: Colors.white,
-                ),
-              ),
       ),
     );
   }
@@ -624,8 +640,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     await auth.signInWithGoogle();
     if (mounted) {
       setState(() => _isLoading = false);
-      if (auth.isAuthenticated &&
-          !auth.isGuest) {
+      if (auth.isAuthenticated && !auth.isGuest) {
         Navigator.of(context).popUntil((route) => route.isFirst);
         appShellKey.currentState?.navigateTo(0);
       }
@@ -638,7 +653,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
     bool isDesktop = false,
   }) {
     return OutlinedButton.icon(
-      onPressed: text == 'Google' ? (_isLoading ? null : _signInWithGoogle) : () {},
+      onPressed:
+          text == 'Google' ? (_isLoading ? null : _signInWithGoogle) : () {},
       icon: Container(
         padding: const EdgeInsets.all(2),
         decoration: const BoxDecoration(
@@ -659,20 +675,20 @@ class _RegisterScreenState extends State<RegisterScreen> {
         padding: const EdgeInsets.symmetric(vertical: 16),
         side: BorderSide(
           color: Colors.white.withOpacity(isDesktop ? 0.0 : 0.08),
-        ), 
+        ),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        backgroundColor: isDesktop
-            ? const Color(0xFF141725)
-            : Colors.white.withOpacity(0.02),
+        backgroundColor:
+            isDesktop
+                ? const Color(0xFF141725)
+                : Colors.white.withOpacity(0.02),
       ),
     );
   }
 
   Widget _buildLoginText({required bool isMobile}) {
     final textColor = Colors.white54;
-    final actionColor = isMobile
-        ? const Color(0xFF3CDCF8)
-        : const Color(0xFFCC88FF); 
+    final actionColor =
+        isMobile ? const Color(0xFF3CDCF8) : const Color(0xFFCC88FF);
     const prefix = "¿Ya tienes una cuenta? ";
     const suffix = "Iniciar sesión";
 

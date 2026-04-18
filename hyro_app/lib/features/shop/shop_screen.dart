@@ -299,9 +299,9 @@ class _ShopScreenState extends State<ShopScreen>
                     unselectedLabelStyle: AppTypography.bodyMedium,
                     dividerColor: AppColors.cardBorder,
                     tabs: const [
-                      Tab(text: '🎩 Sombreros'),
-                      Tab(text: '😎 Cara'),
-                      Tab(text: '👕 Cuerpo'),
+                      Tab(text: 'Sombreros'),
+                      Tab(text: 'Cara'),
+                      Tab(text: 'Cuerpo'),
                     ],
                   ),
                   const SizedBox(height: 16),
@@ -349,8 +349,9 @@ class _ShopScreenState extends State<ShopScreen>
                       child: AnimatedContainer(
                         duration: const Duration(milliseconds: 200),
                         width: 100,
+                        height: 135, // Forzar misma altura siempre
                         padding: const EdgeInsets.symmetric(
-                          vertical: 16,
+                          vertical: 12, // Reduce un poco el padding vertical para acomodar la altura fija
                           horizontal: 8,
                         ),
                         decoration: BoxDecoration(
@@ -369,24 +370,34 @@ class _ShopScreenState extends State<ShopScreen>
                         ),
                         child: Column(
                           mainAxisSize: MainAxisSize.min,
+                          mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Text(
-                              item.id == nadaId ? '❌' : item.icon,
-                              style: const TextStyle(fontSize: 36),
-                            ),
+                            item.imageAsset != null
+                                ? Image.asset(
+                                    item.imageAsset!,
+                                    height: 48,
+                                    fit: BoxFit.contain,
+                                  )
+                                : Text(
+                                    item.id == nadaId ? '❌' : item.icon,
+                                    style: const TextStyle(fontSize: 36),
+                                  ),
                             const SizedBox(height: 8),
-                            Text(
-                              item.nombre,
-                              style: AppTypography.bodySmall.copyWith(
-                                color:
-                                    isSelected
-                                        ? AppColors.textPrimary
-                                        : AppColors.textSecondary,
+                            Expanded(
+                              child: Text(
+                                item.nombre,
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                                style: AppTypography.bodySmall.copyWith(
+                                  color:
+                                      isSelected
+                                          ? AppColors.textPrimary
+                                          : AppColors.textSecondary,
+                                ),
+                                textAlign: TextAlign.center,
                               ),
-                              textAlign: TextAlign.center,
                             ),
                             if (isOwned && item.id != nadaId) ...[
-                              const SizedBox(height: 4),
                               Text(
                                 'Comprado',
                                 style: AppTypography.bodySmall.copyWith(
@@ -396,7 +407,6 @@ class _ShopScreenState extends State<ShopScreen>
                               ),
                             ],
                             if (!isOwned) ...[
-                              const SizedBox(height: 4),
                               Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [

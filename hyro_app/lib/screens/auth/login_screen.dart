@@ -65,6 +65,17 @@ class _LoginScreenState extends State<LoginScreen> {
 
       mascot.addListener(listener);
     }
+    
+    // Auth Listener to auto-close LoginScreen when OAuth completes via external browser (Deep Link)
+    final authProvider = context.read<AuthProvider>();
+    void authListener() {
+      if (mounted && authProvider.isAuthenticated && !authProvider.isGuest) {
+        authProvider.removeListener(authListener);
+        Navigator.of(context).popUntil((route) => route.isFirst);
+        appShellKey.currentState?.navigateTo(0);
+      }
+    }
+    authProvider.addListener(authListener);
   }
 
   void _startGreetingLoop() {

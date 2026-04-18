@@ -3,6 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:isar/isar.dart';
 import 'package:hyro_app/models/user_profile.dart';
+import 'package:hive_flutter/hive_flutter.dart';
+import 'package:hyro_app/data/models/daily_stats.dart';
+import 'package:hyro_app/data/repositories/stats_repository.dart';
 
 /// Reactive state for the user's gamification profile (nivel, xp, monedas)
 /// backed by the `perfiles` table in Supabase or locally via Isar for guests.
@@ -100,6 +103,42 @@ class ProfileProvider extends ChangeNotifier {
           }
         } catch (syncError) {
           debugPrint('Error de sincronización con Supabase (ignorado por Offline-First): $syncError');
+        }
+      }
+
+      // 🚀 Juez de Rachas (Duolingo-style streak check)
+      if (Hive.isBoxOpen('statsBox')) {
+        final statsRepo = StatsRepository(Hive.box<DailyStats>('statsBox'));
+        final trueStreak = statsRepo.getCurrentStreak();
+        
+        // Si el repositorio confirma que pasamos la medianoche de ayer sin actividad y perdimos la racha
+        if (trueStreak == 0 && rachaActual > 0) {
+          debugPrint('🚨 Juez de Rachas: ¡Racha perdida! (Tenías $rachaActual, bajado a 0)');
+          
+          // Actualizamos memoria
+          rachaActual = 0;
+          
+          // Actualizamos local (Isar)
+          final usr = activeUser ?? await isar.userProfiles.filter().isActivelyLoggedInEqualTo(true).findFirst();
+          if (usr != null) {
+            await isar.writeTxn(() async {
+              usr.rachaActual = 0;
+              await isar.userProfiles.put(usr);
+            });
+          }
+          
+          // Castigamos también en Supabase
+          if (userId != null) {
+            try {
+              await _supabase.from('perfiles').update({'racha_actual': 0}).eq('id', userId);
+              debugPrint('🚨 Castigo reflejado en Supabase');
+            } catch (e) {
+              debugPrint('⚠️ No se pudo enviar el castigo de racha a Supabase: $e');
+            }
+          }
+          
+          // Ya que modificamos memoria, avisamos a la UI
+          notifyListeners();
         }
       }
     } catch (e) {

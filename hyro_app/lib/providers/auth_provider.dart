@@ -440,10 +440,12 @@ class AuthProvider extends ChangeNotifier {
     try {
       await Supabase.instance.client.auth.signOut();
 
-      // Limpiamos también la sesión nativa de Google
-      final googleSignIn = GoogleSignIn();
-      if (await googleSignIn.isSignedIn()) {
-        await googleSignIn.signOut();
+      // Limpiamos también la sesión nativa de Google solo en móvil (evita crash en Windows)
+      if (!kIsWeb && (Platform.isAndroid || Platform.isIOS)) {
+        final googleSignIn = GoogleSignIn();
+        if (await googleSignIn.isSignedIn()) {
+          await googleSignIn.signOut();
+        }
       }
     } catch (e) {
       debugPrint('Error durante el logout: $e');

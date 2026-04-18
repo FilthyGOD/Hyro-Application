@@ -24,6 +24,7 @@ class _TasksScreenState extends State<TasksScreen> {
   // ── Demo data ──
   // ── Categories will be dynamic ──
   String? _selectedCategoryName;
+  bool _showAllCategoriesDesktop = false;
 
   @override
   Widget build(BuildContext context) {
@@ -71,7 +72,7 @@ class _TasksScreenState extends State<TasksScreen> {
                   const SizedBox(height: 32),
                   _buildTopCards(isLargeScreen: isLargeScreen),
                   const SizedBox(height: 32),
-                  _buildCategoryCards(),
+                  _buildCategoryCards(isLargeScreen: isLargeScreen),
                   const SizedBox(height: 32),
                   _buildCategoriesHeader(),
                   const SizedBox(height: 16),
@@ -177,11 +178,77 @@ class _TasksScreenState extends State<TasksScreen> {
     return '${days[now.weekday % 7]}, ${now.day} de ${months[now.month - 1]}';
   }
 
-  Widget _buildCategoryCards() {
+  Widget _buildCategoryCards({required bool isLargeScreen}) {
     return Consumer2<CategoryProvider, TaskProvider>(
       builder: (context, categoryProvider, taskProvider, child) {
         final categories = categoryProvider.categories;
         if (categories.isEmpty) return const SizedBox.shrink();
+
+        if (isLargeScreen) {
+          final maxVisible = 6;
+          final hasMore = categories.length > maxVisible;
+          final visibleCategories = (_showAllCategoriesDesktop || !hasMore)
+              ? categories
+              : categories.take(maxVisible).toList();
+
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Wrap(
+                spacing: 16,
+                runSpacing: 16,
+                children: visibleCategories.map((cat) {
+                  final tasks = taskProvider.tasks.where(
+                    (t) => t.category == cat.name || t.categoryId == cat.id,
+                  );
+                  final pending = tasks.where((t) => !t.isCompleted).length;
+                  final total = tasks.length;
+
+                  final isSelected =
+                      _selectedCategoryName == cat.name ||
+                      (_selectedCategoryName == null && cat == categories.first);
+
+                  return GestureDetector(
+                    onTap: () {
+                      setState(() {
+                        _selectedCategoryName = cat.name;
+                      });
+                    },
+                    child: Opacity(
+                      opacity: isSelected ? 1.0 : 0.5,
+                      child: SizedBox(
+                        width: 160,
+                        child: _CategoryCard(
+                          category: cat,
+                          pending: pending,
+                          total: total,
+                        ),
+                      ),
+                    ),
+                  );
+                }).toList(),
+              ),
+              if (hasMore) ...[
+                const SizedBox(height: 16),
+                TextButton.icon(
+                  onPressed: () {
+                    setState(() {
+                      _showAllCategoriesDesktop = !_showAllCategoriesDesktop;
+                    });
+                  },
+                  icon: Icon(
+                    _showAllCategoriesDesktop ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
+                    color: AppColors.primary,
+                  ),
+                  label: Text(
+                    _showAllCategoriesDesktop ? 'Mostrar menos' : 'Mostrar más',
+                    style: AppTypography.bodySmall.copyWith(color: AppColors.primary),
+                  ),
+                ),
+              ]
+            ],
+          );
+        }
 
         return SingleChildScrollView(
           scrollDirection: Axis.horizontal,
@@ -461,6 +528,8 @@ class _TasksScreenState extends State<TasksScreen> {
     final titleController = TextEditingController();
     int selectedColor = 0xFF22C55E; // Default Green
     int? selectedIcon; // Default nil
+    bool showAllColors = false;
+    bool showAllIcons = false;
 
     final colors = [
       0xFF22C55E, // Green
@@ -470,6 +539,23 @@ class _TasksScreenState extends State<TasksScreen> {
       0xFF8B5CF6, // Purple
       0xFFEC4899, // Pink
       0xFF06B6D4, // Cyan
+      // Nuevos 16 colores
+      0xFF14B8A6, // Teal
+      0xFF10B981, // Emerald
+      0xFF84CC16, // Lime
+      0xFFEAB308, // Yellow
+      0xFFF97316, // Deep Orange
+      0xFF6366F1, // Indigo
+      0xFFD946EF, // Fuchsia
+      0xFFF43F5E, // Rose
+      0xFF64748B, // Slate
+      0xFF78716C, // Stone
+      0xFFA855F7, // Light Purple
+      0xFF0EA5E9, // Sky Blue
+      0xFF2DD4BF, // Light Teal
+      0xFFFBBF24, // Amber
+      0xFFFB923C, // Coral
+      0xFF9333EA, // Deep Purple
     ];
 
     final icons = [
@@ -484,6 +570,29 @@ class _TasksScreenState extends State<TasksScreen> {
       Icons.flight.codePoint,
       Icons.palette.codePoint,
       Icons.shopping_bag.codePoint,
+      // Nuevos íconos
+      Icons.book.codePoint,
+      Icons.language.codePoint,
+      Icons.calculate.codePoint,
+      Icons.science.codePoint,
+      Icons.biotech.codePoint,
+      Icons.build.codePoint,
+      Icons.code.codePoint,
+      Icons.terminal.codePoint,
+      Icons.brush.codePoint,
+      Icons.camera_alt.codePoint,
+      Icons.movie.codePoint,
+      Icons.sports_soccer.codePoint,
+      Icons.directions_car.codePoint,
+      Icons.local_cafe.codePoint,
+      Icons.restaurant.codePoint,
+      Icons.home.codePoint,
+      Icons.pets.codePoint,
+      Icons.favorite.codePoint,
+      Icons.star.codePoint,
+      Icons.attach_money.codePoint,
+      Icons.bolt.codePoint,
+      Icons.cloud.codePoint,
     ];
 
     showDialog(
@@ -518,7 +627,7 @@ class _TasksScreenState extends State<TasksScreen> {
                         spacing: 12,
                         runSpacing: 12,
                         children:
-                            colors.map((c) {
+                            (showAllColors ? colors : colors.take(8)).map((c) {
                               final isSelected = selectedColor == c;
                               return GestureDetector(
                                 onTap:
@@ -550,6 +659,23 @@ class _TasksScreenState extends State<TasksScreen> {
                               );
                             }).toList(),
                       ),
+                      if (colors.length > 8)
+                        TextButton(
+                          onPressed: () {
+                            setDialogState(() {
+                              showAllColors = !showAllColors;
+                            });
+                          },
+                          style: TextButton.styleFrom(
+                            padding: EdgeInsets.zero,
+                            minimumSize: const Size(0, 32),
+                            alignment: Alignment.centerLeft,
+                          ),
+                          child: Text(
+                            showAllColors ? 'Mostrar menos' : 'Mostrar más',
+                            style: AppTypography.bodySmall.copyWith(color: AppColors.primary),
+                          ),
+                        ),
                       const SizedBox(height: 20),
                       Text('Ícono (Opcional)', style: AppTypography.bodySmall),
                       const SizedBox(height: 12),
@@ -557,7 +683,7 @@ class _TasksScreenState extends State<TasksScreen> {
                         spacing: 12,
                         runSpacing: 12,
                         children:
-                            icons.map((iconCode) {
+                            (showAllIcons ? icons : icons.take(8)).map((iconCode) {
                               final isSelected = selectedIcon == iconCode;
                               return GestureDetector(
                                 onTap:
@@ -598,6 +724,23 @@ class _TasksScreenState extends State<TasksScreen> {
                               );
                             }).toList(),
                       ),
+                      if (icons.length > 8)
+                        TextButton(
+                          onPressed: () {
+                            setDialogState(() {
+                              showAllIcons = !showAllIcons;
+                            });
+                          },
+                          style: TextButton.styleFrom(
+                            padding: EdgeInsets.zero,
+                            minimumSize: const Size(0, 32),
+                            alignment: Alignment.centerLeft,
+                          ),
+                          child: Text(
+                            showAllIcons ? 'Mostrar menos' : 'Mostrar más',
+                            style: AppTypography.bodySmall.copyWith(color: AppColors.primary),
+                          ),
+                        ),
                     ],
                   ),
                 ),

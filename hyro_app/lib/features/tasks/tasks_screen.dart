@@ -968,7 +968,7 @@ class _CategoryCard extends StatelessWidget {
           ),
           title: Text('Eliminar Categoría', style: AppTypography.h3),
           content: Text(
-            '¿Estás seguro de que deseas eliminar "${category.name}"?\n\nLas tareas asociadas no serán eliminadas.',
+            '¿Estás seguro de que deseas eliminar "${category.name}"?\n\nLas tareas asociadas también serán eliminadas.',
             style: AppTypography.bodyMedium.copyWith(
               color: AppColors.textSecondary,
             ),
@@ -983,6 +983,7 @@ class _CategoryCard extends StatelessWidget {
                 backgroundColor: const Color(0xFFEF4444),
               ),
               onPressed: () {
+                context.read<TaskProvider>().deleteTasksByCategory(category.id, category.name);
                 context.read<CategoryProvider>().deleteCategory(category.id);
                 Navigator.pop(ctx);
               },

@@ -97,6 +97,30 @@ class TaskProvider extends ChangeNotifier {
     }
   }
 
+  /// Delete all tasks associated with a specific category
+  Future<void> deleteTasksByCategory(String? categoryId, String? categoryName) async {
+    final tasksToDelete = _tasks.where((t) {
+      return (categoryId != null && t.categoryId == categoryId) ||
+             (categoryName != null && t.category == categoryName);
+    }).toList();
+
+    if (tasksToDelete.isEmpty) return;
+
+    for (final task in tasksToDelete) {
+      try {
+        await _repository.deleteTask(task.id);
+      } catch (e) {
+        debugPrint('Error deleting task ${task.id}: $e');
+      }
+    }
+    
+    _tasks.removeWhere((t) {
+      return (categoryId != null && t.categoryId == categoryId) ||
+             (categoryName != null && t.category == categoryName);
+    });
+    notifyListeners();
+  }
+
   Future<void> toggleTaskCompletion(String id) async {
     final taskIndex = _tasks.indexWhere((t) => t.id == id);
     if (taskIndex != -1) {

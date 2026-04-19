@@ -195,7 +195,9 @@ class MascotController extends ChangeNotifier {
 
   // CORRECCIÓN CLAVE: Usar async/await para dar tiempo a la máquina de estados
   Future<void> triggerRacha(int streak) async {
-    debugPrint('🔥 [MascotController] triggerRacha iniciado con streak: $streak');
+    debugPrint(
+      '🔥 [MascotController] triggerRacha iniciado con streak: $streak',
+    );
     _triggerVolver?.fire(); // Return to movimiento_suave first
 
     // Damos un pequeño respiro de 50ms para que Rive procese la transición 'volver'
@@ -205,12 +207,14 @@ class MascotController extends ChangeNotifier {
     final valUnidades = (streak % 10).toDouble();
     final valDecenas = (streak ~/ 10).toDouble();
 
-    debugPrint('🔥 [MascotController] Rive Inputs -> Unidades: $valUnidades, Decenas: $valDecenas');
+    debugPrint(
+      '🔥 [MascotController] Rive Inputs -> Unidades: $valUnidades, Decenas: $valDecenas',
+    );
 
     _unidades?.value = valUnidades;
     _decenas?.value = valDecenas;
-    
-    _triggerRacha?.fire(); 
+
+    _triggerRacha?.fire();
     debugPrint('🔥 [MascotController] Animación de Racha disparada!');
   }
 

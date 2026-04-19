@@ -148,10 +148,11 @@ class _FocusQuizDialogState extends State<FocusQuizDialog> {
       child: GlassCard(
         width: 400,
         padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
             Row(
               children: [
                 const Icon(
@@ -346,6 +347,7 @@ class _FocusQuizDialogState extends State<FocusQuizDialog> {
               ),
             ],
           ],
+        ),
         ),
       ),
     );

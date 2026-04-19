@@ -3,6 +3,7 @@ import '../../data/models/task_model.dart';
 import '../../data/repositories/task_repository.dart';
 import '../../data/local/task_local_ds.dart';
 import '../../data/remote/task_remote_ds.dart';
+import '../../services/notifications_service.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class TaskProvider extends ChangeNotifier {
@@ -65,6 +66,7 @@ class TaskProvider extends ChangeNotifier {
     try {
       await _repository.addTask(task);
       _tasks.add(task);
+      NotificationsService.instance.scheduleTaskReminder(task.id, task.title, task.dueDate, task.isCompleted);
       notifyListeners();
     } catch (e) {
       debugPrint('Error adding task: $e');
@@ -78,6 +80,7 @@ class TaskProvider extends ChangeNotifier {
       final index = _tasks.indexWhere((t) => t.id == task.id);
       if (index != -1) {
         _tasks[index] = task;
+        NotificationsService.instance.scheduleTaskReminder(task.id, task.title, task.dueDate, task.isCompleted);
         notifyListeners();
       }
     } catch (e) {
@@ -89,6 +92,7 @@ class TaskProvider extends ChangeNotifier {
   Future<void> deleteTask(String id) async {
     try {
       await _repository.deleteTask(id);
+      NotificationsService.instance.cancelTaskReminder(id);
       _tasks.removeWhere((t) => t.id == id);
       notifyListeners();
     } catch (e) {
@@ -109,6 +113,7 @@ class TaskProvider extends ChangeNotifier {
     for (final task in tasksToDelete) {
       try {
         await _repository.deleteTask(task.id);
+        NotificationsService.instance.cancelTaskReminder(task.id);
       } catch (e) {
         debugPrint('Error deleting task ${task.id}: $e');
       }
@@ -160,6 +165,7 @@ class TaskProvider extends ChangeNotifier {
     for (final orphan in orphans) {
       debugPrint('Deleting orphaned task: ${orphan.title} (${orphan.id})');
       await _repository.deleteTask(orphan.id);
+      NotificationsService.instance.cancelTaskReminder(orphan.id);
     }
 
     _tasks.removeWhere((t) => orphans.any((o) => o.id == t.id));

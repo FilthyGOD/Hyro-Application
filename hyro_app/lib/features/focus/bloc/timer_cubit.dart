@@ -7,6 +7,7 @@ import '../../../providers/profile_provider.dart';
 import '../../missions/missions_provider.dart';
 import '../../tasks/tasks_provider.dart';
 import '../../../providers/auth_provider.dart';
+import '../../../services/notifications_service.dart';
 import 'timer_state.dart';
 
 /// Cubit that manages the Pomodoro timer logic.
@@ -42,11 +43,16 @@ class TimerCubit extends Cubit<TimerState> {
     ));
     _timer?.cancel();
     _timer = Timer.periodic(const Duration(seconds: 1), (_) => _tick());
+    NotificationsService.instance.schedulePomodoroEndNotification(
+      state.mode == TimerMode.pomodoro, 
+      state.remainingSeconds
+    );
   }
 
   /// Pause the timer.
   void pause() {
     _timer?.cancel();
+    NotificationsService.instance.cancelPomodoroNotification();
     emit(state.copyWith(status: TimerStatus.paused));
   }
 
@@ -59,6 +65,7 @@ class TimerCubit extends Cubit<TimerState> {
   /// Reset the timer to the beginning of the current mode.
   void reset() {
     _timer?.cancel();
+    NotificationsService.instance.cancelPomodoroNotification();
     _secondsSinceLastQuiz = 0;
     final totalSec = _durationForMode(state.mode) * 60;
     emit(
@@ -80,6 +87,7 @@ class TimerCubit extends Cubit<TimerState> {
   /// Stop the timer completely and go back to idle pomodoro.
   void stop() {
     _timer?.cancel();
+    NotificationsService.instance.cancelPomodoroNotification();
     _secondsSinceLastQuiz = 0;
     final totalSec = (settingsProvider?.pomodoroDuration.toInt() ?? PomodoroConstants.pomodoroDuration) * 60;
     emit(
@@ -97,6 +105,7 @@ class TimerCubit extends Cubit<TimerState> {
   /// Switch timer mode (Pomodoro, Short Break, Long Break).
   void setMode(TimerMode mode) {
     _timer?.cancel();
+    NotificationsService.instance.cancelPomodoroNotification();
     final totalSec = _durationForMode(mode) * 60;
     emit(
       TimerState(

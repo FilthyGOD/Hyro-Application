@@ -16,9 +16,14 @@ import 'models/user_profile.dart';
 import 'package:window_manager/window_manager.dart';
 import 'dart:io';
 import 'package:windows_single_instance/windows_single_instance.dart'; // <-- Vuelve el salvador
+import 'services/notifications_service.dart';
 
 void main(List<String> args) async {
   WidgetsFlutterBinding.ensureInitialized();
+  
+  // Inicializar notificaciones y solicitar permisos
+  await NotificationsService.instance.init();
+  await NotificationsService.instance.requestPermissions();
 
   // ─── EL CADENERO OFICIAL (PARCHADO PARA NULLS) ───────────────────
   if (Platform.isWindows) {

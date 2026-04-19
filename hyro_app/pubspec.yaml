@@ -53,6 +53,9 @@ dependencies:
   app_links: ^6.4.1
   windows_single_instance: ^1.1.0
   file_picker: ^8.0.0
+  flutter_local_notifications: ^21.0.0
+  timezone: ^0.11.0
+  permission_handler: ^12.0.1
 
 dev_dependencies:
   flutter_test:

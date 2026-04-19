@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 import '../../providers/ui_provider.dart';
 import 'settings_provider.dart';
 import '../focus/bloc/timer_cubit.dart';
+import '../../services/notifications_service.dart';
 
 /// Settings screen for Pomodoro durations, notifications, and theme.
 class SettingsScreen extends StatefulWidget {
@@ -140,6 +141,73 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     },
                   ),
                 ],
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+          // ── Notifications Test ──
+          GlassCard(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Prueba de Notificaciones', style: AppTypography.h3),
+                const SizedBox(height: 12),
+                Text(
+                  'Si las notificaciones no suenan, asegúrate de haber dado los permisos necesarios a la aplicación en los ajustes de tu teléfono.',
+                  style: AppTypography.bodySmall,
+                ),
+                const SizedBox(height: 20),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton.icon(
+                    icon: const Icon(Icons.timer),
+                    label: const Text('Recordatorio de Tarea (Falta 1 día)'),
+                    onPressed: () {
+                      NotificationsService.instance.testTaskReminderDay('Hacer Proyecto final', 1);
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primary.withAlpha(50),
+                      foregroundColor: AppColors.primary,
+                      alignment: Alignment.centerLeft,
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton.icon(
+                    icon: const Icon(Icons.wb_sunny_rounded),
+                    label: const Text('Motivación Diaria'),
+                    onPressed: () {
+                      NotificationsService.instance.testMorningMotivation();
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.orange.withAlpha(50),
+                      foregroundColor: Colors.orange,
+                      alignment: Alignment.centerLeft,
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton.icon(
+                    icon: const Icon(Icons.check_circle_rounded),
+                    label: const Text('Fin del Pomodoro'),
+                    onPressed: () {
+                      NotificationsService.instance.testPomodoroEnd();
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.green.withAlpha(50),
+                      foregroundColor: Colors.green,
+                      alignment: Alignment.centerLeft,
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    ),
+                  ),
+                ),
               ],
             ),
           ),

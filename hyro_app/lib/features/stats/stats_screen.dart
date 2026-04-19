@@ -136,6 +136,8 @@ class _StatsScreenState extends State<StatsScreen> {
                           flex: 2,
                           child: _buildRecentMilestones(
                             statsProvider.totalFocusHours,
+                            streak,
+                            sessionsToday,
                           ),
                         ),
                       ],
@@ -151,7 +153,7 @@ class _StatsScreenState extends State<StatsScreen> {
                           onNextMonth: _nextMonth,
                         ),
                         const SizedBox(height: 24),
-                        _buildRecentMilestones(statsProvider.totalFocusHours),
+                        _buildRecentMilestones(statsProvider.totalFocusHours, streak, sessionsToday),
                       ],
                     );
                   }
@@ -288,7 +290,95 @@ class _StatsScreenState extends State<StatsScreen> {
     );
   }
 
-  Widget _buildRecentMilestones(double totalHours) {
+  Widget _buildRecentMilestones(double totalHours, int streak, int sessionsToday) {
+    final achievements = [
+      _MilestoneData(
+        icon: Icons.local_fire_department,
+        title: 'Primera Llama',
+        description: 'Construye una racha de 1 día',
+        current: streak.toDouble(),
+        target: 1.0,
+      ),
+      _MilestoneData(
+        icon: Icons.local_cafe,
+        title: 'Racha de Bronce',
+        description: 'Mantén una racha de 7 días',
+        current: streak.toDouble(),
+        target: 7.0,
+      ),
+      _MilestoneData(
+        icon: Icons.psychology,
+        title: 'Hábito Formado',
+        description: 'Alcanza una racha de 21 días',
+        current: streak.toDouble(),
+        target: 21.0,
+      ),
+      _MilestoneData(
+        icon: Icons.military_tech,
+        title: 'Club del Siglo',
+        description: 'Meta legendaria de 100 días',
+        current: streak.toDouble(),
+        target: 100.0,
+      ),
+      _MilestoneData(
+        icon: Icons.timer,
+        title: 'Calentando Motores',
+        description: 'Acumula 5 horas totales de enfoque',
+        current: totalHours,
+        target: 5.0,
+      ),
+      _MilestoneData(
+        icon: Icons.explore,
+        title: 'Explorador del Tiempo',
+        description: 'Acumula 50 horas de dedicación',
+        current: totalHours,
+        target: 50.0,
+      ),
+      _MilestoneData(
+        icon: Icons.auto_awesome,
+        title: 'Maestro del Enfoque',
+        description: 'Completa 100 horas totales',
+        current: totalHours,
+        target: 100.0,
+      ),
+      _MilestoneData(
+        icon: Icons.task_alt,
+        title: 'Doble Sesión',
+        description: 'Completa 2 sesiones en un día',
+        current: sessionsToday.toDouble(),
+        target: 2.0,
+      ),
+      _MilestoneData(
+        icon: Icons.bolt,
+        title: 'Imparable',
+        description: 'Completa 5 sesiones en un solo día',
+        current: sessionsToday.toDouble(),
+        target: 5.0,
+      ),
+      _MilestoneData(
+        icon: Icons.self_improvement,
+        title: 'Monje del Silencio',
+        description: 'Alcanza 200 horas de concentración',
+        current: totalHours,
+        target: 200.0,
+      ),
+    ];
+
+    final completed = achievements.where((a) => a.current >= a.target).toList();
+    final inProgress = achievements.where((a) => a.current < a.target).toList();
+
+    completed.sort((a, b) => b.target.compareTo(a.target));
+    inProgress.sort((a, b) {
+      final aProgress = a.current / a.target;
+      final bProgress = b.current / b.target;
+      return bProgress.compareTo(aProgress);
+    });
+
+    final displayAchievements = [
+      ...completed.take(2),
+      ...inProgress.take(4),
+    ].take(5).toList();
+
     return GlassCard(
       padding: const EdgeInsets.all(24),
       child: Column(
@@ -317,30 +407,19 @@ class _StatsScreenState extends State<StatsScreen> {
             ],
           ),
           const SizedBox(height: 24),
-
-          _MilestoneItem(
-            icon: Icons.local_fire_department,
-            title: 'Primera Llama',
-            description: 'Alcanzaste una racha de 1 día',
-            isCompleted: true,
-            progress: 1.0,
-          ),
-          const SizedBox(height: 16),
-          _MilestoneItem(
-            icon: Icons.auto_awesome,
-            title: 'Maestro del Enfoque',
-            description: '100 Horas Totales',
-            isCompleted: totalHours >= 100,
-            progress: (totalHours / 100).clamp(0.0, 1.0),
-          ),
-          const SizedBox(height: 16),
-          _MilestoneItem(
-            icon: Icons.military_tech,
-            title: 'Club del Siglo',
-            description: 'Meta de Racha de 100 Días',
-            isCompleted: false, // Could pass current streak here too
-            progress: 0.1, // Placeholder
-          ),
+          ...displayAchievements.map((ach) {
+            final isLast = ach == displayAchievements.last;
+            return Padding(
+              padding: EdgeInsets.only(bottom: isLast ? 0 : 16),
+              child: _MilestoneItem(
+                icon: ach.icon,
+                title: ach.title,
+                description: ach.description,
+                isCompleted: ach.current >= ach.target,
+                progress: (ach.current / ach.target).clamp(0.0, 1.0),
+              ),
+            );
+          }),
         ],
       ),
     );
@@ -432,4 +511,20 @@ class _MilestoneItem extends StatelessWidget {
       ),
     );
   }
+}
+
+class _MilestoneData {
+  final IconData icon;
+  final String title;
+  final String description;
+  final double current;
+  final double target;
+
+  _MilestoneData({
+    required this.icon,
+    required this.title,
+    required this.description,
+    required this.current,
+    required this.target,
+  });
 }

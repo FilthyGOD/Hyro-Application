@@ -237,6 +237,24 @@ class TimerCubit extends Cubit<TimerState> {
     }
   }
 
+  /// Debug method to immediately trigger the completed session view
+  void debugForceSessionCompleted() {
+    _timer?.cancel();
+    NotificationsService.instance.cancelPomodoroNotification();
+    emit(
+      TimerState(
+        status: TimerStatus.finished,
+        mode: TimerMode.shortBreak,
+        remainingSeconds: 5 * 60,
+        totalSeconds: 5 * 60,
+        completedSessions: state.completedSessions,
+        totalFocusMinutes: state.totalFocusMinutes,
+        activeTaskId: state.activeTaskId,
+        activeTaskTitle: state.activeTaskTitle,
+      ),
+    );
+  }
+
   @override
   Future<void> close() {
     _timer?.cancel();

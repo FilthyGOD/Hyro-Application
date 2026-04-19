@@ -64,23 +64,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 _SliderSetting(
                   label: 'Duración del Pomodoro',
                   value: settings.pomodoroDuration,
-                  min: 1,
+                  min: 25,
                   max: 60,
+                  divisions: 7,
                   suffix: 'min',
                   onChanged: (v) {
                     settings.setPomodoroDuration(v);
-                    context.read<TimerCubit>().refreshIfIdle();
-                  },
-                ),
-                const SizedBox(height: 16),
-                _SliderSetting(
-                  label: 'Descanso Corto',
-                  value: settings.shortBreakDuration,
-                  min: 1,
-                  max: 15,
-                  suffix: 'min',
-                  onChanged: (v) {
-                    settings.setShortBreakDuration(v);
+                    settings.setShortBreakDuration(v / 5);
                     context.read<TimerCubit>().refreshIfIdle();
                   },
                 ),
@@ -208,6 +198,26 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     ),
                   ),
                 ),
+                const SizedBox(height: 12),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton.icon(
+                    icon: const Icon(Icons.bug_report),
+                    label: const Text('Test: Pantalla de Sesión Completada'),
+                    onPressed: () {
+                       context.read<TimerCubit>().debugForceSessionCompleted();
+                       ScaffoldMessenger.of(context).showSnackBar(
+                         const SnackBar(content: Text('Simulando fin de sesión. Revisa la pantalla de Focus.')),
+                       );
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.purple.withAlpha(50),
+                      foregroundColor: Colors.purpleAccent,
+                      alignment: Alignment.centerLeft,
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    ),
+                  ),
+                ),
               ],
             ),
           ),
@@ -280,6 +290,7 @@ class _SliderSetting extends StatelessWidget {
   final double value;
   final double min;
   final double max;
+  final int? divisions;
   final String suffix;
   final ValueChanged<double> onChanged;
 
@@ -288,6 +299,7 @@ class _SliderSetting extends StatelessWidget {
     required this.value,
     required this.min,
     required this.max,
+    this.divisions,
     required this.suffix,
     required this.onChanged,
   });
@@ -321,7 +333,7 @@ class _SliderSetting extends StatelessWidget {
             value: value,
             min: min,
             max: max,
-            divisions: (max - min).toInt(),
+            divisions: divisions ?? (max - min).toInt(),
             onChanged: onChanged,
           ),
         ),

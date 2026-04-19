@@ -6,12 +6,12 @@ import '../bloc/timer_state.dart';
 /// Chips to switch between Pomodoro, Short Break, Long Break.
 class ModeSelector extends StatelessWidget {
   final TimerMode currentMode;
-  final ValueChanged<TimerMode> onModeChanged;
+  final VoidCallback onStart;
 
   const ModeSelector({
     super.key,
     required this.currentMode,
-    required this.onModeChanged,
+    required this.onStart,
   });
 
   @override
@@ -22,16 +22,10 @@ class ModeSelector extends StatelessWidget {
       runSpacing: 10,
       children: [
         _ModeChip(
-          label: 'Pomodoro',
-          isActive: currentMode == TimerMode.pomodoro,
+          label: 'Iniciar',
+          isActive: true,
           activeColor: AppColors.timerColor,
-          onTap: () => onModeChanged(TimerMode.pomodoro),
-        ),
-        _ModeChip(
-          label: 'Descanso Corto',
-          isActive: currentMode == TimerMode.shortBreak,
-          activeColor: AppColors.timerColor,
-          onTap: () => onModeChanged(TimerMode.shortBreak),
+          onTap: onStart,
         ),
       ],
     );

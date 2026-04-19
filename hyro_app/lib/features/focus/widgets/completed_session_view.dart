@@ -48,8 +48,7 @@ class _CompletedSessionViewState extends State<CompletedSessionView> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  _buildHeader(context),
-                  const SizedBox(height: 32),
+
                   Center(
                     child: _buildFestejoAnimation(isMobile),
                   ),
@@ -66,10 +65,10 @@ class _CompletedSessionViewState extends State<CompletedSessionView> {
                     ),
                   ),
                   const SizedBox(height: 12),
-                  const Text(
-                    'Has completado tu sesión con éxito. ¡Sigue así!',
+                  Text(
+                    'Has completado tu sesión con éxito llevas una racha de $streak días. ¡Sigue así!',
                     textAlign: TextAlign.center,
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontSize: 16,
                       color: Colors.white70,
                     ),
@@ -98,9 +97,20 @@ class _CompletedSessionViewState extends State<CompletedSessionView> {
                     runSpacing: 12,
                     children: [
                       _buildActionButton(
+                        label: 'Continuar Tarea',
+                        icon: Icons.play_arrow,
+                        isPrimary: true,
+                        onPressed: () {
+                          final cubit = context.read<TimerCubit>();
+                          final state = cubit.state;
+                          cubit.setMode(TimerMode.pomodoro);
+                          cubit.start(taskId: state.activeTaskId, taskTitle: state.activeTaskTitle);
+                        },
+                      ),
+                      _buildActionButton(
                         label: 'Iniciar Descanso',
                         icon: Icons.coffee,
-                        isPrimary: true,
+                        isPrimary: false,
                         onPressed: () {
                           final cubit = context.read<TimerCubit>();
                           cubit.setMode(TimerMode.shortBreak);
@@ -108,10 +118,12 @@ class _CompletedSessionViewState extends State<CompletedSessionView> {
                         },
                       ),
                       _buildActionButton(
-                        label: 'Próxima Tarea',
-                        icon: Icons.arrow_forward,
+                        label: 'Cambiar Tarea',
+                        icon: Icons.swap_horiz,
                         isPrimary: false,
-                        onPressed: () {},
+                        onPressed: () {
+                          context.read<TimerCubit>().reset();
+                        },
                       ),
                     ],
                   ),
@@ -129,24 +141,7 @@ class _CompletedSessionViewState extends State<CompletedSessionView> {
     );
   }
 
-  Widget _buildHeader(BuildContext context) {
-    final now = DateTime.now();
-    final dayNames = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
-    final monthNames = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        Text('Sesión Completada', style: AppTypography.h1, textAlign: TextAlign.center),
-        const SizedBox(height: 8),
-        Text(
-          '${dayNames[now.weekday - 1]}, ${now.day} ${monthNames[now.month - 1]} • Racha de Focus: $streak días 🔥',
-          style: AppTypography.bodyMedium,
-          textAlign: TextAlign.center,
-        ),
-      ],
-    );
-  }
 
   Widget _buildFestejoAnimation(bool isMobile) {
     final size = isMobile ? 150.0 : 200.0;
@@ -179,13 +174,15 @@ class _CompletedSessionViewState extends State<CompletedSessionView> {
     final isMobile = MediaQuery.of(context).size.width < 600;
     return Container(
       width: isMobile ? 150 : 200,
-      padding: EdgeInsets.symmetric(vertical: isMobile ? 16 : 24, horizontal: 12),
+      height: isMobile ? 100 : 130,
+      padding: const EdgeInsets.symmetric(horizontal: 8),
       decoration: BoxDecoration(
         color: const Color(0xFF191D28),
         borderRadius: BorderRadius.circular(24),
         border: Border.all(color: const Color(0xFF2D3748), width: 1),
       ),
       child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Text(
             label,

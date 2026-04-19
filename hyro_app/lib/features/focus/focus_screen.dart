@@ -15,6 +15,7 @@ import '../mascot/mascot_controller.dart';
 import '../settings/settings_provider.dart';
 import '../../providers/ui_provider.dart';
 import 'widgets/focus_quiz_dialog.dart';
+import 'widgets/pause_clock.dart';
 import '../../data/local/card_local_ds.dart';
 import '../../data/local/note_local_ds.dart';
 import '../tasks/tasks_provider.dart';
@@ -182,11 +183,16 @@ class _DesktopLayout extends StatelessWidget {
                                       const SizedBox(height: 24),
                                     ],
                                     // The content (Timer, Controls, Scroller)
-                                    CircularTimer(
-                                      remainingSeconds: state.remainingSeconds,
-                                      progress: state.progress,
-                                      size: timerSize,
-                                    ),
+                                    if (state.isPaused)
+                                      PauseClock(
+                                        size: timerSize,
+                                      )
+                                    else
+                                      CircularTimer(
+                                        remainingSeconds: state.remainingSeconds,
+                                        progress: state.progress,
+                                        size: timerSize,
+                                      ),
                                     const SizedBox(height: 16),
                                     if (state.isRunning && state.quizTotalCount > 0)
                                       Padding(
@@ -208,10 +214,11 @@ class _DesktopLayout extends StatelessWidget {
                                       onStop: cubit.stop,
                                     ),
                                     const SizedBox(height: 24),
-                                    ModeSelector(
-                                      currentMode: state.mode,
-                                      onModeChanged: cubit.setMode,
-                                    ),
+                                    if (!state.isRunning && !state.isPaused)
+                                      ModeSelector(
+                                        currentMode: state.mode,
+                                        onStart: () => _handleStart(context, cubit),
+                                      ),
                                   ],
                                 );
                               },
@@ -348,6 +355,8 @@ class _MobileLayout extends StatelessWidget {
                     final size =
                         (availableWidth * 0.75).clamp(160.0, 260.0) *
                         settings.timerSizeMultiplier;
+                    if (state.isPaused)
+                      return PauseClock(size: size);
                     return CircularTimer(
                       remainingSeconds: state.remainingSeconds,
                       progress: state.progress,
@@ -377,10 +386,11 @@ class _MobileLayout extends StatelessWidget {
                 onStop: cubit.stop,
               ),
               const SizedBox(height: 24),
-              ModeSelector(
-                currentMode: state.mode,
-                onModeChanged: cubit.setMode,
-              ),
+              if (!state.isRunning && !state.isPaused)
+                ModeSelector(
+                  currentMode: state.mode,
+                  onStart: () => _handleStart(context, cubit),
+                ),
             ],
           ),
         ),
@@ -419,6 +429,8 @@ class _MobileLayout extends StatelessWidget {
                   final size =
                       (availableWidth * 0.75).clamp(160.0, 260.0) *
                       settings.timerSizeMultiplier;
+                  if (state.isPaused)
+                    return PauseClock(size: size);
                   return CircularTimer(
                     remainingSeconds: state.remainingSeconds,
                     progress: state.progress,
@@ -440,7 +452,11 @@ class _MobileLayout extends StatelessWidget {
               onStop: cubit.stop,
             ),
             const SizedBox(height: 24),
-            ModeSelector(currentMode: state.mode, onModeChanged: cubit.setMode),
+            if (!state.isRunning && !state.isPaused)
+              ModeSelector(
+                currentMode: state.mode,
+                onStart: () => _handleStart(context, cubit),
+              ),
             if (!state.isRunning && !settings.hideFocusCards) ...[
               const SizedBox(height: 24),
               const MiniTaskList(),

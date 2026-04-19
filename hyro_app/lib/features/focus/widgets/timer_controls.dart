@@ -51,59 +51,42 @@ class TimerControls extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (!isRunning && !isPaused) {
+       return const SizedBox.shrink();
+    }
+
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        // Reset
-        _ControlButton(
-          icon: Icons.replay,
-          size: 48 * buttonSizeMultiplier,
-          onTap: () {
-            if (isRunning || isPaused) {
-              _confirmAction(context, 'Reiniciar', '¿Reiniciar el temporizador?', onReset);
-            } else {
-              onReset();
-            }
-          },
-          backgroundColor: AppColors.surfaceLight,
-        ),
-        SizedBox(width: 24 * buttonSizeMultiplier),
-        // Play / Pause
-        _ControlButton(
-          icon:
-              isRunning
-                  ? Icons.pause
-                  : isPaused
-                  ? Icons.play_arrow
-                  : Icons.play_arrow,
-          size: 60 * buttonSizeMultiplier,
-          onTap: () {
-            if (isRunning) {
-              _confirmAction(context, 'Pausar', '¿Estás seguro de que deseas pausar tu sesión?', onPause);
-            } else if (isPaused) {
-              onResume();
-            } else {
-              onStart();
-            }
-          },
-          backgroundColor: AppColors.timerColor,
-          iconColor: Colors.white,
-          elevation: true,
-        ),
-        SizedBox(width: 24 * buttonSizeMultiplier),
         // Stop
         _ControlButton(
           icon: Icons.stop,
-          size: 48,
+          size: 60 * buttonSizeMultiplier,
           onTap: () {
-            if (isRunning || isPaused) {
-               _confirmAction(context, 'Detener', '¿Deseas detener y salir de la sesión actual?', onStop);
-            } else {
-               onStop();
-            }
+             _confirmAction(context, 'Detener', '¿Deseas detener y salir de la sesión actual?', onStop);
           },
           backgroundColor: AppColors.surfaceLight,
         ),
+        SizedBox(width: 32 * buttonSizeMultiplier),
+        // Pause / Resume
+        if (isRunning)
+          _ControlButton(
+            icon: Icons.pause,
+            size: 60 * buttonSizeMultiplier,
+            onTap: onPause,
+            backgroundColor: AppColors.timerColor,
+            iconColor: Colors.white,
+            elevation: true,
+          )
+        else if (isPaused)
+          _ControlButton(
+            icon: Icons.play_arrow,
+            size: 60 * buttonSizeMultiplier,
+            onTap: onResume,
+            backgroundColor: AppColors.timerColor,
+            iconColor: Colors.white,
+            elevation: true,
+          ),
       ],
     );
   }

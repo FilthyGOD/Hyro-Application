@@ -64,12 +64,12 @@ class MascotController extends ChangeNotifier {
 
   Future<void> _loadRiveFile() async {
     final file = await File.asset(
-      'assets/mascot/jairo43.riv',
+      'assets/mascot/jairo44.riv',
       riveFactory: Factory.flutter,
     );
 
     if (file == null) {
-      debugPrint('ERROR: Could not load Rive file jairo43.riv');
+      debugPrint('ERROR: Could not load Rive file jairo44.riv');
       return;
     }
 

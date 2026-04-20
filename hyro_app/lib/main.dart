@@ -17,6 +17,8 @@ import 'package:window_manager/window_manager.dart';
 import 'dart:io';
 import 'package:windows_single_instance/windows_single_instance.dart'; // <-- Vuelve el salvador
 import 'services/notifications_service.dart';
+// ignore: unused_import
+import 'features/focus/strict_overlay_screen.dart'; // Keeps overlayMain entry point alive
 
 void main(List<String> args) async {
   WidgetsFlutterBinding.ensureInitialized();

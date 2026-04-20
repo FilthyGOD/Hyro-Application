@@ -11,6 +11,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../tasks/tasks_provider.dart';
 import '../stats/stats_provider.dart';
 import 'dart:io';
+import '../../core/services/strict_mode_service.dart';
 
 /// Settings screen for Pomodoro durations, notifications, and theme.
 class SettingsScreen extends StatefulWidget {
@@ -128,14 +129,42 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     onChanged: (v) => settings.setMinimizeToTray(v),
                   ),
                 ],
-                const Divider(height: 24),
-                _ToggleSetting(
-                  label: 'Modo Estricto',
-                  subtitle:
-                      'Bloquea salir de la pantalla mientras el temporizador esté activo',
-                  value: settings.strictMode,
-                  onChanged: (v) => settings.setStrictMode(v),
-                ),
+                if (Platform.isAndroid) ...[
+                  const Divider(height: 24),
+                  _ToggleSetting(
+                    label: 'Modo Estricto (Experimental)',
+                    subtitle:
+                        'Si sales de Hyro durante una sesión, te mostraremos una alerta para que vuelvas',
+                    value: settings.strictMode,
+                    onChanged: (v) async {
+                      debugPrint('[StrictMode][Settings] Toggle changed to: $v');
+                      if (v) {
+                        // Request permissions when enabling
+                        debugPrint('[StrictMode][Settings] Requesting permissions...');
+                        final service = StrictModeService();
+                        await service.init();
+                        final granted = await service.checkAndRequestPermissions();
+                        debugPrint('[StrictMode][Settings] Permissions granted: $granted');
+                        if (!granted) {
+                          // User was sent to system settings — don't enable yet
+                          debugPrint('[StrictMode][Settings] Permissions NOT granted, showing snackbar');
+                          if (context.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('Acepta los permisos necesarios y vuelve a activar el Modo Estricto.'),
+                              ),
+                            );
+                          }
+                          return;
+                        }
+                        debugPrint('[StrictMode][Settings] ✅ Enabling strict mode');
+                      } else {
+                        debugPrint('[StrictMode][Settings] Disabling strict mode');
+                      }
+                      settings.setStrictMode(v);
+                    },
+                  ),
+                ],
                 const Divider(height: 24),
                 _ToggleSetting(
                   label: 'Focus Quiz',

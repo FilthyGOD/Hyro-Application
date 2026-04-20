@@ -235,7 +235,7 @@ class AppShellState extends State<AppShell> with WidgetsBindingObserver, WindowL
       final cubit = context.read<TimerCubit>();
       final settings = context.read<SettingsProvider>();
       if (cubit.state.isRunning && settings.autoPauseTimer) {
-        cubit.pause();
+        cubit.pause(manual: false);
       }
     }
   }

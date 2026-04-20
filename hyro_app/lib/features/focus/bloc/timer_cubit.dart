@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../core/constants/pomodoro_constants.dart';
 import '../../stats/stats_provider.dart';
@@ -8,6 +9,7 @@ import '../../missions/missions_provider.dart';
 import '../../tasks/tasks_provider.dart';
 import '../../../providers/auth_provider.dart';
 import '../../../services/notifications_service.dart';
+import '../../../core/services/strict_mode_service.dart';
 import 'timer_state.dart';
 
 /// Cubit that manages the Pomodoro timer logic.
@@ -31,8 +33,10 @@ class TimerCubit extends Cubit<TimerState> {
     this.taskProvider,
   }) : super(const TimerState());
 
+  final StrictModeService _strictModeService = StrictModeService();
+
   /// Start the timer.
-  void start({String? taskId, String? taskTitle}) {
+  void start({String? taskId, String? taskTitle, bool isStrictMode = false}) {
     if (state.status == TimerStatus.running) return;
 
     emit(state.copyWith(
@@ -40,6 +44,7 @@ class TimerCubit extends Cubit<TimerState> {
       activeTaskId: taskId ?? state.activeTaskId,
       activeTaskTitle: taskTitle ?? state.activeTaskTitle,
       quizDue: false,
+      isStrictModeActive: isStrictMode || state.isStrictModeActive,
     ));
     _timer?.cancel();
     _timer = Timer.periodic(const Duration(seconds: 1), (_) => _tick());
@@ -47,13 +52,36 @@ class TimerCubit extends Cubit<TimerState> {
       state.mode == TimerMode.pomodoro, 
       state.remainingSeconds
     );
+
+    // Start strict mode monitoring if enabled
+    if (state.isStrictModeActive) {
+      debugPrint('[StrictMode][TimerCubit] isStrictModeActive=true, calling _initStrictMode()');
+      _initStrictMode();
+    } else {
+      debugPrint('[StrictMode][TimerCubit] isStrictModeActive=false, skipping strict mode');
+    }
   }
 
-  /// Pause the timer.
-  void pause() {
+  Future<void> _initStrictMode() async {
+    debugPrint('[StrictMode][TimerCubit] _initStrictMode() starting...');
+    await _strictModeService.init();
+    debugPrint('[StrictMode][TimerCubit] Service initialized, starting monitoring...');
+    await _strictModeService.startStrictMonitoring(() {
+      // Called when the user leaves the app during strict mode
+      debugPrint('[StrictMode][TimerCubit] ⚠️ Violation callback! isRunning=${state.isRunning}');
+      if (state.isRunning) {
+        debugPrint('[StrictMode][TimerCubit] Pausing timer due to strict mode violation');
+        pause(manual: false);
+      }
+    });
+    debugPrint('[StrictMode][TimerCubit] _initStrictMode() complete');
+  }
+
+  /// Pause the timer. [manual] = true when user presses pause button.
+  void pause({bool manual = true}) {
     _timer?.cancel();
     NotificationsService.instance.cancelPomodoroNotification();
-    emit(state.copyWith(status: TimerStatus.paused));
+    emit(state.copyWith(status: TimerStatus.paused, isManualPause: manual));
   }
 
   /// Resume a paused timer.
@@ -67,12 +95,17 @@ class TimerCubit extends Cubit<TimerState> {
     _timer?.cancel();
     NotificationsService.instance.cancelPomodoroNotification();
     _secondsSinceLastQuiz = 0;
+    // Stop strict monitoring if it was active
+    if (state.isStrictModeActive) {
+      _strictModeService.stopStrictMonitoring();
+    }
     final totalSec = _durationForMode(state.mode) * 60;
     emit(
       state.copyWith(
         status: TimerStatus.idle,
         remainingSeconds: totalSec,
         totalSeconds: totalSec,
+        isStrictModeActive: false,
       ),
     );
   }
@@ -89,6 +122,10 @@ class TimerCubit extends Cubit<TimerState> {
     _timer?.cancel();
     NotificationsService.instance.cancelPomodoroNotification();
     _secondsSinceLastQuiz = 0;
+    // Stop strict monitoring if it was active
+    if (state.isStrictModeActive) {
+      _strictModeService.stopStrictMonitoring();
+    }
     final totalSec = (settingsProvider?.pomodoroDuration.toInt() ?? PomodoroConstants.pomodoroDuration) * 60;
     emit(
       TimerState(
@@ -163,6 +200,11 @@ class TimerCubit extends Cubit<TimerState> {
   }
 
   void _onTimerFinished() {
+    // Stop strict mode monitoring when a session finishes
+    if (state.isStrictModeActive) {
+      _strictModeService.stopStrictMonitoring();
+    }
+
     if (state.mode == TimerMode.pomodoro) {
       final newSessions = state.completedSessions + 1;
       final focusMinutes = state.totalSeconds ~/ 60;
@@ -258,6 +300,9 @@ class TimerCubit extends Cubit<TimerState> {
   @override
   Future<void> close() {
     _timer?.cancel();
+    if (state.isStrictModeActive) {
+      _strictModeService.stopStrictMonitoring();
+    }
     return super.close();
   }
 }

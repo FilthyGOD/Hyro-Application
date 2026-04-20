@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../core/theme/app_typography.dart';
@@ -62,7 +63,11 @@ class FocusScreen extends StatelessWidget {
                 state.mode == TimerMode.longBreak)) {
           mascot.triggerHueva();
         } else if (state.isPaused) {
-          mascot.triggerVolver();
+          if (state.isManualPause) {
+            mascot.triggerHueva();
+          } else {
+            mascot.triggerVolver();
+          }
         } else if (state.isIdle) {
           mascot.triggerVolver();
         }
@@ -183,7 +188,7 @@ class _DesktopLayout extends StatelessWidget {
                                       const SizedBox(height: 24),
                                     ],
                                     // The content (Timer, Controls, Scroller)
-                                    if (state.isPaused)
+                                    if (state.isPaused && state.isManualPause)
                                       PauseClock(
                                         size: timerSize,
                                       )
@@ -355,8 +360,9 @@ class _MobileLayout extends StatelessWidget {
                     final size =
                         (availableWidth * 0.75).clamp(160.0, 260.0) *
                         settings.timerSizeMultiplier;
-                    if (state.isPaused)
+                    if (state.isPaused && state.isManualPause) {
                       return PauseClock(size: size);
+                    }
                     return CircularTimer(
                       remainingSeconds: state.remainingSeconds,
                       progress: state.progress,
@@ -429,8 +435,9 @@ class _MobileLayout extends StatelessWidget {
                   final size =
                       (availableWidth * 0.75).clamp(160.0, 260.0) *
                       settings.timerSizeMultiplier;
-                  if (state.isPaused)
+                  if (state.isPaused && state.isManualPause) {
                     return PauseClock(size: size);
+                  }
                   return CircularTimer(
                     remainingSeconds: state.remainingSeconds,
                     progress: state.progress,
@@ -470,16 +477,19 @@ class _MobileLayout extends StatelessWidget {
 }
 
 void _handleStart(BuildContext context, TimerCubit cubit) {
+  final settings = context.read<SettingsProvider>();
+  final isStrictMode = Platform.isAndroid && settings.strictMode;
+
   showDialog<dynamic>(
     context: context,
     builder: (ctx) => const TaskSelectionDialog(),
   ).then((result) {
     if (result == 'NO_TASK') {
-      cubit.start();
+      cubit.start(isStrictMode: isStrictMode);
     } else if (result != null && result is Map) {
       final taskId = result['id'] as String;
       final taskTitle = result['title'] as String;
-      cubit.start(taskId: taskId, taskTitle: taskTitle);
+      cubit.start(taskId: taskId, taskTitle: taskTitle, isStrictMode: isStrictMode);
     }
   });
 }

@@ -149,7 +149,11 @@ class AppShellState extends State<AppShell> with WidgetsBindingObserver, WindowL
       if (minimizeToTray) {
         await windowManager.hide();
       } else {
-        trayManager.destroy();
+        try {
+          await trayManager.destroy();
+        } catch (_) {}
+        await windowManager.setPreventClose(false);
+        await windowManager.destroy();
         exit(0);
       }
     }
@@ -168,12 +172,25 @@ class AppShellState extends State<AppShell> with WidgetsBindingObserver, WindowL
 
   @override
   void onTrayMenuItemClick(MenuItem menuItem) {
-    if (menuItem.key == 'show_window') {
+    debugPrint('Tray clicked: key=${menuItem.key}, label=${menuItem.label}');
+    final key = menuItem.key;
+    final label = menuItem.label ?? '';
+
+    if (key == 'show_window' || label == 'Abrir Hyro' || label.contains('Abrir')) {
       windowManager.show();
       windowManager.focus();
-    } else if (menuItem.key == 'exit_app') {
-      trayManager.destroy();
-      exit(0);
+    } else if (key == 'exit_app' || label == 'Salir (Cerrar notificaciones)' || label.contains('Salir')) {
+      windowManager.setPreventClose(false);
+      
+      // Attempt cleanup but force exit after 500ms to guarantee termination
+      Future.delayed(const Duration(milliseconds: 500), () => exit(0));
+      
+      try {
+        windowManager.destroy();
+        trayManager.destroy().then((_) => exit(0));
+      } catch (e) {
+        exit(0);
+      }
     }
   }
 

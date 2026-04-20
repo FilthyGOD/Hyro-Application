@@ -8,7 +8,6 @@ list(APPEND FLUTTER_PLUGIN_LIST
   isar_flutter_libs
   rive_native
   screen_retriever_linux
-  system_tray
   tray_manager
   url_launcher_linux
   window_manager

@@ -26,6 +26,7 @@ import 'shared/layout/main_layout.dart';
 import 'shared/widgets/floating_mascot.dart';
 import 'features/focus/mini_focus_screen.dart';
 import 'core/utils/responsive.dart';
+import 'services/notifications_service.dart';
 
 /// Root widget for the Hyro app.
 class HyroApp extends StatelessWidget {
@@ -202,6 +203,29 @@ class AppShellState extends State<AppShell> with WidgetsBindingObserver {
     final missionsProvider = context.read<MissionsProvider>();
     await missionsProvider.initialize();
     if (!mounted) return;
+
+    // ── Schedule notifications with real data ──
+    try {
+      final statsProvider = context.read<StatsProvider>();
+      final pendingTasks = taskProvider.tasks.where((t) => !t.isCompleted).toList();
+      final currentStreak = statsProvider.currentStreak;
+      final hadSessionToday = statsProvider.todaysStats != null;
+
+      await NotificationsService.instance.scheduleDailyNotifications(
+        pendingTaskCount: pendingTasks.length,
+        currentStreak: currentStreak,
+        hadSessionToday: hadSessionToday,
+      );
+
+      // Schedule reminders for tasks due in 1-2 days
+      final taskDueData = pendingTasks
+          .where((t) => t.dueDate != null)
+          .map((t) => {'id': t.id, 'title': t.title, 'dueDate': t.dueDate!})
+          .toList();
+      await NotificationsService.instance.scheduleTaskDueReminders(taskDueData);
+    } catch (e) {
+      debugPrint('⚠️ Error programando notificaciones: $e');
+    }
 
     // SM starts in cargando → transition to movimiento_suave
     final mascot = context.read<MascotController>();

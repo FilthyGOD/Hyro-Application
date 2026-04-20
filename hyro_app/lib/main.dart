@@ -65,6 +65,7 @@ void main(List<String> args) async {
       titleBarStyle: TitleBarStyle.hidden,
     );
     await windowManager.waitUntilReadyToShow(windowOptions, () async {
+      await windowManager.setPreventClose(true);
       await windowManager.show();
       await windowManager.focus();
       await Future.delayed(const Duration(milliseconds: 100));

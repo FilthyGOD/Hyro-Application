@@ -27,6 +27,9 @@ import 'shared/widgets/floating_mascot.dart';
 import 'features/focus/mini_focus_screen.dart';
 import 'core/utils/responsive.dart';
 import 'services/notifications_service.dart';
+import 'package:window_manager/window_manager.dart';
+import 'package:tray_manager/tray_manager.dart';
+import 'dart:io';
 
 /// Root widget for the Hyro app.
 class HyroApp extends StatelessWidget {
@@ -97,7 +100,7 @@ class AppShell extends StatefulWidget {
   State<AppShell> createState() => AppShellState();
 }
 
-class AppShellState extends State<AppShell> with WidgetsBindingObserver {
+class AppShellState extends State<AppShell> with WidgetsBindingObserver, WindowListener, TrayListener {
   int _selectedIndex = 0;
   bool _initialized = false;
   late final PageController _pageController;
@@ -111,7 +114,69 @@ class AppShellState extends State<AppShell> with WidgetsBindingObserver {
     _lastUserId = widget.authProvider.supabaseUserId;
     _lastIsGuest = widget.authProvider.isGuest;
     WidgetsBinding.instance.addObserver(this);
+    if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
+      windowManager.addListener(this);
+      trayManager.addListener(this);
+      _initTray();
+    }
   }
+
+  Future<void> _initTray() async {
+    try {
+      await trayManager.setIcon(
+        Platform.isWindows ? 'assets/images/app_icon.ico' : 'assets/images/app_icon.png',
+      );
+      await trayManager.setToolTip('Hyro');
+      Menu menu = Menu(
+        items: [
+          MenuItem(key: 'show_window', label: 'Abrir Hyro'),
+          MenuItem.separator(),
+          MenuItem(key: 'exit_app', label: 'Salir (Cerrar notificaciones)'),
+        ],
+      );
+      await trayManager.setContextMenu(menu);
+    } catch (e) {
+      debugPrint('Tray initialization error: $e');
+    }
+  }
+
+  @override
+  void onWindowClose() async {
+    bool isPreventClose = await windowManager.isPreventClose();
+    if (isPreventClose) {
+      if (!mounted) return;
+      final minimizeToTray = context.read<SettingsProvider>().minimizeToTray;
+      if (minimizeToTray) {
+        await windowManager.hide();
+      } else {
+        trayManager.destroy();
+        exit(0);
+      }
+    }
+  }
+
+  @override
+  void onTrayIconRightMouseDown() {
+    trayManager.popUpContextMenu();
+  }
+
+  @override
+  void onTrayIconMouseDown() {
+    windowManager.show();
+    windowManager.focus();
+  }
+
+  @override
+  void onTrayMenuItemClick(MenuItem menuItem) {
+    if (menuItem.key == 'show_window') {
+      windowManager.show();
+      windowManager.focus();
+    } else if (menuItem.key == 'exit_app') {
+      trayManager.destroy();
+      exit(0);
+    }
+  }
+
 
   @override
   void didUpdateWidget(AppShell oldWidget) {
@@ -132,11 +197,21 @@ class AppShellState extends State<AppShell> with WidgetsBindingObserver {
   void dispose() {
     _pageController.dispose();
     WidgetsBinding.instance.removeObserver(this);
+    if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
+      windowManager.removeListener(this);
+      trayManager.removeListener(this);
+    }
     super.dispose();
+
   }
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
+      // Don't auto-pause on desktop, let users minimize to tray and keep timer running.
+      return;
+    }
+
     if (state == AppLifecycleState.paused || 
         state == AppLifecycleState.inactive || 
         state == AppLifecycleState.detached) {

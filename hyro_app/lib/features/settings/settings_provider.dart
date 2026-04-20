@@ -9,6 +9,7 @@ class SettingsProvider extends ChangeNotifier {
   bool _notificationsEnabled = true;
   TimerSize _timerSize = TimerSize.medium;
   bool _autoPauseTimer = true;
+  bool _minimizeToTray = true;
   bool _strictMode = false;
   bool _hideFocusCards = false;
   bool _focusQuizEnabled = true;
@@ -20,6 +21,7 @@ class SettingsProvider extends ChangeNotifier {
   bool get notificationsEnabled => _notificationsEnabled;
   TimerSize get timerSize => _timerSize;
   bool get autoPauseTimer => _autoPauseTimer;
+  bool get minimizeToTray => _minimizeToTray;
   bool get strictMode => _strictMode;
   bool get hideFocusCards => _hideFocusCards;
   bool get focusQuizEnabled => _focusQuizEnabled;
@@ -67,6 +69,12 @@ class SettingsProvider extends ChangeNotifier {
   void setAutoPauseTimer(bool value) {
     if (_autoPauseTimer == value) return;
     _autoPauseTimer = value;
+    notifyListeners();
+  }
+
+  void setMinimizeToTray(bool value) {
+    if (_minimizeToTray == value) return;
+    _minimizeToTray = value;
     notifyListeners();
   }
 

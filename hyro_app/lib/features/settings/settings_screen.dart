@@ -10,6 +10,7 @@ import '../../services/notifications_service.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../tasks/tasks_provider.dart';
 import '../stats/stats_provider.dart';
+import 'dart:io';
 
 /// Settings screen for Pomodoro durations, notifications, and theme.
 class SettingsScreen extends StatefulWidget {
@@ -72,10 +73,26 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   suffix: 'min',
                   onChanged: (v) {
                     settings.setPomodoroDuration(v);
-                    settings.setShortBreakDuration(v / 5);
+                    if (Supabase.instance.client.auth.currentUser?.email != 'jairothehyrax@gmail.com') {
+                      settings.setShortBreakDuration(v / 5);
+                    }
                     context.read<TimerCubit>().refreshIfIdle();
                   },
                 ),
+                if (Supabase.instance.client.auth.currentUser?.email == 'jairothehyrax@gmail.com') ...[
+                  const SizedBox(height: 16),
+                  _SliderSetting(
+                    label: 'Descanso Corto (Debug)',
+                    value: settings.shortBreakDuration,
+                    min: 0.5,
+                    max: 5,
+                    suffix: 'min',
+                    onChanged: (v) {
+                      settings.setShortBreakDuration(v);
+                      context.read<TimerCubit>().refreshIfIdle();
+                    },
+                  ),
+                ],
                 const SizedBox(height: 16),
                 _TimerSizeSelector(
                   currentSize: settings.timerSize,
@@ -102,6 +119,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   value: settings.autoPauseTimer,
                   onChanged: (v) => settings.setAutoPauseTimer(v),
                 ),
+                if (Platform.isWindows || Platform.isMacOS || Platform.isLinux) ...[
+                  const Divider(height: 24),
+                  _ToggleSetting(
+                    label: 'Minimizar a la Bandeja',
+                    subtitle: 'Al cerrar la ventana, la app seguirá activa en 2do plano',
+                    value: settings.minimizeToTray,
+                    onChanged: (v) => settings.setMinimizeToTray(v),
+                  ),
+                ],
                 const Divider(height: 24),
                 _ToggleSetting(
                   label: 'Modo Estricto',
@@ -281,6 +307,29 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           ),
                         ),
                       ),
+                      const SizedBox(height: 12),
+                      // ── Device Time ──
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton.icon(
+                          icon: const Icon(Icons.access_time),
+                          label: const Text('🕒 Mostrar Hora del Dispositivo'),
+                          onPressed: () {
+                             final now = DateTime.now();
+                             final hourStr = now.hour.toString().padLeft(2, '0');
+                             final minStr = now.minute.toString().padLeft(2, '0');
+                             ScaffoldMessenger.of(context).showSnackBar(
+                               SnackBar(content: Text('🕒 La hora local es: $hourStr:$minStr')),
+                             );
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.teal.withAlpha(50),
+                            foregroundColor: Colors.tealAccent,
+                            alignment: Alignment.centerLeft,
+                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                          ),
+                        ),
+                      ),
                     ],
                   ),
                 );
@@ -379,7 +428,7 @@ class _SliderSetting extends StatelessWidget {
           children: [
             Text(label, style: AppTypography.labelLarge),
             Text(
-              '${value.toInt()} $suffix',
+              value == value.toInt() ? '${value.toInt()} $suffix' : '${value.toStringAsFixed(1)} $suffix',
               style: AppTypography.bodyMedium.copyWith(
                 color: AppColors.primary,
               ),
@@ -398,7 +447,7 @@ class _SliderSetting extends StatelessWidget {
             value: value,
             min: min,
             max: max,
-            divisions: divisions ?? (max - min).toInt(),
+            divisions: divisions ?? ((max - min) * 2).toInt(), // Default to 0.5 steps if no divisions given
             onChanged: onChanged,
           ),
         ),

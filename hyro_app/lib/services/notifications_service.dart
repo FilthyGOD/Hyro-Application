@@ -70,7 +70,7 @@ class NotificationsService {
     '😴 Antes de dormir...',
     '🌟 ¡No pierdas tu racha!',
     '📖 Cierra el día con broche de oro',
-    '🦊 Hyro se pregunta...',
+    'Hyro se pregunta...',
   ];
 
   static const List<String> _eveningBodies = [
@@ -91,7 +91,7 @@ class NotificationsService {
   static const List<String> _streakRiskBodies = [
     '¡No pierdas tu racha de {streak} días! Haz una sesión ahora para protegerla.',
     'Tu racha de {streak} días está a punto de romperse. ¡Solo necesitas un Pomodoro!',
-    'Llevas {streak} días seguidos. ¡No dejes que se pierda por hoy!',
+    'Llevas {streak} días seguidos. ¡No dejes que se pierda por hoy! ',
   ];
 
   /// Inactivity messages (2+ days without session) — for future use
@@ -121,23 +121,24 @@ class NotificationsService {
 
     const DarwinInitializationSettings initializationSettingsIOS =
         DarwinInitializationSettings(
-      requestAlertPermission: false,
-      requestBadgePermission: false,
-      requestSoundPermission: false,
-    );
+          requestAlertPermission: false,
+          requestBadgePermission: false,
+          requestSoundPermission: false,
+        );
 
     const WindowsInitializationSettings initializationSettingsWindows =
         WindowsInitializationSettings(
-      appName: 'Hyro',
-      appUserModelId: 'com.phyrus.hyro',
-      guid: 'a1234567-89ab-cdef-0123-456789abcdef',
-    );
+          appName: 'Hyro',
+          appUserModelId: 'com.phyrus.hyro',
+          guid: 'a1234567-89ab-cdef-0123-456789abcdef',
+        );
 
-    const InitializationSettings initializationSettings = InitializationSettings(
-      android: initializationSettingsAndroid,
-      iOS: initializationSettingsIOS,
-      windows: initializationSettingsWindows,
-    );
+    const InitializationSettings initializationSettings =
+        InitializationSettings(
+          android: initializationSettingsAndroid,
+          iOS: initializationSettingsIOS,
+          windows: initializationSettingsWindows,
+        );
 
     await flutterLocalNotificationsPlugin.initialize(
       settings: initializationSettings,
@@ -152,16 +153,14 @@ class NotificationsService {
       await [
         Permission.notification,
         Permission.scheduleExactAlarm,
+        Permission.ignoreBatteryOptimizations,
       ].request();
     } else if (Platform.isIOS) {
-       await flutterLocalNotificationsPlugin
+      await flutterLocalNotificationsPlugin
           .resolvePlatformSpecificImplementation<
-              IOSFlutterLocalNotificationsPlugin>()
-          ?.requestPermissions(
-            alert: true,
-            badge: true,
-            sound: true,
-          );
+            IOSFlutterLocalNotificationsPlugin
+          >()
+          ?.requestPermissions(alert: true, badge: true, sound: true);
     }
   }
 
@@ -183,6 +182,12 @@ class NotificationsService {
     // Decide message variant based on context
     final bool streakAtRisk = currentStreak > 0 && !hadSessionToday;
 
+    // =========================================================================
+    // 💡 NOTA PARA CAMBIAR EL HORARIO DE LAS NOTIFICACIONES:
+    // Puedes elegir la hora a la que se mandan modificando el parámetro 'hour'
+    // en los recuadros de abajo (ej. hour: 8 para las 8:00 AM).
+    // =========================================================================
+
     // ── Morning 8:00 AM ──
     if (streakAtRisk && currentStreak >= 3) {
       // Use streak risk messages in the morning if streak is at risk
@@ -192,7 +197,11 @@ class NotificationsService {
         hour: 8,
         minute: 0,
         title: _streakRiskTitles[idx],
-        body: _fillPlaceholders(_streakRiskBodies[idx], pendingTaskCount, currentStreak),
+        body: _fillPlaceholders(
+          _streakRiskBodies[idx],
+          pendingTaskCount,
+          currentStreak,
+        ),
       );
     } else {
       final idx = _random.nextInt(_morningTitles.length);
@@ -201,7 +210,11 @@ class NotificationsService {
         hour: 8,
         minute: 0,
         title: _morningTitles[idx],
-        body: _fillPlaceholders(_morningBodies[idx], pendingTaskCount, currentStreak),
+        body: _fillPlaceholders(
+          _morningBodies[idx],
+          pendingTaskCount,
+          currentStreak,
+        ),
       );
     }
 
@@ -213,7 +226,11 @@ class NotificationsService {
         hour: 14,
         minute: 0,
         title: _afternoonTitles[idx],
-        body: _fillPlaceholders(_afternoonBodies[idx], pendingTaskCount, currentStreak),
+        body: _fillPlaceholders(
+          _afternoonBodies[idx],
+          pendingTaskCount,
+          currentStreak,
+        ),
       );
     }
 
@@ -224,9 +241,13 @@ class NotificationsService {
       await _scheduleDailyAtTime(
         id: 202,
         hour: 20,
-        minute: 0,
+        minute: 20,
         title: _streakRiskTitles[idx],
-        body: _fillPlaceholders(_streakRiskBodies[idx], pendingTaskCount, currentStreak),
+        body: _fillPlaceholders(
+          _streakRiskBodies[idx],
+          pendingTaskCount,
+          currentStreak,
+        ),
       );
     } else {
       final idx = _random.nextInt(_eveningTitles.length);
@@ -235,11 +256,17 @@ class NotificationsService {
         hour: 20,
         minute: 0,
         title: _eveningTitles[idx],
-        body: _fillPlaceholders(_eveningBodies[idx], pendingTaskCount, currentStreak),
+        body: _fillPlaceholders(
+          _eveningBodies[idx],
+          pendingTaskCount,
+          currentStreak,
+        ),
       );
     }
 
-    debugPrint('📬 Notificaciones diarias programadas (tareas: $pendingTaskCount, racha: $currentStreak)');
+    debugPrint(
+      '📬 Notificaciones diarias programadas (tareas: $pendingTaskCount, racha: $currentStreak)',
+    );
   }
 
   /// Schedules a notification that repeats daily at the given [hour]:[minute].
@@ -250,21 +277,25 @@ class NotificationsService {
     required String title,
     required String body,
   }) async {
-    final now = tz.TZDateTime.now(tz.local);
-    var scheduledDate = tz.TZDateTime(tz.local, now.year, now.month, now.day, hour, minute);
+    final now = DateTime.now();
+    var targetDate = DateTime(now.year, now.month, now.day, hour, minute);
 
     // If the time has already passed today, schedule for tomorrow
-    if (scheduledDate.isBefore(now)) {
-      scheduledDate = scheduledDate.add(const Duration(days: 1));
+    if (targetDate.isBefore(now)) {
+      targetDate = targetDate.add(const Duration(days: 1));
     }
 
-    const AndroidNotificationDetails androidDetails = AndroidNotificationDetails(
-      'daily_motivation',
-      'Motivación Diaria',
-      channelDescription: 'Notificaciones motivacionales a lo largo del día',
-      importance: Importance.high,
-      priority: Priority.high,
-    );
+    final scheduledDate = tz.TZDateTime.from(targetDate, tz.local);
+
+    const AndroidNotificationDetails androidDetails =
+        AndroidNotificationDetails(
+          'daily_motivation',
+          'Motivación Diaria',
+          channelDescription:
+              'Notificaciones motivacionales a lo largo del día',
+          importance: Importance.high,
+          priority: Priority.high,
+        );
     const NotificationDetails platformDetails = NotificationDetails(
       android: androidDetails,
       iOS: DarwinNotificationDetails(),
@@ -276,8 +307,9 @@ class NotificationsService {
       body: body,
       scheduledDate: scheduledDate,
       notificationDetails: platformDetails,
-      androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
-      matchDateTimeComponents: DateTimeComponents.time, // Repeat daily at same time
+      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+      matchDateTimeComponents:
+          DateTimeComponents.time, // Repeat daily at same time
     );
   }
 
@@ -293,7 +325,9 @@ class NotificationsService {
 
   /// Schedules reminder notifications for tasks due in 1 or 2 days.
   /// [tasks] is a list of maps with keys: 'id' (String), 'title' (String), 'dueDate' (DateTime).
-  Future<void> scheduleTaskDueReminders(List<Map<String, dynamic>> tasks) async {
+  Future<void> scheduleTaskDueReminders(
+    List<Map<String, dynamic>> tasks,
+  ) async {
     // Cancel all previous task due reminders (range 300-399)
     for (int i = 300; i < 400; i++) {
       await flutterLocalNotificationsPlugin.cancel(id: i);
@@ -329,22 +363,26 @@ class NotificationsService {
         body = 'Tu tarea "$taskTitle" vence en $dayLabel.';
       } else {
         title = '🚨 ¡Atención!';
-        body = '"$taskTitle" se vence $timeLabel. ¡No la dejes para el último momento!';
+        body =
+            '"$taskTitle" se vence $timeLabel. ¡No la dejes para el último momento!';
       }
 
       // Schedule at 9:00 AM of today (or tomorrow if passed)
-      final targetDate = tz.TZDateTime(tz.local, now.year, now.month, now.day, 9, 0);
-      final scheduledDate = targetDate.isBefore(tz.TZDateTime.now(tz.local))
-          ? targetDate.add(const Duration(days: 1))
-          : targetDate;
+      var targetDate = DateTime(now.year, now.month, now.day, 9, 0);
+      if (targetDate.isBefore(now)) {
+        targetDate = targetDate.add(const Duration(days: 1));
+      }
+      final scheduledDate = tz.TZDateTime.from(targetDate, tz.local);
 
-      const AndroidNotificationDetails androidDetails = AndroidNotificationDetails(
-        'task_due_reminders',
-        'Tareas por Vencer',
-        channelDescription: 'Alertas para tareas que están por vencer en 1-2 días',
-        importance: Importance.max,
-        priority: Priority.high,
-      );
+      const AndroidNotificationDetails androidDetails =
+          AndroidNotificationDetails(
+            'task_due_reminders',
+            'Tareas por Vencer',
+            channelDescription:
+                'Alertas para tareas que están por vencer en 1-2 días',
+            importance: Importance.max,
+            priority: Priority.high,
+          );
       const NotificationDetails platformDetails = NotificationDetails(
         android: androidDetails,
         iOS: DarwinNotificationDetails(),
@@ -361,7 +399,9 @@ class NotificationsService {
     }
 
     if (slotIndex > 0) {
-      debugPrint('📬 $slotIndex recordatorios de tareas por vencer programados');
+      debugPrint(
+        '📬 $slotIndex recordatorios de tareas por vencer programados',
+      );
     }
   }
 
@@ -392,13 +432,15 @@ class NotificationsService {
   // ═══════════════════════════════════════════════════════════════════
 
   Future<void> testTaskReminderDay(String taskName, int daysLeft) async {
-    const AndroidNotificationDetails androidDetails = AndroidNotificationDetails(
-      'task_due_reminders',
-      'Tareas por Vencer',
-      channelDescription: 'Alertas para tareas que están por vencer en 1-2 días',
-      importance: Importance.max,
-      priority: Priority.high,
-    );
+    const AndroidNotificationDetails androidDetails =
+        AndroidNotificationDetails(
+          'task_due_reminders',
+          'Tareas por Vencer',
+          channelDescription:
+              'Alertas para tareas que están por vencer en 1-2 días',
+          importance: Importance.max,
+          priority: Priority.high,
+        );
     const NotificationDetails platformDetails = NotificationDetails(
       android: androidDetails,
       iOS: DarwinNotificationDetails(),
@@ -414,7 +456,8 @@ class NotificationsService {
       body = 'Tu tarea "$taskName" vence en $dayLabel.';
     } else {
       title = '🚨 ¡Atención!';
-      body = '"$taskName" se vence $timeLabel. ¡No la dejes para el último momento!';
+      body =
+          '"$taskName" se vence $timeLabel. ¡No la dejes para el último momento!';
     }
 
     await flutterLocalNotificationsPlugin.show(
@@ -426,14 +469,19 @@ class NotificationsService {
   }
 
   /// Test morning notification with real message bank and real data.
-  Future<void> testMorningMotivation({int pendingTasks = 3, int streak = 0}) async {
-    const AndroidNotificationDetails androidDetails = AndroidNotificationDetails(
-      'daily_motivation',
-      'Motivación Diaria',
-      channelDescription: 'Notificaciones motivacionales a lo largo del día',
-      importance: Importance.high,
-      priority: Priority.high,
-    );
+  Future<void> testMorningMotivation({
+    int pendingTasks = 3,
+    int streak = 0,
+  }) async {
+    const AndroidNotificationDetails androidDetails =
+        AndroidNotificationDetails(
+          'daily_motivation',
+          'Motivación Diaria',
+          channelDescription:
+              'Notificaciones motivacionales a lo largo del día',
+          importance: Importance.high,
+          priority: Priority.high,
+        );
     const NotificationDetails platformDetails = NotificationDetails(
       android: androidDetails,
       iOS: DarwinNotificationDetails(),
@@ -449,14 +497,19 @@ class NotificationsService {
   }
 
   /// Test afternoon notification with real message bank and real data.
-  Future<void> testAfternoonMotivation({int pendingTasks = 3, int streak = 0}) async {
-    const AndroidNotificationDetails androidDetails = AndroidNotificationDetails(
-      'daily_motivation',
-      'Motivación Diaria',
-      channelDescription: 'Notificaciones motivacionales a lo largo del día',
-      importance: Importance.high,
-      priority: Priority.high,
-    );
+  Future<void> testAfternoonMotivation({
+    int pendingTasks = 3,
+    int streak = 0,
+  }) async {
+    const AndroidNotificationDetails androidDetails =
+        AndroidNotificationDetails(
+          'daily_motivation',
+          'Motivación Diaria',
+          channelDescription:
+              'Notificaciones motivacionales a lo largo del día',
+          importance: Importance.high,
+          priority: Priority.high,
+        );
     const NotificationDetails platformDetails = NotificationDetails(
       android: androidDetails,
       iOS: DarwinNotificationDetails(),
@@ -472,14 +525,19 @@ class NotificationsService {
   }
 
   /// Test evening notification with real message bank and real data.
-  Future<void> testEveningMotivation({int pendingTasks = 3, int streak = 0}) async {
-    const AndroidNotificationDetails androidDetails = AndroidNotificationDetails(
-      'daily_motivation',
-      'Motivación Diaria',
-      channelDescription: 'Notificaciones motivacionales a lo largo del día',
-      importance: Importance.high,
-      priority: Priority.high,
-    );
+  Future<void> testEveningMotivation({
+    int pendingTasks = 3,
+    int streak = 0,
+  }) async {
+    const AndroidNotificationDetails androidDetails =
+        AndroidNotificationDetails(
+          'daily_motivation',
+          'Motivación Diaria',
+          channelDescription:
+              'Notificaciones motivacionales a lo largo del día',
+          importance: Importance.high,
+          priority: Priority.high,
+        );
     const NotificationDetails platformDetails = NotificationDetails(
       android: androidDetails,
       iOS: DarwinNotificationDetails(),
@@ -496,13 +554,15 @@ class NotificationsService {
 
   /// Test pomodoro end with real messages.
   Future<void> testPomodoroEnd() async {
-     const AndroidNotificationDetails androidDetails = AndroidNotificationDetails(
-      'pomodoro_timer',
-      'Temporizador Pomodoro',
-      channelDescription: 'Notificaciones sobre los descansos y bloques de estudio',
-      importance: Importance.max,
-      priority: Priority.high,
-    );
+    const AndroidNotificationDetails androidDetails =
+        AndroidNotificationDetails(
+          'pomodoro_timer',
+          'Temporizador Pomodoro',
+          channelDescription:
+              'Notificaciones sobre los descansos y bloques de estudio',
+          importance: Importance.max,
+          priority: Priority.high,
+        );
     const NotificationDetails platformDetails = NotificationDetails(
       android: androidDetails,
       iOS: DarwinNotificationDetails(),
@@ -510,10 +570,12 @@ class NotificationsService {
 
     // Randomly pick pomodoro or break end message
     final isPomodoro = _random.nextBool();
-    final title = isPomodoro ? '🎯 ¡Pomodoro completado!' : '🔔 ¡Se acabó el descanso!';
-    final body = isPomodoro 
-        ? 'Buen trabajo. ¡Es hora de un merecido descanso!' 
-        : 'Es hora de volver al ruedo y seguir rompiéndola.';
+    final title =
+        isPomodoro ? '🎯 ¡Pomodoro completado!' : '🔔 ¡Se acabó el descanso!';
+    final body =
+        isPomodoro
+            ? 'Buen trabajo. ¡Es hora de un merecido descanso!'
+            : 'Es hora de volver al ruedo y seguir rompiéndola.';
 
     await flutterLocalNotificationsPlugin.show(
       id: 2,
@@ -527,20 +589,27 @@ class NotificationsService {
   // POMODORO TIMER NOTIFICATIONS (existing)
   // ═══════════════════════════════════════════════════════════════════
 
-  Future<void> schedulePomodoroEndNotification(bool isPomodoro, int secondsRemaining) async {
+  Future<void> schedulePomodoroEndNotification(
+    bool isPomodoro,
+    int secondsRemaining,
+  ) async {
     const int notificationId = 100;
-    String title = isPomodoro ? '🎯 ¡Pomodoro completado!' : '🔔 ¡Se acabó el descanso!';
-    String body = isPomodoro 
-        ? 'Buen trabajo. ¡Es hora de un merecido descanso!' 
-        : 'Es hora de volver al ruedo y seguir rompiéndola.';
+    String title =
+        isPomodoro ? '🎯 ¡Pomodoro completado!' : '🔔 ¡Se acabó el descanso!';
+    String body =
+        isPomodoro
+            ? 'Buen trabajo. ¡Es hora de un merecido descanso!'
+            : 'Es hora de volver al ruedo y seguir rompiéndola.';
 
-    const AndroidNotificationDetails androidDetails = AndroidNotificationDetails(
-      'pomodoro_timer',
-      'Temporizador Pomodoro',
-      channelDescription: 'Notificaciones sobre los descansos y bloques de estudio',
-      importance: Importance.max,
-      priority: Priority.high,
-    );
+    const AndroidNotificationDetails androidDetails =
+        AndroidNotificationDetails(
+          'pomodoro_timer',
+          'Temporizador Pomodoro',
+          channelDescription:
+              'Notificaciones sobre los descansos y bloques de estudio',
+          importance: Importance.max,
+          priority: Priority.high,
+        );
     const NotificationDetails platformDetails = NotificationDetails(
       android: androidDetails,
       iOS: DarwinNotificationDetails(),
@@ -567,12 +636,17 @@ class NotificationsService {
   // INDIVIDUAL TASK REMINDERS (existing — for 30min before dueDate)
   // ═══════════════════════════════════════════════════════════════════
 
-  Future<void> scheduleTaskReminder(String taskId, String taskTitle, DateTime? dueDate, bool isCompleted) async {
+  Future<void> scheduleTaskReminder(
+    String taskId,
+    String taskTitle,
+    DateTime? dueDate,
+    bool isCompleted,
+  ) async {
     if (dueDate == null || isCompleted) {
-        await cancelTaskReminder(taskId);
-        return;
+      await cancelTaskReminder(taskId);
+      return;
     }
-    
+
     // Check if dueDate is in the past
     if (dueDate.isBefore(DateTime.now())) return;
 
@@ -584,13 +658,14 @@ class NotificationsService {
 
     final int notificationId = taskId.hashCode;
 
-    const AndroidNotificationDetails androidDetails = AndroidNotificationDetails(
-      'task_reminders',
-      'Recordatorios de Tareas',
-      channelDescription: 'Alertas para tareas que están por vencer',
-      importance: Importance.max,
-      priority: Priority.high,
-    );
+    const AndroidNotificationDetails androidDetails =
+        AndroidNotificationDetails(
+          'task_reminders',
+          'Recordatorios de Tareas',
+          channelDescription: 'Alertas para tareas que están por vencer',
+          importance: Importance.max,
+          priority: Priority.high,
+        );
     const NotificationDetails platformDetails = NotificationDetails(
       android: androidDetails,
       iOS: DarwinNotificationDetails(),

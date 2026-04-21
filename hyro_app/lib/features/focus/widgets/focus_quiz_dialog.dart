@@ -10,6 +10,8 @@ import '../../../shared/widgets/glass_card.dart';
 import '../../mascot/mascot_controller.dart';
 import 'package:rive/rive.dart' hide Animation;
 
+enum QuizMode { fillInNote, fillInCard, writeCardBack, writeCardFront }
+
 class FocusQuizDialog extends StatefulWidget {
   final List<TareaCardModel> flashcards;
   final List<TareaNotaModel> notas;
@@ -25,7 +27,7 @@ class FocusQuizDialog extends StatefulWidget {
 }
 
 class _FocusQuizDialogState extends State<FocusQuizDialog> {
-  late bool _isFlashcard;
+  late QuizMode _mode;
   TareaCardModel? _selectedCard;
   TareaNotaModel? _selectedNote;
   List<String> _hiddenWords = [];
@@ -49,23 +51,36 @@ class _FocusQuizDialogState extends State<FocusQuizDialog> {
 
     _difficulty = random.nextInt(3) + 1;
 
+    bool isFlashcard = false;
     if (hasCards && hasNotes) {
-      _isFlashcard = random.nextBool();
+      isFlashcard = random.nextBool();
     } else {
-      _isFlashcard = hasCards;
+      isFlashcard = hasCards;
     }
 
-    if (_isFlashcard && hasCards) {
+    if (isFlashcard && hasCards) {
       _selectedCard =
           widget.flashcards[random.nextInt(widget.flashcards.length)];
-      _prepareFillInTheBlanks(_selectedCard!.reverso);
+      final modeInt = random.nextInt(3);
+      if (modeInt == 0) {
+        _mode = QuizMode.fillInCard;
+        _prepareQuestion(_selectedCard!.reverso, fillInBlanks: true);
+      } else if (modeInt == 1) {
+        _mode = QuizMode.writeCardBack;
+        _prepareQuestion(_selectedCard!.reverso, fillInBlanks: false);
+      } else {
+        _mode = QuizMode.writeCardFront;
+        _prepareQuestion(_selectedCard!.frente, fillInBlanks: false);
+      }
     } else if (hasNotes) {
       _selectedNote = widget.notas[random.nextInt(widget.notas.length)];
-      _prepareFillInTheBlanks(_selectedNote!.contenido);
+      _mode = QuizMode.fillInNote;
+      _prepareQuestion(_selectedNote!.contenido, fillInBlanks: true);
     }
   }
 
-  void _prepareFillInTheBlanks(String text) {
+  void _prepareQuestion(String text, {required bool fillInBlanks}) {
+    final random = Random();
     final words = text.split(RegExp(r'\s+'));
     final candidateWords = words
         .where((w) => w.length > 3 && w.contains(RegExp(r'[a-zA-ZáéíóúÁÉÍÓÚñÑ]')))
@@ -83,13 +98,21 @@ class _FocusQuizDialogState extends State<FocusQuizDialog> {
       final distinctCandidates = candidateWords.toSet().toList();
       distinctCandidates.shuffle();
 
-      int wordsToHide = min(_difficulty, distinctCandidates.length);
+      int wordsToHide;
+      if (fillInBlanks) {
+        wordsToHide = min(_difficulty, distinctCandidates.length);
+      } else {
+        wordsToHide = random.nextInt(4) + 3; // 3 to 6
+        wordsToHide = min(wordsToHide, distinctCandidates.length);
+      }
       _hiddenWords = distinctCandidates.take(wordsToHide).toList();
     }
 
     _displayText = text;
-    for (var word in _hiddenWords) {
-      _displayText = _displayText!.replaceFirst(word, '___');
+    if (fillInBlanks) {
+      for (var word in _hiddenWords) {
+        _displayText = _displayText!.replaceFirst(word, '___');
+      }
     }
 
     _hiddenWords = _hiddenWords
@@ -187,7 +210,41 @@ class _FocusQuizDialogState extends State<FocusQuizDialog> {
             ),
             const SizedBox(height: 16),
 
-            if (_isFlashcard) ...[
+            if (_mode == QuizMode.writeCardFront) ...[
+              Text('Reverso de la tarjeta:', style: AppTypography.labelSmall),
+              const SizedBox(height: 8),
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: AppColors.surfaceLight,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: AppColors.cardBorder),
+                ),
+                child: Text(
+                  _selectedCard!.reverso,
+                  style: AppTypography.bodyLarge,
+                ),
+              ),
+              const SizedBox(height: 16),
+              Text('Escribe el frente (o conceptos clave):', style: AppTypography.labelSmall),
+            ] else if (_mode == QuizMode.writeCardBack) ...[
+              Text('Frente de la tarjeta:', style: AppTypography.labelSmall),
+              const SizedBox(height: 8),
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: AppColors.surfaceLight,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: AppColors.cardBorder),
+                ),
+                child: Text(
+                  _selectedCard!.frente,
+                  style: AppTypography.bodyLarge,
+                ),
+              ),
+              const SizedBox(height: 16),
+              Text('Escribe el reverso (o conceptos clave):', style: AppTypography.labelSmall),
+            ] else if (_mode == QuizMode.fillInCard) ...[
               Text('Frente de la tarjeta:', style: AppTypography.labelSmall),
               const SizedBox(height: 8),
               Container(

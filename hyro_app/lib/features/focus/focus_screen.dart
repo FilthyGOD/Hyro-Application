@@ -38,7 +38,7 @@ class FocusScreen extends StatelessWidget {
            final notes = noteLocal.getNotesForTask(state.activeTaskId!);
            
            if (cards.isNotEmpty || notes.isNotEmpty) {
-             context.read<TimerCubit>().pause();
+             context.read<TimerCubit>().pause(manual: false);
              mascot.triggerPensando();
 
              showDialog(
@@ -56,6 +56,8 @@ class FocusScreen extends StatelessWidget {
            } else {
              context.read<TimerCubit>().acknowledgeQuiz();
            }
+        } else if (state.quizDue) {
+           // Do not override mascot state if a quiz pause is active.
         } else if (state.isRunning && state.mode == TimerMode.pomodoro) {
           mascot.triggerEstudiando();
         } else if (state.isRunning &&

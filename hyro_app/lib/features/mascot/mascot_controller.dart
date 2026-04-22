@@ -200,11 +200,12 @@ class MascotController extends ChangeNotifier {
     debugPrint(
       '🔥 [MascotController] triggerRacha iniciado con streak: $streak',
     );
+    //await Future.delayed(const Duration(milliseconds: 200));
     _triggerVolver?.fire(); // Return to movimiento_suave first
 
     // Damos un pequeño respiro de 50ms para que Rive procese la transición 'volver'
     // antes de inyectarle la nueva animación.
-    await Future.delayed(const Duration(milliseconds: 50));
+    //await Future.delayed(const Duration(milliseconds: 50));
 
     final valUnidades = (streak % 10).toDouble();
     final valDecenas = (streak ~/ 10).toDouble();

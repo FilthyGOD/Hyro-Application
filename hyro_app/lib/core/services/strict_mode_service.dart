@@ -5,6 +5,7 @@ import 'package:flutter_foreground_task/flutter_foreground_task.dart' hide Notif
 import 'package:flutter_overlay_window/flutter_overlay_window.dart';
 import 'package:usage_stats/usage_stats.dart';
 import 'package:device_apps/device_apps.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 /// The package name of our app — used to know when the user is inside Hyro.
 const _hyroPackageName = 'com.hyro.hyro_app';
@@ -80,10 +81,25 @@ class StrictOverlayTaskHandler extends TaskHandler {
                 'packageName': pkg,
               });
 
-              // Force Hyro app back to foreground so the main isolate wakes up
-              // and processes our message (shows overlay + pauses timer)
-              debugPrint('[StrictMode][BG] Launching app to wake main isolate...');
-              FlutterForegroundTask.launchApp();
+              // Mostramos el overlay desde el Isolate que sí está despierto (Background Service)
+              try {
+                bool isActive = await FlutterOverlayWindow.isActive();
+                if (!isActive) {
+                  debugPrint('[StrictMode][BG] Showing overlay window...');
+                  await FlutterOverlayWindow.showOverlay(
+                    enableDrag: false,
+                    flag: OverlayFlag.defaultFlag,
+                    alignment: OverlayAlignment.center,
+                    visibility: NotificationVisibility.visibilityPublic,
+                    positionGravity: PositionGravity.auto,
+                    height: WindowSize.matchParent,
+                    width: WindowSize.matchParent,
+                  ).timeout(const Duration(seconds: 3));
+                }
+                FlutterOverlayWindow.shareData(appName);
+              } catch (e) {
+                debugPrint('[StrictMode][BG] Error showing overlay: $e');
+              }
             }
           } else if (isHyro && _violationActive) {
             debugPrint('[StrictMode][BG] User returned to Hyro');
@@ -92,6 +108,9 @@ class StrictOverlayTaskHandler extends TaskHandler {
             FlutterForegroundTask.sendDataToMain({
               'action': 'RETURNED',
             });
+            try {
+              await FlutterOverlayWindow.closeOverlay();
+            } catch(e) {}
           } else if (isHyro) {
             _lastForegroundPackage = pkg;
           }
@@ -170,6 +189,17 @@ class StrictModeService {
       return false;
     }
 
+    // 3. Ignore Battery Optimizations (required for background stability like Forest)
+    bool isBatteryIgnoring = await Permission.ignoreBatteryOptimizations.isGranted;
+    debugPrint('[StrictMode][UI] Battery Optimization Ignoring: $isBatteryIgnoring');
+    if (!isBatteryIgnoring) {
+      debugPrint('[StrictMode][UI] Requesting Ignore Battery Optimizations...');
+      await Permission.ignoreBatteryOptimizations.request();
+      // Usually battery optimizations popup takes you to settings, 
+      // we return false so the user has to toggle again next time to verify
+      return false;
+    }
+    
     debugPrint('[StrictMode][UI] ✅ All permissions granted!');
     return true;
   }
@@ -203,11 +233,11 @@ class StrictModeService {
           final appName = data['appName'] as String? ?? 'otra app';
           debugPrint('[StrictMode][UI] ⚠️ Violation received — app: $appName');
 
-          // Pause the timer
+          // Pause the timer when UI catches up
           onViolationDetected();
-          debugPrint('[StrictMode][UI] Timer paused via callback');
+
         } else if (action == 'RETURNED') {
-          debugPrint('[StrictMode][UI] User returned to Hyro');
+          debugPrint('[StrictMode][UI] User returned to Hyro.');
         }
       }
     };

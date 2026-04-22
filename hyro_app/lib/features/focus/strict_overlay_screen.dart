@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_overlay_window/flutter_overlay_window.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:device_apps/device_apps.dart';
 
 @pragma("vm:entry-point")
 void overlayMain() {
@@ -99,7 +100,10 @@ class _StrictOverlayScreenState extends State<StrictOverlayScreen> {
               // Return Button
               ElevatedButton(
                 onPressed: () async {
-                  await FlutterOverlayWindow.closeOverlay();
+                  try {
+                    await DeviceApps.openApp('com.hyro.hyro_app');
+                    await FlutterOverlayWindow.closeOverlay();
+                  } catch(e) {}
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFF67DFB8),

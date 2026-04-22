@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:provider/provider.dart';
 import 'core/theme/app_theme.dart';
+import 'core/theme/app_colors.dart';
 import 'features/focus/bloc/timer_cubit.dart';
 import 'features/focus/bloc/timer_state.dart';
 import 'features/focus/focus_screen.dart';
@@ -102,6 +103,7 @@ class AppShell extends StatefulWidget {
 
 class AppShellState extends State<AppShell> with WidgetsBindingObserver, WindowListener, TrayListener {
   int _selectedIndex = 2; // Default to Focus
+  int _previousIndex = 2;
   bool _initialized = false;
   late final PageController _pageController;
   String? _lastUserId;
@@ -325,6 +327,10 @@ class AppShellState extends State<AppShell> with WidgetsBindingObserver, WindowL
   }
 
   void navigateTo(int index) {
+    if (index == 5 && _selectedIndex == 5) {
+      index = _previousIndex;
+    }
+    
     final previousIndex = _selectedIndex;
     final timerState = context.read<TimerCubit>().state;
     final settings = context.read<SettingsProvider>();
@@ -336,7 +342,10 @@ class AppShellState extends State<AppShell> with WidgetsBindingObserver, WindowL
       return;
     }
 
-    setState(() => _selectedIndex = index);
+    setState(() {
+      _previousIndex = previousIndex;
+      _selectedIndex = index;
+    });
     
     if (index != 5) {
       if (!Responsive.isMobile(context)) {
@@ -400,7 +409,10 @@ class AppShellState extends State<AppShell> with WidgetsBindingObserver, WindowL
                 onPageChanged: (index) {
                   final previousIndex = _selectedIndex;
                   if (index != _selectedIndex) {
-                    setState(() => _selectedIndex = index);
+                    setState(() {
+                      _previousIndex = previousIndex;
+                      _selectedIndex = index;
+                    });
                     
                     final mascot = context.read<MascotController>();
                     if (previousIndex == 2 || previousIndex == 0 || previousIndex == 1) {
@@ -428,7 +440,7 @@ class AppShellState extends State<AppShell> with WidgetsBindingObserver, WindowL
               if (_selectedIndex == 5)
                 Positioned.fill(
                   child: Container(
-                    color: Theme.of(context).scaffoldBackgroundColor,
+                    color: AppColors.background,
                     child: const SettingsScreen(),
                   ),
                 ),

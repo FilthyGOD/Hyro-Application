@@ -51,7 +51,11 @@ class TaskProvider extends ChangeNotifier {
 
     try {
       if (isAuthenticated()) {
-        await _repository.pullRemoteToLocal();
+        try {
+          await _repository.pullRemoteToLocal();
+        } catch (e) {
+          debugPrint('Error pulling remote tasks (offline?): $e');
+        }
       }
       _tasks = _repository.getTasks();
     } catch (e) {

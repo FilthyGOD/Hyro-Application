@@ -16,40 +16,14 @@ class MiniTaskList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final taskProvider = context.watch<TaskProvider>();
-    final isAuth = taskProvider.isAuthenticated();
-    final userId = taskProvider.getUserId();
-
-    if (isAuth && userId != null) {
-      return StreamBuilder<List<Map<String, dynamic>>>(
-        stream: Supabase.instance.client
-            .from('tareas')
-            .stream(primaryKey: ['id']).eq('usuario_id', userId),
-        builder: (context, snapshot) {
-          if (!snapshot.hasData && snapshot.connectionState == ConnectionState.waiting) {
-            return const GlassCard(
-              padding: EdgeInsets.all(16),
-              child: Center(child: CircularProgressIndicator()),
-            );
-          }
-
-          final maps = snapshot.data ?? [];
-          final tasks = maps.map((m) => TaskModel.fromSupabaseJson(m)).toList();
-          
-          final topTasks = _getTopTasks(tasks);
-          return _buildGlassCard(context, topTasks);
-        },
-      );
-    } else {
-      // Local behavior
-      final tasks = taskProvider.tasks;
-      final topTasks = _getTopTasks(tasks);
-      return _buildGlassCard(context, topTasks);
-    }
+    final tasks = taskProvider.tasks;
+    final topTasks = _getTopTasks(tasks);
+    return _buildGlassCard(context, topTasks);
   }
 
   List<TaskModel> _getTopTasks(List<TaskModel> tasks) {
     final uncompleted = tasks.where((t) => !t.isCompleted).toList();
-    
+
     // Sort ascending by due date (closest first). Nulls go to the bottom.
     uncompleted.sort((a, b) {
       if (a.dueDate == null && b.dueDate == null) return 0;
@@ -73,7 +47,9 @@ class MiniTaskList extends StatelessWidget {
               Text('Tareas', style: AppTypography.h3),
               GestureDetector(
                 onTap: () {
-                  context.findAncestorStateOfType<AppShellState>()?.navigateTo(1);
+                  context.findAncestorStateOfType<AppShellState>()?.navigateTo(
+                    3,
+                  );
                 },
                 child: Text(
                   'Ver Todas',
@@ -111,7 +87,7 @@ class MiniTaskList extends StatelessWidget {
   Widget _buildTaskItem(BuildContext context, TaskModel task) {
     final categories = context.read<CategoryProvider>().categories;
     String categoryName = 'Sin Categoría';
-    
+
     if (task.category != null && task.category!.isNotEmpty) {
       categoryName = task.category!;
     } else if (task.categoryId != null) {
@@ -172,7 +148,12 @@ class _TaskItem extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                 ),
                 const SizedBox(height: 2),
-                Text(subtitle, style: AppTypography.bodySmall, maxLines: 1, overflow: TextOverflow.ellipsis),
+                Text(
+                  subtitle,
+                  style: AppTypography.bodySmall,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
               ],
             ),
           ),

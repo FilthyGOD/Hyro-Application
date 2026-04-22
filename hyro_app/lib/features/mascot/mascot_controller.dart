@@ -205,7 +205,7 @@ class MascotController extends ChangeNotifier {
 
     // Damos un pequeño respiro de 50ms para que Rive procese la transición 'volver'
     // antes de inyectarle la nueva animación.
-    //await Future.delayed(const Duration(milliseconds: 50));
+    await Future.delayed(const Duration(milliseconds: 100));
 
     final valUnidades = (streak % 10).toDouble();
     final valDecenas = (streak ~/ 10).toDouble();

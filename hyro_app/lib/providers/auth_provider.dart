@@ -4,7 +4,7 @@ import 'package:isar/isar.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:hyro_app/models/user_profile.dart';
-import 'dart:io' show Platform;
+import 'dart:io' show Platform, InternetAddress;
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:app_links/app_links.dart';
 import 'package:hyro_app/data/sync/sync_service.dart';
@@ -127,6 +127,16 @@ class AuthProvider extends ChangeNotifier {
         await isar.userProfiles.put(user);
       });
 
+      final isConnected = await _hasInternet();
+      if (!isConnected) {
+        debugPrint('⚠️ No internet connection detected. Skipping sync.');
+        _currentUser = user;
+        _isLoading = false;
+        _isSyncingUser = false;
+        notifyListeners();
+        return;
+      }
+
       // 3. Sincronizar gamificación a Supabase (solo tiene efecto la primera vez)
       try {
         await Supabase.instance.client.rpc('sincronizar_perfil_local', params: {
@@ -184,6 +194,16 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
+  Future<bool> _hasInternet() async {
+    if (kIsWeb) return true;
+    try {
+      final result = await InternetAddress.lookup('google.com').timeout(const Duration(seconds: 2));
+      return result.isNotEmpty && result[0].rawAddress.isNotEmpty;
+    } catch (_) {
+      return false;
+    }
+  }
+
   // ─── Load Session ─────────────────────────────────────────────────
 
   Future<void> _loadUserSession() async {
@@ -204,8 +224,8 @@ class AuthProvider extends ChangeNotifier {
             .isActivelyLoggedInEqualTo(true)
             .findFirst();
 
-    // Artificial delay for splash screen
-    await Future.delayed(const Duration(seconds: 5));
+    // Artificial delay for splash screen reduced for better UX
+    await Future.delayed(const Duration(milliseconds: 500));
 
     if (activeUser != null) {
       _currentUser = activeUser;

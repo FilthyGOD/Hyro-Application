@@ -36,7 +36,11 @@ class CategoryProvider extends ChangeNotifier {
   Future<void> reload() async {
     try {
       if (isAuthenticated()) {
-        await _repository.pullRemoteToLocal();
+        try {
+          await _repository.pullRemoteToLocal();
+        } catch (e) {
+          debugPrint('Error pulling remote categories (offline?): $e');
+        }
       }
       _categories = _repository.getCategories();
       notifyListeners();

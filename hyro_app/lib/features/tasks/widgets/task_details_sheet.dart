@@ -308,16 +308,19 @@ class _TaskDetailsDialogState extends State<TaskDetailsDialog>
         return AlertDialog(
           backgroundColor: AppColors.surface,
           title: Text('Editar Nota', style: AppTypography.labelLarge),
-          content: TextField(
-            controller: controller,
-            maxLines: null,
-            style: AppTypography.bodyMedium.copyWith(color: AppColors.textPrimary),
-            decoration: InputDecoration(
-              filled: true,
-              fillColor: AppColors.surfaceLight,
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: BorderSide.none,
+          content: SizedBox(
+            width: 400,
+            child: TextField(
+              controller: controller,
+              maxLines: null,
+              style: AppTypography.bodyMedium.copyWith(color: AppColors.textPrimary),
+              decoration: InputDecoration(
+                filled: true,
+                fillColor: AppColors.surfaceLight,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide.none,
+                ),
               ),
             ),
           ),
@@ -374,6 +377,109 @@ class _TaskDetailsDialogState extends State<TaskDetailsDialog>
     setState(() {
       _flashcards.removeAt(index);
     });
+  }
+
+  void _confirmRemoveFlashcard(int index) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: AppColors.surface,
+        title: Text('Eliminar card', style: AppTypography.labelLarge),
+        content: Text(
+          '¿Estás seguro de que deseas eliminar esta card?',
+          style: AppTypography.bodyMedium,
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text('Cancelar', style: AppTypography.bodyMedium.copyWith(color: AppColors.textTertiary)),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              _removeFlashcard(index);
+            },
+            child: Text('Eliminar', style: AppTypography.labelLarge.copyWith(color: Colors.redAccent)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showEditCardDialog(int index) {
+    final card = _flashcards[index];
+    final frontCtrl = TextEditingController(text: card.frente);
+    final backCtrl = TextEditingController(text: card.reverso);
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          backgroundColor: AppColors.surface,
+          title: Text('Editar Card', style: AppTypography.labelLarge),
+          content: SizedBox(
+            width: 400,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  controller: frontCtrl,
+                  maxLength: 60,
+                  style: AppTypography.bodyMedium.copyWith(color: AppColors.textPrimary),
+                  decoration: InputDecoration(
+                    labelText: 'Frente',
+                    labelStyle: AppTypography.bodySmall.copyWith(color: AppColors.textTertiary),
+                    filled: true,
+                    fillColor: AppColors.surfaceLight,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide.none,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: backCtrl,
+                  maxLength: 200,
+                  maxLines: 3,
+                  style: AppTypography.bodyMedium.copyWith(color: AppColors.textPrimary),
+                  decoration: InputDecoration(
+                    labelText: 'Reverso',
+                    labelStyle: AppTypography.bodySmall.copyWith(color: AppColors.textTertiary),
+                    filled: true,
+                    fillColor: AppColors.surfaceLight,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide.none,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text('Cancelar', style: AppTypography.bodyMedium.copyWith(color: AppColors.textTertiary)),
+            ),
+            TextButton(
+              onPressed: () {
+                final newFront = frontCtrl.text.trim();
+                final newBack = backCtrl.text.trim();
+                if (newFront.isNotEmpty && newBack.isNotEmpty) {
+                  final updated = card.copyWith(frente: newFront, reverso: newBack);
+                  _cardRepo.updateCard(updated);
+                  setState(() {
+                    _flashcards[index] = updated;
+                  });
+                }
+                Navigator.pop(context);
+              },
+              child: Text('Guardar', style: AppTypography.labelLarge.copyWith(color: AppColors.primary)),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   // ── Helpers ──────────────────────────────────────────────────────────────
@@ -1006,7 +1112,7 @@ class _TaskDetailsDialogState extends State<TaskDetailsDialog>
             style: AppTypography.bodyMedium.copyWith(
                 color: AppColors.textPrimary),
             maxLines: 2,
-            maxLength: 150,
+            maxLength: 200,
             decoration: InputDecoration(
               hintText: 'Reverso — Respuesta o definición',
               hintStyle: AppTypography.bodySmall.copyWith(
@@ -1123,10 +1229,17 @@ class _TaskDetailsDialogState extends State<TaskDetailsDialog>
               ),
             ),
             IconButton(
-              icon:
-                  const Icon(Icons.delete_outline_rounded, size: 18),
+              icon: const Icon(Icons.edit_rounded, size: 18),
               color: AppColors.textTertiary,
-              onPressed: () => _removeFlashcard(index),
+              onPressed: () => _showEditCardDialog(index),
+              padding: EdgeInsets.zero,
+              constraints: const BoxConstraints(),
+            ),
+            const SizedBox(width: 4),
+            IconButton(
+              icon: const Icon(Icons.delete_outline_rounded, size: 18),
+              color: AppColors.textTertiary,
+              onPressed: () => _confirmRemoveFlashcard(index),
               padding: EdgeInsets.zero,
               constraints: const BoxConstraints(),
             ),

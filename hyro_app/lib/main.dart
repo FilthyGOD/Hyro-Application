@@ -27,6 +27,20 @@ void main(List<String> args) async {
   await NotificationsService.instance.init();
   await NotificationsService.instance.requestPermissions();
 
+  // ─── REGISTRAR PROTOCOLO EN WINDOWS (Para Deep Links) ────────────
+  if (Platform.isWindows) {
+    try {
+      final String executable = Platform.resolvedExecutable;
+      const String scheme = 'io.supabase.hyroapp';
+      Process.runSync('reg', ['add', 'HKCU\\Software\\Classes\\$scheme', '/ve', '/d', 'URL:$scheme Protocol', '/f']);
+      Process.runSync('reg', ['add', 'HKCU\\Software\\Classes\\$scheme', '/v', 'URL Protocol', '/d', '', '/f']);
+      Process.runSync('reg', ['add', 'HKCU\\Software\\Classes\\$scheme\\shell\\open\\command', '/ve', '/d', '"$executable" "%1"', '/f']);
+      debugPrint('🚨 [Hyro Debug] Protocolo $scheme registrado en Windows.');
+    } catch (e) {
+      debugPrint('🚨 [Hyro Debug] Error registrando protocolo: $e');
+    }
+  }
+
   // ─── EL CADENERO OFICIAL (PARCHADO PARA NULLS) ───────────────────
   if (Platform.isWindows) {
     // Le ponemos "bool?" y "??" para que nunca sea nulo

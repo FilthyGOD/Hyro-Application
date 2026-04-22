@@ -8,6 +8,7 @@ import '../../../data/models/tarea_nota_model.dart';
 import '../bloc/timer_cubit.dart';
 import '../../../shared/widgets/glass_card.dart';
 import '../../mascot/mascot_controller.dart';
+import '../models/quiz_result_item.dart';
 import 'package:rive/rive.dart' hide Animation;
 
 enum QuizMode { fillInNote, fillInCard, writeCardBack, writeCardFront }
@@ -82,9 +83,13 @@ class _FocusQuizDialogState extends State<FocusQuizDialog> {
   void _prepareQuestion(String text, {required bool fillInBlanks}) {
     final random = Random();
     final words = text.split(RegExp(r'\s+'));
-    final candidateWords = words
-        .where((w) => w.length > 3 && w.contains(RegExp(r'[a-zA-ZáéíóúÁÉÍÓÚñÑ]')))
-        .toList();
+    final candidateWords =
+        words
+            .where(
+              (w) =>
+                  w.length > 3 && w.contains(RegExp(r'[a-zA-ZáéíóúÁÉÍÓÚñÑ]')),
+            )
+            .toList();
 
     _hiddenWords.clear();
 
@@ -115,16 +120,17 @@ class _FocusQuizDialogState extends State<FocusQuizDialog> {
       }
     }
 
-    _hiddenWords = _hiddenWords
-        .map((w) => w.replaceAll(RegExp(r'[.,;!?()"\[\]{}]'), ''))
-        .toList();
+    _hiddenWords =
+        _hiddenWords
+            .map((w) => w.replaceAll(RegExp(r'[.,;!?()"\[\]{}]'), ''))
+            .toList();
   }
 
   void _checkAnswer() {
     if (_revealed) return;
 
     final answer = _inputController.text.trim().toLowerCase();
-    
+
     bool allCorrect = true;
     for (var word in _hiddenWords) {
       if (word.isNotEmpty && !answer.contains(word.toLowerCase())) {
@@ -138,9 +144,17 @@ class _FocusQuizDialogState extends State<FocusQuizDialog> {
       _revealed = true;
     });
 
-    context.read<TimerCubit>().recordQuizResult(_isCorrect);
+    final item = QuizResultItem(
+      id: DateTime.now().millisecondsSinceEpoch,
+      questionText: _displayText ?? '',
+      userAnswer: answer.isEmpty ? '(sin respuesta)' : answer,
+      correctAnswer: _hiddenWords.join(', '),
+      isCorrect: _isCorrect,
+    );
 
-    Future.delayed(const Duration(seconds: 2), () {
+    context.read<TimerCubit>().recordQuizResult(_isCorrect, item);
+
+    Future.delayed(const Duration(seconds: 5), () {
       if (mounted) {
         Navigator.pop(context);
         context.read<TimerCubit>().acknowledgeQuiz();
@@ -176,235 +190,248 @@ class _FocusQuizDialogState extends State<FocusQuizDialog> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-            Row(
-              children: [
-                const Icon(
-                  Icons.psychology_alt_rounded,
-                  color: AppColors.primary,
-                  size: 28,
-                ),
-                const SizedBox(width: 12),
-                Text('Verificación de Enfoque', style: AppTypography.h3),
-              ],
-            ),
-            const SizedBox(height: 16),
-            Consumer<MascotController>(
-              builder: (context, mascot, _) {
-                if (!mascot.isLoaded) return const SizedBox();
-                return SizedBox(
-                  height: 140,
-                  child: Center(
-                    child: Transform.scale(
-                      scale: 1.5,
-                      child: Transform.translate(
-                         offset: const Offset(0, 10),
-                         child: RiveWidget(
-                           controller: mascot.controller!,
-                           fit: Fit.contain,
-                         ),
-                      ),
-                    ),
-                  ),
-                );
-              },
-            ),
-            const SizedBox(height: 16),
-
-            if (_mode == QuizMode.writeCardFront) ...[
-              Text('Reverso de la tarjeta:', style: AppTypography.labelSmall),
-              const SizedBox(height: 8),
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: AppColors.surfaceLight,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: AppColors.cardBorder),
-                ),
-                child: Text(
-                  _selectedCard!.reverso,
-                  style: AppTypography.bodyLarge,
-                ),
-              ),
-              const SizedBox(height: 16),
-              Text('Escribe el frente (o conceptos clave):', style: AppTypography.labelSmall),
-            ] else if (_mode == QuizMode.writeCardBack) ...[
-              Text('Frente de la tarjeta:', style: AppTypography.labelSmall),
-              const SizedBox(height: 8),
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: AppColors.surfaceLight,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: AppColors.cardBorder),
-                ),
-                child: Text(
-                  _selectedCard!.frente,
-                  style: AppTypography.bodyLarge,
-                ),
-              ),
-              const SizedBox(height: 16),
-              Text('Escribe el reverso (o conceptos clave):', style: AppTypography.labelSmall),
-            ] else if (_mode == QuizMode.fillInCard) ...[
-              Text('Frente de la tarjeta:', style: AppTypography.labelSmall),
-              const SizedBox(height: 8),
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: AppColors.surfaceLight,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: AppColors.cardBorder),
-                ),
-                child: Text(
-                  _selectedCard!.frente,
-                  style: AppTypography.bodyLarge,
-                ),
-              ),
-              const SizedBox(height: 16),
-              Text('Completa el reverso:', style: AppTypography.labelSmall),
-              const SizedBox(height: 8),
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: AppColors.surfaceLight,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: AppColors.cardBorder),
-                ),
-                child: Text(_displayText ?? '', style: AppTypography.bodyLarge),
-              ),
-            ] else ...[
-              Text('Completa la nota:', style: AppTypography.labelSmall),
-              const SizedBox(height: 8),
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: AppColors.surfaceLight,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: AppColors.cardBorder),
-                ),
-                child: Text(_displayText ?? '', style: AppTypography.bodyLarge),
-              ),
-            ],
-
-            const SizedBox(height: 24),
-
-            if (!_revealed) ...[
-              TextField(
-                controller: _inputController,
-                decoration: InputDecoration(
-                  hintText: _hiddenWords.length > 1
-                      ? 'Escribe las ${_hiddenWords.length} palabras...'
-                      : 'Escribe tu respuesta...',
-                  hintStyle: AppTypography.bodyMedium,
-                  filled: true,
-                  fillColor: AppColors.surface,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: AppColors.cardBorder),
-                  ),
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: AppColors.cardBorder),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(
-                      color: AppColors.primary,
-                      width: 2,
-                    ),
-                  ),
-                ),
-                style: AppTypography.bodyLarge,
-                autofocus: true,
-                onSubmitted: (_) => _checkAnswer(),
-              ),
-              const SizedBox(height: 24),
               Row(
-                mainAxisAlignment: MainAxisAlignment.end,
                 children: [
-                  TextButton(
-                    onPressed: _skip,
-                    child: Text('Saltar', style: AppTypography.bodyMedium),
+                  const Icon(
+                    Icons.psychology_alt_rounded,
+                    color: AppColors.primary,
+                    size: 28,
                   ),
                   const SizedBox(width: 12),
-                  ElevatedButton(
-                    onPressed: _checkAnswer,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.primary,
-                      foregroundColor: AppColors.background,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 24,
-                        vertical: 12,
-                      ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                    child: const Text(
-                      'Responder',
-                      style: TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                  ),
+                  Text('Verificación de Enfoque', style: AppTypography.h3),
                 ],
               ),
-            ] else ...[
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color:
-                      _isCorrect
-                          ? AppColors.breakGreen.withValues(alpha: 0.3)
-                          : const Color(0xFFEF4444).withValues(alpha: 0.3),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color:
-                        _isCorrect
-                            ? AppColors.breakGreen
-                            : const Color(0xFFEF4444),
-                    width: 2,
+              const SizedBox(height: 16),
+              Consumer<MascotController>(
+                builder: (context, mascot, _) {
+                  if (!mascot.isLoaded) return const SizedBox();
+                  return SizedBox(
+                    height: 140,
+                    child: Center(
+                      child: Transform.scale(
+                        scale: 1.5,
+                        child: Transform.translate(
+                          offset: const Offset(0, 10),
+                          child: RiveWidget(
+                            controller: mascot.controller!,
+                            fit: Fit.contain,
+                          ),
+                        ),
+                      ),
+                    ),
+                  );
+                },
+              ),
+              const SizedBox(height: 16),
+
+              if (_mode == QuizMode.writeCardFront) ...[
+                Text('Reverso de la tarjeta:', style: AppTypography.labelSmall),
+                const SizedBox(height: 8),
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: AppColors.surfaceLight,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: AppColors.cardBorder),
+                  ),
+                  child: Text(
+                    _selectedCard!.reverso,
+                    style: AppTypography.bodyLarge,
                   ),
                 ),
-                child: Column(
+                const SizedBox(height: 16),
+                Text(
+                  'Escribe el frente (o conceptos clave):',
+                  style: AppTypography.labelSmall,
+                ),
+              ] else if (_mode == QuizMode.writeCardBack) ...[
+                Text('Frente de la tarjeta:', style: AppTypography.labelSmall),
+                const SizedBox(height: 8),
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: AppColors.surfaceLight,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: AppColors.cardBorder),
+                  ),
+                  child: Text(
+                    _selectedCard!.frente,
+                    style: AppTypography.bodyLarge,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  'Escribe el reverso (o conceptos clave):',
+                  style: AppTypography.labelSmall,
+                ),
+              ] else if (_mode == QuizMode.fillInCard) ...[
+                Text('Frente de la tarjeta:', style: AppTypography.labelSmall),
+                const SizedBox(height: 8),
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: AppColors.surfaceLight,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: AppColors.cardBorder),
+                  ),
+                  child: Text(
+                    _selectedCard!.frente,
+                    style: AppTypography.bodyLarge,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Text('Completa el reverso:', style: AppTypography.labelSmall),
+                const SizedBox(height: 8),
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: AppColors.surfaceLight,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: AppColors.cardBorder),
+                  ),
+                  child: Text(
+                    _displayText ?? '',
+                    style: AppTypography.bodyLarge,
+                  ),
+                ),
+              ] else ...[
+                Text('Completa la nota:', style: AppTypography.labelSmall),
+                const SizedBox(height: 8),
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: AppColors.surfaceLight,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: AppColors.cardBorder),
+                  ),
+                  child: Text(
+                    _displayText ?? '',
+                    style: AppTypography.bodyLarge,
+                  ),
+                ),
+              ],
+
+              const SizedBox(height: 24),
+
+              if (!_revealed) ...[
+                TextField(
+                  controller: _inputController,
+                  decoration: InputDecoration(
+                    hintText:
+                        _hiddenWords.length > 1
+                            ? 'Escribe las ${_hiddenWords.length} palabras...'
+                            : 'Escribe tu respuesta...',
+                    hintStyle: AppTypography.bodyMedium,
+                    filled: true,
+                    fillColor: AppColors.surface,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: const BorderSide(color: AppColors.cardBorder),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: const BorderSide(color: AppColors.cardBorder),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: const BorderSide(
+                        color: AppColors.primary,
+                        width: 2,
+                      ),
+                    ),
+                  ),
+                  style: AppTypography.bodyLarge,
+                  autofocus: true,
+                  onSubmitted: (_) => _checkAnswer(),
+                ),
+                const SizedBox(height: 24),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
                   children: [
-                    Icon(
-                      _isCorrect
-                          ? Icons.check_circle_rounded
-                          : Icons.cancel_rounded,
+                    TextButton(
+                      onPressed: _skip,
+                      child: Text('Saltar', style: AppTypography.bodyMedium),
+                    ),
+                    const SizedBox(width: 12),
+                    ElevatedButton(
+                      onPressed: _checkAnswer,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.primary,
+                        foregroundColor: AppColors.background,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 24,
+                          vertical: 12,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      child: const Text(
+                        'Responder',
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                  ],
+                ),
+              ] else ...[
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color:
+                        _isCorrect
+                            ? AppColors.breakGreen.withValues(alpha: 0.3)
+                            : const Color(0xFFEF4444).withValues(alpha: 0.3),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
                       color:
                           _isCorrect
                               ? AppColors.breakGreen
                               : const Color(0xFFEF4444),
-                      size: 48,
+                      width: 2,
                     ),
-                    const SizedBox(height: 12),
-                    Text(
-                      _isCorrect ? '¡Correcto!' : 'Incorrecto',
-                      style: AppTypography.h3.copyWith(
+                  ),
+                  child: Column(
+                    children: [
+                      Icon(
+                        _isCorrect
+                            ? Icons.check_circle_rounded
+                            : Icons.cancel_rounded,
                         color:
                             _isCorrect
                                 ? AppColors.breakGreen
                                 : const Color(0xFFEF4444),
+                        size: 48,
                       ),
-                    ),
-                    if (!_isCorrect) ...[
-                      const SizedBox(height: 8),
+                      const SizedBox(height: 12),
                       Text(
-                        'Respuesta esperada:',
-                        style: AppTypography.labelSmall,
-                      ),
-                      Text(
-                        _hiddenWords.join(', '),
-                        style: AppTypography.bodyLarge.copyWith(
-                          fontWeight: FontWeight.bold,
+                        _isCorrect ? '¡Correcto!' : 'Incorrecto',
+                        style: AppTypography.h3.copyWith(
+                          color:
+                              _isCorrect
+                                  ? AppColors.breakGreen
+                                  : const Color(0xFFEF4444),
                         ),
-                        textAlign: TextAlign.center,
                       ),
+                      if (!_isCorrect) ...[
+                        const SizedBox(height: 8),
+                        Text(
+                          'Respuesta esperada:',
+                          style: AppTypography.labelSmall,
+                        ),
+                        Text(
+                          _hiddenWords.join(', '),
+                          style: AppTypography.bodyLarge.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ],
                     ],
-                  ],
+                  ),
                 ),
-              ),
+              ],
             ],
-          ],
-        ),
+          ),
         ),
       ),
     );

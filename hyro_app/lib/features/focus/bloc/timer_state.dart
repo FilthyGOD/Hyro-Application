@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+import '../models/quiz_result_item.dart';
 
 enum TimerStatus { idle, running, paused, finished }
 
@@ -18,6 +19,8 @@ class TimerState extends Equatable {
   final int quizTotalCount;
   final bool isStrictModeActive;
   final bool isManualPause;
+  final String? strictModeViolationApp;
+  final List<QuizResultItem> quizHistory;
 
   const TimerState({
     this.status = TimerStatus.idle,
@@ -33,6 +36,8 @@ class TimerState extends Equatable {
     this.quizTotalCount = 0,
     this.isStrictModeActive = false,
     this.isManualPause = false,
+    this.strictModeViolationApp,
+    this.quizHistory = const [],
   });
 
   double get progress =>
@@ -57,6 +62,9 @@ class TimerState extends Equatable {
     int? quizTotalCount,
     bool? isStrictModeActive,
     bool? isManualPause,
+    String? strictModeViolationApp,
+    bool clearViolationApp = false,
+    List<QuizResultItem>? quizHistory,
   }) {
     return TimerState(
       status: status ?? this.status,
@@ -72,6 +80,8 @@ class TimerState extends Equatable {
       quizTotalCount: quizTotalCount ?? this.quizTotalCount,
       isStrictModeActive: isStrictModeActive ?? this.isStrictModeActive,
       isManualPause: isManualPause ?? this.isManualPause,
+      strictModeViolationApp: clearViolationApp ? null : (strictModeViolationApp ?? this.strictModeViolationApp),
+      quizHistory: quizHistory ?? this.quizHistory,
     );
   }
 
@@ -90,5 +100,7 @@ class TimerState extends Equatable {
     quizTotalCount,
     isStrictModeActive,
     isManualPause,
+    strictModeViolationApp,
+    quizHistory,
   ];
 }

@@ -167,13 +167,15 @@ class MascotController extends ChangeNotifier {
     triggerEstudiando();
   }
 
-  void triggerHueva() {
+  Future<void> triggerHueva() async {
     _isStudying = true;
     _cancelIdleLoop();
+    await Future.delayed(const Duration(milliseconds: 50));
     _triggerHueva?.fire();
   }
 
-  void triggerVolver() {
+  Future<void> triggerVolver() async {
+    await Future.delayed(const Duration(milliseconds: 50));
     _isStudying = false;
     _unidades?.value = 0;
     _decenas?.value = 0;

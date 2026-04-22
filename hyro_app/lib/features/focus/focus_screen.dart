@@ -12,14 +12,16 @@ import '../../core/theme/app_colors.dart';
 import 'widgets/mini_task_list.dart';
 import 'widgets/task_selection_dialog.dart';
 import '../stats/stats_provider.dart';
-import '../mascot/mascot_controller.dart';
+import '../tasks/tasks_provider.dart';
 import '../settings/settings_provider.dart';
 import '../../providers/ui_provider.dart';
+import '../mascot/mascot_controller.dart';
 import 'widgets/focus_quiz_dialog.dart';
 import 'widgets/pause_clock.dart';
 import '../../data/local/card_local_ds.dart';
 import '../../data/local/note_local_ds.dart';
-import '../tasks/tasks_provider.dart';
+import '../../data/local/note_local_ds.dart';
+import 'widgets/strict_mode_violation_card.dart';
 
 /// The main Focus screen with the Pomodoro timer and sidebar widgets.
 class FocusScreen extends StatelessWidget {
@@ -28,9 +30,26 @@ class FocusScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocListener<TimerCubit, TimerState>(
-      listenWhen: (prev, curr) => (prev.status != curr.status) || (prev.quizDue != curr.quizDue),
+      listenWhen: (prev, curr) => (prev.status != curr.status) || (prev.quizDue != curr.quizDue) || (prev.strictModeViolationApp != curr.strictModeViolationApp),
       listener: (context, state) {
         final mascot = context.read<MascotController>();
+        
+        if (state.strictModeViolationApp != null) {
+          mascot.triggerPensando();
+          showDialog(
+             context: context,
+             barrierDismissible: false,
+             builder: (_) => StrictModeViolationCard(appName: state.strictModeViolationApp!),
+          ).then((_) {
+             mascot.resumeEstudio();
+             if (!context.mounted) return;
+             if (context.read<TimerCubit>().state.isPaused) {
+                context.read<TimerCubit>().resume();
+             }
+          });
+          return;
+        }
+
         if (state.quizDue && state.isRunning) {
            final cardLocal = CardLocalDataSource();
            final noteLocal = NoteLocalDataSource();

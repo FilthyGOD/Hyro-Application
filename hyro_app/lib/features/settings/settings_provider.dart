@@ -81,6 +81,9 @@ class SettingsProvider extends ChangeNotifier {
   void setStrictMode(bool value) {
     if (_strictMode == value) return;
     _strictMode = value;
+    if (_strictMode) {
+      _autoPauseTimer = true;
+    }
     notifyListeners();
   }
 

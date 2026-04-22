@@ -18,11 +18,10 @@ import 'dart:io';
 import 'package:windows_single_instance/windows_single_instance.dart'; // <-- Vuelve el salvador
 import 'services/notifications_service.dart';
 // ignore: unused_import
-import 'features/focus/strict_overlay_screen.dart'; // Keeps overlayMain entry point alive
 
 void main(List<String> args) async {
   WidgetsFlutterBinding.ensureInitialized();
-  
+
   // Inicializar notificaciones y solicitar permisos
   await NotificationsService.instance.init();
   await NotificationsService.instance.requestPermissions();
@@ -32,9 +31,31 @@ void main(List<String> args) async {
     try {
       final String executable = Platform.resolvedExecutable;
       const String scheme = 'io.supabase.hyroapp';
-      Process.runSync('reg', ['add', 'HKCU\\Software\\Classes\\$scheme', '/ve', '/d', 'URL:$scheme Protocol', '/f']);
-      Process.runSync('reg', ['add', 'HKCU\\Software\\Classes\\$scheme', '/v', 'URL Protocol', '/d', '', '/f']);
-      Process.runSync('reg', ['add', 'HKCU\\Software\\Classes\\$scheme\\shell\\open\\command', '/ve', '/d', '"$executable" "%1"', '/f']);
+      Process.runSync('reg', [
+        'add',
+        'HKCU\\Software\\Classes\\$scheme',
+        '/ve',
+        '/d',
+        'URL:$scheme Protocol',
+        '/f',
+      ]);
+      Process.runSync('reg', [
+        'add',
+        'HKCU\\Software\\Classes\\$scheme',
+        '/v',
+        'URL Protocol',
+        '/d',
+        '',
+        '/f',
+      ]);
+      Process.runSync('reg', [
+        'add',
+        'HKCU\\Software\\Classes\\$scheme\\shell\\open\\command',
+        '/ve',
+        '/d',
+        '"$executable" "%1"',
+        '/f',
+      ]);
       debugPrint('🚨 [Hyro Debug] Protocolo $scheme registrado en Windows.');
     } catch (e) {
       debugPrint('🚨 [Hyro Debug] Error registrando protocolo: $e');

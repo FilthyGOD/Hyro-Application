@@ -2,7 +2,7 @@ import 'dart:async';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_foreground_task/flutter_foreground_task.dart' hide NotificationVisibility;
-import 'package:flutter_overlay_window/flutter_overlay_window.dart';
+
 import 'package:usage_stats/usage_stats.dart';
 import 'package:device_apps/device_apps.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -81,24 +81,14 @@ class StrictOverlayTaskHandler extends TaskHandler {
                 'packageName': pkg,
               });
 
-              // Mostramos el overlay desde el Isolate que sí está despierto (Background Service)
+              // Mandamos la app de vuelta al frente
               try {
-                bool isActive = await FlutterOverlayWindow.isActive();
-                if (!isActive) {
-                  debugPrint('[StrictMode][BG] Showing overlay window...');
-                  await FlutterOverlayWindow.showOverlay(
-                    enableDrag: false,
-                    flag: OverlayFlag.defaultFlag,
-                    alignment: OverlayAlignment.center,
-                    visibility: NotificationVisibility.visibilityPublic,
-                    positionGravity: PositionGravity.auto,
-                    height: WindowSize.matchParent,
-                    width: WindowSize.matchParent,
-                  ).timeout(const Duration(seconds: 3));
-                }
-                FlutterOverlayWindow.shareData(appName);
+                FlutterForegroundTask.wakeUpScreen();
+                Future.delayed(const Duration(milliseconds: 200), () {
+                  FlutterForegroundTask.launchApp();
+                });
               } catch (e) {
-                debugPrint('[StrictMode][BG] Error showing overlay: $e');
+                debugPrint('[StrictMode][BG] Error launching app: $e');
               }
             }
           } else if (isHyro && _violationActive) {
@@ -108,12 +98,8 @@ class StrictOverlayTaskHandler extends TaskHandler {
             FlutterForegroundTask.sendDataToMain({
               'action': 'RETURNED',
             });
-            try {
-              await FlutterOverlayWindow.closeOverlay();
-            } catch(e) {}
-          } else if (isHyro) {
-            _lastForegroundPackage = pkg;
           }
+          _lastForegroundPackage = pkg;
           break; // only process the most recent foreground event
         }
       }
@@ -180,12 +166,12 @@ class StrictModeService {
       return false;
     }
 
-    // 2. Overlay (System Alert Window)
-    bool? isOverlayGranted = await FlutterOverlayWindow.isPermissionGranted();
+    // 2. System Alert Window (Required for Android 10+ to launch app from background)
+    bool isOverlayGranted = await Permission.systemAlertWindow.isGranted;
     debugPrint('[StrictMode][UI] Overlay permission: $isOverlayGranted');
-    if (isOverlayGranted != true) {
-      debugPrint('[StrictMode][UI] Requesting Overlay permission...');
-      await FlutterOverlayWindow.requestPermission();
+    if (!isOverlayGranted) {
+      debugPrint('[StrictMode][UI] Requesting System Alert Window permission...');
+      await Permission.systemAlertWindow.request();
       return false;
     }
 
@@ -206,7 +192,7 @@ class StrictModeService {
 
   /// Starts the foreground service that monitors app usage.
   /// [onViolationDetected] fires in the main isolate when the user leaves Hyro.
-  Future<void> startStrictMonitoring(VoidCallback onViolationDetected) async {
+  Future<void> startStrictMonitoring(void Function(String appName) onViolationDetected) async {
     debugPrint('[StrictMode][UI] startStrictMonitoring()');
     if (!Platform.isAndroid) return;
 
@@ -234,7 +220,7 @@ class StrictModeService {
           debugPrint('[StrictMode][UI] ⚠️ Violation received — app: $appName');
 
           // Pause the timer when UI catches up
-          onViolationDetected();
+          onViolationDetected(appName);
 
         } else if (action == 'RETURNED') {
           debugPrint('[StrictMode][UI] User returned to Hyro.');

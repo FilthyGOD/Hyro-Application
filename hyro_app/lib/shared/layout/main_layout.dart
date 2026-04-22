@@ -36,11 +36,7 @@ class _MainLayoutState extends State<MainLayout> {
   // State to control sidebar visibility on desktop/tablet
   bool _isDesktopSidebarVisible = true;
 
-  // Mobile bottom nav order: Tienda(0), Estads(1), Enfoque(2), Tareas(3), Perfil(4)
-  // Maps mobile nav index → screen index
-  static const _mobileNavToScreen = [3, 2, 0, 1, 4];
-  // Maps screen index → mobile nav index
-  static const _screenToMobileNav = {0: 2, 1: 3, 2: 1, 3: 0, 4: 4};
+  // No mappings needed, index is 1-to-1
 
   late final SpotifyAuthService _spotifyAuthService;
   late final SpotifyPlayerService _spotifyPlayerService;
@@ -235,14 +231,14 @@ class _MainLayoutState extends State<MainLayout> {
                 child: BottomNavigationBar(
                   backgroundColor: AppColors.surface,
                   type: BottomNavigationBarType.fixed,
-                  currentIndex: _screenToMobileNav[widget.selectedIndex] ?? 0,
+                  currentIndex: widget.selectedIndex < 5 ? widget.selectedIndex : 4,
                   selectedItemColor: AppColors.primary,
                   unselectedItemColor: AppColors.textSecondary,
                   selectedFontSize: 11,
                   unselectedFontSize: 11,
                   showUnselectedLabels: true,
                   onTap: (index) {
-                    widget.onNavigate(_mobileNavToScreen[index]);
+                    widget.onNavigate(index);
                   },
                   items: const [
                     BottomNavigationBarItem(

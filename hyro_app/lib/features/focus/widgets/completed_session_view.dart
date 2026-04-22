@@ -8,6 +8,7 @@ import '../../settings/settings_provider.dart';
 import '../../../providers/ui_provider.dart';
 import '../../mascot/mascot_controller.dart';
 import 'package:provider/provider.dart';
+import '../models/quiz_result_item.dart';
 
 class CompletedSessionView extends StatefulWidget {
   final int streak;
@@ -125,6 +126,15 @@ class _CompletedSessionViewState extends State<CompletedSessionView> {
                           context.read<TimerCubit>().reset();
                         },
                       ),
+                      if (context.read<TimerCubit>().state.quizHistory.isNotEmpty)
+                        _buildActionButton(
+                          label: 'Resultados del Quiz',
+                          icon: Icons.checklist_rtl_rounded,
+                          isPrimary: false,
+                          onPressed: () {
+                            _showQuizHistory(context, context.read<TimerCubit>().state.quizHistory);
+                          },
+                        ),
                     ],
                   ),
                   Consumer<UiProvider>(
@@ -242,4 +252,88 @@ class _CompletedSessionViewState extends State<CompletedSessionView> {
       ),
     );
   }
+
+  void _showQuizHistory(BuildContext context, List<QuizResultItem> history) {
+    showDialog(
+      context: context,
+      builder: (ctx) {
+        return Dialog(
+          backgroundColor: const Color(0xFF191D28),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+          child: Container(
+            width: 400,
+            constraints: const BoxConstraints(maxHeight: 600),
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text('Resultados del Quiz', style: AppTypography.h3.copyWith(color: Colors.white)),
+                const SizedBox(height: 16),
+                Expanded(
+                  child: ListView.separated(
+                    shrinkWrap: true,
+                    itemCount: history.length,
+                    separatorBuilder: (_, __) => const Divider(color: Color(0xFF2D3748), height: 32),
+                    itemBuilder: (context, index) {
+                      final item = history[index];
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Icon(
+                                item.isCorrect ? Icons.check_circle : Icons.cancel,
+                                color: item.isCorrect ? const Color(0xFF10B981) : const Color(0xFFEF4444),
+                                size: 20,
+                              ),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Text(
+                                  'Pregunta ${index + 1}',
+                                  style: AppTypography.labelLarge.copyWith(color: Colors.white),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 12),
+                          Text('Definición/Contexto:', style: AppTypography.labelSmall.copyWith(color: Colors.white54)),
+                          Text(item.questionText, style: AppTypography.bodyMedium.copyWith(color: Colors.white)),
+                          const SizedBox(height: 8),
+                          Text('Tu respuesta:', style: AppTypography.labelSmall.copyWith(color: Colors.white54)),
+                          Text(
+                            item.userAnswer,
+                            style: AppTypography.bodyLarge.copyWith(
+                              color: item.isCorrect ? const Color(0xFF10B981) : const Color(0xFFEF4444),
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          if (!item.isCorrect) ...[
+                            const SizedBox(height: 4),
+                            Text('Respuesta correcta:', style: AppTypography.labelSmall.copyWith(color: Colors.white54)),
+                            Text(item.correctAnswer, style: AppTypography.bodyMedium.copyWith(color: const Color(0xFF10B981))),
+                          ]
+                        ],
+                      );
+                    },
+                  ),
+                ),
+                const SizedBox(height: 24),
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF3B82F6),
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                  onPressed: () => Navigator.of(ctx).pop(),
+                  child: const Text('Cerrar', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
 }
+

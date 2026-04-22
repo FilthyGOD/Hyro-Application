@@ -10,6 +10,7 @@ import '../../tasks/tasks_provider.dart';
 import '../../../providers/auth_provider.dart';
 import '../../../services/notifications_service.dart';
 import '../../../core/services/strict_mode_service.dart';
+import '../models/quiz_result_item.dart';
 import 'timer_state.dart';
 
 /// Cubit that manages the Pomodoro timer logic.
@@ -39,39 +40,68 @@ class TimerCubit extends Cubit<TimerState> {
   void start({String? taskId, String? taskTitle, bool isStrictMode = false}) {
     if (state.status == TimerStatus.running) return;
 
-    emit(state.copyWith(
-      status: TimerStatus.running,
-      activeTaskId: taskId ?? state.activeTaskId,
-      activeTaskTitle: taskTitle ?? state.activeTaskTitle,
-      quizDue: false,
-      isStrictModeActive: isStrictMode || state.isStrictModeActive,
-    ));
+    emit(
+      state.copyWith(
+        status: TimerStatus.running,
+        activeTaskId: taskId ?? state.activeTaskId,
+        activeTaskTitle: taskTitle ?? state.activeTaskTitle,
+        quizDue: false,
+        isStrictModeActive: isStrictMode || state.isStrictModeActive,
+        clearViolationApp: true,
+        quizHistory: (state.status == TimerStatus.paused) ? state.quizHistory : const [],
+        quizCorrectCount: (state.status == TimerStatus.paused) ? state.quizCorrectCount : 0,
+        quizTotalCount: (state.status == TimerStatus.paused) ? state.quizTotalCount : 0,
+      ),
+    );
     _timer?.cancel();
     _timer = Timer.periodic(const Duration(seconds: 1), (_) => _tick());
     NotificationsService.instance.schedulePomodoroEndNotification(
-      state.mode == TimerMode.pomodoro, 
-      state.remainingSeconds
+      state.mode == TimerMode.pomodoro,
+      state.remainingSeconds,
     );
 
     // Start strict mode monitoring if enabled
     if (state.isStrictModeActive) {
-      debugPrint('[StrictMode][TimerCubit] isStrictModeActive=true, calling _initStrictMode()');
+      debugPrint(
+        '[StrictMode][TimerCubit] isStrictModeActive=true, calling _initStrictMode()',
+      );
       _initStrictMode();
     } else {
-      debugPrint('[StrictMode][TimerCubit] isStrictModeActive=false, skipping strict mode');
+      debugPrint(
+        '[StrictMode][TimerCubit] isStrictModeActive=false, skipping strict mode',
+      );
     }
   }
 
   Future<void> _initStrictMode() async {
     debugPrint('[StrictMode][TimerCubit] _initStrictMode() starting...');
     await _strictModeService.init();
-    debugPrint('[StrictMode][TimerCubit] Service initialized, starting monitoring...');
-    await _strictModeService.startStrictMonitoring(() {
+    debugPrint(
+      '[StrictMode][TimerCubit] Service initialized, starting monitoring...',
+    );
+    await _strictModeService.startStrictMonitoring((appName) {
+      String formattedAppName = appName;
+      final parts = appName.split('.');
+      if (parts.length >= 2) {
+        formattedAppName = parts[1];
+      }
       // Called when the user leaves the app during strict mode
-      debugPrint('[StrictMode][TimerCubit] ⚠️ Violation callback! isRunning=${state.isRunning}');
-      if (state.isRunning) {
-        debugPrint('[StrictMode][TimerCubit] Pausing timer due to strict mode violation');
-        pause(manual: false);
+      debugPrint(
+        '[StrictMode][TimerCubit] ⚠️ Violation callback! isRunning=${state.isRunning}, app: $formattedAppName',
+      );
+      if (state.isRunning ||
+          (state.status == TimerStatus.paused && !state.isManualPause)) {
+        debugPrint(
+          '[StrictMode][TimerCubit] Registering strict mode violation',
+        );
+        _timer?.cancel();
+        emit(
+          state.copyWith(
+            status: TimerStatus.paused,
+            isManualPause: false,
+            strictModeViolationApp: appName,
+          ),
+        );
       }
     });
     debugPrint('[StrictMode][TimerCubit] _initStrictMode() complete');
@@ -81,7 +111,13 @@ class TimerCubit extends Cubit<TimerState> {
   void pause({bool manual = true}) {
     _timer?.cancel();
     NotificationsService.instance.cancelPomodoroNotification();
-    emit(state.copyWith(status: TimerStatus.paused, isManualPause: manual));
+    emit(
+      state.copyWith(
+        status: TimerStatus.paused,
+        isManualPause: manual,
+        clearViolationApp: true,
+      ),
+    );
   }
 
   /// Resume a paused timer.
@@ -126,7 +162,10 @@ class TimerCubit extends Cubit<TimerState> {
     if (state.isStrictModeActive) {
       _strictModeService.stopStrictMonitoring();
     }
-    final totalSec = (settingsProvider?.pomodoroDuration.toInt() ?? PomodoroConstants.pomodoroDuration) * 60;
+    final totalSec =
+        (settingsProvider?.pomodoroDuration.toInt() ??
+            PomodoroConstants.pomodoroDuration) *
+        60;
     emit(
       TimerState(
         completedSessions: state.completedSessions,
@@ -167,7 +206,8 @@ class TimerCubit extends Cubit<TimerState> {
 
       // Check if quiz is due (only during pomodoro mode, quiz enabled, and has a task)
       final quizEnabled = settingsProvider?.focusQuizEnabled ?? false;
-      final quizInterval = ((settingsProvider?.focusQuizIntervalMinutes ?? 5) * 60).toInt();
+      final quizInterval =
+          ((settingsProvider?.focusQuizIntervalMinutes ?? 5) * 60).toInt();
       bool triggerQuiz = false;
 
       if (quizEnabled &&
@@ -179,10 +219,12 @@ class TimerCubit extends Cubit<TimerState> {
         _secondsSinceLastQuiz = 0;
       }
 
-      emit(state.copyWith(
-        remainingSeconds: state.remainingSeconds - 1,
-        quizDue: triggerQuiz ? true : null,
-      ));
+      emit(
+        state.copyWith(
+          remainingSeconds: state.remainingSeconds - 1,
+          quizDue: triggerQuiz ? true : null,
+        ),
+      );
     }
   }
 
@@ -192,11 +234,14 @@ class TimerCubit extends Cubit<TimerState> {
   }
 
   /// Records the result of a quiz question.
-  void recordQuizResult(bool isCorrect) {
-    emit(state.copyWith(
-      quizCorrectCount: state.quizCorrectCount + (isCorrect ? 1 : 0),
-      quizTotalCount: state.quizTotalCount + 1,
-    ));
+  void recordQuizResult(bool isCorrect, QuizResultItem item) {
+    emit(
+      state.copyWith(
+        quizCorrectCount: state.quizCorrectCount + (isCorrect ? 1 : 0),
+        quizTotalCount: state.quizTotalCount + 1,
+        quizHistory: [...state.quizHistory, item],
+      ),
+    );
   }
 
   void _onTimerFinished() {
@@ -211,14 +256,18 @@ class TimerCubit extends Cubit<TimerState> {
       final newFocusMinutes = state.totalFocusMinutes + focusMinutes;
 
       final userId = authProvider?.supabaseUserId;
-      
+
       // Tell stats provider to record this session locally and sync to cloud
       statsProvider?.addFocusSession(focusMinutes, userId);
 
       Future.microtask(() {
-         // After it updates local StatsBox, we capture the newest real dynamic streak
-         final currentDynamicStreak = statsProvider?.currentStreak ?? 0;
-         profileProvider?.syncDynamicStats(userId, currentDynamicStreak, focusMinutes);
+        // After it updates local StatsBox, we capture the newest real dynamic streak
+        final currentDynamicStreak = statsProvider?.currentStreak ?? 0;
+        profileProvider?.syncDynamicStats(
+          userId,
+          currentDynamicStreak,
+          focusMinutes,
+        );
       });
 
       // ── Gamification hooks ──
@@ -252,11 +301,16 @@ class TimerCubit extends Cubit<TimerState> {
           activeTaskTitle: state.activeTaskTitle,
           quizCorrectCount: state.quizCorrectCount,
           quizTotalCount: state.quizTotalCount,
+          quizHistory:
+              state.quizHistory, // Keep history for review on final screen
         ),
       );
     } else {
       // Break finished → go back to pomodoro
-      final nextDuration = (settingsProvider?.pomodoroDuration.toInt() ?? PomodoroConstants.pomodoroDuration) * 60;
+      final nextDuration =
+          (settingsProvider?.pomodoroDuration.toInt() ??
+              PomodoroConstants.pomodoroDuration) *
+          60;
       emit(
         state.copyWith(
           status: TimerStatus.finished,
@@ -271,11 +325,14 @@ class TimerCubit extends Cubit<TimerState> {
   int _durationForMode(TimerMode mode) {
     switch (mode) {
       case TimerMode.pomodoro:
-        return settingsProvider?.pomodoroDuration.toInt() ?? PomodoroConstants.pomodoroDuration;
+        return settingsProvider?.pomodoroDuration.toInt() ??
+            PomodoroConstants.pomodoroDuration;
       case TimerMode.shortBreak:
-        return settingsProvider?.shortBreakDuration.toInt() ?? PomodoroConstants.shortBreakDuration;
+        return settingsProvider?.shortBreakDuration.toInt() ??
+            PomodoroConstants.shortBreakDuration;
       case TimerMode.longBreak:
-        return settingsProvider?.longBreakDuration.toInt() ?? PomodoroConstants.longBreakDuration;
+        return settingsProvider?.longBreakDuration.toInt() ??
+            PomodoroConstants.longBreakDuration;
     }
   }
 

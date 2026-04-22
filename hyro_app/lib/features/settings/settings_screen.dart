@@ -21,7 +21,35 @@ class SettingsScreen extends StatefulWidget {
   State<SettingsScreen> createState() => _SettingsScreenState();
 }
 
-class _SettingsScreenState extends State<SettingsScreen> {
+class _SettingsScreenState extends State<SettingsScreen> with WidgetsBindingObserver {
+  bool _awaitingStrictModePermission = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) async {
+    if (state == AppLifecycleState.resumed && _awaitingStrictModePermission) {
+      _awaitingStrictModePermission = false;
+      final service = StrictModeService();
+      final granted = await service.checkAndRequestPermissions();
+      if (granted && mounted) {
+        context.read<SettingsProvider>().setStrictMode(true);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Modo Estricto activado correctamente')),
+        );
+      }
+    }
+  }
   @override
   Widget build(BuildContext context) {
     final settings = context.watch<SettingsProvider>();
@@ -118,6 +146,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   label: 'Pausa Automática',
                   subtitle: 'Si sales de la app, el contador se pausa',
                   value: settings.autoPauseTimer,
+                  disabled: settings.strictMode,
                   onChanged: (v) => settings.setAutoPauseTimer(v),
                 ),
                 if (Platform.isWindows || Platform.isMacOS || Platform.isLinux) ...[
@@ -148,10 +177,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         if (!granted) {
                           // User was sent to system settings — don't enable yet
                           debugPrint('[StrictMode][Settings] Permissions NOT granted, showing snackbar');
+                          _awaitingStrictModePermission = true;
                           if (context.mounted) {
                             ScaffoldMessenger.of(context).showSnackBar(
                               const SnackBar(
-                                content: Text('Acepta los permisos necesarios y vuelve a activar el Modo Estricto.'),
+                                content: Text('Acepta los permisos necesarios y vuelve a Hyro.'),
                               ),
                             );
                           }
@@ -489,34 +519,39 @@ class _ToggleSetting extends StatelessWidget {
   final String label;
   final String subtitle;
   final bool value;
-  final ValueChanged<bool> onChanged;
+  final ValueChanged<bool>? onChanged;
+  final bool disabled;
 
   const _ToggleSetting({
     required this.label,
     required this.subtitle,
     required this.value,
-    required this.onChanged,
+    this.onChanged,
+    this.disabled = false,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(label, style: AppTypography.labelLarge),
-              Text(subtitle, style: AppTypography.bodySmall),
-            ],
+    return Opacity(
+      opacity: disabled ? 0.5 : 1.0,
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(label, style: AppTypography.labelLarge),
+                Text(subtitle, style: AppTypography.bodySmall),
+              ],
+            ),
           ),
-        ),
-        Switch(
-          value: value,
-          onChanged: onChanged,
-          activeThumbColor: AppColors.primary,
-        ),
-      ],
+          Switch(
+            value: value,
+            onChanged: disabled ? null : onChanged,
+            activeThumbColor: disabled ? AppColors.textSecondary : AppColors.primary,
+          ),
+        ],
+      ),
     );
   }
 }

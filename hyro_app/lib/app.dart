@@ -101,7 +101,7 @@ class AppShell extends StatefulWidget {
 }
 
 class AppShellState extends State<AppShell> with WidgetsBindingObserver, WindowListener, TrayListener {
-  int _selectedIndex = 0;
+  int _selectedIndex = 2; // Default to Focus
   bool _initialized = false;
   late final PageController _pageController;
   String? _lastUserId;
@@ -241,12 +241,11 @@ class AppShellState extends State<AppShell> with WidgetsBindingObserver, WindowL
   }
 
   static const _screens = <Widget>[
-    FocusScreen(), // 0
-    TasksScreen(), // 1
-    StatsScreen(), // 2
-    ShopScreen(), // 3
+    ShopScreen(), // 0
+    StatsScreen(), // 1
+    FocusScreen(), // 2
+    TasksScreen(), // 3
     ProfileScreen(), // 4
-    SettingsScreen(), // 5
   ];
 
   @override
@@ -339,14 +338,16 @@ class AppShellState extends State<AppShell> with WidgetsBindingObserver, WindowL
 
     setState(() => _selectedIndex = index);
     
-    if (index == 5 || !Responsive.isMobile(context)) {
-      _pageController.jumpToPage(index);
-    } else {
-      _pageController.animateToPage(
-        index,
-        duration: const Duration(milliseconds: 300),
-        curve: Curves.easeInOut,
-      );
+    if (index != 5) {
+      if (!Responsive.isMobile(context)) {
+        _pageController.jumpToPage(index);
+      } else {
+        _pageController.animateToPage(
+          index,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeInOut,
+        );
+      }
     }
 
     if (previousIndex == index) return;
@@ -354,15 +355,12 @@ class AppShellState extends State<AppShell> with WidgetsBindingObserver, WindowL
     final mascot = context.read<MascotController>();
 
     // Leaving Focus, Shop, or Stats → reset mascot to idle
-    if (previousIndex == 0 || previousIndex == 3) {
-      mascot.triggerVolver();
-    }
-    if (previousIndex == 2) {
+    if (previousIndex == 2 || previousIndex == 0 || previousIndex == 1) {
       mascot.triggerVolver();
     }
 
     // Arriving at Focus → resume animation if timer is running
-    if (index == 0) {
+    if (index == 2) {
       // Also fire volver to ensure we leave any other animation state
       mascot.triggerVolver();
       if (timerState.isRunning) {
@@ -375,7 +373,7 @@ class AppShellState extends State<AppShell> with WidgetsBindingObserver, WindowL
     }
 
     // Arriving at Stats → trigger racha animation
-    if (index == 2) {
+    if (index == 1) {
       final streak = context.read<StatsProvider>().currentStreak;
       mascot.triggerRacha(streak);
     }
@@ -392,38 +390,49 @@ class AppShellState extends State<AppShell> with WidgetsBindingObserver, WindowL
         MainLayout(
           selectedIndex: _selectedIndex,
           onNavigate: navigateTo,
-          child: PageView(
-            controller: _pageController,
-            physics: (context.watch<SettingsProvider>().strictMode && context.watch<TimerCubit>().state.isRunning)
-                ? const NeverScrollableScrollPhysics() // Bloquea el swipe en modo estricto si está corriendo
-                : const BouncingScrollPhysics(),
-            onPageChanged: (index) {
-              final previousIndex = _selectedIndex;
-              if (index != _selectedIndex) {
-                setState(() => _selectedIndex = index);
-                
-                final mascot = context.read<MascotController>();
-                if (previousIndex == 0 || previousIndex == 3 || previousIndex == 2) {
-                  mascot.triggerVolver();
-                }
-                if (index == 0) {
-                  mascot.triggerVolver();
-                  final timerState = context.read<TimerCubit>().state;
-                  if (timerState.isRunning) {
-                    if (timerState.mode == TimerMode.pomodoro) {
-                      mascot.triggerEstudiando();
-                    } else {
-                      mascot.triggerHueva();
+          child: Stack(
+            children: [
+              PageView(
+                controller: _pageController,
+                physics: (context.watch<TimerCubit>().state.isRunning)
+                    ? const NeverScrollableScrollPhysics() // Bloquea el swipe si está corriendo
+                    : const BouncingScrollPhysics(),
+                onPageChanged: (index) {
+                  final previousIndex = _selectedIndex;
+                  if (index != _selectedIndex) {
+                    setState(() => _selectedIndex = index);
+                    
+                    final mascot = context.read<MascotController>();
+                    if (previousIndex == 2 || previousIndex == 0 || previousIndex == 1) {
+                      mascot.triggerVolver();
+                    }
+                    if (index == 2) {
+                      mascot.triggerVolver();
+                      final timerState = context.read<TimerCubit>().state;
+                      if (timerState.isRunning) {
+                        if (timerState.mode == TimerMode.pomodoro) {
+                          mascot.triggerEstudiando();
+                        } else {
+                          mascot.triggerHueva();
+                        }
+                      }
+                    }
+                    if (index == 1) {
+                      final streak = context.read<StatsProvider>().currentStreak;
+                      mascot.triggerRacha(streak);
                     }
                   }
-                }
-                if (index == 2) {
-                  final streak = context.read<StatsProvider>().currentStreak;
-                  mascot.triggerRacha(streak);
-                }
-              }
-            },
-            children: _screens,
+                },
+                children: _screens,
+              ),
+              if (_selectedIndex == 5)
+                Positioned.fill(
+                  child: Container(
+                    color: Theme.of(context).scaffoldBackgroundColor,
+                    child: const SettingsScreen(),
+                  ),
+                ),
+            ],
           ),
         ),
         // Floating mascot overlay — only visible on Focus (0) and Tasks (1), and not during completed session view
@@ -435,7 +444,7 @@ class AppShellState extends State<AppShell> with WidgetsBindingObserver, WindowL
                  timerState.mode == TimerMode.longBreak);
                  
             final isQuizActive = timerState.quizDue;
-            final isVisible = (_selectedIndex == 0 || _selectedIndex == 1) && !isPomodoroFinished && !isQuizActive;
+            final isVisible = (_selectedIndex == 2 || _selectedIndex == 3) && !isPomodoroFinished && !isQuizActive;
             return FloatingMascot(visible: isVisible);
           },
         ),

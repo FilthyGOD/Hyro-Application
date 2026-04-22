@@ -403,8 +403,8 @@ class AppShellState extends State<AppShell> with WidgetsBindingObserver, WindowL
             children: [
               PageView(
                 controller: _pageController,
-                physics: (context.watch<TimerCubit>().state.isRunning)
-                    ? const NeverScrollableScrollPhysics() // Bloquea el swipe si está corriendo
+                physics: (Platform.isWindows || Platform.isMacOS || Platform.isLinux || context.watch<TimerCubit>().state.isRunning)
+                    ? const NeverScrollableScrollPhysics() // Bloquea el swipe en PC o si el timer corre
                     : const BouncingScrollPhysics(),
                 onPageChanged: (index) {
                   final previousIndex = _selectedIndex;

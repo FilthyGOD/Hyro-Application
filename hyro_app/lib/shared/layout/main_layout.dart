@@ -83,11 +83,16 @@ class _MainLayoutState extends State<MainLayout> {
                     const Positioned.fill(child: AnimatedBackground()),
                     // Main Content Region
                     Positioned.fill(
-                      child: Center(
-                        child: ConstrainedBox(
-                          constraints: const BoxConstraints(maxWidth: 1200),
-                          child: widget.child,
-                        ),
+                      child: Container(
+                        color: widget.selectedIndex == 5 ? AppColors.background : Colors.transparent,
+                        child: widget.selectedIndex == 5 
+                          ? widget.child // No centering/constraints for Settings if it should be "large"
+                          : Center(
+                              child: ConstrainedBox(
+                                constraints: const BoxConstraints(maxWidth: 1200),
+                                child: widget.child,
+                              ),
+                            ),
                       ),
                     ),
                     // Floating Spotify Base

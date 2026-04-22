@@ -69,6 +69,7 @@ dev_dependencies:
   hive_generator: ^2.0.1
   build_runner: 2.4.13
   isar_generator: 3.1.0
+  msix: ^3.16.13
 
 flutter:
   uses-material-design: true
@@ -87,3 +88,10 @@ flutter_launcher_icons:
     image_path: "assets/images/app_icon.png"
   image_path: "assets/images/app_icon.png"
   min_sdk_android: 21
+
+msix_config:
+  display_name: "Hyro"
+  publisher_display_name: "Hyro"
+  identity_name: "HyroApp.Hyro"
+  msix_version: 1.0.0.0
+  logo_path: assets/images/app_icon.png

@@ -22,21 +22,25 @@ class Sidebar extends StatelessWidget {
       icon: Icons.timer_outlined,
       activeIcon: Icons.timer,
       label: 'Enfoque',
+      targetIndex: 2,
     ),
     _SidebarItemData(
       icon: Icons.check_circle_outline,
       activeIcon: Icons.check_circle,
       label: 'Tareas',
+      targetIndex: 3,
     ),
     _SidebarItemData(
       icon: Icons.bar_chart_outlined,
       activeIcon: Icons.bar_chart,
       label: 'Estadísticas',
+      targetIndex: 1,
     ),
     _SidebarItemData(
       icon: Icons.storefront_outlined,
       activeIcon: Icons.storefront,
       label: 'Tienda',
+      targetIndex: 0,
     ),
   ];
 
@@ -57,13 +61,16 @@ class Sidebar extends StatelessWidget {
           _buildLogo(),
           const SizedBox(height: 36),
           // ── Nav items ──
-          ...List.generate(_items.length, (i) {
+          ..._items.map((item) {
             return _SidebarItem(
-              icon: selectedIndex == i ? _items[i].activeIcon : _items[i].icon,
-              label: _items[i].label,
-              isActive: selectedIndex == i,
+              icon:
+                  selectedIndex == item.targetIndex
+                      ? item.activeIcon
+                      : item.icon,
+              label: item.label,
+              isActive: selectedIndex == item.targetIndex,
               collapsed: collapsed,
-              onTap: () => onItemSelected(i),
+              onTap: () => onItemSelected(item.targetIndex),
             );
           }),
           const Spacer(),
@@ -110,7 +117,8 @@ class Sidebar extends StatelessWidget {
   Widget _buildUserInfo(BuildContext context) {
     final isActive = selectedIndex == 4;
     final String? rawName = context.watch<AuthProvider>().currentUser?.name;
-    final String userName = (rawName != null && rawName.isNotEmpty) ? rawName : 'Usuario';
+    final String userName =
+        (rawName != null && rawName.isNotEmpty) ? rawName : 'Usuario';
     final String initial = userName.substring(0, 1).toUpperCase();
 
     return Padding(
@@ -164,11 +172,13 @@ class _SidebarItemData {
   final IconData icon;
   final IconData activeIcon;
   final String label;
+  final int targetIndex;
 
   const _SidebarItemData({
     required this.icon,
     required this.activeIcon,
     required this.label,
+    required this.targetIndex,
   });
 }
 

@@ -1,7 +1,7 @@
-name: hyro_app
-description: "Hyro - Study app with Pomodoro technique"
+name: hyro
+description: "Hyro - aplicacion de estudio con la tecnica de pomodoro"
 publish_to: 'none'
-version: 1.0.0+1
+version: 1.0.0+2
 
 environment:
   sdk: ^3.7.2

@@ -113,19 +113,23 @@ class _FlashcardRevealQuizState extends State<FlashcardRevealQuiz> with SingleTi
                   border: Border.all(color: AppColors.cardBorder, width: 1.5),
                   boxShadow: [BoxShadow(color: AppColors.primary.withAlpha(20), blurRadius: 20)],
                 ),
-                child: Column(
-                  children: [
-                    Text(
-                      show ? (_showFront ? 'FRENTE' : 'REVERSO') : (_showFront ? 'REVERSO' : 'FRENTE'),
-                      style: AppTypography.labelSmall.copyWith(color: AppColors.primary),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      show ? shownSide : hiddenSide,
-                      style: AppTypography.bodyLarge.copyWith(fontSize: 18),
-                      textAlign: TextAlign.center,
-                    ),
-                  ],
+                child: Transform(
+                  alignment: Alignment.center,
+                  transform: Matrix4.identity()..rotateY(show ? 0 : 3.14159),
+                  child: Column(
+                    children: [
+                      Text(
+                        show ? (_showFront ? 'FRENTE' : 'REVERSO') : (_showFront ? 'REVERSO' : 'FRENTE'),
+                        style: AppTypography.labelSmall.copyWith(color: AppColors.primary),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        show ? shownSide : hiddenSide,
+                        style: AppTypography.bodyLarge.copyWith(fontSize: 18),
+                        textAlign: TextAlign.center,
+                      ),
+                    ],
+                  ),
                 ),
               ),
             );

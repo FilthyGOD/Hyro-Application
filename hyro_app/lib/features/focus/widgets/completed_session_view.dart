@@ -289,9 +289,27 @@ class _CompletedSessionViewState extends State<CompletedSessionView> {
                               ),
                               const SizedBox(width: 8),
                               Expanded(
-                                child: Text(
-                                  'Pregunta ${index + 1}',
-                                  style: AppTypography.labelLarge.copyWith(color: Colors.white),
+                                child: Row(
+                                  children: [
+                                    Text(
+                                      'Pregunta ${index + 1}',
+                                      style: AppTypography.labelLarge.copyWith(color: Colors.white),
+                                    ),
+                                    if (item.quizType.isNotEmpty) ...[
+                                      const SizedBox(width: 8),
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                        decoration: BoxDecoration(
+                                          color: const Color(0xFF3B82F6).withAlpha(40),
+                                          borderRadius: BorderRadius.circular(6),
+                                        ),
+                                        child: Text(
+                                          item.quizType,
+                                          style: AppTypography.bodySmall.copyWith(color: const Color(0xFF60A5FA), fontSize: 10),
+                                        ),
+                                      ),
+                                    ],
+                                  ],
                                 ),
                               ),
                             ],

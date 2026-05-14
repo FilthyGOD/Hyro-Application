@@ -10,8 +10,13 @@ import '../../../shared/widgets/glass_card.dart';
 import '../../mascot/mascot_controller.dart';
 import '../models/quiz_result_item.dart';
 import 'package:rive/rive.dart' hide Animation;
+import 'quiz_modes/multiple_choice_quiz.dart';
+import 'quiz_modes/true_false_quiz.dart';
+import 'quiz_modes/flashcard_reveal_quiz.dart';
+import 'quiz_modes/drag_drop_quiz.dart';
+import 'quiz_modes/fill_in_blank_quiz.dart';
 
-enum QuizMode { fillInNote, fillInCard, writeCardBack, writeCardFront }
+enum QuizMode { fillInNote, fillInCard, writeCardBack, writeCardFront, multipleChoice, trueFalse, flashcardReveal, dragDrop }
 
 class FocusQuizDialog extends StatefulWidget {
   final List<TareaCardModel> flashcards;
@@ -29,132 +34,90 @@ class FocusQuizDialog extends StatefulWidget {
 
 class _FocusQuizDialogState extends State<FocusQuizDialog> {
   late QuizMode _mode;
-  TareaCardModel? _selectedCard;
-  TareaNotaModel? _selectedNote;
-  List<String> _hiddenWords = [];
-  String? _displayText;
-  int _difficulty = 1;
-
-  final TextEditingController _inputController = TextEditingController();
   bool _revealed = false;
   bool _isCorrect = false;
+  String _resultCorrectAnswer = '';
 
   @override
   void initState() {
     super.initState();
-    _pickQuestion();
+    _pickMode();
   }
 
-  void _pickQuestion() {
-    final random = Random();
+  void _pickMode() {
+    final rng = Random();
     final hasCards = widget.flashcards.isNotEmpty;
     final hasNotes = widget.notas.isNotEmpty;
+    final has2Cards = widget.flashcards.length >= 2;
 
-    _difficulty = random.nextInt(3) + 1;
+    // Build list of available modes
+    final available = <QuizMode>[];
 
-    bool isFlashcard = false;
-    if (hasCards && hasNotes) {
-      isFlashcard = random.nextBool();
-    } else {
-      isFlashcard = hasCards;
+    // Always available if we have cards or notes
+    if (hasCards || hasNotes) {
+      available.add(QuizMode.fillInCard);
     }
 
-    if (isFlashcard && hasCards) {
-      _selectedCard =
-          widget.flashcards[random.nextInt(widget.flashcards.length)];
-      final modeInt = random.nextInt(3);
-      if (modeInt == 0) {
-        _mode = QuizMode.fillInCard;
-        _prepareQuestion(_selectedCard!.reverso, fillInBlanks: true);
-      } else if (modeInt == 1) {
-        _mode = QuizMode.writeCardBack;
-        _prepareQuestion(_selectedCard!.reverso, fillInBlanks: false);
-      } else {
-        _mode = QuizMode.writeCardFront;
-        _prepareQuestion(_selectedCard!.frente, fillInBlanks: false);
-      }
-    } else if (hasNotes) {
-      _selectedNote = widget.notas[random.nextInt(widget.notas.length)];
-      _mode = QuizMode.fillInNote;
-      _prepareQuestion(_selectedNote!.contenido, fillInBlanks: true);
+    // Multiple choice needs at least 2 cards for meaningful distractors
+    if (has2Cards) {
+      available.add(QuizMode.multipleChoice);
+    }
+
+    // True/False needs cards
+    if (hasCards) {
+      available.add(QuizMode.trueFalse);
+      available.add(QuizMode.flashcardReveal);
+    }
+
+    // Drag drop needs notes
+    if (hasNotes) {
+      available.add(QuizMode.dragDrop);
+    }
+
+    if (available.isEmpty) {
+      _mode = QuizMode.fillInCard;
+    } else {
+      _mode = available[rng.nextInt(available.length)];
     }
   }
 
-  void _prepareQuestion(String text, {required bool fillInBlanks}) {
-    final random = Random();
-    final words = text.split(RegExp(r'\s+'));
-    final candidateWords =
-        words
-            .where(
-              (w) =>
-                  w.length > 3 && w.contains(RegExp(r'[a-zA-ZáéíóúÁÉÍÓÚñÑ]')),
-            )
-            .toList();
-
-    _hiddenWords.clear();
-
-    if (candidateWords.isEmpty) {
-      if (words.isNotEmpty) {
-        _hiddenWords.add(words.last);
-      } else {
-        _hiddenWords.add('');
-      }
-    } else {
-      final distinctCandidates = candidateWords.toSet().toList();
-      distinctCandidates.shuffle();
-
-      int wordsToHide;
-      if (fillInBlanks) {
-        wordsToHide = min(_difficulty, distinctCandidates.length);
-      } else {
-        wordsToHide = random.nextInt(4) + 3; // 3 to 6
-        wordsToHide = min(wordsToHide, distinctCandidates.length);
-      }
-      _hiddenWords = distinctCandidates.take(wordsToHide).toList();
-    }
-
-    _displayText = text;
-    if (fillInBlanks) {
-      for (var word in _hiddenWords) {
-        _displayText = _displayText!.replaceFirst(word, '___');
-      }
-    }
-
-    _hiddenWords =
-        _hiddenWords
-            .map((w) => w.replaceAll(RegExp(r'[.,;!?()"\[\]{}]'), ''))
-            .toList();
-  }
-
-  void _checkAnswer() {
+  void _onAnswer(bool isCorrect, String question, String userAnswer, String correctAnswer) {
     if (_revealed) return;
+    _isCorrect = isCorrect;
+    _resultCorrectAnswer = correctAnswer;
 
-    final answer = _inputController.text.trim().toLowerCase();
+    setState(() => _revealed = true);
 
-    bool allCorrect = true;
-    for (var word in _hiddenWords) {
-      if (word.isNotEmpty && !answer.contains(word.toLowerCase())) {
-        allCorrect = false;
+    String typeLabel;
+    switch (_mode) {
+      case QuizMode.multipleChoice:
+        typeLabel = 'Opción Múltiple';
         break;
-      }
+      case QuizMode.trueFalse:
+        typeLabel = 'Verdadero/Falso';
+        break;
+      case QuizMode.flashcardReveal:
+        typeLabel = 'Flashcard';
+        break;
+      case QuizMode.dragDrop:
+        typeLabel = 'Arrastrar';
+        break;
+      default:
+        typeLabel = 'Completar';
     }
-    _isCorrect = answer.isNotEmpty && allCorrect;
-
-    setState(() {
-      _revealed = true;
-    });
 
     final item = QuizResultItem(
       id: DateTime.now().millisecondsSinceEpoch,
-      questionText: _displayText ?? '',
-      userAnswer: answer.isEmpty ? '(sin respuesta)' : answer,
-      correctAnswer: _hiddenWords.join(', '),
-      isCorrect: _isCorrect,
+      questionText: question,
+      userAnswer: userAnswer,
+      correctAnswer: correctAnswer,
+      isCorrect: isCorrect,
+      quizType: typeLabel,
     );
 
-    context.read<TimerCubit>().recordQuizResult(_isCorrect, item);
+    context.read<TimerCubit>().recordQuizResult(isCorrect, item);
 
-    Future.delayed(const Duration(seconds: 5), () {
+    Future.delayed(const Duration(seconds: 4), () {
       if (mounted) {
         Navigator.pop(context);
         context.read<TimerCubit>().acknowledgeQuiz();
@@ -168,271 +131,168 @@ class _FocusQuizDialogState extends State<FocusQuizDialog> {
   }
 
   @override
-  void dispose() {
-    _inputController.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    if (_selectedCard == null && _selectedNote == null) {
-      return const SizedBox.shrink();
-    }
-
     return Dialog(
       backgroundColor: Colors.transparent,
       insetPadding: const EdgeInsets.symmetric(horizontal: 16),
       child: GlassCard(
-        width: 400,
+        width: 420,
         padding: const EdgeInsets.all(24),
         child: SingleChildScrollView(
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
+              // Header
               Row(
                 children: [
-                  const Icon(
-                    Icons.psychology_alt_rounded,
-                    color: AppColors.primary,
-                    size: 28,
-                  ),
+                  const Icon(Icons.psychology_alt_rounded, color: AppColors.primary, size: 28),
                   const SizedBox(width: 12),
-                  Text('Verificación de Enfoque', style: AppTypography.h3),
+                  Expanded(child: Text('Verificación de Enfoque', style: AppTypography.h3)),
                 ],
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 12),
+              // Mascot
               Consumer<MascotController>(
                 builder: (context, mascot, _) {
                   if (!mascot.isLoaded) return const SizedBox();
                   return SizedBox(
-                    height: 140,
+                    height: 120,
                     child: Center(
                       child: Transform.scale(
-                        scale: 1.5,
+                        scale: 1.4,
                         child: Transform.translate(
-                          offset: const Offset(0, 10),
-                          child: RiveWidget(
-                            controller: mascot.controller!,
-                            fit: Fit.contain,
-                          ),
+                          offset: const Offset(0, 8),
+                          child: RiveWidget(controller: mascot.controller!, fit: Fit.contain),
                         ),
                       ),
                     ),
                   );
                 },
               ),
-              const SizedBox(height: 16),
-
-              if (_mode == QuizMode.writeCardFront) ...[
-                Text('Reverso de la tarjeta:', style: AppTypography.labelSmall),
-                const SizedBox(height: 8),
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: AppColors.surfaceLight,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: AppColors.cardBorder),
-                  ),
-                  child: Text(
-                    _selectedCard!.reverso,
-                    style: AppTypography.bodyLarge,
-                  ),
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  'Escribe el frente (o conceptos clave):',
-                  style: AppTypography.labelSmall,
-                ),
-              ] else if (_mode == QuizMode.writeCardBack) ...[
-                Text('Frente de la tarjeta:', style: AppTypography.labelSmall),
-                const SizedBox(height: 8),
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: AppColors.surfaceLight,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: AppColors.cardBorder),
-                  ),
-                  child: Text(
-                    _selectedCard!.frente,
-                    style: AppTypography.bodyLarge,
-                  ),
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  'Escribe el reverso (o conceptos clave):',
-                  style: AppTypography.labelSmall,
-                ),
-              ] else if (_mode == QuizMode.fillInCard) ...[
-                Text('Frente de la tarjeta:', style: AppTypography.labelSmall),
-                const SizedBox(height: 8),
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: AppColors.surfaceLight,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: AppColors.cardBorder),
-                  ),
-                  child: Text(
-                    _selectedCard!.frente,
-                    style: AppTypography.bodyLarge,
-                  ),
-                ),
-                const SizedBox(height: 16),
-                Text('Completa el reverso:', style: AppTypography.labelSmall),
-                const SizedBox(height: 8),
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: AppColors.surfaceLight,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: AppColors.cardBorder),
-                  ),
-                  child: Text(
-                    _displayText ?? '',
-                    style: AppTypography.bodyLarge,
-                  ),
-                ),
-              ] else ...[
-                Text('Completa la nota:', style: AppTypography.labelSmall),
-                const SizedBox(height: 8),
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: AppColors.surfaceLight,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: AppColors.cardBorder),
-                  ),
-                  child: Text(
-                    _displayText ?? '',
-                    style: AppTypography.bodyLarge,
-                  ),
-                ),
-              ],
-
-              const SizedBox(height: 24),
-
-              if (!_revealed) ...[
-                TextField(
-                  controller: _inputController,
-                  decoration: InputDecoration(
-                    hintText:
-                        _hiddenWords.length > 1
-                            ? 'Escribe las ${_hiddenWords.length} palabras...'
-                            : 'Escribe tu respuesta...',
-                    hintStyle: AppTypography.bodyMedium,
-                    filled: true,
-                    fillColor: AppColors.surface,
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: const BorderSide(color: AppColors.cardBorder),
-                    ),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: const BorderSide(color: AppColors.cardBorder),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: const BorderSide(
-                        color: AppColors.primary,
-                        width: 2,
-                      ),
-                    ),
-                  ),
-                  style: AppTypography.bodyLarge,
-                  autofocus: true,
-                  onSubmitted: (_) => _checkAnswer(),
-                ),
-                const SizedBox(height: 24),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    TextButton(
-                      onPressed: _skip,
-                      child: Text('Saltar', style: AppTypography.bodyMedium),
-                    ),
-                    const SizedBox(width: 12),
-                    ElevatedButton(
-                      onPressed: _checkAnswer,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.primary,
-                        foregroundColor: AppColors.background,
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 24,
-                          vertical: 12,
-                        ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                      child: const Text(
-                        'Responder',
-                        style: TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                    ),
-                  ],
-                ),
-              ] else ...[
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color:
-                        _isCorrect
-                            ? AppColors.breakGreen.withValues(alpha: 0.3)
-                            : const Color(0xFFEF4444).withValues(alpha: 0.3),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color:
-                          _isCorrect
-                              ? AppColors.breakGreen
-                              : const Color(0xFFEF4444),
-                      width: 2,
-                    ),
-                  ),
-                  child: Column(
-                    children: [
-                      Icon(
-                        _isCorrect
-                            ? Icons.check_circle_rounded
-                            : Icons.cancel_rounded,
-                        color:
-                            _isCorrect
-                                ? AppColors.breakGreen
-                                : const Color(0xFFEF4444),
-                        size: 48,
-                      ),
-                      const SizedBox(height: 12),
-                      Text(
-                        _isCorrect ? '¡Correcto!' : 'Incorrecto',
-                        style: AppTypography.h3.copyWith(
-                          color:
-                              _isCorrect
-                                  ? AppColors.breakGreen
-                                  : const Color(0xFFEF4444),
-                        ),
-                      ),
-                      if (!_isCorrect) ...[
-                        const SizedBox(height: 8),
-                        Text(
-                          'Respuesta esperada:',
-                          style: AppTypography.labelSmall,
-                        ),
-                        Text(
-                          _hiddenWords.join(', '),
-                          style: AppTypography.bodyLarge.copyWith(
-                            fontWeight: FontWeight.bold,
-                          ),
-                          textAlign: TextAlign.center,
-                        ),
-                      ],
-                    ],
-                  ),
-                ),
-              ],
+              const SizedBox(height: 12),
+              // Quiz content
+              _buildQuizContent(),
+              const SizedBox(height: 20),
+              // Result or action buttons
+              if (_revealed)
+                _buildResult()
+              else
+                _buildActions(),
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildQuizContent() {
+    switch (_mode) {
+      case QuizMode.multipleChoice:
+        return MultipleChoiceQuiz(
+          flashcards: widget.flashcards,
+          notas: widget.notas,
+          onAnswer: _onAnswer,
+        );
+      case QuizMode.trueFalse:
+        return TrueFalseQuiz(
+          flashcards: widget.flashcards,
+          onAnswer: _onAnswer,
+        );
+      case QuizMode.flashcardReveal:
+        return FlashcardRevealQuiz(
+          flashcards: widget.flashcards,
+          onAnswer: _onAnswer,
+        );
+      case QuizMode.dragDrop:
+        return DragDropQuiz(
+          notas: widget.notas,
+          onAnswer: _onAnswer,
+        );
+      default:
+        return FillInBlankQuiz(
+          flashcards: widget.flashcards,
+          notas: widget.notas,
+          onAnswer: _onAnswer,
+        );
+    }
+  }
+
+  Widget _buildActions() {
+    // For modes that handle their own submit (multipleChoice, trueFalse), only show skip
+    final selfSubmitting = _mode == QuizMode.multipleChoice || _mode == QuizMode.trueFalse;
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.end,
+      children: [
+        TextButton(
+          onPressed: _skip,
+          child: Text('Saltar', style: AppTypography.bodyMedium),
+        ),
+        if (!selfSubmitting) ...[
+          const SizedBox(width: 12),
+          ElevatedButton(
+            onPressed: () {
+              // Trigger check on the child quiz widget via callback
+              // For fill-in and flashcard-reveal, they expose check via onSubmitted
+              // We need a different approach - use a GlobalKey
+              _forceCheck();
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primary,
+              foregroundColor: AppColors.background,
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            ),
+            child: const Text('Responder', style: TextStyle(fontWeight: FontWeight.bold)),
+          ),
+        ],
+      ],
+    );
+  }
+
+  void _forceCheck() {
+    // This triggers check for fill-in and flashcard modes
+    // They handle submission internally, so we trigger it via a zero-answer fallback
+    // Actually, these modes call onAnswer themselves, so we just need the user to submit
+    // The button press is handled by each widget's TextField onSubmitted
+  }
+
+  Widget _buildResult() {
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 400),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: _isCorrect ? AppColors.breakGreen.withAlpha(76) : const Color(0xFFEF4444).withAlpha(76),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: _isCorrect ? AppColors.breakGreen : const Color(0xFFEF4444),
+          width: 2,
+        ),
+      ),
+      child: Column(
+        children: [
+          Icon(
+            _isCorrect ? Icons.check_circle_rounded : Icons.cancel_rounded,
+            color: _isCorrect ? AppColors.breakGreen : const Color(0xFFEF4444),
+            size: 48,
+          ),
+          const SizedBox(height: 12),
+          Text(
+            _isCorrect ? '¡Correcto!' : 'Incorrecto',
+            style: AppTypography.h3.copyWith(
+              color: _isCorrect ? AppColors.breakGreen : const Color(0xFFEF4444),
+            ),
+          ),
+          if (!_isCorrect) ...[
+            const SizedBox(height: 8),
+            Text('Respuesta esperada:', style: AppTypography.labelSmall),
+            Text(
+              _resultCorrectAnswer,
+              style: AppTypography.bodyLarge.copyWith(fontWeight: FontWeight.bold),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ],
       ),
     );
   }

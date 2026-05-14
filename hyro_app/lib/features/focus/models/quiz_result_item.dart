@@ -4,6 +4,7 @@ class QuizResultItem {
   final String userAnswer;
   final String correctAnswer;
   final bool isCorrect;
+  final String quizType;
 
   const QuizResultItem({
     required this.id,
@@ -11,10 +12,11 @@ class QuizResultItem {
     required this.userAnswer,
     required this.correctAnswer,
     required this.isCorrect,
+    this.quizType = '',
   });
 
   @override
   String toString() {
-    return 'QuizResultItem(id: $id, correct: $isCorrect)';
+    return 'QuizResultItem(id: $id, correct: $isCorrect, type: $quizType)';
   }
 }

@@ -219,8 +219,6 @@ class _FocusQuizDialogState extends State<FocusQuizDialog> {
   }
 
   Widget _buildActions() {
-    // For modes that handle their own submit (multipleChoice, trueFalse), only show skip
-    final selfSubmitting = _mode == QuizMode.multipleChoice || _mode == QuizMode.trueFalse;
     return Row(
       mainAxisAlignment: MainAxisAlignment.end,
       children: [
@@ -228,33 +226,8 @@ class _FocusQuizDialogState extends State<FocusQuizDialog> {
           onPressed: _skip,
           child: Text('Saltar', style: AppTypography.bodyMedium),
         ),
-        if (!selfSubmitting) ...[
-          const SizedBox(width: 12),
-          ElevatedButton(
-            onPressed: () {
-              // Trigger check on the child quiz widget via callback
-              // For fill-in and flashcard-reveal, they expose check via onSubmitted
-              // We need a different approach - use a GlobalKey
-              _forceCheck();
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.primary,
-              foregroundColor: AppColors.background,
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-            ),
-            child: const Text('Responder', style: TextStyle(fontWeight: FontWeight.bold)),
-          ),
-        ],
       ],
     );
-  }
-
-  void _forceCheck() {
-    // This triggers check for fill-in and flashcard modes
-    // They handle submission internally, so we trigger it via a zero-answer fallback
-    // Actually, these modes call onAnswer themselves, so we just need the user to submit
-    // The button press is handled by each widget's TextField onSubmitted
   }
 
   Widget _buildResult() {

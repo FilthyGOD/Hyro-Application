@@ -148,6 +148,20 @@ class _FlashcardRevealQuizState extends State<FlashcardRevealQuiz> with SingleTi
             autofocus: true,
             onSubmitted: (_) => _check(),
           ),
+          const SizedBox(height: 16),
+          Align(
+            alignment: Alignment.centerRight,
+            child: ElevatedButton(
+              onPressed: _check,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                foregroundColor: AppColors.background,
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              ),
+              child: const Text('Responder', style: TextStyle(fontWeight: FontWeight.bold)),
+            ),
+          ),
         ],
       ],
     );

@@ -1,8 +1,8 @@
-import 'dart:async';
+﻿import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../features/shop/models/shop_item.dart';
-import 'package:hyro_app/models/user_profile.dart';
+import 'package:hyro/models/user_profile.dart';
 import 'package:isar/isar.dart';
 
 /// Manages the shop catalog, user inventory, and purchases via Supabase or Isar.
@@ -17,7 +17,7 @@ class ShopProvider extends ChangeNotifier {
   bool isLoading = false;
   String? error;
 
-  // ─── Load Catalog + Inventory ─────────────────────────────────────
+  // â”€â”€â”€ Load Catalog + Inventory â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   static const List<ShopItem> _defaultCatalog = [
     ShopItem(
@@ -38,7 +38,7 @@ class ShopProvider extends ChangeNotifier {
       categoria: 'Sombrero',
       precio: 1,
     ),
-    ShopItem(id: 201, nombre: 'Monóculo', categoria: 'Cara', precio: 1),
+    ShopItem(id: 201, nombre: 'MonÃ³culo', categoria: 'Cara', precio: 1),
     ShopItem(id: 202, nombre: 'Gafas de Sol', categoria: 'Cara', precio: 1),
     ShopItem(id: 203, nombre: 'Nariz de Payaso', categoria: 'Cara', precio: 1),
     ShopItem(id: 301, nombre: 'Smoking', categoria: 'Traje', precio: 1),
@@ -64,7 +64,7 @@ class ShopProvider extends ChangeNotifier {
 
         if (catalogData.isEmpty) {
           throw Exception(
-            'Catálogo vacío (posible bloqueo de RLS o sin conexión)',
+            'CatÃ¡logo vacÃ­o (posible bloqueo de RLS o sin conexiÃ³n)',
           );
         }
 
@@ -108,7 +108,7 @@ class ShopProvider extends ChangeNotifier {
     }
   }
 
-  // ─── Purchase ─────────────────────────────────────────────────────
+  // â”€â”€â”€ Purchase â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   /// Attempts to purchase an item.
   Future<bool> purchaseItem(String? userId, int itemId) async {
@@ -173,7 +173,7 @@ class ShopProvider extends ChangeNotifier {
     }
   }
 
-  // ─── Helpers ──────────────────────────────────────────────────────
+  // â”€â”€â”€ Helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   /// Whether the user owns a given item.
   bool ownsItem(int itemId) => ownedItemIds.contains(itemId);

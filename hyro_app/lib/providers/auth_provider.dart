@@ -1,31 +1,31 @@
-import 'dart:async';
+﻿import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:isar/isar.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:google_sign_in/google_sign_in.dart';
-import 'package:hyro_app/models/user_profile.dart';
+import 'package:hyro/models/user_profile.dart';
 import 'dart:io' show Platform, InternetAddress;
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:app_links/app_links.dart';
-import 'package:hyro_app/data/sync/sync_service.dart';
-import 'package:hyro_app/data/local/task_local_ds.dart';
-import 'package:hyro_app/data/local/category_local_ds.dart';
-import 'package:hyro_app/data/local/note_local_ds.dart';
-import 'package:hyro_app/data/local/source_local_ds.dart';
-import 'package:hyro_app/data/local/card_local_ds.dart';
-import 'package:hyro_app/data/remote/task_remote_ds.dart';
-import 'package:hyro_app/data/remote/category_remote_ds.dart';
-import 'package:hyro_app/data/remote/note_remote_ds.dart';
-import 'package:hyro_app/data/remote/source_remote_ds.dart';
-import 'package:hyro_app/data/remote/card_remote_ds.dart';
-import 'package:hyro_app/data/remote/file_storage_service.dart';
+import 'package:hyro/data/sync/sync_service.dart';
+import 'package:hyro/data/local/task_local_ds.dart';
+import 'package:hyro/data/local/category_local_ds.dart';
+import 'package:hyro/data/local/note_local_ds.dart';
+import 'package:hyro/data/local/source_local_ds.dart';
+import 'package:hyro/data/local/card_local_ds.dart';
+import 'package:hyro/data/remote/task_remote_ds.dart';
+import 'package:hyro/data/remote/category_remote_ds.dart';
+import 'package:hyro/data/remote/note_remote_ds.dart';
+import 'package:hyro/data/remote/source_remote_ds.dart';
+import 'package:hyro/data/remote/card_remote_ds.dart';
+import 'package:hyro/data/remote/file_storage_service.dart';
 import 'package:hive_flutter/hive_flutter.dart';
-import 'package:hyro_app/data/models/task_model.dart';
-import 'package:hyro_app/data/models/daily_stats.dart';
-import 'package:hyro_app/data/models/category_model.dart';
-import 'package:hyro_app/data/models/tarea_nota_model.dart';
-import 'package:hyro_app/data/models/tarea_fuente_model.dart';
-import 'package:hyro_app/data/models/tarea_card_model.dart';
+import 'package:hyro/data/models/task_model.dart';
+import 'package:hyro/data/models/daily_stats.dart';
+import 'package:hyro/data/models/category_model.dart';
+import 'package:hyro/data/models/tarea_nota_model.dart';
+import 'package:hyro/data/models/tarea_fuente_model.dart';
+import 'package:hyro/data/models/tarea_card_model.dart';
 
 class AuthProvider extends ChangeNotifier {
   final Isar isar;
@@ -50,7 +50,7 @@ class AuthProvider extends ChangeNotifier {
   /// Returns the Supabase user UUID, or null if not signed in via Supabase.
   String? get supabaseUserId => Supabase.instance.client.auth.currentUser?.id;
 
-  // ─── Supabase Auth Listener ───────────────────────────────────────
+  // â”€â”€â”€ Supabase Auth Listener â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   void _listenAuthChanges() {
     _authSubscription = Supabase.instance.client.auth.onAuthStateChange.listen((
@@ -129,7 +129,7 @@ class AuthProvider extends ChangeNotifier {
 
       final isConnected = await _hasInternet();
       if (!isConnected) {
-        debugPrint('⚠️ No internet connection detected. Skipping sync.');
+        debugPrint('âš ï¸ No internet connection detected. Skipping sync.');
         _currentUser = user;
         _isLoading = false;
         _isSyncingUser = false;
@@ -137,7 +137,7 @@ class AuthProvider extends ChangeNotifier {
         return;
       }
 
-      // 3. Sincronizar gamificación a Supabase (solo tiene efecto la primera vez)
+      // 3. Sincronizar gamificaciÃ³n a Supabase (solo tiene efecto la primera vez)
       try {
         await Supabase.instance.client.rpc('sincronizar_perfil_local', params: {
           'p_nivel': localNivel,
@@ -145,12 +145,12 @@ class AuthProvider extends ChangeNotifier {
           'p_monedas': localMonedas,
           'p_compras_ids': localCompras,
         });
-        debugPrint('✅ Gamificación sincronizada (nivel: $localNivel)');
+        debugPrint('âœ… GamificaciÃ³n sincronizada (nivel: $localNivel)');
       } catch (e) {
-        debugPrint('⚠️ Error sincronizando gamificación: $e');
+        debugPrint('âš ï¸ Error sincronizando gamificaciÃ³n: $e');
       }
 
-      // 4. Sincronizar tareas, categorías, notas, PDFs y flashcards
+      // 4. Sincronizar tareas, categorÃ­as, notas, PDFs y flashcards
       try {
         final supabaseClient = Supabase.instance.client;
         final syncService = SyncService(
@@ -169,24 +169,24 @@ class AuthProvider extends ChangeNotifier {
 
         final syncResult = await syncService.syncAllToRemote(supabaseUser.id);
         if (syncResult.success) {
-          debugPrint('✅ Datos de tareas sincronizados: $syncResult');
+          debugPrint('âœ… Datos de tareas sincronizados: $syncResult');
         } else {
-          debugPrint('⚠️ Sync parcial: ${syncResult.errors}');
+          debugPrint('âš ï¸ Sync parcial: ${syncResult.errors}');
         }
 
         final pullResult = await syncService.pullFromRemote(supabaseUser.id);
         if (pullResult.success) {
-          debugPrint('✅ Datos remotos descargados: $pullResult');
+          debugPrint('âœ… Datos remotos descargados: $pullResult');
         } else {
-          debugPrint('⚠️ Pull parcial: ${pullResult.errors}');
+          debugPrint('âš ï¸ Pull parcial: ${pullResult.errors}');
         }
       } catch (e) {
-        debugPrint('⚠️ Error sincronizando datos de tareas: $e');
+        debugPrint('âš ï¸ Error sincronizando datos de tareas: $e');
       }
 
       _currentUser = user;
     } catch (e) {
-      debugPrint('⚠️ Error crítico en _syncSupabaseUserToIsar: $e');
+      debugPrint('âš ï¸ Error crÃ­tico en _syncSupabaseUserToIsar: $e');
     } finally {
       _isLoading = false;
       _isSyncingUser = false;
@@ -204,7 +204,7 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
-  // ─── Load Session ─────────────────────────────────────────────────
+  // â”€â”€â”€ Load Session â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   Future<void> _loadUserSession() async {
     _isLoading = true;
@@ -271,43 +271,43 @@ class AuthProvider extends ChangeNotifier {
   }
 
   void _listenForDeepLinksPC() async {
-    // Ignoramos móvil y web porque ahí jala nativo
+    // Ignoramos mÃ³vil y web porque ahÃ­ jala nativo
     if (kIsWeb || Platform.isAndroid || Platform.isIOS) return;
 
     final appLinks = AppLinks();
 
-    // 1. Radar inicial: Por si Windows abrió la app a través del link
+    // 1. Radar inicial: Por si Windows abriÃ³ la app a travÃ©s del link
     try {
       final initialUri = await appLinks.getInitialLink();
       if (initialUri != null && initialUri.scheme == 'io.supabase.hyroapp') {
-        debugPrint('🚨 [Hyro Debug] Link inicial atrapado: $initialUri');
+        debugPrint('ðŸš¨ [Hyro Debug] Link inicial atrapado: $initialUri');
         await Supabase.instance.client.auth.getSessionFromUrl(initialUri);
       }
     } catch (e) {
-      debugPrint('🚨 [Hyro Debug] Error leyendo link inicial: $e');
+      debugPrint('ðŸš¨ [Hyro Debug] Error leyendo link inicial: $e');
     }
 
     // 2. Radar de flujo: Por si Windows se lo manda a la app ya abierta
     _linkSubscription = appLinks.uriLinkStream.listen(
       (uri) async {
         if (uri.scheme != 'io.supabase.hyroapp') return;
-        debugPrint('🚨 [Hyro Debug] Link atrapado en stream: $uri');
+        debugPrint('ðŸš¨ [Hyro Debug] Link atrapado en stream: $uri');
         try {
           await Supabase.instance.client.auth.getSessionFromUrl(uri);
         } catch (e) {
-          debugPrint('🚨 [Hyro Debug] Error en Supabase con el link: $e');
+          debugPrint('ðŸš¨ [Hyro Debug] Error en Supabase con el link: $e');
         }
       },
       onError: (err) {
-        debugPrint('🚨 [Hyro Debug] Error en el stream: $err');
+        debugPrint('ðŸš¨ [Hyro Debug] Error en el stream: $err');
       },
     );
   }
 
-  // ─── Sign In Methods ──────────────────────────────────────────────
+  // â”€â”€â”€ Sign In Methods â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   /// Google Auth via Native Google Sign In
-  /// Google Auth: Detecta si es PC o Móvil para usar el flujo correcto
+  /// Google Auth: Detecta si es PC o MÃ³vil para usar el flujo correcto
   Future<void> signInWithGoogle() async {
     _isLoading = true;
     notifyListeners();
@@ -318,15 +318,15 @@ class AuthProvider extends ChangeNotifier {
           Platform.isWindows ||
           Platform.isLinux ||
           Platform.isMacOS) {
-        // 💻 FLUJO PARA ESCRITORIO: Abrir el navegador
+        // ðŸ’» FLUJO PARA ESCRITORIO: Abrir el navegador
         await Supabase.instance.client.auth.signInWithOAuth(
           OAuthProvider.google,
           // Este es el enlace personalizado que ya registraste en Supabase
           redirectTo: 'io.supabase.hyroapp://login-callback/',
         );
-        // La redirección será atrapada por Supabase y _listenAuthChanges hará el resto.
+        // La redirecciÃ³n serÃ¡ atrapada por Supabase y _listenAuthChanges harÃ¡ el resto.
       } else {
-        // 📱 FLUJO PARA MÓVILES: Menú nativo (el que ya te funcionó)
+        // ðŸ“± FLUJO PARA MÃ“VILES: MenÃº nativo (el que ya te funcionÃ³)
         const webClientId =
             '19333866872-qv63mn5m7bjiaqfkk252p4sd646mhm9h.apps.googleusercontent.com';
 
@@ -347,7 +347,7 @@ class AuthProvider extends ChangeNotifier {
         final idToken = googleAuth.idToken;
 
         if (accessToken == null || idToken == null) {
-          throw 'Faltan los tokens de autenticación de Google.';
+          throw 'Faltan los tokens de autenticaciÃ³n de Google.';
         }
 
         final res = await Supabase.instance.client.auth.signInWithIdToken(
@@ -454,13 +454,13 @@ class AuthProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  // ─── Logout ───────────────────────────────────────────────────────
+  // â”€â”€â”€ Logout â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   Future<void> logout() async {
     try {
       await Supabase.instance.client.auth.signOut();
 
-      // Limpiamos también la sesión nativa de Google solo en móvil (evita crash en Windows)
+      // Limpiamos tambiÃ©n la sesiÃ³n nativa de Google solo en mÃ³vil (evita crash en Windows)
       if (!kIsWeb && (Platform.isAndroid || Platform.isIOS)) {
         final googleSignIn = GoogleSignIn();
         if (await googleSignIn.isSignedIn()) {

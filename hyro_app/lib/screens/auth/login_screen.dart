@@ -1,9 +1,9 @@
-import 'dart:async';
+﻿import 'dart:async';
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:rive/rive.dart';
-import 'package:hyro_app/providers/auth_provider.dart';
+import 'package:hyro/providers/auth_provider.dart';
 import '../../shared/widgets/animated_background.dart';
 import '../../features/mascot/mascot_controller.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -137,7 +137,7 @@ class _LoginScreenState extends State<LoginScreen> {
         setState(() => _isLoading = false);
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text('Error al iniciar sesión: $e')));
+        ).showSnackBar(SnackBar(content: Text('Error al iniciar sesiÃ³n: $e')));
       }
     }
   }
@@ -228,16 +228,16 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                         const SizedBox(height: 24),
                         _buildInputField(
-                          label: 'CONTRASEÑA',
-                          hint: '••••••••',
+                          label: 'CONTRASEÃ‘A',
+                          hint: 'â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢',
                           controller: _passwordController,
                           prefixIcon: Icons.lock_outline,
                           isPassword: true,
-                          actionText: 'Olvide mi contraseña',
+                          actionText: 'Olvide mi contraseÃ±a',
                         ),
                         const SizedBox(height: 32),
                         _buildGradientButton(
-                          text: 'Iniciar Sesión',
+                          text: 'Iniciar SesiÃ³n',
                           onPressed: _login,
                         ),
                         const SizedBox(height: 32),
@@ -416,17 +416,17 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                     const SizedBox(height: 24),
                     _buildInputField(
-                      label: 'CONTRASEÑA',
-                      hint: '••••••••',
+                      label: 'CONTRASEÃ‘A',
+                      hint: 'â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢',
                       controller: _passwordController,
                       prefixIcon: Icons.lock_outline,
                       isPassword: true,
-                      actionText: 'Olvide mi contraseña',
+                      actionText: 'Olvide mi contraseÃ±a',
                       isDesktop: true,
                     ),
                     const SizedBox(height: 32),
                     _buildGradientButton(
-                      text: 'Iniciar Sesión',
+                      text: 'Iniciar SesiÃ³n',
                       onPressed: _login,
                       isDesktop: true,
                     ),
@@ -680,8 +680,8 @@ class _LoginScreenState extends State<LoginScreen> {
         isMobile
             ? const Color(0xFF3CDCF8)
             : const Color(0xFFCC88FF); // Mobile uses Cyan, Desktop uses Purple
-    final prefix = isMobile ? "¿No tienes una cuenta? " : "¿Nuevo en Hyro? ";
-    final suffix = isMobile ? "Regístrate" : "Crear una cuenta";
+    final prefix = isMobile ? "Â¿No tienes una cuenta? " : "Â¿Nuevo en Hyro? ";
+    final suffix = isMobile ? "RegÃ­strate" : "Crear una cuenta";
 
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,

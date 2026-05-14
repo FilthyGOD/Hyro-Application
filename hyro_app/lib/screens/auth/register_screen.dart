@@ -1,9 +1,9 @@
-import 'dart:async';
+﻿import 'dart:async';
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:rive/rive.dart';
-import 'package:hyro_app/providers/auth_provider.dart';
+import 'package:hyro/providers/auth_provider.dart';
 import '../../shared/widgets/animated_background.dart';
 import '../../features/mascot/mascot_controller.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -122,11 +122,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
               (context) => AlertDialog(
                 backgroundColor: const Color(0xFF191D32),
                 title: const Text(
-                  '¡Cuenta creada!',
+                  'Â¡Cuenta creada!',
                   style: TextStyle(color: Colors.white),
                 ),
                 content: const Text(
-                  'Hemos enviado un enlace de confirmación a tu correo. Por favor, revísalo para verificar tu cuenta y poder iniciar sesión.',
+                  'Hemos enviado un enlace de confirmaciÃ³n a tu correo. Por favor, revÃ­salo para verificar tu cuenta y poder iniciar sesiÃ³n.',
                   style: TextStyle(color: Colors.white70),
                 ),
                 actions: [
@@ -258,8 +258,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         ),
                         const SizedBox(height: 24),
                         _buildInputField(
-                          label: 'CONTRASEÑA',
-                          hint: '••••••••',
+                          label: 'CONTRASEÃ‘A',
+                          hint: 'â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢',
                           controller: _passwordController,
                           prefixIcon: Icons.lock_outline,
                           isPassword: true,
@@ -270,7 +270,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           onPressed: _register,
                         ),
                         const SizedBox(height: 32),
-                        _buildDivider('O REGÍSTRATE CON'),
+                        _buildDivider('O REGÃSTRATE CON'),
                         const SizedBox(height: 24),
                         Row(
                           children: [
@@ -383,7 +383,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 ),
                 const SizedBox(height: 24),
                 const Text(
-                  'Únete a miles de personas que están\nmejorando sus vidas con Hyro.',
+                  'Ãšnete a miles de personas que estÃ¡n\nmejorando sus vidas con Hyro.',
                   style: TextStyle(
                     fontSize: 20,
                     color: Colors.white70,
@@ -419,7 +419,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const Text(
-                      'Únete a Hyro',
+                      'Ãšnete a Hyro',
                       style: TextStyle(
                         fontSize: 28,
                         fontWeight: FontWeight.bold,
@@ -449,8 +449,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     ),
                     const SizedBox(height: 24),
                     _buildInputField(
-                      label: 'CONTRASEÑA',
-                      hint: '••••••••',
+                      label: 'CONTRASEÃ‘A',
+                      hint: 'â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢',
                       controller: _passwordController,
                       prefixIcon: Icons.lock_outline,
                       isPassword: true,
@@ -463,7 +463,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       isDesktop: true,
                     ),
                     const SizedBox(height: 32),
-                    _buildDivider('O REGÍSTRATE CON'),
+                    _buildDivider('O REGÃSTRATE CON'),
                     const SizedBox(height: 24),
                     Row(
                       children: [
@@ -689,8 +689,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
     final textColor = Colors.white54;
     final actionColor =
         isMobile ? const Color(0xFF3CDCF8) : const Color(0xFFCC88FF);
-    const prefix = "¿Ya tienes una cuenta? ";
-    const suffix = "Iniciar sesión";
+    const prefix = "Â¿Ya tienes una cuenta? ";
+    const suffix = "Iniciar sesiÃ³n";
 
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,

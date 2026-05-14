@@ -1,11 +1,11 @@
-import 'dart:async';
+﻿import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:isar/isar.dart';
-import 'package:hyro_app/models/user_profile.dart';
+import 'package:hyro/models/user_profile.dart';
 import 'package:hive_flutter/hive_flutter.dart';
-import 'package:hyro_app/data/models/daily_stats.dart';
-import 'package:hyro_app/data/repositories/stats_repository.dart';
+import 'package:hyro/data/models/daily_stats.dart';
+import 'package:hyro/data/repositories/stats_repository.dart';
 
 /// Reactive state for the user's gamification profile (nivel, xp, monedas)
 /// backed by the `perfiles` table in Supabase or locally via Isar for guests.
@@ -56,7 +56,7 @@ class ProfileProvider extends ChangeNotifier {
         notifyListeners();
       }
 
-      // Si hay sesión online, intentamos sincronizar desde Supabase
+      // Si hay sesiÃ³n online, intentamos sincronizar desde Supabase
       if (userId != null) {
         try {
           final response = await _supabase
@@ -102,18 +102,18 @@ class ProfileProvider extends ChangeNotifier {
             sesionesMes = activeUser.sesionesMes;
           }
         } catch (syncError) {
-          debugPrint('Error de sincronización con Supabase (ignorado por Offline-First): $syncError');
+          debugPrint('Error de sincronizaciÃ³n con Supabase (ignorado por Offline-First): $syncError');
         }
       }
 
-      // 🚀 Juez de Rachas (Duolingo-style streak check)
+      // ðŸš€ Juez de Rachas (Duolingo-style streak check)
       if (Hive.isBoxOpen('statsBox')) {
         final statsRepo = StatsRepository(Hive.box<DailyStats>('statsBox'));
         final trueStreak = statsRepo.getCurrentStreak();
         
         // Si el repositorio confirma que pasamos la medianoche de ayer sin actividad y perdimos la racha
         if (trueStreak == 0 && rachaActual > 0) {
-          debugPrint('🚨 Juez de Rachas: ¡Racha perdida! (Tenías $rachaActual, bajado a 0)');
+          debugPrint('ðŸš¨ Juez de Rachas: Â¡Racha perdida! (TenÃ­as $rachaActual, bajado a 0)');
           
           // Actualizamos memoria
           rachaActual = 0;
@@ -127,13 +127,13 @@ class ProfileProvider extends ChangeNotifier {
             });
           }
           
-          // Castigamos también en Supabase
+          // Castigamos tambiÃ©n en Supabase
           if (userId != null) {
             try {
               await _supabase.from('perfiles').update({'racha_actual': 0}).eq('id', userId);
-              debugPrint('🚨 Castigo reflejado en Supabase');
+              debugPrint('ðŸš¨ Castigo reflejado en Supabase');
             } catch (e) {
-              debugPrint('⚠️ No se pudo enviar el castigo de racha a Supabase: $e');
+              debugPrint('âš ï¸ No se pudo enviar el castigo de racha a Supabase: $e');
             }
           }
           
@@ -145,7 +145,7 @@ class ProfileProvider extends ChangeNotifier {
       _error = 'Error cargando perfil: $e';
       debugPrint(_error);
     } finally {
-      // 2. Blindaje: Aseguramos la salida también
+      // 2. Blindaje: Aseguramos la salida tambiÃ©n
       Future.microtask(() {
         isLoading = false;
         notifyListeners();
@@ -220,16 +220,16 @@ class ProfileProvider extends ChangeNotifier {
             'minutos_enfoque_total': minutosEnfoqueTotal,
           }).eq('id', userId);
         } catch (e) {
-          debugPrint('⚠️ Not online to sync profile gamification directly: $e');
+          debugPrint('âš ï¸ Not online to sync profile gamification directly: $e');
         }
       }
     }
   }
 
-  /// XP required to reach the next level: nivel × 100.
+  /// XP required to reach the next level: nivel Ã— 100.
   int get xpForNextLevel => nivel * 100;
 
-  /// Progress fraction (0.0 – 1.0) toward the next level.
+  /// Progress fraction (0.0 â€“ 1.0) toward the next level.
   double get levelProgress {
     final required = xpForNextLevel;
     if (required <= 0) return 0.0;

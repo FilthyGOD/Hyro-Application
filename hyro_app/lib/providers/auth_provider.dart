@@ -1,4 +1,4 @@
-﻿import 'dart:async';
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:isar/isar.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -306,60 +306,20 @@ class AuthProvider extends ChangeNotifier {
 
   // â”€â”€â”€ Sign In Methods â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
-  /// Google Auth via Native Google Sign In
-  /// Google Auth: Detecta si es PC o MÃ³vil para usar el flujo correcto
+  /// Google Auth unificado para todas las plataformas (Escritorio, Web y Móvil)
   Future<void> signInWithGoogle() async {
     _isLoading = true;
     notifyListeners();
 
     try {
-      // Checamos si estamos en PC (Windows) o en Web
-      if (kIsWeb ||
-          Platform.isWindows ||
-          Platform.isLinux ||
-          Platform.isMacOS) {
-        // ðŸ’» FLUJO PARA ESCRITORIO: Abrir el navegador
-        await Supabase.instance.client.auth.signInWithOAuth(
-          OAuthProvider.google,
-          // Este es el enlace personalizado que ya registraste en Supabase
-          redirectTo: 'io.supabase.hyroapp://login-callback/',
-        );
-        // La redirecciÃ³n serÃ¡ atrapada por Supabase y _listenAuthChanges harÃ¡ el resto.
-      } else {
-        // ðŸ“± FLUJO PARA MÃ“VILES: MenÃº nativo (el que ya te funcionÃ³)
-        const webClientId =
-            '19333866872-qv63mn5m7bjiaqfkk252p4sd646mhm9h.apps.googleusercontent.com';
-
-        final GoogleSignIn googleSignIn = GoogleSignIn(
-          serverClientId: webClientId,
-        );
-
-        final googleUser = await googleSignIn.signIn();
-
-        if (googleUser == null) {
-          _isLoading = false;
-          notifyListeners();
-          return;
-        }
-
-        final googleAuth = await googleUser.authentication;
-        final accessToken = googleAuth.accessToken;
-        final idToken = googleAuth.idToken;
-
-        if (accessToken == null || idToken == null) {
-          throw 'Faltan los tokens de autenticaciÃ³n de Google.';
-        }
-
-        final res = await Supabase.instance.client.auth.signInWithIdToken(
-          provider: OAuthProvider.google,
-          idToken: idToken,
-          accessToken: accessToken,
-        );
-
-        if (res.session != null) {
-          await _syncSupabaseUserToIsar(res.session!.user);
-        }
-      }
+      // 🌐 FLUJO UNIFICADO: Abrir el navegador
+      // Esto evita problemas de huellas SHA-1 en Android para Google Sign In nativo
+      await Supabase.instance.client.auth.signInWithOAuth(
+        OAuthProvider.google,
+        // Este es el enlace personalizado que ya registraste en Supabase
+        redirectTo: 'io.supabase.hyroapp://login-callback/',
+      );
+      // La redirección será atrapada por Supabase y _listenAuthChanges hará el resto.
     } catch (e) {
       debugPrint('Google Sign-In error: $e');
       _isLoading = false;

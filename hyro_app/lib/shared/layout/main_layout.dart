@@ -83,16 +83,11 @@ class _MainLayoutState extends State<MainLayout> {
                     const Positioned.fill(child: AnimatedBackground()),
                     // Main Content Region
                     Positioned.fill(
-                      child: Container(
-                        color: widget.selectedIndex == 5 ? AppColors.background : Colors.transparent,
-                        child: widget.selectedIndex == 5 
-                          ? widget.child // No centering/constraints for Settings if it should be "large"
-                          : Center(
-                              child: ConstrainedBox(
-                                constraints: const BoxConstraints(maxWidth: 1200),
-                                child: widget.child,
-                              ),
-                            ),
+                      child: Center(
+                        child: ConstrainedBox(
+                          constraints: const BoxConstraints(maxWidth: 1200),
+                          child: widget.child,
+                        ),
                       ),
                     ),
                     // Floating Spotify Base
@@ -200,29 +195,7 @@ class _MainLayoutState extends State<MainLayout> {
               },
             ),
           ),
-          if (!isTimerRunning)
-            Positioned(
-              top: 16,
-              right: 16,
-              child: SafeArea(
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: Colors.black.withValues(alpha: 0.3),
-                    shape: BoxShape.circle,
-                  ),
-                  child: IconButton(
-                    icon: const Icon(
-                      Icons.settings_outlined,
-                      color: Colors.white,
-                      size: 24,
-                    ),
-                    onPressed: () {
-                      widget.onNavigate(5);
-                    },
-                  ),
-                ),
-              ),
-            ),
+
         ],
       ),
       bottomNavigationBar:
@@ -252,9 +225,9 @@ class _MainLayoutState extends State<MainLayout> {
                       label: 'Tienda',
                     ),
                     BottomNavigationBarItem(
-                      icon: Icon(Icons.bar_chart_outlined),
-                      activeIcon: Icon(Icons.bar_chart),
-                      label: 'Estads',
+                      icon: Icon(Icons.emoji_events_outlined),
+                      activeIcon: Icon(Icons.emoji_events),
+                      label: 'Desafíos',
                     ),
                     BottomNavigationBarItem(
                       icon: Icon(Icons.timer_outlined),

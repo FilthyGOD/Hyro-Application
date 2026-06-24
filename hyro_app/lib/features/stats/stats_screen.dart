@@ -11,7 +11,10 @@ import '../../providers/ui_provider.dart';
 import '../focus/widgets/session_info_card.dart';
 import '../focus/widgets/activity_chart.dart';
 import '../../providers/profile_provider.dart';
+import '../../providers/auth_provider.dart';
 import '../mascot/mascot_controller.dart';
+import '../missions/missions_provider.dart';
+import '../missions/models/daily_mission.dart';
 
 class StatsScreen extends StatefulWidget {
   const StatsScreen({super.key});
@@ -93,13 +96,13 @@ class _StatsScreenState extends State<StatsScreen> {
                   return Column(
                     children: [
                       Text(
-                        'Estadísticas y Logros',
+                        'Desafíos y Logros',
                         style: isMobile ? AppTypography.h2 : AppTypography.h1,
                         textAlign: isMobile ? TextAlign.center : TextAlign.start,
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        'Haz seguimiento de tu consistencia de enfoque y progreso',
+                        'Supera tus metas y desbloquea logros',
                         style: AppTypography.bodyMedium,
                         textAlign: isMobile ? TextAlign.center : TextAlign.start,
                       ),
@@ -111,6 +114,14 @@ class _StatsScreenState extends State<StatsScreen> {
 
               // ── Current Streak Card ──
               _buildCurrentStreakCard(streak),
+              const SizedBox(height: 24),
+
+              // ── Daily Missions ──
+              _buildDailyMissionsSection(context),
+              const SizedBox(height: 24),
+
+              // ── Achievement Summary Cards ──
+              _buildAchievementSummary(profileProvider),
               const SizedBox(height: 24),
 
               // ── Bottom Row/Column: Calendar & Milestones ──
@@ -420,6 +431,275 @@ class _StatsScreenState extends State<StatsScreen> {
               ),
             );
           }),
+        ],
+      ),
+    );
+  }
+
+  // ── Daily Missions Section ──
+  Widget _buildDailyMissionsSection(BuildContext context) {
+    final missions = context.watch<MissionsProvider>();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            const Icon(
+              Icons.assignment,
+              color: AppColors.primary,
+              size: 20,
+            ),
+            const SizedBox(width: 8),
+            Text(
+              'Misiones Diarias',
+              style: AppTypography.h3.copyWith(fontSize: 18),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        if (missions.isLoading)
+          const Padding(
+            padding: EdgeInsets.all(32),
+            child: CircularProgressIndicator(color: AppColors.primary),
+          )
+        else if (missions.missions.isEmpty)
+          GlassCard(
+            padding: const EdgeInsets.all(24),
+            child: Text(
+              'Las misiones se generarán automáticamente.',
+              style: AppTypography.bodyMedium,
+              textAlign: TextAlign.center,
+            ),
+          )
+        else
+          ...missions.missions.map(
+            (mission) => Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: _MissionCard(mission: mission),
+            ),
+          ),
+      ],
+    );
+  }
+
+  // ── Achievement Summary Cards ──
+  Widget _buildAchievementSummary(ProfileProvider profile) {
+    return Column(
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: _AchievementCard(
+                icon: Icons.local_fire_department,
+                color: Colors.orange,
+                title: 'Racha de ${profile.rachaMaxima} días',
+                subtitle: 'Récord Actual',
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: _AchievementCard(
+                icon: Icons.emoji_events,
+                color: Colors.amber,
+                title: '${profile.sesionesMes} Sesiones',
+                subtitle: 'Este Mes',
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        Row(
+          children: [
+            Expanded(
+              child: _AchievementCard(
+                icon: Icons.timer,
+                color: AppColors.primary,
+                title: '${(profile.minutosEnfoqueTotal / 60.0).toStringAsFixed(1)} Horas',
+                subtitle: 'Enfoque Total',
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: _AchievementCard(
+                icon: Icons.task_alt,
+                color: AppColors.breakGreen,
+                title: '${profile.tareasCompletadas} Tareas',
+                subtitle: 'Completadas',
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+// ─── Mission Card Widget ──────────────────────────────────────────────
+
+class _MissionCard extends StatelessWidget {
+  final DailyMission mission;
+
+  const _MissionCard({required this.mission});
+
+  @override
+  Widget build(BuildContext context) {
+    final auth = context.read<AuthProvider>();
+    final missions = context.read<MissionsProvider>();
+
+    Color statusColor;
+    IconData statusIcon;
+    if (mission.isClaimed) {
+      statusColor = AppColors.breakGreen;
+      statusIcon = Icons.check_circle;
+    } else if (mission.isCompleted) {
+      statusColor = Colors.amber;
+      statusIcon = Icons.star;
+    } else {
+      statusColor = AppColors.primary;
+      statusIcon = Icons.radio_button_unchecked;
+    }
+
+    return GlassCard(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(statusIcon, color: statusColor, size: 20),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  mission.title,
+                  style: AppTypography.labelLarge.copyWith(
+                    fontSize: 14,
+                    decoration:
+                        mission.isClaimed ? TextDecoration.lineThrough : null,
+                  ),
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: Colors.amber.withAlpha(25),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.bolt, color: Colors.amber, size: 14),
+                    const SizedBox(width: 2),
+                    Text(
+                      '+${mission.xpReward} XP',
+                      style: AppTypography.bodySmall.copyWith(
+                        color: Colors.amber,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(mission.description, style: AppTypography.bodySmall),
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              Expanded(
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(6),
+                  child: LinearProgressIndicator(
+                    value: mission.progress,
+                    minHeight: 6,
+                    backgroundColor: AppColors.surfaceLight,
+                    valueColor: AlwaysStoppedAnimation<Color>(statusColor),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Text(
+                '${mission.currentProgress}/${mission.targetValue}',
+                style: AppTypography.bodySmall.copyWith(
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
+          if (mission.isCompleted && !mission.isClaimed) ...[
+            const SizedBox(height: 10),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: () async {
+                  final userId = auth.supabaseUserId;
+                  await missions.claimMission(mission.id, userId);
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 10),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+                child: const Text(
+                  '¡Reclamar!',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+// ─── Achievement Card Widget ──────────────────────────────────────────
+
+class _AchievementCard extends StatelessWidget {
+  final IconData icon;
+  final Color color;
+  final String title;
+  final String subtitle;
+
+  const _AchievementCard({
+    required this.icon,
+    required this.color,
+    required this.title,
+    required this.subtitle,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GlassCard(
+      padding: const EdgeInsets.all(16),
+      child: Row(
+        children: [
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: color.withAlpha(30),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Icon(icon, color: color, size: 22),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: AppTypography.labelLarge.copyWith(fontSize: 13),
+                ),
+                Text(subtitle, style: AppTypography.bodySmall),
+              ],
+            ),
+          ),
         ],
       ),
     );

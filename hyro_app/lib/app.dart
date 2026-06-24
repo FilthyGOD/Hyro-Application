@@ -437,13 +437,6 @@ class AppShellState extends State<AppShell> with WidgetsBindingObserver, WindowL
                 },
                 children: _screens,
               ),
-              if (_selectedIndex == 5)
-                Positioned.fill(
-                  child: Container(
-                    color: AppColors.background,
-                    child: const SettingsScreen(),
-                  ),
-                ),
             ],
           ),
         ),

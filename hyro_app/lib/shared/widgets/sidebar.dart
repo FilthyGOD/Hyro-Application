@@ -31,9 +31,9 @@ class Sidebar extends StatelessWidget {
       targetIndex: 3,
     ),
     _SidebarItemData(
-      icon: Icons.bar_chart_outlined,
-      activeIcon: Icons.bar_chart,
-      label: 'Estadísticas',
+      icon: Icons.emoji_events_outlined,
+      activeIcon: Icons.emoji_events,
+      label: 'Desafíos',
       targetIndex: 1,
     ),
     _SidebarItemData(
@@ -74,15 +74,6 @@ class Sidebar extends StatelessWidget {
             );
           }),
           const Spacer(),
-          // ── Settings ──
-          _SidebarItem(
-            icon: Icons.settings_outlined,
-            label: 'Ajustes',
-            isActive: selectedIndex == 5,
-            collapsed: collapsed,
-            onTap: () => onItemSelected(5),
-          ),
-          const SizedBox(height: 12),
           // ── User avatar ──
           if (!collapsed) _buildUserInfo(context),
           const SizedBox(height: 20),

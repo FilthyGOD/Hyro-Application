@@ -54,40 +54,42 @@ class _SettingsScreenState extends State<SettingsScreen> with WidgetsBindingObse
   Widget build(BuildContext context) {
     final settings = context.watch<SettingsProvider>();
 
-    return SingleChildScrollView(
-      padding:
-          MediaQuery.of(context).size.width < 800
-              ? const EdgeInsets.symmetric(horizontal: 24, vertical: 32)
-              : const EdgeInsets.all(32),
-      child: Column(
-        crossAxisAlignment:
+    return Scaffold(
+      backgroundColor: AppColors.background,
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        title: Text('Ajustes', style: AppTypography.h3),
+        centerTitle: true,
+      ),
+      body: SingleChildScrollView(
+        padding:
             MediaQuery.of(context).size.width < 800
-                ? CrossAxisAlignment.center
-                : CrossAxisAlignment.start,
-        children: [
-          LayoutBuilder(
-            builder: (context, constraints) {
-              final isMobile = MediaQuery.of(context).size.width < 800;
-              return Column(
-                children: [
-                  Text(
-                    'Ajustes',
-                    style: isMobile ? AppTypography.h2 : AppTypography.h1,
-                    textAlign: isMobile ? TextAlign.center : TextAlign.start,
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Personaliza tu experiencia de enfoque',
-                    style: AppTypography.bodyMedium,
-                    textAlign: isMobile ? TextAlign.center : TextAlign.start,
-                  ),
-                ],
-              );
-            },
-          ),
-          const SizedBox(height: 32),
-          // ── Timer settings ──
-          GlassCard(
+                ? const EdgeInsets.symmetric(horizontal: 24, vertical: 16)
+                : const EdgeInsets.all(32),
+        child: Column(
+          crossAxisAlignment:
+              MediaQuery.of(context).size.width < 800
+                  ? CrossAxisAlignment.center
+                  : CrossAxisAlignment.start,
+          children: [
+            LayoutBuilder(
+              builder: (context, constraints) {
+                final isMobile = MediaQuery.of(context).size.width < 800;
+                return Column(
+                  children: [
+                    Text(
+                      'Personaliza tu experiencia de enfoque',
+                      style: AppTypography.bodyMedium,
+                      textAlign: isMobile ? TextAlign.center : TextAlign.start,
+                    ),
+                  ],
+                );
+              },
+            ),
+            const SizedBox(height: 32),
+            // ── Timer settings ──
+            GlassCard(
             padding: const EdgeInsets.all(20),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -454,7 +456,7 @@ class _SettingsScreenState extends State<SettingsScreen> with WidgetsBindingObse
           ),
         ],
       ),
-    );
+    ));
   }
 }
 

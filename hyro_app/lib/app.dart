@@ -2,14 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:provider/provider.dart';
 import 'core/theme/app_theme.dart';
-import 'core/theme/app_colors.dart';
 import 'features/focus/bloc/timer_cubit.dart';
 import 'features/focus/bloc/timer_state.dart';
 import 'features/focus/focus_screen.dart';
 import 'features/tasks/tasks_screen.dart';
 import 'features/stats/stats_screen.dart';
 import 'features/shop/shop_screen.dart';
-import 'features/settings/settings_screen.dart';
 import 'features/profile/profile_screen.dart';
 import 'features/tasks/tasks_provider.dart';
 import 'features/stats/stats_provider.dart';
@@ -51,25 +49,26 @@ class HyroApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => ProfileProvider(isar)),
         ChangeNotifierProvider(create: (_) => ShopProvider(isar)),
         ChangeNotifierProxyProvider<ProfileProvider, MissionsProvider>(
-          create: (ctx) => MissionsProvider(
-            profileProvider: ctx.read<ProfileProvider>(),
-          ),
-          update: (ctx, profile, previous) =>
-              previous ?? MissionsProvider(profileProvider: profile),
+          create:
+              (ctx) => MissionsProvider(
+                profileProvider: ctx.read<ProfileProvider>(),
+              ),
+          update:
+              (ctx, profile, previous) =>
+                  previous ?? MissionsProvider(profileProvider: profile),
         ),
       ],
       child: MultiBlocProvider(
         providers: [
           BlocProvider(
             create:
-                (context) =>
-                    TimerCubit(
-                      statsProvider: context.read<StatsProvider>(),
-                      settingsProvider: context.read<SettingsProvider>(),
-                      profileProvider: context.read<ProfileProvider>(),
-                      missionsProvider: context.read<MissionsProvider>(),
-                      taskProvider: context.read<TaskProvider>(),
-                    ),
+                (context) => TimerCubit(
+                  statsProvider: context.read<StatsProvider>(),
+                  settingsProvider: context.read<SettingsProvider>(),
+                  profileProvider: context.read<ProfileProvider>(),
+                  missionsProvider: context.read<MissionsProvider>(),
+                  taskProvider: context.read<TaskProvider>(),
+                ),
           ),
         ],
         child: MaterialApp(
@@ -101,7 +100,8 @@ class AppShell extends StatefulWidget {
   State<AppShell> createState() => AppShellState();
 }
 
-class AppShellState extends State<AppShell> with WidgetsBindingObserver, WindowListener, TrayListener {
+class AppShellState extends State<AppShell>
+    with WidgetsBindingObserver, WindowListener, TrayListener {
   int _selectedIndex = 2; // Default to Focus
   int _previousIndex = 2;
   bool _initialized = false;
@@ -126,7 +126,9 @@ class AppShellState extends State<AppShell> with WidgetsBindingObserver, WindowL
   Future<void> _initTray() async {
     try {
       await trayManager.setIcon(
-        Platform.isWindows ? 'assets/images/app_icon.ico' : 'assets/images/app_icon.png',
+        Platform.isWindows
+            ? 'assets/images/app_icon.ico'
+            : 'assets/images/app_icon.png',
       );
       await trayManager.setToolTip('Hyro');
       Menu menu = Menu(
@@ -178,15 +180,19 @@ class AppShellState extends State<AppShell> with WidgetsBindingObserver, WindowL
     final key = menuItem.key;
     final label = menuItem.label ?? '';
 
-    if (key == 'show_window' || label == 'Abrir Hyro' || label.contains('Abrir')) {
+    if (key == 'show_window' ||
+        label == 'Abrir Hyro' ||
+        label.contains('Abrir')) {
       windowManager.show();
       windowManager.focus();
-    } else if (key == 'exit_app' || label == 'Salir (Cerrar notificaciones)' || label.contains('Salir')) {
+    } else if (key == 'exit_app' ||
+        label == 'Salir (Cerrar notificaciones)' ||
+        label.contains('Salir')) {
       windowManager.setPreventClose(false);
-      
+
       // Attempt cleanup but force exit after 500ms to guarantee termination
       Future.delayed(const Duration(milliseconds: 500), () => exit(0));
-      
+
       try {
         windowManager.destroy();
         trayManager.destroy().then((_) => exit(0));
@@ -195,7 +201,6 @@ class AppShellState extends State<AppShell> with WidgetsBindingObserver, WindowL
       }
     }
   }
-
 
   @override
   void didUpdateWidget(AppShell oldWidget) {
@@ -221,7 +226,6 @@ class AppShellState extends State<AppShell> with WidgetsBindingObserver, WindowL
       trayManager.removeListener(this);
     }
     super.dispose();
-
   }
 
   @override
@@ -231,8 +235,8 @@ class AppShellState extends State<AppShell> with WidgetsBindingObserver, WindowL
       return;
     }
 
-    if (state == AppLifecycleState.paused || 
-        state == AppLifecycleState.inactive || 
+    if (state == AppLifecycleState.paused ||
+        state == AppLifecycleState.inactive ||
         state == AppLifecycleState.detached) {
       final cubit = context.read<TimerCubit>();
       final settings = context.read<SettingsProvider>();
@@ -285,10 +289,10 @@ class AppShellState extends State<AppShell> with WidgetsBindingObserver, WindowL
     final validNames = categoryProvider.categories.map((c) => c.name).toList();
     final validIds = categoryProvider.categories.map((c) => c.id).toList();
     await taskProvider.deleteOrphanedTasks(validNames, validIds);
-    
+
     final profileProvider = context.read<ProfileProvider>();
     final shopProvider = context.read<ShopProvider>();
-    
+
     await profileProvider.loadProfile(userId);
     await shopProvider.loadShop(userId);
     if (!mounted) return;
@@ -300,7 +304,8 @@ class AppShellState extends State<AppShell> with WidgetsBindingObserver, WindowL
     // ── Schedule notifications with real data ──
     try {
       final statsProvider = context.read<StatsProvider>();
-      final pendingTasks = taskProvider.tasks.where((t) => !t.isCompleted).toList();
+      final pendingTasks =
+          taskProvider.tasks.where((t) => !t.isCompleted).toList();
       final currentStreak = statsProvider.currentStreak;
       final hadSessionToday = statsProvider.todaysStats != null;
 
@@ -311,10 +316,11 @@ class AppShellState extends State<AppShell> with WidgetsBindingObserver, WindowL
       );
 
       // Schedule reminders for tasks due in 1-2 days
-      final taskDueData = pendingTasks
-          .where((t) => t.dueDate != null)
-          .map((t) => {'id': t.id, 'title': t.title, 'dueDate': t.dueDate!})
-          .toList();
+      final taskDueData =
+          pendingTasks
+              .where((t) => t.dueDate != null)
+              .map((t) => {'id': t.id, 'title': t.title, 'dueDate': t.dueDate!})
+              .toList();
       await NotificationsService.instance.scheduleTaskDueReminders(taskDueData);
     } catch (e) {
       debugPrint('⚠️ Error programando notificaciones: $e');
@@ -330,14 +336,21 @@ class AppShellState extends State<AppShell> with WidgetsBindingObserver, WindowL
     if (index == 5 && _selectedIndex == 5) {
       index = _previousIndex;
     }
-    
+
     final previousIndex = _selectedIndex;
     final timerState = context.read<TimerCubit>().state;
     final settings = context.read<SettingsProvider>();
 
-    if (settings.strictMode && timerState.isRunning && previousIndex == 0 && index != 0) {
+    if (settings.strictMode &&
+        timerState.isRunning &&
+        previousIndex == 0 &&
+        index != 0) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Modo estricto activado. ¡Termina tu sesión de enfoque primero!')),
+        const SnackBar(
+          content: Text(
+            'Modo estricto activado. ¡Termina tu sesión de enfoque primero!',
+          ),
+        ),
       );
       return;
     }
@@ -346,7 +359,7 @@ class AppShellState extends State<AppShell> with WidgetsBindingObserver, WindowL
       _previousIndex = previousIndex;
       _selectedIndex = index;
     });
-    
+
     if (index != 5) {
       if (!Responsive.isMobile(context)) {
         _pageController.jumpToPage(index);
@@ -403,9 +416,13 @@ class AppShellState extends State<AppShell> with WidgetsBindingObserver, WindowL
             children: [
               PageView(
                 controller: _pageController,
-                physics: (Platform.isWindows || Platform.isMacOS || Platform.isLinux || context.watch<TimerCubit>().state.isRunning)
-                    ? const NeverScrollableScrollPhysics() // Bloquea el swipe en PC o si el timer corre
-                    : const BouncingScrollPhysics(),
+                physics:
+                    (Platform.isWindows ||
+                            Platform.isMacOS ||
+                            Platform.isLinux ||
+                            context.watch<TimerCubit>().state.isRunning)
+                        ? const NeverScrollableScrollPhysics() // Bloquea el swipe en PC o si el timer corre
+                        : const BouncingScrollPhysics(),
                 onPageChanged: (index) {
                   final previousIndex = _selectedIndex;
                   if (index != _selectedIndex) {
@@ -413,9 +430,11 @@ class AppShellState extends State<AppShell> with WidgetsBindingObserver, WindowL
                       _previousIndex = previousIndex;
                       _selectedIndex = index;
                     });
-                    
+
                     final mascot = context.read<MascotController>();
-                    if (previousIndex == 2 || previousIndex == 0 || previousIndex == 1) {
+                    if (previousIndex == 2 ||
+                        previousIndex == 0 ||
+                        previousIndex == 1) {
                       mascot.triggerVolver();
                     }
                     if (index == 2) {
@@ -430,7 +449,8 @@ class AppShellState extends State<AppShell> with WidgetsBindingObserver, WindowL
                       }
                     }
                     if (index == 1) {
-                      final streak = context.read<StatsProvider>().currentStreak;
+                      final streak =
+                          context.read<StatsProvider>().currentStreak;
                       mascot.triggerRacha(streak);
                     }
                   }
@@ -444,12 +464,16 @@ class AppShellState extends State<AppShell> with WidgetsBindingObserver, WindowL
         Builder(
           builder: (context) {
             final timerState = context.watch<TimerCubit>().state;
-            final isPomodoroFinished = timerState.isFinished &&
+            final isPomodoroFinished =
+                timerState.isFinished &&
                 (timerState.mode == TimerMode.shortBreak ||
-                 timerState.mode == TimerMode.longBreak);
-                 
+                    timerState.mode == TimerMode.longBreak);
+
             final isQuizActive = timerState.quizDue;
-            final isVisible = (_selectedIndex == 2 || _selectedIndex == 3) && !isPomodoroFinished && !isQuizActive;
+            final isVisible =
+                (_selectedIndex == 2 || _selectedIndex == 3) &&
+                !isPomodoroFinished &&
+                !isQuizActive;
             return FloatingMascot(visible: isVisible);
           },
         ),

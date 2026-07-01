@@ -20,7 +20,6 @@ import 'widgets/focus_quiz_dialog.dart';
 import 'widgets/pause_clock.dart';
 import '../../data/local/card_local_ds.dart';
 import '../../data/local/note_local_ds.dart';
-import '../../data/local/note_local_ds.dart';
 import 'widgets/strict_mode_violation_card.dart';
 
 /// The main Focus screen with the Pomodoro timer and sidebar widgets.
@@ -30,53 +29,60 @@ class FocusScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocListener<TimerCubit, TimerState>(
-      listenWhen: (prev, curr) => (prev.status != curr.status) || (prev.quizDue != curr.quizDue) || (prev.strictModeViolationApp != curr.strictModeViolationApp),
+      listenWhen:
+          (prev, curr) =>
+              (prev.status != curr.status) ||
+              (prev.quizDue != curr.quizDue) ||
+              (prev.strictModeViolationApp != curr.strictModeViolationApp),
       listener: (context, state) {
         final mascot = context.read<MascotController>();
-        
+
         if (state.strictModeViolationApp != null) {
           mascot.triggerPensando();
           showDialog(
-             context: context,
-             barrierDismissible: false,
-             builder: (_) => StrictModeViolationCard(appName: state.strictModeViolationApp!),
+            context: context,
+            barrierDismissible: false,
+            builder:
+                (_) => StrictModeViolationCard(
+                  appName: state.strictModeViolationApp!,
+                ),
           ).then((_) {
-             mascot.resumeEstudio();
-             if (!context.mounted) return;
-             if (context.read<TimerCubit>().state.isPaused) {
-                context.read<TimerCubit>().resume();
-             }
+            mascot.resumeEstudio();
+            if (!context.mounted) return;
+            if (context.read<TimerCubit>().state.isPaused) {
+              context.read<TimerCubit>().resume();
+            }
           });
           return;
         }
 
         if (state.quizDue && state.isRunning) {
-           final cardLocal = CardLocalDataSource();
-           final noteLocal = NoteLocalDataSource();
-           final cards = cardLocal.getCardsForTask(state.activeTaskId!);
-           final notes = noteLocal.getNotesForTask(state.activeTaskId!);
-           
-           if (cards.isNotEmpty || notes.isNotEmpty) {
-             context.read<TimerCubit>().pause(manual: false);
-             mascot.triggerPensando();
+          final cardLocal = CardLocalDataSource();
+          final noteLocal = NoteLocalDataSource();
+          final cards = cardLocal.getCardsForTask(state.activeTaskId!);
+          final notes = noteLocal.getNotesForTask(state.activeTaskId!);
 
-             showDialog(
-                context: context,
-                barrierDismissible: false,
-                builder: (_) => FocusQuizDialog(flashcards: cards, notas: notes),
-             ).then((_) {
-                 mascot.resumeEstudio();
-                 // only resume if it's currently paused
-                 if (!context.mounted) return;
-                 if (context.read<TimerCubit>().state.isPaused) {
-                    context.read<TimerCubit>().resume();
-                 }
-             });
-           } else {
-             context.read<TimerCubit>().acknowledgeQuiz();
-           }
+          if (cards.isNotEmpty || notes.isNotEmpty) {
+            context.read<TimerCubit>().pause(manual: false);
+            mascot.triggerPensando();
+
+            showDialog(
+              context: context,
+              barrierDismissible: false,
+              builder: (_) => FocusQuizDialog(flashcards: cards, notas: notes),
+            ).then((_) {
+              mascot.resumeEstudio();
+              // only resume if it's currently paused
+              if (!context.mounted) return;
+              if (context.read<TimerCubit>().state.isPaused) {
+                context.read<TimerCubit>().resume();
+              }
+            });
+          } else {
+            context.read<TimerCubit>().acknowledgeQuiz();
+          }
         } else if (state.quizDue) {
-           // Do not override mascot state if a quiz pause is active.
+          // Do not override mascot state if a quiz pause is active.
         } else if (state.isRunning && state.mode == TimerMode.pomodoro) {
           mascot.triggerEstudiando();
         } else if (state.isRunning &&
@@ -201,7 +207,8 @@ class _DesktopLayout extends StatelessWidget {
                                 return Column(
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
-                                    if (state.isRunning && state.activeTaskTitle != null) ...[
+                                    if (state.isRunning &&
+                                        state.activeTaskTitle != null) ...[
                                       _ActiveTaskBadge(
                                         taskId: state.activeTaskId ?? '',
                                         title: state.activeTaskTitle!,
@@ -210,22 +217,27 @@ class _DesktopLayout extends StatelessWidget {
                                     ],
                                     // The content (Timer, Controls, Scroller)
                                     if (state.isPaused && state.isManualPause)
-                                      PauseClock(
-                                        size: timerSize,
-                                      )
+                                      PauseClock(size: timerSize)
                                     else
                                       CircularTimer(
-                                        remainingSeconds: state.remainingSeconds,
+                                        remainingSeconds:
+                                            state.remainingSeconds,
                                         progress: state.progress,
                                         size: timerSize,
                                       ),
                                     const SizedBox(height: 16),
-                                    if (state.isRunning && state.quizTotalCount > 0)
+                                    if (state.isRunning &&
+                                        state.quizTotalCount > 0)
                                       Padding(
-                                        padding: const EdgeInsets.only(bottom: 8),
+                                        padding: const EdgeInsets.only(
+                                          bottom: 8,
+                                        ),
                                         child: Text(
                                           'Quiz: ${state.quizCorrectCount}/${state.quizTotalCount} ✅',
-                                          style: AppTypography.bodySmall.copyWith(color: AppColors.breakGreen),
+                                          style: AppTypography.bodySmall
+                                              .copyWith(
+                                                color: AppColors.breakGreen,
+                                              ),
                                         ),
                                       ),
                                     const SizedBox(height: 16),
@@ -243,7 +255,8 @@ class _DesktopLayout extends StatelessWidget {
                                     if (!state.isRunning && !state.isPaused)
                                       ModeSelector(
                                         currentMode: state.mode,
-                                        onStart: () => _handleStart(context, cubit),
+                                        onStart:
+                                            () => _handleStart(context, cubit),
                                       ),
                                   ],
                                 );
@@ -394,14 +407,16 @@ class _MobileLayout extends StatelessWidget {
               ),
               const SizedBox(height: 16),
               if (state.isRunning && state.quizTotalCount > 0)
-                 Padding(
-                   padding: const EdgeInsets.only(bottom: 8),
-                   child: Text(
-                     'Quiz: ${state.quizCorrectCount}/${state.quizTotalCount} ✅',
-                     style: AppTypography.bodySmall.copyWith(color: AppColors.breakGreen),
-                     textAlign: TextAlign.center,
-                   ),
-                 ),
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 8),
+                  child: Text(
+                    'Quiz: ${state.quizCorrectCount}/${state.quizTotalCount} ✅',
+                    style: AppTypography.bodySmall.copyWith(
+                      color: AppColors.breakGreen,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
               const SizedBox(height: 8),
               TimerControls(
                 isRunning: state.isRunning,
@@ -510,7 +525,11 @@ void _handleStart(BuildContext context, TimerCubit cubit) {
     } else if (result != null && result is Map) {
       final taskId = result['id'] as String;
       final taskTitle = result['title'] as String;
-      cubit.start(taskId: taskId, taskTitle: taskTitle, isStrictMode: isStrictMode);
+      cubit.start(
+        taskId: taskId,
+        taskTitle: taskTitle,
+        isStrictMode: isStrictMode,
+      );
     }
   });
 }
@@ -546,10 +565,7 @@ class _ActiveTaskBadge extends StatelessWidget {
               color: color,
               shape: BoxShape.circle,
               boxShadow: [
-                BoxShadow(
-                  color: color.withValues(alpha: 0.6),
-                  blurRadius: 6,
-                ),
+                BoxShadow(color: color.withValues(alpha: 0.6), blurRadius: 6),
               ],
             ),
           ),

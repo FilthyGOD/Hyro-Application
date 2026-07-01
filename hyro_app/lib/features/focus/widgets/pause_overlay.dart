@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:ui';
 import 'package:flutter/material.dart';
-import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 
 /// Full screen overlay shown when the timer is paused.
@@ -34,7 +33,7 @@ class _PauseOverlayState extends State<PauseOverlay>
       curve: Curves.easeOut,
     );
     _fadeController.forward();
-    
+
     _startTimer();
   }
 
@@ -93,10 +92,7 @@ class _PauseOverlayState extends State<PauseOverlay>
                         fontWeight: FontWeight.w300,
                         color: Colors.white,
                         shadows: [
-                          Shadow(
-                            color: Colors.white24,
-                            blurRadius: 24,
-                          ),
+                          Shadow(color: Colors.white24, blurRadius: 24),
                         ],
                       ),
                     ),
@@ -104,7 +100,7 @@ class _PauseOverlayState extends State<PauseOverlay>
                     _ResumeButton(
                       onTap: () {
                         _fadeController.reverse().then((_) {
-                           widget.onResume();
+                          widget.onResume();
                         });
                       },
                     ),
@@ -172,10 +168,7 @@ class _ResumeButtonState extends State<_ResumeButton>
           decoration: BoxDecoration(
             color: const Color(0xFF252528),
             shape: BoxShape.circle,
-            border: Border.all(
-              color: Colors.white12,
-              width: 1,
-            ),
+            border: Border.all(color: Colors.white12, width: 1),
           ),
           child: const Icon(
             Icons.play_arrow_rounded,

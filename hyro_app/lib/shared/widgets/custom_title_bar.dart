@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:window_manager/window_manager.dart';
 import 'dart:io';
-import '../../core/theme/app_colors.dart';
 
 class CustomTitleBar extends StatelessWidget {
   const CustomTitleBar({super.key});

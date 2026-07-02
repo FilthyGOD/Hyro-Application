@@ -1,4 +1,4 @@
-﻿import 'dart:async';
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:isar/isar.dart';
@@ -7,8 +7,8 @@ import 'package:hive_flutter/hive_flutter.dart';
 import 'package:hyro/data/models/daily_stats.dart';
 import 'package:hyro/data/repositories/stats_repository.dart';
 
-/// Reactive state for the user's gamification profile (nivel, xp, monedas)
-/// backed by the `perfiles` table in Supabase or locally via Isar for guests.
+/// Estado reactivo para el perfil de gamificación del usuario (nivel, xp, monedas)
+/// respaldado por la tabla `perfiles` en Supabase o localmente vía Isar para invitados.
 class ProfileProvider extends ChangeNotifier {
   final Isar isar;
 
@@ -17,7 +17,7 @@ class ProfileProvider extends ChangeNotifier {
   int experiencia = 0;
   int monedas = 0;
   
-  // Offline-first variables
+  // Variables para priorizar offline (Offline-first)
   int rachaActual = 0;
   int rachaMaxima = 0;
   int minutosEnfoqueTotal = 0;
@@ -31,7 +31,7 @@ class ProfileProvider extends ChangeNotifier {
 
   final _supabase = Supabase.instance.client;
 
-  /// Loads the profile from Supabase or locally if [userId] is null.
+  /// Carga el perfil desde Supabase o localmente si [userId] es nulo.
   Future<void> loadProfile(String? userId) async {
     // 1. Blindaje: Envolvemos el aviso inicial en un microtask
     Future.microtask(() {
@@ -56,7 +56,7 @@ class ProfileProvider extends ChangeNotifier {
         notifyListeners();
       }
 
-      // Si hay sesiÃ³n online, intentamos sincronizar desde Supabase
+      // Si hay sesión online, intentamos sincronizar desde Supabase
       if (userId != null) {
         try {
           final response = await _supabase
@@ -102,18 +102,18 @@ class ProfileProvider extends ChangeNotifier {
             sesionesMes = activeUser.sesionesMes;
           }
         } catch (syncError) {
-          debugPrint('Error de sincronizaciÃ³n con Supabase (ignorado por Offline-First): $syncError');
+          debugPrint('Error de sincronización con Supabase (ignorado por Offline-First): $syncError');
         }
       }
 
-      // ðŸš€ Juez de Rachas (Duolingo-style streak check)
+      // 🚀 Juez de Rachas (verificación de racha estilo Duolingo)
       if (Hive.isBoxOpen('statsBox')) {
         final statsRepo = StatsRepository(Hive.box<DailyStats>('statsBox'));
         final trueStreak = statsRepo.getCurrentStreak();
         
         // Si el repositorio confirma que pasamos la medianoche de ayer sin actividad y perdimos la racha
         if (trueStreak == 0 && rachaActual > 0) {
-          debugPrint('ðŸš¨ Juez de Rachas: Â¡Racha perdida! (TenÃ­as $rachaActual, bajado a 0)');
+          debugPrint('🚨 Juez de Rachas: ¡Racha perdida! (Tenías $rachaActual, bajado a 0)');
           
           // Actualizamos memoria
           rachaActual = 0;
@@ -127,13 +127,13 @@ class ProfileProvider extends ChangeNotifier {
             });
           }
           
-          // Castigamos tambiÃ©n en Supabase
+          // Castigamos también en Supabase
           if (userId != null) {
             try {
               await _supabase.from('perfiles').update({'racha_actual': 0}).eq('id', userId);
-              debugPrint('ðŸš¨ Castigo reflejado en Supabase');
+              debugPrint('🚨 Castigo reflejado en Supabase');
             } catch (e) {
-              debugPrint('âš ï¸ No se pudo enviar el castigo de racha a Supabase: $e');
+              debugPrint('⚠️ No se pudo enviar el castigo de racha a Supabase: $e');
             }
           }
           
@@ -145,7 +145,7 @@ class ProfileProvider extends ChangeNotifier {
       _error = 'Error cargando perfil: $e';
       debugPrint(_error);
     } finally {
-      // 2. Blindaje: Aseguramos la salida tambiÃ©n
+      // 2. Blindaje: Aseguramos la salida también
       Future.microtask(() {
         isLoading = false;
         notifyListeners();
@@ -153,7 +153,7 @@ class ProfileProvider extends ChangeNotifier {
     }
   }
 
-  /// Calls the `otorgar_experiencia` RPC or updates locally.
+  /// Llama a la RPC `otorgar_experiencia` o actualiza localmente.
   Future<void> grantXP(String? userId, int xp) async {
     try {
       if (userId == null) {
@@ -192,7 +192,7 @@ class ProfileProvider extends ChangeNotifier {
     }
   }
 
-  /// Syncs newly calculated offline-first gamification metrics locally and to Supabase
+  /// Sincroniza las métricas de gamificación offline-first recién calculadas localmente y en Supabase
   Future<void> syncDynamicStats(String? userId, int dynamicStreak, int newlyAddedMinutes) async {
     final activeUser = await isar.userProfiles.filter().isActivelyLoggedInEqualTo(true).findFirst();
     if (activeUser != null) {
@@ -220,16 +220,16 @@ class ProfileProvider extends ChangeNotifier {
             'minutos_enfoque_total': minutosEnfoqueTotal,
           }).eq('id', userId);
         } catch (e) {
-          debugPrint('âš ï¸ Not online to sync profile gamification directly: $e');
+          debugPrint('⚠️ Sin conexión para sincronizar gamificación del perfil: $e');
         }
       }
     }
   }
 
-  /// XP required to reach the next level: nivel Ã— 100.
+  /// XP requerida para alcanzar el siguiente nivel: nivel × 100.
   int get xpForNextLevel => nivel * 100;
 
-  /// Progress fraction (0.0 â€“ 1.0) toward the next level.
+  /// Fracción de progreso (0.0 – 1.0) hacia el siguiente nivel.
   double get levelProgress {
     final required = xpForNextLevel;
     if (required <= 0) return 0.0;

@@ -1,28 +1,28 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-/// Remote data source for flashcards via Supabase.
+/// Fuente de datos remota para flashcards v\u00eda Supabase.
 class CardRemoteDataSource {
   final SupabaseClient _client;
 
   CardRemoteDataSource(this._client);
 
-  /// Insert a single card.
+  /// Inserta una flashcard.
   Future<void> insertCard(Map<String, dynamic> data) async {
     await _client.from('tarea_cards').insert(data);
   }
 
-  /// Update a card by ID.
+  /// Actualiza una flashcard por ID.
   Future<void> updateCard(String id, Map<String, dynamic> data) async {
     await _client.from('tarea_cards').update(data).eq('id', id);
   }
 
-  /// Delete a card by ID.
+  /// Elimina un card por ID.
   Future<void> deleteCard(String id) async {
     await _client.from('tarea_cards').delete().eq('id', id);
   }
 
-  /// Fetch all cards for a list of task IDs from Supabase.
+  /// Obtiene todas las flashcards de una lista de IDs de tareas desde Supabase.
   Future<List<Map<String, dynamic>>> fetchAllByTaskIds(List<String> taskIds) async {
     if (taskIds.isEmpty) return [];
     final response = await _client
@@ -32,7 +32,7 @@ class CardRemoteDataSource {
     return List<Map<String, dynamic>>.from(response);
   }
 
-  /// Bulk upsert for initial sync.
+  /// Upsert masivo para sincronizaci\u00f3n inicial.
   Future<void> bulkUpsert(List<Map<String, dynamic>> cards) async {
     if (cards.isEmpty) return;
     try {

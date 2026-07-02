@@ -50,26 +50,26 @@ class _FocusQuizDialogState extends State<FocusQuizDialog> {
     final hasNotes = widget.notas.isNotEmpty;
     final has2Cards = widget.flashcards.length >= 2;
 
-    // Build list of available modes
+    // Construir lista de modos disponibles
     final available = <QuizMode>[];
 
-    // Always available if we have cards or notes
+    // Siempre disponible si tenemos tarjetas o notas
     if (hasCards || hasNotes) {
       available.add(QuizMode.fillInCard);
     }
 
-    // Multiple choice needs at least 2 cards for meaningful distractors
+    // Opción múltiple necesita al menos 2 tarjetas para tener distractores significativos
     if (has2Cards) {
       available.add(QuizMode.multipleChoice);
     }
 
-    // True/False needs cards
+    // Verdadero/Falso necesita tarjetas
     if (hasCards) {
       available.add(QuizMode.trueFalse);
       available.add(QuizMode.flashcardReveal);
     }
 
-    // Drag drop needs notes
+    // Arrastrar y soltar necesita notas
     if (hasNotes) {
       available.add(QuizMode.dragDrop);
     }
@@ -143,7 +143,7 @@ class _FocusQuizDialogState extends State<FocusQuizDialog> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // Header
+              // Encabezado
               Row(
                 children: [
                   const Icon(Icons.psychology_alt_rounded, color: AppColors.primary, size: 28),
@@ -152,7 +152,7 @@ class _FocusQuizDialogState extends State<FocusQuizDialog> {
                 ],
               ),
               const SizedBox(height: 12),
-              // Mascot
+              // Mascota
               Consumer<MascotController>(
                 builder: (context, mascot, _) {
                   if (!mascot.isLoaded) return const SizedBox();
@@ -171,10 +171,10 @@ class _FocusQuizDialogState extends State<FocusQuizDialog> {
                 },
               ),
               const SizedBox(height: 12),
-              // Quiz content
+              // Contenido del cuestionario
               _buildQuizContent(),
               const SizedBox(height: 20),
-              // Result or action buttons
+              // Botones de resultado o acción
               if (_revealed)
                 _buildResult()
               else

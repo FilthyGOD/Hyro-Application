@@ -13,7 +13,7 @@ import '../../../core/services/strict_mode_service.dart';
 import '../models/quiz_result_item.dart';
 import 'timer_state.dart';
 
-/// Cubit that manages the Pomodoro timer logic.
+/// Cubit que gestiona la lógica del temporizador Pomodoro.
 class TimerCubit extends Cubit<TimerState> {
   Timer? _timer;
   int _secondsSinceLastQuiz = 0;
@@ -23,7 +23,7 @@ class TimerCubit extends Cubit<TimerState> {
   final MissionsProvider? missionsProvider;
   final TaskProvider? taskProvider;
 
-  /// Optional reference to AuthProvider — set from outside after creation.
+  /// Referencia opcional al AuthProvider — se establece desde afuera después de la creación.
   AuthProvider? authProvider;
 
   TimerCubit({
@@ -36,7 +36,7 @@ class TimerCubit extends Cubit<TimerState> {
 
   final StrictModeService _strictModeService = StrictModeService();
 
-  /// Start the timer.
+  /// Inicia el temporizador.
   void start({String? taskId, String? taskTitle, bool isStrictMode = false}) {
     if (state.status == TimerStatus.running) return;
 
@@ -60,7 +60,7 @@ class TimerCubit extends Cubit<TimerState> {
       state.remainingSeconds,
     );
 
-    // Start strict mode monitoring if enabled
+    // Inicia el monitoreo del modo estricto si está habilitado
     if (state.isStrictModeActive) {
       debugPrint(
         '[StrictMode][TimerCubit] isStrictModeActive=true, calling _initStrictMode()',
@@ -85,7 +85,7 @@ class TimerCubit extends Cubit<TimerState> {
       if (parts.length >= 2) {
         formattedAppName = parts[1];
       }
-      // Called when the user leaves the app during strict mode
+      // Llamado cuando el usuario sale de la aplicación durante el modo estricto
       debugPrint(
         '[StrictMode][TimerCubit] ⚠️ Violation callback! isRunning=${state.isRunning}, app: $formattedAppName',
       );
@@ -107,7 +107,7 @@ class TimerCubit extends Cubit<TimerState> {
     debugPrint('[StrictMode][TimerCubit] _initStrictMode() complete');
   }
 
-  /// Pause the timer. [manual] = true when user presses pause button.
+  /// Pausa el temporizador. [manual] = true cuando el usuario presiona el botón de pausa.
   void pause({bool manual = true}) {
     _timer?.cancel();
     NotificationsService.instance.cancelPomodoroNotification();
@@ -120,18 +120,18 @@ class TimerCubit extends Cubit<TimerState> {
     );
   }
 
-  /// Resume a paused timer.
+  /// Reanuda un temporizador pausado.
   void resume() {
     if (state.status != TimerStatus.paused) return;
     start();
   }
 
-  /// Reset the timer to the beginning of the current mode.
+  /// Reinicia el temporizador al comienzo del modo actual.
   void reset() {
     _timer?.cancel();
     NotificationsService.instance.cancelPomodoroNotification();
     _secondsSinceLastQuiz = 0;
-    // Stop strict monitoring if it was active
+    // Detiene el monitoreo estricto si estaba activo
     if (state.isStrictModeActive) {
       _strictModeService.stopStrictMonitoring();
     }
@@ -146,19 +146,19 @@ class TimerCubit extends Cubit<TimerState> {
     );
   }
 
-  /// Refreshes the timer duration immediately if it's idle.
+  /// Refresca la duración del temporizador inmediatamente si está inactivo.
   void refreshIfIdle() {
     if (state.status == TimerStatus.idle) {
       reset();
     }
   }
 
-  /// Stop the timer completely and go back to idle pomodoro.
+  /// Detiene el temporizador completamente y vuelve a pomodoro inactivo.
   void stop() {
     _timer?.cancel();
     NotificationsService.instance.cancelPomodoroNotification();
     _secondsSinceLastQuiz = 0;
-    // Stop strict monitoring if it was active
+    // Detiene el monitoreo estricto si estaba activo
     if (state.isStrictModeActive) {
       _strictModeService.stopStrictMonitoring();
     }
@@ -178,7 +178,7 @@ class TimerCubit extends Cubit<TimerState> {
     );
   }
 
-  /// Switch timer mode (Pomodoro, Short Break, Long Break).
+  /// Cambia el modo del temporizador (Pomodoro, Descanso Corto, Descanso Largo).
   void setMode(TimerMode mode) {
     _timer?.cancel();
     NotificationsService.instance.cancelPomodoroNotification();
@@ -204,7 +204,7 @@ class TimerCubit extends Cubit<TimerState> {
     } else {
       _secondsSinceLastQuiz++;
 
-      // Check if quiz is due (only during pomodoro mode, quiz enabled, and has a task)
+      // Verifica si es hora de un cuestionario (solo durante modo pomodoro, cuestionario habilitado, y tiene una tarea)
       final quizEnabled = settingsProvider?.focusQuizEnabled ?? false;
       final quizInterval =
           ((settingsProvider?.focusQuizIntervalMinutes ?? 5) * 60).toInt();
@@ -228,12 +228,12 @@ class TimerCubit extends Cubit<TimerState> {
     }
   }
 
-  /// Called by the FocusScreen after the quiz dialog is shown.
+  /// Llamado por FocusScreen después de que se muestra el diálogo del cuestionario.
   void acknowledgeQuiz() {
     emit(state.copyWith(quizDue: false));
   }
 
-  /// Records the result of a quiz question.
+  /// Registra el resultado de una pregunta de cuestionario.
   void recordQuizResult(bool isCorrect, QuizResultItem item) {
     emit(
       state.copyWith(
@@ -245,7 +245,7 @@ class TimerCubit extends Cubit<TimerState> {
   }
 
   void _onTimerFinished() {
-    // Stop strict mode monitoring when a session finishes
+    // Detiene el monitoreo de modo estricto cuando termina una sesión
     if (state.isStrictModeActive) {
       _strictModeService.stopStrictMonitoring();
     }
@@ -257,11 +257,11 @@ class TimerCubit extends Cubit<TimerState> {
 
       final userId = authProvider?.supabaseUserId;
 
-      // Tell stats provider to record this session locally and sync to cloud
+      // Dile al proveedor de estadísticas que registre esta sesión localmente y la sincronice con la nube
       statsProvider?.addFocusSession(focusMinutes, userId);
 
       Future.microtask(() {
-        // After it updates local StatsBox, we capture the newest real dynamic streak
+        // Después de que actualiza la caja local (StatsBox), capturamos la racha dinámica real más nueva
         final currentDynamicStreak = statsProvider?.currentStreak ?? 0;
         profileProvider?.syncDynamicStats(
           userId,
@@ -270,19 +270,19 @@ class TimerCubit extends Cubit<TimerState> {
         );
       });
 
-      // ── Gamification hooks ──
-      // 10 XP per completed pomodoro (grantXP natively supports local accounts)
+      // ── Acciones de gamificación ──
+      // 10 XP por cada pomodoro completado (grantXP soporta nativamente cuentas locales)
       profileProvider?.grantXP(userId, 10);
-      // Update mission progress
+      // Actualiza progreso de la misión
       missionsProvider?.updateProgress('pomodoro_completed', 1);
       missionsProvider?.updateProgress('minutes_studied', focusMinutes);
 
-      // ── Task Linking hook ──
+      // ── Acción de Enlace de Tareas ──
       if (state.activeTaskId != null && taskProvider != null) {
         taskProvider?.incrementTaskPomodoro(state.activeTaskId!);
       }
 
-      // Auto-transition: after 4 pomodoros → long break, else short break
+      // Transición automática: después de 4 pomodoros → descanso largo, si no, descanso corto
       final nextMode =
           newSessions % PomodoroConstants.pomodorosBeforeLongBreak == 0
               ? TimerMode.longBreak
@@ -302,11 +302,11 @@ class TimerCubit extends Cubit<TimerState> {
           quizCorrectCount: state.quizCorrectCount,
           quizTotalCount: state.quizTotalCount,
           quizHistory:
-              state.quizHistory, // Keep history for review on final screen
+              state.quizHistory, // Mantiene el historial para revisión en la pantalla final
         ),
       );
     } else {
-      // Break finished → go back to pomodoro
+      // Termina el descanso → vuelve a pomodoro
       final nextDuration =
           (settingsProvider?.pomodoroDuration.toInt() ??
               PomodoroConstants.pomodoroDuration) *
@@ -336,7 +336,7 @@ class TimerCubit extends Cubit<TimerState> {
     }
   }
 
-  /// Debug method to immediately trigger the completed session view
+  /// Método de depuración para activar de inmediato la vista de sesión completada
   void debugForceSessionCompleted() {
     _timer?.cancel();
     NotificationsService.instance.cancelPomodoroNotification();

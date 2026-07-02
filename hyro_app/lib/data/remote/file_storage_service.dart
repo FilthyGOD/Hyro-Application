@@ -3,18 +3,18 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:path/path.dart' as p;
 
-/// Handles uploading local files to and downloading files from
-/// the Supabase Storage bucket `task_documents`.
+/// Maneja la subida de archivos locales y descarga de archivos desde
+/// el bucket de Supabase Storage `task_documents`.
 class FileStorageService {
   final SupabaseClient _client;
   static const String _bucket = 'task_documents';
 
   FileStorageService(this._client);
 
-  /// Uploads a local file to the Supabase `task_documents` bucket.
+  /// Sube un archivo local al bucket `task_documents` de Supabase.
   ///
-  /// Returns the public URL of the uploaded file.
-  /// Files are stored under `{userId}/{fileId}{extension}`.
+  /// Devuelve la URL p\u00fablica del archivo subido.
+  /// Los archivos se almacenan bajo `{userId}/{fileId}{extension}`.
   Future<String> uploadFile({
     required String localPath,
     required String userId,
@@ -44,8 +44,8 @@ class FileStorageService {
     return publicUrl;
   }
 
-  /// Downloads a file from Supabase Storage to local storage.
-  /// Used when syncing data TO a new device (future use).
+  /// Descarga un archivo de Supabase Storage al almacenamiento local.
+  /// Usado al sincronizar datos A un nuevo dispositivo (uso futuro).
   Future<String> downloadFile({
     required String remotePath,
     required String localDir,

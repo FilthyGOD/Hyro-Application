@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 
-/// Responsive breakpoints and utilities for Hyro.
+/// Breakpoints responsivos y utilidades para Hyro.
 ///
-/// - Mobile:  < 768px
-/// - Tablet:  768px — 1200px
-/// - Desktop: > 1200px
+/// - Móvil:     < 768px
+/// - Tablet:    768px — 1200px
+/// - Escritorio: > 1200px
 class Responsive {
   Responsive._();
 
@@ -22,7 +22,7 @@ class Responsive {
   static bool isDesktop(BuildContext context) =>
       MediaQuery.sizeOf(context).width >= tabletBreakpoint;
 
-  /// Returns different values based on the current breakpoint.
+  /// Devuelve valores diferentes según el breakpoint actual.
   static T value<T>(
     BuildContext context, {
     required T mobile,
@@ -35,7 +35,7 @@ class Responsive {
   }
 }
 
-/// A responsive builder widget that rebuilds on layout changes.
+/// Un widget constructor responsivo que se reconstruye con los cambios de diseño.
 class ResponsiveBuilder extends StatelessWidget {
   final Widget Function(BuildContext context) mobile;
   final Widget Function(BuildContext context)? tablet;

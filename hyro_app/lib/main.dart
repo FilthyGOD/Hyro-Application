@@ -90,7 +90,7 @@ void main(List<String> args) async {
   }
   // ──────────────────────────────────────────────────────────────────
 
-  // Desktop window management
+  // Gestión de la ventana en escritorio
   if (!Platform.isAndroid && !Platform.isIOS) {
     await windowManager.ensureInitialized();
     WindowOptions windowOptions = const WindowOptions(
@@ -139,5 +139,5 @@ void main(List<String> args) async {
 
   runApp(HyroApp(isar: isar));
 }
-// koko was here
-// koko was here x2
+// koko estuvo aquí
+// koko estuvo aquí x2

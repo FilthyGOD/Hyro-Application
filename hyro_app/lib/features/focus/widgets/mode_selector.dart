@@ -3,7 +3,7 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../bloc/timer_state.dart';
 
-/// Chips to switch between Pomodoro, Short Break, Long Break.
+/// Chips para cambiar entre Pomodoro, Descanso Corto, Descanso Largo.
 class ModeSelector extends StatelessWidget {
   final TimerMode currentMode;
   final VoidCallback onStart;

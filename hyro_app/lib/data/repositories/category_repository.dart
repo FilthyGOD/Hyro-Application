@@ -3,7 +3,7 @@ import '../local/category_local_ds.dart';
 import '../remote/category_remote_ds.dart';
 import '../models/category_model.dart';
 
-/// Repository that abstracts local and remote category operations.
+/// Repositorio que abstrae las operaciones locales y remotas de categor\u00edas.
 class CategoryRepository {
   final CategoryLocalDataSource _local;
   final CategoryRemoteDataSource _remote;
@@ -20,17 +20,17 @@ class CategoryRepository {
         _isAuthenticated = isAuthenticated,
         _getUserId = getUserId;
 
-  /// Get all categories from local storage.
+  /// Obtiene todas las categor\u00edas desde el almacenamiento local.
   List<CategoryModel> getCategories() {
     return _local.getAllCategories();
   }
 
-  /// Get a single category by ID.
+  /// Obtiene una categor\u00eda por ID.
   CategoryModel? getCategory(String id) {
     return _local.getCategory(id);
   }
 
-  /// Pull all categories from Supabase and replace local data.
+  /// Descarga todas las categor\u00edas de Supabase y reemplaza los datos locales.
   Future<void> pullRemoteToLocal() async {
     final userId = _getUserId();
     if (userId == null) return;

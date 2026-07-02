@@ -91,7 +91,7 @@ class SpotifyAuthService extends ChangeNotifier {
           if (params.containsKey('code')) {
             final code = params['code']!;
 
-            // Show successful message first
+            // Mostrar mensaje de éxito primero
             request.response
               ..statusCode = HttpStatus.ok
               ..headers.contentType = ContentType.html
@@ -100,7 +100,7 @@ class SpotifyAuthService extends ChangeNotifier {
               )
               ..close();
 
-            // Try to exchange code for token
+            // Intentar intercambiar el código por un token
             await _exchangeCodeForToken(code);
 
             _server?.close(force: true);

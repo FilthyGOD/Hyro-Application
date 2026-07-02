@@ -112,10 +112,10 @@ class _TaskSelectionDialogState extends State<TaskSelectionDialog> {
     }
     return ListView.builder(
       shrinkWrap: true,
-      itemCount: categories.length + 1, // +1 for "Sin Categoria"
+      itemCount: categories.length + 1, // +1 para "Sin Categoria"
       itemBuilder: (context, index) {
         if (index == categories.length) {
-          // Additional fixed option
+          // Opción fija adicional
            return ListTile(
             leading: const Icon(Icons.folder_outlined, color: Colors.white54),
             title: Text('Sin Categoría', style: AppTypography.bodyMedium),
@@ -146,7 +146,7 @@ class _TaskSelectionDialogState extends State<TaskSelectionDialog> {
     );
   }
 
-  // ============== TASK SELECTION VIEW ==============
+  // ============== VISTA DE SELECCIÓN DE TAREA ==============
 
   Widget _buildTaskSelection(BuildContext context, bool isAuth, String? userId, String catId) {
     return Padding(
@@ -174,7 +174,7 @@ class _TaskSelectionDialogState extends State<TaskSelectionDialog> {
                   textAlign: TextAlign.center,
                 ),
               ),
-              const SizedBox(width: 48), // Balancing title
+              const SizedBox(width: 48), // Equilibrar título
             ],
           ),
           const SizedBox(height: 16),
@@ -205,7 +205,7 @@ class _TaskSelectionDialogState extends State<TaskSelectionDialog> {
          }
          var tasks = (snapshot.data ?? []).map((m) => TaskModel.fromSupabaseJson(m)).toList();
          
-         // Filter natively after fetch since is(null) on stream filters might be tricky in pure dart stream API.
+         // Filtrar de forma nativa después de obtener los datos ya que is(null) en los filtros de stream podría ser complicado en la API de stream de dart puro.
          tasks = tasks.where((t) {
             if (catId == 'SIN_CATEGORIA') return t.categoryId == null;
             return t.categoryId == catId;
@@ -254,7 +254,7 @@ class _TaskSelectionDialogState extends State<TaskSelectionDialog> {
             '${task.pomodorosCompleted} / ${task.pomodorosTarget} Pomodoros',
             style: const TextStyle(color: Colors.white54, fontSize: 12),
           ),
-          onTap: () => Navigator.pop(context, {'id': task.id, 'title': task.title}), // Passing the TASK ID back with title
+          onTap: () => Navigator.pop(context, {'id': task.id, 'title': task.title}), // Pasa el ID DE LA TAREA de vuelta junto con el título
         );
       },
     );

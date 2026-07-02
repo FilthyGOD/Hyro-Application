@@ -1,4 +1,4 @@
-﻿import 'dart:async';
+import 'dart:async';
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -63,7 +63,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       mascot.addListener(listener);
     }
 
-    // Auth Listener to auto-close RegisterScreen when OAuth completes via external browser (Deep Link)
+    // Listener de Auth para cerrar RegisterScreen automáticamente cuando OAuth se complete vía navegador externo (Deep Link)
     final authProvider = context.read<AuthProvider>();
     void authListener() {
       if (mounted && authProvider.isAuthenticated && !authProvider.isGuest) {
@@ -115,7 +115,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
       if (mounted) {
         setState(() => _isLoading = false);
-        // Show dialog telling user to check email
+        // Mostrar diálogo indicando al usuario que revise su correo
         showDialog(
           context: context,
           builder:
@@ -132,8 +132,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 actions: [
                   TextButton(
                     onPressed: () {
-                      Navigator.of(context).pop(); // Close dialog
-                      Navigator.of(context).pop(); // Go back to Login Screen
+                      Navigator.of(context).pop(); // Cerrar diálogo
+                      Navigator.of(context).pop(); // Regresar a la pantalla de Login
                     },
                     child: const Text(
                       'Entendido',

@@ -6,13 +6,13 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 // ignore_for_file: deprecated_member_use
 
-/// Centralized controller for the Rive mascot animation.
-/// Shared between FocusScreen (idle/studying) and ShopScreen (purchase/equip).
+/// Controlador centralizado para la animaci\u00f3n de la mascota Rive.
+/// Compartido entre FocusScreen (inactivo/estudiando) y ShopScreen (compra/equipar).
 class MascotController extends ChangeNotifier {
   File? _file;
   RiveWidgetController? _riveController;
 
-  // Triggers
+  // Disparadores
   TriggerInput? _triggerSaludo;
   TriggerInput? _triggerEstudiando;
   TriggerInput? _triggerHueva;
@@ -23,7 +23,7 @@ class MascotController extends ChangeNotifier {
   TriggerInput? _triggerFestejo;
   TriggerInput? _triggerPensando;
 
-  // Inputs
+  // Entradas
   NumberInput? _shopItemId;
   NumberInput? _sombrero;
   NumberInput? _cara;
@@ -38,7 +38,7 @@ class MascotController extends ChangeNotifier {
 
   bool get isInitialLoad => _isInitialLoad;
 
-  // Track the genuinely equipped items
+  // Rastrear los \u00edtems genuinamente equipados
   int equippedSombrero = 100;
   int equippedCara = 200;
   int equippedCuerpo = 300;
@@ -83,7 +83,7 @@ class MascotController extends ChangeNotifier {
     _riveController = riveController;
     final sm = riveController.stateMachine;
 
-    // Resolve triggers
+    // Resolver disparadores
     _triggerSaludo = sm.trigger('trigger_saludo');
     _triggerEstudiando = sm.trigger('trigger_estudiando');
     _triggerHueva = sm.trigger('trigger_hueva');
@@ -94,7 +94,7 @@ class MascotController extends ChangeNotifier {
     _triggerFestejo = sm.trigger('trigger_festejo');
     _triggerPensando = sm.trigger('trigger_pensando');
 
-    // Resolve number inputs
+    // Resolver entradas num\u00e9ricas
     _shopItemId = sm.number('shop_item_id');
     _sombrero = sm.number('sombrero') ?? sm.number('control_sombrero');
     _cara = sm.number('cara') ?? sm.number('control_cara');
@@ -116,7 +116,7 @@ class MascotController extends ChangeNotifier {
     // No restauramos el equipamiento aquí para que la animación inicial 'cargando'
     // se mantenga sin cosméticos. Se restaurarán al llamar a triggerVolver().
 
-    // Start the idle greeting loop
+    // Iniciar el bucle de saludo inactivo
     _startIdleLoop();
   }
 
@@ -188,7 +188,7 @@ class MascotController extends ChangeNotifier {
 
   void triggerCargando() {
     _cancelIdleLoop();
-    // Clear cosmetics for cargando animation
+    // Limpiar cosm\u00e9ticos para la animaci\u00f3n de carga
     _sombrero?.value = 0;
     _cara?.value = 0;
     _cuerpo?.value = 0;

@@ -2,7 +2,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import '../../core/theme/app_colors.dart';
 
-/// A reusable card with glassmorphism effect.
+/// Una tarjeta reutilizable con efecto de cristalismo (glassmorphism).
 class GlassCard extends StatelessWidget {
   final Widget child;
   final EdgeInsetsGeometry? padding;

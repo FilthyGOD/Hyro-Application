@@ -1,34 +1,34 @@
 import 'package:hive/hive.dart';
 import '../models/tarea_card_model.dart';
 
-/// Local data source for flashcards using Hive.
+/// Fuente de datos local para flashcards usando Hive.
 class CardLocalDataSource {
   static const String boxName = 'cardsBox';
 
   Box<TareaCardModel> get _box => Hive.box<TareaCardModel>(boxName);
 
-  /// Get all flashcards for a specific task.
+  /// Obtiene todas las flashcards de una tarea espec\u00edfica.
   List<TareaCardModel> getCardsForTask(String tareaId) {
     return _box.values.where((c) => c.tareaId == tareaId).toList()
       ..sort((a, b) => a.creadoEn.compareTo(b.creadoEn));
   }
 
-  /// Get a single card by ID.
+  /// Obtiene una flashcard por ID.
   TareaCardModel? getCard(String id) {
     return _box.get(id);
   }
 
-  /// Insert or update a card.
+  /// Inserta o actualiza una flashcard.
   Future<void> putCard(TareaCardModel card) async {
     await _box.put(card.id, card);
   }
 
-  /// Delete a card by ID.
+  /// Elimina una flashcard por ID.
   Future<void> deleteCard(String id) async {
     await _box.delete(id);
   }
 
-  /// Delete all cards for a task.
+  /// Elimina todas las flashcards de una tarea.
   Future<void> deleteCardsForTask(String tareaId) async {
     final keys = _box.keys.where((key) {
       final card = _box.get(key);
@@ -37,12 +37,12 @@ class CardLocalDataSource {
     await _box.deleteAll(keys);
   }
 
-  /// Clear all cards from local storage.
+  /// Limpia todas las flashcards del almacenamiento local.
   Future<void> clearAll() async {
     await _box.clear();
   }
 
-  /// Get all cards for bulk sync.
+  /// Obtiene todas las flashcards para sincronizaci\u00f3n masiva.
   List<TareaCardModel> getAllForSync() {
     return _box.values.toList();
   }

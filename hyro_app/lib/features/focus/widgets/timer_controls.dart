@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../core/theme/app_colors.dart';
 
-/// Play / Pause / Reset / Stop controls for the timer.
+/// Controles de Iniciar / Pausar / Reiniciar / Detener para el temporizador.
 class TimerControls extends StatelessWidget {
   final bool isRunning;
   final bool isPaused;
@@ -58,7 +58,7 @@ class TimerControls extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        // Stop
+        // Detener
         _ControlButton(
           icon: Icons.stop,
           size: 60 * buttonSizeMultiplier,
@@ -68,7 +68,7 @@ class TimerControls extends StatelessWidget {
           backgroundColor: AppColors.surfaceLight,
         ),
         SizedBox(width: 32 * buttonSizeMultiplier),
-        // Pause / Resume
+        // Pausar / Reanudar
         if (isRunning)
           _ControlButton(
             icon: Icons.pause,

@@ -5,13 +5,13 @@ import '../../../shared/widgets/glass_card.dart';
 import 'package:provider/provider.dart';
 import '../../stats/stats_provider.dart';
 
-/// Activity chart card showing daily focus sessions as vertical bars.
+/// Tarjeta de gr\u00e1fico de actividad mostrando sesiones de enfoque diarias como barras verticales.
 class ActivityChart extends StatelessWidget {
   const ActivityChart({super.key});
 
   @override
   Widget build(BuildContext context) {
-    // Generate labels for the last 7 days, ending today at index 6
+    // Generar etiquetas para los \u00faltimos 7 d\u00edas, terminando hoy en \u00edndice 6
     final List<String> labels = [];
     final now = DateTime.now();
     for (int i = 6; i >= 0; i--) {

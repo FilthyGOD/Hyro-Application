@@ -4,11 +4,11 @@ import '../remote/task_remote_ds.dart';
 import '../models/task_model.dart';
 import '../local/category_local_ds.dart';
 
-/// Repository that abstracts local and remote task operations.
+/// Repositorio que abstrae las operaciones locales y remotas de tareas.
 ///
-/// - Always writes to local (Hive) first.
-/// - If the user is authenticated, also writes to Supabase.
-/// - Reads always come from local (offline-first).
+/// - Siempre escribe en local (Hive) primero.
+/// - Si el usuario est\u00e1 autenticado, tambi\u00e9n escribe en Supabase.
+/// - Las lecturas siempre vienen de local (offline-first).
 class TaskRepository {
   final TaskLocalDataSource _local;
   final TaskRemoteDataSource _remote;
@@ -25,17 +25,17 @@ class TaskRepository {
         _isAuthenticated = isAuthenticated,
         _getUserId = getUserId;
 
-  /// Get all tasks from local storage.
+  /// Obtiene todas las tareas desde el almacenamiento local.
   List<TaskModel> getTasks() {
     return _local.getAllTasks();
   }
 
-  /// Get a single task by ID.
+  /// Obtiene una tarea por ID.
   TaskModel? getTask(String id) {
     return _local.getTask(id);
   }
 
-  /// Pull all tasks from Supabase and replace local data.
+  /// Descarga todas las tareas de Supabase y reemplaza los datos locales.
   Future<void> pullRemoteToLocal() async {
     final userId = _getUserId();
     if (userId == null) return;
@@ -45,7 +45,7 @@ class TaskRepository {
       final categoryLocal = CategoryLocalDataSource();
       for (final map in maps) {
         final task = TaskModel.fromSupabaseJson(map);
-        // Resolve category name
+        // Resolver nombre de categor\u00eda
         if (task.categoryId != null) {
           final cat = categoryLocal.getCategory(task.categoryId!);
           if (cat != null) task.category = cat.name;

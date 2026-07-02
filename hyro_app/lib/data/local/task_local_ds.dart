@@ -1,38 +1,38 @@
 import 'package:hive/hive.dart';
 import '../models/task_model.dart';
 
-/// Local data source for tasks using Hive.
+/// Fuente de datos local para tareas usando Hive.
 class TaskLocalDataSource {
   static const String boxName = 'tasksBox';
 
   Box<TaskModel> get _box => Hive.box<TaskModel>(boxName);
 
-  /// Get all tasks.
+  /// Obtiene todas las tareas.
   List<TaskModel> getAllTasks() {
     return _box.values.toList();
   }
 
-  /// Get a single task by ID.
+  /// Obtiene una tarea por ID.
   TaskModel? getTask(String id) {
     return _box.get(id);
   }
 
-  /// Insert or update a task.
+  /// Inserta o actualiza una tarea.
   Future<void> putTask(TaskModel task) async {
     await _box.put(task.id, task);
   }
 
-  /// Delete a task by ID.
+  /// Elimina una tarea por ID.
   Future<void> deleteTask(String id) async {
     await _box.delete(id);
   }
 
-  /// Clear all tasks from local storage.
+  /// Limpia todas las tareas del almacenamiento local.
   Future<void> clearAll() async {
     await _box.clear();
   }
 
-  /// Get all tasks for bulk sync.
+  /// Obtiene todas las tareas para sincronizaci\u00f3n masiva.
   List<TaskModel> getAllForSync() {
     return _box.values.toList();
   }

@@ -37,7 +37,7 @@ class _TrueFalseQuizState extends State<TrueFalseQuiz> {
       _statement = '"${target.frente}" → ${target.reverso}';
       _isTrue = true;
     } else {
-      // Pick a wrong back from another card
+      // Elige un reverso incorrecto de otra tarjeta
       final wrong = cards.firstWhere((c) => c.id != target.id, orElse: () => target);
       if (wrong.id == target.id) {
         _statement = '"${target.frente}" → ${target.reverso}';

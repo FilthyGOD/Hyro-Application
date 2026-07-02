@@ -16,10 +16,10 @@ class DragDropQuiz extends StatefulWidget {
 
 class _DragDropQuizState extends State<DragDropQuiz> {
   String _originalText = '';
-  List<String> _blanks = []; // words removed
-  List<String> _displayParts = []; // text split with placeholders
+  List<String> _blanks = []; // palabras removidas
+  List<String> _displayParts = []; // texto dividido con marcadores de posición
   List<String> _availableWords = [];
-  final Map<int, String?> _placed = {}; // blank index -> placed word
+  final Map<int, String?> _placed = {}; // índice del espacio en blanco -> palabra colocada
   bool _answered = false;
   bool _isCorrect = false;
 
@@ -41,16 +41,16 @@ class _DragDropQuizState extends State<DragDropQuiz> {
     final count = min(3, candidates.length);
     _blanks = candidates.take(count).toList();
 
-    // Build display parts
+    // Construye las partes para mostrar
     String text = _originalText;
     for (var w in _blanks) {
       text = text.replaceFirst(w, '{{BLANK}}');
     }
     _displayParts = text.split('{{BLANK}}');
 
-    // Shuffle available words with distractors
+    // Mezcla las palabras disponibles con distractores
     _availableWords = List<String>.from(_blanks);
-    // Add 1-2 distractors from other words
+    // Añade 1-2 distractores de otras palabras
     final distractorPool = candidates.where((w) => !_blanks.contains(w)).toList();
     distractorPool.shuffle(rng);
     _availableWords.addAll(distractorPool.take(min(2, distractorPool.length)));
@@ -106,7 +106,7 @@ class _DragDropQuizState extends State<DragDropQuiz> {
         const SizedBox(height: 16),
         Text('Coloca las palabras en su lugar correcto:', style: AppTypography.labelSmall),
         const SizedBox(height: 12),
-        // Text with drop targets
+        // Texto con objetivos para soltar
         Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
@@ -122,7 +122,7 @@ class _DragDropQuizState extends State<DragDropQuiz> {
           ),
         ),
         const SizedBox(height: 16),
-        // Draggable words
+        // Palabras arrastrables
         Text('Palabras disponibles:', style: AppTypography.labelSmall),
         const SizedBox(height: 8),
         Wrap(
@@ -171,7 +171,7 @@ class _DragDropQuizState extends State<DragDropQuiz> {
             onAcceptWithDetails: (details) {
               if (_answered) return;
               setState(() {
-                // Remove from any other blank
+                // Quítala de cualquier otro espacio en blanco
                 _placed.forEach((k, v) {
                   if (v == details.data) _placed[k] = null;
                 });

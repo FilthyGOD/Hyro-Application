@@ -16,7 +16,7 @@ class FlashcardRevealQuiz extends StatefulWidget {
 
 class _FlashcardRevealQuizState extends State<FlashcardRevealQuiz> with SingleTickerProviderStateMixin {
   late TareaCardModel _card;
-  late bool _showFront; // true = show front, ask back
+  late bool _showFront; // true = muestra anverso, pregunta reverso
   final TextEditingController _ctrl = TextEditingController();
   bool _revealed = false;
   bool _isCorrect = false;
@@ -44,7 +44,7 @@ class _FlashcardRevealQuizState extends State<FlashcardRevealQuiz> with SingleTi
     if (_revealed) return;
     final answer = _ctrl.text.trim().toLowerCase();
     final expected = (_showFront ? _card.reverso : _card.frente).toLowerCase();
-    // Check if answer contains key words (3+ chars)
+    // Comprueba si la respuesta contiene palabras clave (3+ letras)
     final keyWords = expected.split(RegExp(r'\s+')).where((w) => w.length > 3).toList();
     bool correct;
     if (keyWords.isEmpty) {
@@ -91,7 +91,7 @@ class _FlashcardRevealQuizState extends State<FlashcardRevealQuiz> with SingleTi
         const SizedBox(height: 16),
         Text(_showFront ? '¿Qué hay en el reverso?' : '¿Qué hay en el frente?', style: AppTypography.labelSmall),
         const SizedBox(height: 8),
-        // Card visual
+        // Visual de la tarjeta
         AnimatedBuilder(
           animation: _flipAnimation,
           builder: (context, child) {

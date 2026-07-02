@@ -22,7 +22,7 @@ class _CompletedSessionViewState extends State<CompletedSessionView> {
   @override
   void initState() {
     super.initState();
-    // Trigger festejo animation when this view appears
+    // Dispara la animación de festejo cuando aparece esta vista
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<MascotController>().triggerFestejo();
     });
@@ -159,7 +159,7 @@ class _CompletedSessionViewState extends State<CompletedSessionView> {
     return Consumer<MascotController>(
       builder: (context, mascot, _) {
         if (!mascot.isLoaded) {
-          // Fallback while Rive loads
+          // Alternativa de respaldo mientras Rive carga
           return SizedBox(
             width: size,
             height: size,

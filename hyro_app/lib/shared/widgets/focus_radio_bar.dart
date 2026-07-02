@@ -2,7 +2,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import '../../core/theme/app_typography.dart';
 
-/// Persistent mini player bar for Focus Radio.
+/// Barra de mini reproductor persistente para Focus Radio.
 class FocusRadioBar extends StatefulWidget {
   const FocusRadioBar({super.key});
 
@@ -55,7 +55,7 @@ class _FocusRadioBarState extends State<FocusRadioBar> {
                 ),
                 child: Row(
                   children: [
-                    // ── Track info ──
+                    // ── Información de la pista ──
                     Container(
                       width: 48,
                       height: 48,
@@ -95,7 +95,7 @@ class _FocusRadioBarState extends State<FocusRadioBar> {
                         ],
                       ),
                     ),
-                    // ── Playback controls ──
+                    // ── Controles de reproducción ──
                     IconButton(
                       onPressed: () {},
                       icon: const Icon(

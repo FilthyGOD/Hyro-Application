@@ -1,19 +1,19 @@
-/// Pomodoro timer default durations and configuration.
+/// Duraciones y configuración por defecto del temporizador Pomodoro.
 class PomodoroConstants {
   PomodoroConstants._();
 
-  /// Default Pomodoro duration in minutes.
+  /// Duración por defecto del Pomodoro en minutos.
   static const int pomodoroDuration = 25;
 
-  /// Default short break duration in minutes.
+  /// Duración por defecto del descanso corto en minutos.
   static const int shortBreakDuration = 5;
 
-  /// Default long break duration in minutes.
+  /// Duración por defecto del descanso largo en minutos.
   static const int longBreakDuration = 15;
 
-  /// Number of pomodoros before a long break.
+  /// Número de pomodoros antes de un descanso largo.
   static const int pomodorosBeforeLongBreak = 4;
 
-  /// Maximum daily sessions to track.
+  /// Máximo de sesiones diarias para rastrear.
   static const int maxDailySessions = 16;
 }

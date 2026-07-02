@@ -69,7 +69,7 @@ class _SpotifyBottomBarState extends State<SpotifyBottomBar> {
     return _buildLiquidBarContainer(
       child: Row(
         children: [
-          // ── Track info ──
+          // ── Información de la pista ──
           Container(
             width: 48,
             height: 48,
@@ -119,7 +119,7 @@ class _SpotifyBottomBarState extends State<SpotifyBottomBar> {
               ],
             ),
           ),
-          // ── Playback controls ──
+          // ── Controles de reproducción ──
           IconButton(
             onPressed: widget.playerService.skipPrevious,
             icon: const Icon(

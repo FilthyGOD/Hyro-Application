@@ -1,28 +1,28 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-/// Remote data source for task document sources via Supabase.
+/// Fuente de datos remota para task document sources v\u00eda Supabase.
 class SourceRemoteDataSource {
   final SupabaseClient _client;
 
   SourceRemoteDataSource(this._client);
 
-  /// Insert a single source.
+  /// Inserta una fuente.
   Future<void> insertSource(Map<String, dynamic> data) async {
     await _client.from('tarea_fuentes').insert(data);
   }
 
-  /// Update a source by ID.
+  /// Actualiza una fuente por ID.
   Future<void> updateSource(String id, Map<String, dynamic> data) async {
     await _client.from('tarea_fuentes').update(data).eq('id', id);
   }
 
-  /// Delete a source by ID.
+  /// Elimina un source por ID.
   Future<void> deleteSource(String id) async {
     await _client.from('tarea_fuentes').delete().eq('id', id);
   }
 
-  /// Fetch all sources for a user from Supabase.
+  /// Obtiene todas las fuentes de un usuario desde Supabase.
   Future<List<Map<String, dynamic>>> fetchAllForUser(String userId) async {
     final response = await _client
         .from('tarea_fuentes')
@@ -31,7 +31,7 @@ class SourceRemoteDataSource {
     return List<Map<String, dynamic>>.from(response);
   }
 
-  /// Bulk upsert for initial sync.
+  /// Upsert masivo para sincronizaci\u00f3n inicial.
   Future<void> bulkUpsert(List<Map<String, dynamic>> sources) async {
     if (sources.isEmpty) return;
     try {

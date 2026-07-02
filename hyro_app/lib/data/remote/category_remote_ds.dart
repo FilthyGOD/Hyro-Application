@@ -1,28 +1,28 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-/// Remote data source for categories via Supabase.
+/// Fuente de datos remota para categories v\u00eda Supabase.
 class CategoryRemoteDataSource {
   final SupabaseClient _client;
 
   CategoryRemoteDataSource(this._client);
 
-  /// Insert a single category.
+  /// Inserta una categor\u00eda.
   Future<void> insertCategory(Map<String, dynamic> data) async {
     await _client.from('categorias').insert(data);
   }
 
-  /// Update a category by ID.
+  /// Actualiza una categor\u00eda por ID.
   Future<void> updateCategory(String id, Map<String, dynamic> data) async {
     await _client.from('categorias').update(data).eq('id', id);
   }
 
-  /// Delete a category by ID.
+  /// Elimina un category por ID.
   Future<void> deleteCategory(String id) async {
     await _client.from('categorias').delete().eq('id', id);
   }
 
-  /// Fetch all categories for a user from Supabase.
+  /// Obtiene todas las categor\u00edas de un usuario desde Supabase.
   Future<List<Map<String, dynamic>>> fetchAllForUser(String userId) async {
     final response = await _client
         .from('categorias')
@@ -31,7 +31,7 @@ class CategoryRemoteDataSource {
     return List<Map<String, dynamic>>.from(response);
   }
 
-  /// Bulk upsert for initial sync.
+  /// Upsert masivo para sincronizaci\u00f3n inicial.
   Future<void> bulkUpsert(List<Map<String, dynamic>> categories) async {
     if (categories.isEmpty) return;
     try {

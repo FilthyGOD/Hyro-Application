@@ -4,7 +4,7 @@ import '../../providers/auth_provider.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_typography.dart';
 
-/// Sidebar navigation for the Hyro app.
+/// Barra de navegación lateral para la aplicación Hyro.
 class Sidebar extends StatelessWidget {
   final int selectedIndex;
   final ValueChanged<int> onItemSelected;
@@ -57,10 +57,10 @@ class Sidebar extends StatelessWidget {
       child: Column(
         children: [
           const SizedBox(height: 24),
-          // ── Logo ──
+          // ── Logotipo ──
           _buildLogo(),
           const SizedBox(height: 36),
-          // ── Nav items ──
+          // ── Elementos de navegación ──
           ..._items.map((item) {
             return _SidebarItem(
               icon:
@@ -74,7 +74,7 @@ class Sidebar extends StatelessWidget {
             );
           }),
           const Spacer(),
-          // ── User avatar ──
+          // ── Avatar del usuario ──
           if (!collapsed) _buildUserInfo(context),
           const SizedBox(height: 20),
         ],

@@ -12,7 +12,7 @@ class CategoryProvider extends ChangeNotifier {
 
   List<CategoryModel> get categories => _categories;
 
-  /// Auth state callbacks - set externally by AppShell
+  /// Callbacks de estado de autenticaci\u00f3n - establecidos externamente por AppShell
   bool Function() isAuthenticated = () => false;
   String? Function() getUserId = () => null;
 
@@ -23,7 +23,7 @@ class CategoryProvider extends ChangeNotifier {
       isAuthenticated: () => isAuthenticated(),
       getUserId: () => getUserId(),
     );
-    // Defer to after the build frame to avoid notifyListeners() during build
+    // Diferir a despu\u00e9s del frame de construcci\u00f3n para evitar notifyListeners() durante el build
     WidgetsBinding.instance.addPostFrameCallback((_) => _loadCategories());
   }
 

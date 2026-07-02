@@ -91,13 +91,13 @@ class SpotifyPlayerService extends ChangeNotifier {
           notifyListeners();
         }
       } else if (response.statusCode == 204) {
-        // Nothing playing
+        // No se está reproduciendo nada
         if (currentTrack != null) {
           currentTrack = null;
           notifyListeners();
         }
       } else if (response.statusCode == 401) {
-        // Token expired
+        // Token expirado
         authService.logout();
       }
     } catch (e) {

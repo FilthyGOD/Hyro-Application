@@ -7,10 +7,10 @@ import 'package:usage_stats/usage_stats.dart';
 import 'package:device_apps/device_apps.dart';
 import 'package:permission_handler/permission_handler.dart';
 
-/// The package name of our app — used to know when the user is inside Hyro.
+/// El package name de nuestra aplicación — usado para saber cuándo el usuario está dentro de Hyro.
 const _hyroPackageName = 'com.hyro.hyro_app';
 
-// ─── Foreground Task callback (must be top-level) ───────────────────────────
+// ─── Callback de Foreground Task (debe ser de nivel superior) ───────────────────────────
 
 @pragma('vm:entry-point')
 void strictModeTaskStartCallback() {
@@ -18,10 +18,10 @@ void strictModeTaskStartCallback() {
   FlutterForegroundTask.setTaskHandler(StrictOverlayTaskHandler());
 }
 
-// ─── TaskHandler (runs in the foreground-service isolate) ───────────────────
-// Runs in a SEPARATE Dart isolate. Platform channels like FlutterOverlayWindow
-// do NOT work here. We use sendDataToMain() to talk to the main isolate,
-// AND launchApp() to force the main engine back to life so it can process.
+// ─── TaskHandler (se ejecuta en el isolate del servicio en primer plano) ───────────────────
+// Se ejecuta en un isolate Dart SEPARADO. Los platform channels como FlutterOverlayWindow
+// NO funcionan aquí. Usamos sendDataToMain() para hablar con el isolate principal,
+// Y launchApp() para forzar al motor principal a revivir para que pueda procesar.
 
 class StrictOverlayTaskHandler extends TaskHandler {
   String _lastForegroundPackage = '';
@@ -45,11 +45,11 @@ class StrictOverlayTaskHandler extends TaskHandler {
 
       if (events.isEmpty) return;
 
-      // Sort by timestamp descending to find the most recent event
+      // Ordenar por marca de tiempo descendente para encontrar el evento más reciente
       events.sort((a, b) => (b.timeStamp ?? '').compareTo(a.timeStamp ?? ''));
 
       for (var event in events) {
-        // eventType '1' = MOVE_TO_FOREGROUND
+        // eventType '1' = MOVE_TO_FOREGROUND (MOVER_AL_FRENTE)
         if (event.eventType == '1') {
           final pkg = event.packageName;
           if (pkg == null) break;
@@ -60,11 +60,11 @@ class StrictOverlayTaskHandler extends TaskHandler {
               pkg.contains('inputmethod');
 
           if (!isHyro && !isSystemUI) {
-            // User opened a different app
+            // El usuario abrió una app diferente
             if (_lastForegroundPackage != pkg) {
               _lastForegroundPackage = pkg;
 
-              // Resolve human-readable name
+              // Resolver nombre legible por humanos
               String appName = pkg;
               try {
                 Application? app = await DeviceApps.getApp(pkg);
@@ -74,7 +74,7 @@ class StrictOverlayTaskHandler extends TaskHandler {
               debugPrint('[StrictMode][BG] ⚠️ VIOLATION! App: $appName ($pkg)');
               _violationActive = true;
 
-              // Send violation to main isolate
+              // Enviar violación al isolate principal
               FlutterForegroundTask.sendDataToMain({
                 'action': 'VIOLATION',
                 'appName': appName,
@@ -100,7 +100,7 @@ class StrictOverlayTaskHandler extends TaskHandler {
             });
           }
           _lastForegroundPackage = pkg;
-          break; // only process the most recent foreground event
+          break; // solo procesar el evento de primer plano más reciente
         }
       }
     } catch (e, stack) {
@@ -114,7 +114,7 @@ class StrictOverlayTaskHandler extends TaskHandler {
   }
 }
 
-// ─── Service singleton (called from UI isolate) ─────────────────────────────
+// ─── Singleton del servicio (llamado desde el isolate de la UI) ─────────────────────────────
 
 class StrictModeService {
   static final StrictModeService _instance = StrictModeService._internal();
@@ -124,7 +124,7 @@ class StrictModeService {
   bool _isInitialized = false;
   void Function(Object)? _taskDataCallback;
 
-  /// Initialise the foreground-task engine. Safe to call multiple times.
+  /// Inicializa el motor de tareas en primer plano. Seguro de llamar múltiples veces.
   Future<void> init() async {
     debugPrint('[StrictMode][UI] init() — isInitialized=$_isInitialized');
     if (_isInitialized) return;
@@ -152,7 +152,7 @@ class StrictModeService {
     debugPrint('[StrictMode][UI] init() complete');
   }
 
-  /// Returns `true` when both Usage Stats and Overlay permissions are granted.
+  /// Devuelve `true` cuando se otorgan los permisos de Estadísticas de Uso y Superposición.
   Future<bool> checkAndRequestPermissions() async {
     debugPrint('[StrictMode][UI] checkAndRequestPermissions()');
     if (!Platform.isAndroid) return false;
@@ -181,8 +181,8 @@ class StrictModeService {
     if (!isBatteryIgnoring) {
       debugPrint('[StrictMode][UI] Requesting Ignore Battery Optimizations...');
       await Permission.ignoreBatteryOptimizations.request();
-      // Usually battery optimizations popup takes you to settings, 
-      // we return false so the user has to toggle again next time to verify
+      // Usualmente el popup de optimización de batería te lleva a ajustes,
+      // devolvemos falso para que el usuario tenga que alternar de nuevo la próxima vez para verificar
       return false;
     }
     
@@ -190,14 +190,14 @@ class StrictModeService {
     return true;
   }
 
-  /// Starts the foreground service that monitors app usage.
-  /// [onViolationDetected] fires in the main isolate when the user leaves Hyro.
+  /// Inicia el servicio en primer plano que monitorea el uso de la aplicación.
+  /// [onViolationDetected] se dispara en el isolate principal cuando el usuario deja Hyro.
   Future<void> startStrictMonitoring(void Function(String appName) onViolationDetected) async {
     debugPrint('[StrictMode][UI] startStrictMonitoring()');
     if (!Platform.isAndroid) return;
 
-    // Initialize the communication port BEFORE starting the service
-    // This is REQUIRED for sendDataToMain() / addTaskDataCallback() to work
+    // Inicializar el puerto de comunicación ANTES de iniciar el servicio
+    // Esto es REQUERIDO para que sendDataToMain() / addTaskDataCallback() funcionen
     FlutterForegroundTask.initCommunicationPort();
     debugPrint('[StrictMode][UI] Communication port initialized');
 
@@ -208,7 +208,7 @@ class StrictModeService {
     );
     debugPrint('[StrictMode][UI] Foreground service started');
 
-    // Listen for messages from the background TaskHandler.
+    // Escuchar mensajes del TaskHandler en segundo plano.
     _taskDataCallback = (data) {
       debugPrint('[StrictMode][UI] 📩 Received data from BG: $data');
 
@@ -219,7 +219,7 @@ class StrictModeService {
           final appName = data['appName'] as String? ?? 'otra app';
           debugPrint('[StrictMode][UI] ⚠️ Violation received — app: $appName');
 
-          // Pause the timer when UI catches up
+          // Pausar el temporizador cuando la UI se ponga al día
           onViolationDetected(appName);
 
         } else if (action == 'RETURNED') {
@@ -231,7 +231,7 @@ class StrictModeService {
     debugPrint('[StrictMode][UI] ✅ Task data callback registered, monitoring active!');
   }
 
-  /// Stops the foreground service and dismisses any visible overlay.
+  /// Detiene el servicio en primer plano y descarta cualquier superposición visible.
   Future<void> stopStrictMonitoring() async {
     debugPrint('[StrictMode][UI] stopStrictMonitoring()');
     if (!Platform.isAndroid) return;

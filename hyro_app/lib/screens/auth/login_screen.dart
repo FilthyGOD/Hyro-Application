@@ -1,4 +1,4 @@
-﻿import 'dart:async';
+import 'dart:async';
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -28,7 +28,7 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   void initState() {
     super.initState();
-    // Fire saludo on the first frame after the widget is built
+    // Dispara el saludo en el primer frame después de que el widget se construye
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _fireInitialSaludo();
     });
@@ -41,7 +41,7 @@ class _LoginScreenState extends State<LoginScreen> {
     final mascot = context.read<MascotController>();
     if (mascot.isLoaded) {
       mascot.triggerSaludo();
-      // After the greeting animation completes (~3s), go back to movimiento_suave
+      // Después de que la animación de saludo termina (~3s), regresa a movimiento_suave
       Future.delayed(const Duration(seconds: 3), () {
         if (mounted) {
           mascot.triggerVolver();
@@ -49,7 +49,7 @@ class _LoginScreenState extends State<LoginScreen> {
         }
       });
     } else {
-      // If not loaded yet, listen for load then fire
+      // Si aún no ha cargado, escucha la carga y luego dispara
       void listener() {
         if (mascot.isLoaded && mounted) {
           mascot.removeListener(listener);
@@ -65,8 +65,8 @@ class _LoginScreenState extends State<LoginScreen> {
 
       mascot.addListener(listener);
     }
-    
-    // Auth Listener to auto-close LoginScreen when OAuth completes via external browser (Deep Link)
+
+    // Listener de Auth para cerrar LoginScreen automáticamente cuando OAuth se complete vía navegador externo (Deep Link)
     final authProvider = context.read<AuthProvider>();
     void authListener() {
       if (mounted && authProvider.isAuthenticated && !authProvider.isGuest) {
@@ -75,6 +75,7 @@ class _LoginScreenState extends State<LoginScreen> {
         appShellKey.currentState?.navigateTo(0);
       }
     }
+
     authProvider.addListener(authListener);
   }
 
@@ -85,7 +86,7 @@ class _LoginScreenState extends State<LoginScreen> {
       if (mounted) {
         final mascot = context.read<MascotController>();
         mascot.triggerSaludo();
-        _startGreetingLoop(); // schedule next
+        _startGreetingLoop(); // programa el siguiente
       }
     });
   }
@@ -93,7 +94,7 @@ class _LoginScreenState extends State<LoginScreen> {
   void _onMascotTap() {
     final mascot = context.read<MascotController>();
     mascot.triggerSaludo();
-    // Reset the greeting loop timer
+    // Reinicia el temporizador del bucle de saludo
     _startGreetingLoop();
   }
 
@@ -119,8 +120,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
       if (mounted) {
         setState(() => _isLoading = false);
-        if (auth.isAuthenticated &&
-            !auth.isGuest) {
+        if (auth.isAuthenticated && !auth.isGuest) {
           Navigator.of(context).popUntil((route) => route.isFirst);
           appShellKey.currentState?.navigateTo(0);
         }
@@ -137,7 +137,7 @@ class _LoginScreenState extends State<LoginScreen> {
         setState(() => _isLoading = false);
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text('Error al iniciar sesiÃ³n: $e')));
+        ).showSnackBar(SnackBar(content: Text('Error al iniciar sesion: $e')));
       }
     }
   }
@@ -153,7 +153,9 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF101422), // Deep navy from designs
+      backgroundColor: const Color(
+        0xFF101422,
+      ), // Azul marino oscuro de los diseños
       body: SafeArea(
         child: Stack(
           children: [
@@ -219,7 +221,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                     child: Column(
                       children: [
-                        const SizedBox(height: 56), // Space for avatar
+                        const SizedBox(height: 56), // Espacio para el avatar
                         _buildInputField(
                           label: 'EMAIL',
                           hint: 'user@Hyro.com',
@@ -228,16 +230,16 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                         const SizedBox(height: 24),
                         _buildInputField(
-                          label: 'CONTRASEÃ‘A',
-                          hint: 'â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢',
+                          label: 'CONTRASEÃÑA',
+                          hint: '...........',
                           controller: _passwordController,
                           prefixIcon: Icons.lock_outline,
                           isPassword: true,
-                          actionText: 'Olvide mi contraseÃ±a',
+                          actionText: 'Olvide mi contraseña',
                         ),
                         const SizedBox(height: 32),
                         _buildGradientButton(
-                          text: 'Iniciar SesiÃ³n',
+                          text: 'Iniciar Sesion',
                           onPressed: _login,
                         ),
                         const SizedBox(height: 32),
@@ -326,7 +328,7 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget _buildDesktopLayout() {
     return Row(
       children: [
-        // Left Side
+        // Lado Izquierdo
         Expanded(
           flex: 4,
           child: Container(
@@ -351,7 +353,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       TextSpan(
                         text: 'potencial.',
                         style: TextStyle(color: Color(0xFF3CDCF8)),
-                      ), // Cyan
+                      ), // Cian
                     ],
                   ),
                 ),
@@ -369,11 +371,11 @@ class _LoginScreenState extends State<LoginScreen> {
             ),
           ),
         ),
-        // Right Side
+        // Lado Derecho
         Expanded(
           flex: 5,
           child: Container(
-            color: Colors.transparent, // Let animated background show through
+            color: Colors.transparent, // Deja que se vea el fondo animado
             child: Center(
               child: Container(
                 constraints: const BoxConstraints(maxWidth: 450),
@@ -550,14 +552,14 @@ class _LoginScreenState extends State<LoginScreen> {
     required VoidCallback onPressed,
     bool isDesktop = false,
   }) {
-    // Only gradient button in both images, maybe desktop is slightly different but mostly same
+    // Único botón con gradiente en ambas imágenes, tal vez en escritorio es un poco diferente pero mayormente igual
     return Container(
       width: double.infinity,
       height: 56,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(12),
         gradient: const LinearGradient(
-          colors: [Color(0xFF3CDCF8), Color(0xFFCC88FF)], // Cyan to purple
+          colors: [Color(0xFF3CDCF8), Color(0xFFCC88FF)], // De Cian a Púrpura
           begin: Alignment.centerLeft,
           end: Alignment.centerRight,
         ),
@@ -628,8 +630,7 @@ class _LoginScreenState extends State<LoginScreen> {
     await auth.signInWithGoogle();
     if (mounted) {
       setState(() => _isLoading = false);
-      if (auth.isAuthenticated &&
-          !auth.isGuest) {
+      if (auth.isAuthenticated && !auth.isGuest) {
         Navigator.of(context).popUntil((route) => route.isFirst);
         appShellKey.currentState?.navigateTo(0);
       }
@@ -664,7 +665,7 @@ class _LoginScreenState extends State<LoginScreen> {
         padding: const EdgeInsets.symmetric(vertical: 16),
         side: BorderSide(
           color: Colors.white.withValues(alpha: isDesktop ? 0.0 : 0.08),
-        ), // Desktop has no border, just background
+        ), // Escritorio no tiene borde, solo fondo
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         backgroundColor:
             isDesktop
@@ -679,7 +680,7 @@ class _LoginScreenState extends State<LoginScreen> {
     final actionColor =
         isMobile
             ? const Color(0xFF3CDCF8)
-            : const Color(0xFFCC88FF); // Mobile uses Cyan, Desktop uses Purple
+            : const Color(0xFFCC88FF); // Móvil usa Cian, Escritorio usa Púrpura
     final prefix = isMobile ? "Â¿No tienes una cuenta? " : "Â¿Nuevo en Hyro? ";
     final suffix = isMobile ? "RegÃ­strate" : "Crear una cuenta";
 

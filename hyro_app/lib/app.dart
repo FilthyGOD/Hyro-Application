@@ -30,7 +30,7 @@ import 'package:window_manager/window_manager.dart';
 import 'package:tray_manager/tray_manager.dart';
 import 'dart:io';
 
-/// Root widget for the Hyro app.
+/// Widget raíz para la aplicación Hyro.
 class HyroApp extends StatelessWidget {
   final Isar isar;
   const HyroApp({super.key, required this.isar});
@@ -102,7 +102,7 @@ class AppShell extends StatefulWidget {
 
 class AppShellState extends State<AppShell>
     with WidgetsBindingObserver, WindowListener, TrayListener {
-  int _selectedIndex = 2; // Default to Focus
+  int _selectedIndex = 2; // Por defecto en Focus
   int _previousIndex = 2;
   bool _initialized = false;
   late final PageController _pageController;
@@ -190,7 +190,7 @@ class AppShellState extends State<AppShell>
         label.contains('Salir')) {
       windowManager.setPreventClose(false);
 
-      // Attempt cleanup but force exit after 500ms to guarantee termination
+      // Intenta limpiar, pero fuerza la salida después de 500ms para garantizar el cierre
       Future.delayed(const Duration(milliseconds: 500), () => exit(0));
 
       try {
@@ -210,7 +210,7 @@ class AppShellState extends State<AppShell>
     if (_lastUserId != currentUserId || _lastIsGuest != currentIsGuest) {
       _lastUserId = currentUserId;
       _lastIsGuest = currentIsGuest;
-      // Defer to avoid calling notifyListeners() during the build phase
+      // Diferido para evitar llamar a notifyListeners() durante la fase de construcción
       WidgetsBinding.instance.addPostFrameCallback((_) {
         _loadGamificationData();
       });
@@ -231,7 +231,7 @@ class AppShellState extends State<AppShell>
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
-      // Don't auto-pause on desktop, let users minimize to tray and keep timer running.
+      // No pausar automáticamente en escritorio, permite minimizar a la bandeja del sistema y mantener el temporizador.
       return;
     }
 
@@ -259,7 +259,7 @@ class AppShellState extends State<AppShell>
     super.didChangeDependencies();
     if (!_initialized) {
       _initialized = true;
-      // Defer to avoid calling notifyListeners() during the build phase
+      // Diferido para evitar llamar a notifyListeners() durante la fase de construcción
       WidgetsBinding.instance.addPostFrameCallback((_) {
         _loadGamificationData();
       });
@@ -267,14 +267,14 @@ class AppShellState extends State<AppShell>
   }
 
   Future<void> _loadGamificationData() async {
-    // Give TimerCubit access to auth for userId lookups
+    // Dar acceso de autenticación al TimerCubit para búsqueda de userId
     context.read<TimerCubit>().authProvider = widget.authProvider;
 
     final userId = widget.authProvider.supabaseUserId;
     final isAuth = widget.authProvider.isAuthenticated;
 
-    // Wire auth state into task & category providers so they
-    // can dual-write to Supabase when the user is authenticated
+    // Conecta el estado de autenticación a los proveedores de tareas y categorías
+    // para que puedan escribir de forma dual en Supabase cuando el usuario está autenticado
     final categoryProvider = context.read<CategoryProvider>();
     categoryProvider.isAuthenticated = () => isAuth;
     categoryProvider.getUserId = () => userId;
@@ -285,7 +285,7 @@ class AppShellState extends State<AppShell>
     taskProvider.getUserId = () => userId;
     await taskProvider.reload();
 
-    // Clean up orphaned tasks that don't belong to any existing category
+    // Limpia las tareas huérfanas que no pertenecen a ninguna categoría existente
     final validNames = categoryProvider.categories.map((c) => c.name).toList();
     final validIds = categoryProvider.categories.map((c) => c.id).toList();
     await taskProvider.deleteOrphanedTasks(validNames, validIds);
@@ -301,7 +301,7 @@ class AppShellState extends State<AppShell>
     await missionsProvider.initialize();
     if (!mounted) return;
 
-    // ── Schedule notifications with real data ──
+    // ── Programar notificaciones con datos reales ──
     try {
       final statsProvider = context.read<StatsProvider>();
       final pendingTasks =
@@ -315,7 +315,7 @@ class AppShellState extends State<AppShell>
         hadSessionToday: hadSessionToday,
       );
 
-      // Schedule reminders for tasks due in 1-2 days
+      // Programar recordatorios para tareas que vencen en 1-2 días
       final taskDueData =
           pendingTasks
               .where((t) => t.dueDate != null)
@@ -326,7 +326,7 @@ class AppShellState extends State<AppShell>
       debugPrint('⚠️ Error programando notificaciones: $e');
     }
 
-    // SM starts in cargando → transition to movimiento_suave
+    // SM comienza en cargando → transición a movimiento_suave
     final mascot = context.read<MascotController>();
     mascot.triggerVolver();
     mascot.markInitialLoadComplete();
@@ -376,14 +376,14 @@ class AppShellState extends State<AppShell>
 
     final mascot = context.read<MascotController>();
 
-    // Leaving Focus, Shop, or Stats → reset mascot to idle
+    // Saliendo de Focus, Shop, o Stats → reinicia la mascota a inactivo
     if (previousIndex == 2 || previousIndex == 0 || previousIndex == 1) {
       mascot.triggerVolver();
     }
 
-    // Arriving at Focus → resume animation if timer is running
+    // Llegando a Focus → reanuda la animación si el temporizador está corriendo
     if (index == 2) {
-      // Also fire volver to ensure we leave any other animation state
+      // También dispara volver para asegurar que salimos de cualquier otro estado de animación
       mascot.triggerVolver();
       if (timerState.isRunning) {
         if (timerState.mode == TimerMode.pomodoro) {
@@ -394,7 +394,7 @@ class AppShellState extends State<AppShell>
       }
     }
 
-    // Arriving at Stats → trigger racha animation
+    // Llegando a Stats → dispara la animación de racha
     if (index == 1) {
       final streak = context.read<StatsProvider>().currentStreak;
       mascot.triggerRacha(streak);
@@ -460,7 +460,7 @@ class AppShellState extends State<AppShell>
             ],
           ),
         ),
-        // Floating mascot overlay — only visible on Focus (0) and Tasks (1), and not during completed session view
+        // Capa superpuesta de la mascota flotante — visible solo en Focus (0) y Tareas (1), y no durante la vista de sesión completada
         Builder(
           builder: (context) {
             final timerState = context.watch<TimerCubit>().state;

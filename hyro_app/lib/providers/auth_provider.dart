@@ -47,10 +47,10 @@ class AuthProvider extends ChangeNotifier {
       
   bool get isGuest => _currentUser?.usernameOrEmail == 'guest_local';
 
-  /// Returns the Supabase user UUID, or null if not signed in via Supabase.
+  /// Devuelve el UUID del usuario en Supabase, o null si no tiene sesión iniciada vía Supabase.
   String? get supabaseUserId => Supabase.instance.client.auth.currentUser?.id;
 
-  // â”€â”€â”€ Supabase Auth Listener â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─── Listener de Autenticación de Supabase ──────────────────────────────────
 
   void _listenAuthChanges() {
     _authSubscription = Supabase.instance.client.auth.onAuthStateChange.listen((
@@ -65,8 +65,8 @@ class AuthProvider extends ChangeNotifier {
     });
   }
 
-  /// After Supabase OAuth sign-in, create/update the local Isar user
-  /// and sync local guest progress to the cloud (only on first sign-in).
+  /// Después del inicio de sesión OAuth con Supabase, crea/actualiza el usuario local en Isar
+  /// y sincroniza el progreso local de invitado a la nube (solo en el primer inicio de sesión).
   bool _isSyncingUser = false;
 
   Future<void> _syncSupabaseUserToIsar(User supabaseUser) async {
@@ -112,7 +112,7 @@ class AuthProvider extends ChangeNotifier {
       }
 
       await isar.writeTxn(() async {
-        // Log out any other active users
+        // Cierra la sesión de cualquier otro usuario activo
         final activeUsers =
             await isar.userProfiles
                 .filter()
@@ -129,7 +129,7 @@ class AuthProvider extends ChangeNotifier {
 
       final isConnected = await _hasInternet();
       if (!isConnected) {
-        debugPrint('âš ï¸ No internet connection detected. Skipping sync.');
+        debugPrint('⚠️ No internet connection detected. Skipping sync.');
         _currentUser = user;
         _isLoading = false;
         _isSyncingUser = false;
@@ -137,7 +137,7 @@ class AuthProvider extends ChangeNotifier {
         return;
       }
 
-      // 3. Sincronizar gamificaciÃ³n a Supabase (solo tiene efecto la primera vez)
+      /// Obtiene los datos de gamificación actuales del usuario desde Isarbase (solo tiene efecto la primera vez)
       try {
         await Supabase.instance.client.rpc('sincronizar_perfil_local', params: {
           'p_nivel': localNivel,
@@ -145,12 +145,12 @@ class AuthProvider extends ChangeNotifier {
           'p_monedas': localMonedas,
           'p_compras_ids': localCompras,
         });
-        debugPrint('âœ… GamificaciÃ³n sincronizada (nivel: $localNivel)');
+        debugPrint('✅ Gamificación sincronizada (nivel: $localNivel)');
       } catch (e) {
-        debugPrint('âš ï¸ Error sincronizando gamificaciÃ³n: $e');
+        debugPrint('⚠️ Error sincronizando gamificación: $e');
       }
 
-      // 4. Sincronizar tareas, categorÃ­as, notas, PDFs y flashcards
+      // 4. Sincronizar tareas, categorías, notas, PDFs y flashcards
       try {
         final supabaseClient = Supabase.instance.client;
         final syncService = SyncService(
@@ -169,24 +169,24 @@ class AuthProvider extends ChangeNotifier {
 
         final syncResult = await syncService.syncAllToRemote(supabaseUser.id);
         if (syncResult.success) {
-          debugPrint('âœ… Datos de tareas sincronizados: $syncResult');
+          debugPrint('✅ Datos de tareas sincronizados: $syncResult');
         } else {
-          debugPrint('âš ï¸ Sync parcial: ${syncResult.errors}');
+          debugPrint('⚠️ Sync parcial: ${syncResult.errors}');
         }
 
         final pullResult = await syncService.pullFromRemote(supabaseUser.id);
         if (pullResult.success) {
-          debugPrint('âœ… Datos remotos descargados: $pullResult');
+          debugPrint('✅ Datos remotos descargados: $pullResult');
         } else {
-          debugPrint('âš ï¸ Pull parcial: ${pullResult.errors}');
+          debugPrint('⚠️ Pull parcial: ${pullResult.errors}');
         }
       } catch (e) {
-        debugPrint('âš ï¸ Error sincronizando datos de tareas: $e');
+        debugPrint('⚠️ Error sincronizando datos de tareas: $e');
       }
 
       _currentUser = user;
     } catch (e) {
-      debugPrint('âš ï¸ Error crÃ­tico en _syncSupabaseUserToIsar: $e');
+      debugPrint('⚠️ Error crítico en _syncSupabaseUserToIsar: $e');
     } finally {
       _isLoading = false;
       _isSyncingUser = false;
@@ -204,27 +204,30 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
-  // â”€â”€â”€ Load Session â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─── Cargar Sesión ──────────────────────────────────────────────────────────
 
   Future<void> _loadUserSession() async {
     _isLoading = true;
     notifyListeners();
 
-    // 1. Check for an active Supabase session first
+    // 1. Verificar primero si hay una sesión activa de Supabase
     final supabaseSession = Supabase.instance.client.auth.currentSession;
     if (supabaseSession != null) {
       await _syncSupabaseUserToIsar(Supabase.instance.client.auth.currentUser!);
-      return; // _syncSupabaseUserToIsar already sets _isLoading = false
+      return; 
     }
 
-    // 2. Fall back to local Isar user
+    /// Desconecta de la sesión actual (Supabase o Invitado local)
+    /// Si era un usuario de Supabase, mantiene la cuenta local pero marca `isActive = false`.
+
+    /// Actualiza los atributos de gamificación del usuario localmente en Isar
     final activeUser =
         await isar.userProfiles
             .filter()
             .isActivelyLoggedInEqualTo(true)
             .findFirst();
 
-    // Artificial delay for splash screen reduced for better UX
+    /// Intenta reiniciar la racha a cero localmente (para cuando perdemos el día)
     await Future.delayed(const Duration(milliseconds: 500));
 
     if (activeUser != null) {
@@ -253,10 +256,11 @@ class AuthProvider extends ChangeNotifier {
     }
 
     await isar.writeTxn(() async {
-      final activeUsers = await isar.userProfiles
-          .filter()
-          .isActivelyLoggedInEqualTo(true)
-          .findAll();
+      final activeUsers =
+          await isar.userProfiles
+              .filter()
+              .isActivelyLoggedInEqualTo(true)
+              .findAll();
 
       for (var u in activeUsers) {
         u.isActivelyLoggedIn = false;
@@ -271,54 +275,48 @@ class AuthProvider extends ChangeNotifier {
   }
 
   void _listenForDeepLinksPC() async {
-    // Ignoramos mÃ³vil y web porque ahÃ­ jala nativo
     if (kIsWeb || Platform.isAndroid || Platform.isIOS) return;
 
     final appLinks = AppLinks();
 
-    // 1. Radar inicial: Por si Windows abriÃ³ la app a travÃ©s del link
     try {
       final initialUri = await appLinks.getInitialLink();
       if (initialUri != null && initialUri.scheme == 'io.supabase.hyroapp') {
-        debugPrint('ðŸš¨ [Hyro Debug] Link inicial atrapado: $initialUri');
+        debugPrint('🚨 [Hyro Debug] Link inicial atrapado: $initialUri');
         await Supabase.instance.client.auth.getSessionFromUrl(initialUri);
       }
     } catch (e) {
-      debugPrint('ðŸš¨ [Hyro Debug] Error leyendo link inicial: $e');
+      debugPrint('🚨 [Hyro Debug] Error leyendo link inicial: $e');
     }
 
-    // 2. Radar de flujo: Por si Windows se lo manda a la app ya abierta
     _linkSubscription = appLinks.uriLinkStream.listen(
       (uri) async {
         if (uri.scheme != 'io.supabase.hyroapp') return;
-        debugPrint('ðŸš¨ [Hyro Debug] Link atrapado en stream: $uri');
+        debugPrint('🚨 [Hyro Debug] Link atrapado en stream: $uri');
         try {
           await Supabase.instance.client.auth.getSessionFromUrl(uri);
         } catch (e) {
-          debugPrint('ðŸš¨ [Hyro Debug] Error en Supabase con el link: $e');
+          debugPrint('🚨 [Hyro Debug] Error en Supabase con el link: $e');
         }
       },
       onError: (err) {
-        debugPrint('ðŸš¨ [Hyro Debug] Error en el stream: $err');
+        debugPrint('🚨 [Hyro Debug] Error en el stream: $err');
       },
     );
   }
 
-  // â”€â”€â”€ Sign In Methods â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─── Métodos de Inicio de Sesión ──────────────────────────────────────────
 
-  /// Google Auth unificado para todas las plataformas (Escritorio, Web y Móvil)
   Future<void> signInWithGoogle() async {
     _isLoading = true;
     notifyListeners();
 
     try {
-      // 🌐 FLUJO UNIFICADO: Abrir el navegador
-      // Esto evita problemas de huellas SHA-1 en Android para Google Sign In nativo
       await Supabase.instance.client.auth.signInWithOAuth(
         OAuthProvider.google,
-        // Este es el enlace personalizado que ya registraste en Supabase
         redirectTo: 'io.supabase.hyroapp://login-callback/',
       );
+      // ─── Acciones de Autenticación ──────────────────────────────────────
       // La redirección será atrapada por Supabase y _listenAuthChanges hará el resto.
     } catch (e) {
       debugPrint('Google Sign-In error: $e');
@@ -328,7 +326,7 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
-  /// Real email/password Login with Supabase
+  /// Inicio de sesión real con email/contraseña usando Supabase
   Future<void> signInWithEmail(String email, String password) async {
     _isLoading = true;
     notifyListeners();
@@ -348,7 +346,7 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
-  /// Real email/password Signup with Supabase
+  /// Registro real con email/contraseña usando Supabase
   Future<void> signUpWithEmail(String email, String password, String name) async {
     _isLoading = true;
     notifyListeners();
@@ -372,7 +370,7 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
-  /// Local email login (existing behavior).
+  /// Inicio de sesión local con email (comportamiento existente).
   Future<void> loginPersonal(String email, String name) async {
     _isLoading = true;
     notifyListeners();
@@ -414,13 +412,13 @@ class AuthProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  // â”€â”€â”€ Logout â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─── Cierre de Sesión ────────────────────────────────────────────────────────
 
   Future<void> logout() async {
     try {
       await Supabase.instance.client.auth.signOut();
 
-      // Limpiamos tambiÃ©n la sesiÃ³n nativa de Google solo en mÃ³vil (evita crash en Windows)
+      // Limpiamos también la sesión nativa de Google solo en móvil (evita crash en Windows)
       if (!kIsWeb && (Platform.isAndroid || Platform.isIOS)) {
         final googleSignIn = GoogleSignIn();
         if (await googleSignIn.isSignedIn()) {
@@ -451,7 +449,7 @@ class AuthProvider extends ChangeNotifier {
       debugPrint('Error limpiando Hive en logout: $e');
     }
     
-    // Fallback to guest mode
+    // Volver al modo invitado
     await _loginAsGuest();
   }
 

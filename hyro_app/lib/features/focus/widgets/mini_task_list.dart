@@ -8,7 +8,7 @@ import '../../categories/category_provider.dart';
 import '../../../app.dart';
 import '../../../data/models/task_model.dart';
 
-/// Mini task list shown on the Focus screen.
+/// Mini lista de tareas que se muestra en la pantalla de Enfoque.
 class MiniTaskList extends StatelessWidget {
   const MiniTaskList({super.key});
 
@@ -23,7 +23,7 @@ class MiniTaskList extends StatelessWidget {
   List<TaskModel> _getTopTasks(List<TaskModel> tasks) {
     final uncompleted = tasks.where((t) => !t.isCompleted).toList();
 
-    // Sort ascending by due date (closest first). Nulls go to the bottom.
+    // Ordenar de forma ascendente por fecha de vencimiento (las más cercanas primero). Los nulos van al fondo.
     uncompleted.sort((a, b) {
       if (a.dueDate == null && b.dueDate == null) return 0;
       if (a.dueDate == null) return 1;

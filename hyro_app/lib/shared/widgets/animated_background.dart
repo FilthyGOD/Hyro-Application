@@ -3,8 +3,8 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import '../../core/theme/app_colors.dart';
 
-/// A breathing animated background that displays blurred color blobs
-/// using the Focus Aura Lucid palette.
+/// Un fondo animado que respira y muestra burbujas de color difuminadas
+/// utilizando la paleta de colores de Focus Aura Lucid.
 class AnimatedBackground extends StatefulWidget {
   const AnimatedBackground({super.key});
 
@@ -19,7 +19,7 @@ class _AnimatedBackgroundState extends State<AnimatedBackground>
   @override
   void initState() {
     super.initState();
-    // A slow, calming breathing cycle (e.g., 6 seconds per breath cycle)
+    // Un ciclo de respiración lento y calmante (por ejemplo, 6 segundos por ciclo de respiración)
     _controller = AnimationController(
       vsync: this,
       duration: const Duration(seconds: 6),
@@ -39,11 +39,11 @@ class _AnimatedBackgroundState extends State<AnimatedBackground>
       child: Stack(
         fit: StackFit.expand,
         children: [
-          // Primary color (Electric Blue) blob
+          // Burbuja de color primario (Azul Eléctrico)
           AnimatedBuilder(
             animation: _controller,
             builder: (context, child) {
-              final scale = 1.0 + (_controller.value * 0.2); // 1.0 to 1.2
+              final scale = 1.0 + (_controller.value * 0.2); // de 1.0 a 1.2
               final dx = math.sin(_controller.value * math.pi) * 30;
               final dy = math.cos(_controller.value * math.pi) * 20;
 
@@ -65,7 +65,7 @@ class _AnimatedBackgroundState extends State<AnimatedBackground>
             },
           ),
 
-          // Secondary color (Vibrant Violet) blob
+          // Burbuja de color secundario (Violeta Vibrante)
           AnimatedBuilder(
             animation: _controller,
             builder: (context, child) {
@@ -91,7 +91,7 @@ class _AnimatedBackgroundState extends State<AnimatedBackground>
             },
           ),
 
-          // Tertiary color (Soft Neon Purple) blob
+          // Burbuja de color terciario (Púrpura Neón Suave)
           AnimatedBuilder(
             animation: _controller,
             builder: (context, child) {
@@ -116,7 +116,7 @@ class _AnimatedBackgroundState extends State<AnimatedBackground>
             },
           ),
 
-          // Heavy glassmorphism blur applied over all blobs
+          // Fuerte difuminado de cristalismo aplicado sobre todas las burbujas
           Positioned.fill(
             child: BackdropFilter(
               filter: ImageFilter.blur(sigmaX: 80, sigmaY: 80),

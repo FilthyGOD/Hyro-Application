@@ -13,7 +13,7 @@ import 'package:provider/provider.dart';
 import '../../providers/ui_provider.dart';
 import '../../features/focus/bloc/timer_cubit.dart';
 
-/// Main layout scaffold with responsive sidebar + content + radio bar.
+/// Scaffold del diseño principal con barra lateral responsiva + contenido + barra de radio.
 class MainLayout extends StatefulWidget {
   final int selectedIndex;
   final ValueChanged<int> onNavigate;
@@ -33,10 +33,10 @@ class MainLayout extends StatefulWidget {
 class _MainLayoutState extends State<MainLayout> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
-  // State to control sidebar visibility on desktop/tablet
+  // Estado para controlar la visibilidad de la barra lateral en escritorio/tableta
   bool _isDesktopSidebarVisible = true;
 
-  // No mappings needed, index is 1-to-1
+  // No se necesitan mapeos, el índice es 1 a 1
 
   late final SpotifyAuthService _spotifyAuthService;
   late final SpotifyPlayerService _spotifyPlayerService;
@@ -79,9 +79,9 @@ class _MainLayoutState extends State<MainLayout> {
                 final sidebarWidth = isTablet ? 72.0 : 220.0;
                 return Stack(
                   children: [
-                    // Animated breathing background
+                    // Fondo animado que respira
                     const Positioned.fill(child: AnimatedBackground()),
-                    // Main Content Region
+                    // Región de contenido principal
                     Positioned.fill(
                       child: Center(
                         child: ConstrainedBox(
@@ -90,7 +90,7 @@ class _MainLayoutState extends State<MainLayout> {
                         ),
                       ),
                     ),
-                    // Floating Spotify Base
+                    // Base flotante de Spotify
                     Positioned(
                       bottom: 24,
                       left: 0,
@@ -113,7 +113,7 @@ class _MainLayoutState extends State<MainLayout> {
                         ),
                       ),
                     ),
-                    // Optional backdrop for a nicer effect
+                    // Fondo oscuro opcional para un mejor efecto
                     if (_isDesktopSidebarVisible && !isTimerRunning)
                       Positioned.fill(
                         child: GestureDetector(
@@ -144,7 +144,7 @@ class _MainLayoutState extends State<MainLayout> {
                           },
                         ),
                       ),
-                    // Sliding Sidebar
+                    // Barra lateral deslizante
                     AnimatedPositioned(
                       duration: const Duration(milliseconds: 300),
                       curve: Curves.easeInOut,
@@ -176,9 +176,9 @@ class _MainLayoutState extends State<MainLayout> {
       key: _scaffoldKey,
       body: Stack(
         children: [
-          // Animated breathing background
+          // Fondo animado que respira
           const Positioned.fill(child: AnimatedBackground()),
-          // Main Content Region
+          // Región de contenido principal
           Positioned.fill(child: widget.child),
           Positioned(
             bottom: 16,

@@ -20,14 +20,14 @@ import 'package:hive_flutter/hive_flutter.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'sync_status.dart';
 
-/// Orchestrates the one-time migration of ALL local data to Supabase
-/// when a guest user creates an account.
+/// Orquesta la migraci\u00f3n \u00fanica de TODOS los datos locales a Supabase
+/// cuando un usuario invitado crea una cuenta.
 ///
-/// SYNC ORDER (respects foreign key constraints):
+/// ORDEN DE SINCRONIZACI\u00d3N (respeta restricciones de clave for\u00e1nea):
 /// 1. Categorías (no FK dependencies)
 /// 2. Tareas (depends on categorías)
-/// 3. Notas (depends on tareas)
-/// 4. Fuentes/PDFs (depends on tareas + file upload)
+/// 3. Notas (depende de tareas)
+/// 4. Fuentes/PDFs (depende de tareas + subida de archivos)
 /// 5. Flashcards (depends on tareas)
 class SyncService {
   final CategoryLocalDataSource _categoryLocal;
@@ -171,7 +171,7 @@ class SyncService {
   /// PULL ORDER (respects FK constraints):
   /// 1. Categorías (no FK dependencies)
   /// 2. Tareas (depends on categorías)
-  /// 3. Notas (depends on tareas)
+  /// 3. Notas (depende de tareas)
   /// 4. Fuentes (depends on tareas)
   /// 5. Flashcards (depends on tareas)
   Future<SyncResult> pullFromRemote(String userId) async {

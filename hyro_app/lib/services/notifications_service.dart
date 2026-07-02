@@ -17,20 +17,20 @@ class NotificationsService {
 
   NotificationsService._();
 
-  // ─── Notification ID Ranges ──────────────────────────────────────
-  // 0-2     = Test notifications (debug buttons)
-  // 100     = Pomodoro timer
-  // 200     = Morning daily
-  // 201     = Afternoon daily
-  // 202     = Evening daily
-  // 300-399 = Task due reminders
+  // ─── Rangos de ID de notificaciones ──────────────────────────────
+  // 0-2     = Notificaciones de prueba (botones de depuración)
+  // 100     = Temporizador Pomodoro
+  // 200     = Diaria de la mañana
+  // 201     = Diaria de la tarde
+  // 202     = Diaria de la noche
+  // 300-399 = Recordatorios de vencimiento de tareas
   // ─────────────────────────────────────────────────────────────────
 
   // ═══════════════════════════════════════════════════════════════════
-  // MESSAGE BANKS
+  // BANCOS DE MENSAJES
   // ═══════════════════════════════════════════════════════════════════
 
-  /// Morning messages (8:00 AM) — motivational, energetic
+  /// Mensajes matutinos (8:00 AM) — motivadores, enérgicos
   static const List<String> _morningTitles = [
     '🌅 ¡Buenos días!',
     '☀️ ¡Arriba!',
@@ -47,7 +47,7 @@ class NotificationsService {
     'Cada sesión cuenta. ¡Empieza tu día con un Pomodoro!',
   ];
 
-  /// Afternoon messages (2:00 PM) — reminder, push
+  /// Mensajes de la tarde (2:00 PM) — recordatorios, empujón
   static const List<String> _afternoonTitles = [
     '⏰ ¡No lo dejes para después!',
     '📚 ¡Es hora de estudiar!',
@@ -64,7 +64,7 @@ class NotificationsService {
     'Es el momento ideal para avanzar con tus {n} pendientes.',
   ];
 
-  /// Evening messages (8:00 PM) — friendly urgency, day closure
+  /// Mensajes vespertinos (8:00 PM) — urgencia amigable, cierre del día
   static const List<String> _eveningTitles = [
     '🌙 Último chance del día',
     '😴 Antes de dormir...',
@@ -81,7 +81,7 @@ class NotificationsService {
     '¿Hoy sí vas a estudiar? ¡No lo decepciones!',
   ];
 
-  /// Streak at risk messages (streak > 0 but no session today)
+  /// Mensajes de riesgo de racha (racha > 0 pero sin sesión hoy)
   static const List<String> _streakRiskTitles = [
     '🔥 ¡Racha en peligro!',
     '😰 ¡No la pierdas!',
@@ -94,7 +94,7 @@ class NotificationsService {
     'Llevas {streak} días seguidos. ¡No dejes que se pierda por hoy! ',
   ];
 
-  /// Inactivity messages (2+ days without session) — for future use
+  /// Mensajes de inactividad (2+ días sin sesión) — para uso futuro
   // ignore: unused_field
   static const List<String> _inactivityTitles = [
     '😞 Te extrañamos...',
@@ -110,7 +110,7 @@ class NotificationsService {
   ];
 
   // ═══════════════════════════════════════════════════════════════════
-  // INITIALIZATION
+  // INICIALIZACIÓN
   // ═══════════════════════════════════════════════════════════════════
 
   Future<void> init() async {
@@ -143,7 +143,7 @@ class NotificationsService {
     await flutterLocalNotificationsPlugin.initialize(
       settings: initializationSettings,
       onDidReceiveNotificationResponse: (NotificationResponse response) {
-        // Manejar el tap en la notificación
+        // Asegúrate de usar el ID correcto para pruebas (por ejemplo, id = 0, 1 o 2);
       },
     );
   }
@@ -165,21 +165,21 @@ class NotificationsService {
   }
 
   // ═══════════════════════════════════════════════════════════════════
-  // DAILY SCHEDULED NOTIFICATIONS
+  // NOTIFICACIONES DIARIAS PROGRAMADAS
   // ═══════════════════════════════════════════════════════════════════
 
-  /// Schedules the 3 daily notifications (morning, afternoon, evening).
-  /// Uses real data to fill in placeholders.
-  /// Call this after loading tasks/stats on app startup and on user change.
+  /// Programa las 3 notificaciones diarias (mañana, tarde, noche).
+  /// Utiliza datos reales para llenar los marcadores de posición.
+  /// Llama a esto después de cargar tareas/estadísticas al inicio y al cambiar de usuario.
   Future<void> scheduleDailyNotifications({
     required int pendingTaskCount,
     required int currentStreak,
     bool hadSessionToday = false,
   }) async {
-    // Cancel previous daily notifications before rescheduling
+    // Cancela notificaciones diarias anteriores antes de reprogramar
     await _cancelDailyNotifications();
 
-    // Decide message variant based on context
+    // Decide la variante del mensaje según el contexto
     final bool streakAtRisk = currentStreak > 0 && !hadSessionToday;
 
     // =========================================================================
@@ -188,9 +188,9 @@ class NotificationsService {
     // en los recuadros de abajo (ej. hour: 8 para las 8:00 AM).
     // =========================================================================
 
-    // ── Morning 8:00 AM ──
+    // ── Mañana 8:00 AM ──
     if (streakAtRisk && currentStreak >= 3) {
-      // Use streak risk messages in the morning if streak is at risk
+      // Usa mensajes de riesgo de racha en la mañana si la racha está en riesgo
       final idx = _random.nextInt(_streakRiskTitles.length);
       await _scheduleDailyAtTime(
         id: 200,
@@ -218,7 +218,7 @@ class NotificationsService {
       );
     }
 
-    // ── Afternoon 2:00 PM ──
+    // ── Tarde 2:00 PM ──
     {
       final idx = _random.nextInt(_afternoonTitles.length);
       await _scheduleDailyAtTime(
@@ -234,9 +234,9 @@ class NotificationsService {
       );
     }
 
-    // ── Evening 8:00 PM ──
+    // ── Noche 8:00 PM ──
     if (streakAtRisk) {
-      // If still no session by evening, nudge harder
+      // Si aún no hay sesión para la noche, presiona un poco más
       final idx = _random.nextInt(_streakRiskTitles.length);
       await _scheduleDailyAtTime(
         id: 202,
@@ -269,7 +269,7 @@ class NotificationsService {
     );
   }
 
-  /// Schedules a notification that repeats daily at the given [hour]:[minute].
+  /// Programa una notificación que se repite diariamente a la [hour]:[minute] especificada.
   Future<void> _scheduleDailyAtTime({
     required int id,
     required int hour,
@@ -280,7 +280,7 @@ class NotificationsService {
     final now = DateTime.now();
     var targetDate = DateTime(now.year, now.month, now.day, hour, minute);
 
-    // If the time has already passed today, schedule for tomorrow
+    // Si la hora ya pasó hoy, programar para mañana
     if (targetDate.isBefore(now)) {
       targetDate = targetDate.add(const Duration(days: 1));
     }
@@ -309,7 +309,7 @@ class NotificationsService {
       notificationDetails: platformDetails,
       androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
       matchDateTimeComponents:
-          DateTimeComponents.time, // Repeat daily at same time
+          DateTimeComponents.time, // Repetir diariamente a la misma hora
     );
   }
 
@@ -320,15 +320,15 @@ class NotificationsService {
   }
 
   // ═══════════════════════════════════════════════════════════════════
-  // TASK DUE DATE REMINDERS
+  // RECORDATORIOS DE VENCIMIENTO DE TAREAS
   // ═══════════════════════════════════════════════════════════════════
 
-  /// Schedules reminder notifications for tasks due in 1 or 2 days.
-  /// [tasks] is a list of maps with keys: 'id' (String), 'title' (String), 'dueDate' (DateTime).
+  /// Programa notificaciones de recordatorio para tareas que vencen en 1 o 2 días.
+  /// [tasks] es una lista de mapas con claves: 'id' (String), 'title' (String), 'dueDate' (DateTime).
   Future<void> scheduleTaskDueReminders(
     List<Map<String, dynamic>> tasks,
   ) async {
-    // Cancel all previous task due reminders (range 300-399)
+    // Cancela los recordatorios anteriores de tareas (rango 300-399)
     for (int i = 300; i < 400; i++) {
       await flutterLocalNotificationsPlugin.cancel(id: i);
     }
@@ -337,7 +337,7 @@ class NotificationsService {
     int slotIndex = 0;
 
     for (final task in tasks) {
-      if (slotIndex >= 100) break; // Max 100 task reminders
+      if (slotIndex >= 100) break; // Máximo 100 recordatorios de tareas
 
       final dueDate = task['dueDate'] as DateTime?;
       if (dueDate == null) continue;
@@ -355,7 +355,7 @@ class NotificationsService {
       final String timeLabel = daysLeft == 1 ? 'mañana' : 'en 2 días';
       final String dayLabel = daysLeft == 1 ? '1 día' : '2 días';
 
-      // Pick one of two message styles randomly
+      // Elige uno de dos estilos de mensaje aleatoriamente
       final String title;
       final String body;
       if (_random.nextBool()) {
@@ -367,7 +367,7 @@ class NotificationsService {
             '"$taskTitle" se vence $timeLabel. ¡No la dejes para el último momento!';
       }
 
-      // Schedule at 9:00 AM of today (or tomorrow if passed)
+      // Programar para mañana
       var targetDate = DateTime(now.year, now.month, now.day, 9, 0);
       if (targetDate.isBefore(now)) {
         targetDate = targetDate.add(const Duration(days: 1));
@@ -406,21 +406,21 @@ class NotificationsService {
   }
 
   // ═══════════════════════════════════════════════════════════════════
-  // CANCEL ALL
+  // CANCELAR TODAS
   // ═══════════════════════════════════════════════════════════════════
 
-  /// Cancels all scheduled notifications (daily + task reminders).
-  /// Useful on logout or user switch.
+  /// Cancela todas las notificaciones programadas (diarias + recordatorios de tareas).
+  /// Útil al cerrar sesión o cambiar de usuario.
   Future<void> cancelAllScheduledNotifications() async {
     await flutterLocalNotificationsPlugin.cancelAll();
     debugPrint('🗑️ Todas las notificaciones programadas canceladas');
   }
 
   // ═══════════════════════════════════════════════════════════════════
-  // HELPERS
+  // FUNCIONES AUXILIARES
   // ═══════════════════════════════════════════════════════════════════
 
-  /// Replace {n} and {streak} placeholders in message templates.
+  /// Reemplaza {n} y {streak} con valores reales.
   String _fillPlaceholders(String template, int taskCount, int streak) {
     return template
         .replaceAll('{n}', taskCount.toString())
@@ -428,7 +428,7 @@ class NotificationsService {
   }
 
   // ═══════════════════════════════════════════════════════════════════
-  // TEST / DEBUG METHODS — use real message banks + real data
+  // MÉTODOS DE PRUEBA / DEPURACIÓN — usan bancos de mensajes reales + datos reales
   // ═══════════════════════════════════════════════════════════════════
 
   Future<void> testTaskReminderDay(String taskName, int daysLeft) async {
@@ -468,7 +468,7 @@ class NotificationsService {
     );
   }
 
-  /// Test morning notification with real message bank and real data.
+  /// Muestra una notificación inmediata de prueba con un título, cuerpo y payload fijos.
   Future<void> testMorningMotivation({
     int pendingTasks = 3,
     int streak = 0,
@@ -496,7 +496,7 @@ class NotificationsService {
     );
   }
 
-  /// Test afternoon notification with real message bank and real data.
+  /// Prueba la notificación de la tarde con banco de mensajes reales y datos reales.
   Future<void> testAfternoonMotivation({
     int pendingTasks = 3,
     int streak = 0,
@@ -524,7 +524,7 @@ class NotificationsService {
     );
   }
 
-  /// Test evening notification with real message bank and real data.
+  /// Prueba la notificación de la noche con banco de mensajes reales y datos reales.
   Future<void> testEveningMotivation({
     int pendingTasks = 3,
     int streak = 0,
@@ -552,7 +552,7 @@ class NotificationsService {
     );
   }
 
-  /// Test pomodoro end with real messages.
+  /// Prueba de finalización de pomodoro con mensajes reales.
   Future<void> testPomodoroEnd() async {
     const AndroidNotificationDetails androidDetails =
         AndroidNotificationDetails(
@@ -568,7 +568,7 @@ class NotificationsService {
       iOS: DarwinNotificationDetails(),
     );
 
-    // Randomly pick pomodoro or break end message
+    // Elige aleatoriamente un mensaje de fin de pomodoro o de descanso
     final isPomodoro = _random.nextBool();
     final title =
         isPomodoro ? '🎯 ¡Pomodoro completado!' : '🔔 ¡Se acabó el descanso!';
@@ -586,7 +586,7 @@ class NotificationsService {
   }
 
   // ═══════════════════════════════════════════════════════════════════
-  // POMODORO TIMER NOTIFICATIONS (existing)
+  // NOTIFICACIONES DEL TEMPORIZADOR POMODORO (existente)
   // ═══════════════════════════════════════════════════════════════════
 
   Future<void> schedulePomodoroEndNotification(
@@ -633,7 +633,7 @@ class NotificationsService {
   }
 
   // ═══════════════════════════════════════════════════════════════════
-  // INDIVIDUAL TASK REMINDERS (existing — for 30min before dueDate)
+  // RECORDATORIOS INDIVIDUALES DE TAREAS (existente — 30min antes del vencimiento)
   // ═══════════════════════════════════════════════════════════════════
 
   Future<void> scheduleTaskReminder(
@@ -647,12 +647,12 @@ class NotificationsService {
       return;
     }
 
-    // Check if dueDate is in the past
+    // Verificar si la fecha de vencimiento ya pasó
     if (dueDate.isBefore(DateTime.now())) return;
 
     DateTime targetTime = dueDate.subtract(const Duration(minutes: 30));
     if (targetTime.isBefore(DateTime.now())) {
-      targetTime = dueDate; // try exact time
+      targetTime = dueDate; // intentar hora exacta
       if (targetTime.isBefore(DateTime.now())) return;
     }
 

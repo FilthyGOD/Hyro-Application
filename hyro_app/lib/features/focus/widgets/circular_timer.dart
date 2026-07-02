@@ -4,7 +4,7 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/utils/format_time.dart';
 
-/// The circular Pomodoro timer widget with animated glow.
+/// El widget de temporizador Pomodoro circular con brillo animado.
 class CircularTimer extends StatelessWidget {
   final int remainingSeconds;
   final double progress;
@@ -27,7 +27,7 @@ class CircularTimer extends StatelessWidget {
       child: Stack(
         alignment: Alignment.center,
         children: [
-          // ── Background circle ──
+          // ── Círculo de fondo ──
           CustomPaint(
             size: Size(size, size),
             painter: _TimerRingPainter(
@@ -38,7 +38,7 @@ class CircularTimer extends StatelessWidget {
               strokeWidth: 6,
             ),
           ),
-          // ── Time display ──
+          // ── Pantalla de tiempo ──
           Padding(
             padding: EdgeInsets.all(size * 0.15),
             child: FittedBox(
@@ -86,7 +86,7 @@ class _TimerRingPainter extends CustomPainter {
     const startAngle = -pi / 2;
     final sweepAngle = 2 * pi * progress;
 
-    // Track
+    // Pista
     final trackPaint =
         Paint()
           ..color = trackColor
@@ -96,7 +96,7 @@ class _TimerRingPainter extends CustomPainter {
 
     canvas.drawCircle(center, radius, trackPaint);
 
-    // Progress arc
+    // Arco de progreso
     if (progress > 0) {
       final progressPaint =
           Paint()
@@ -113,7 +113,7 @@ class _TimerRingPainter extends CustomPainter {
         progressPaint,
       );
 
-      // Glow effect
+      // Efecto de resplandor
       final glowPaint =
           Paint()
             ..color = glowColor

@@ -3,7 +3,7 @@ import '../local/note_local_ds.dart';
 import '../remote/note_remote_ds.dart';
 import '../models/tarea_nota_model.dart';
 
-/// Repository that abstracts local and remote task note operations.
+/// Repositorio que abstrae las operaciones locales y remotas de notas de tareas.
 class NoteRepository {
   final NoteLocalDataSource _local;
   final NoteRemoteDataSource _remote;
@@ -20,12 +20,12 @@ class NoteRepository {
         _isAuthenticated = isAuthenticated,
         _getUserId = getUserId;
 
-  /// Get all notes for a task from local storage.
+  /// Obtiene todas las notas de una tarea desde el almacenamiento local.
   List<TareaNotaModel> getNotesForTask(String tareaId) {
     return _local.getNotesForTask(tareaId);
   }
 
-  /// Pull all notes from Supabase and replace local data.
+  /// Descarga todas las notas de Supabase y reemplaza los datos locales.
   Future<void> pullRemoteToLocal() async {
     final userId = _getUserId();
     if (userId == null) return;

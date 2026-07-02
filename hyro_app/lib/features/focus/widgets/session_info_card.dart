@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../shared/widgets/glass_card.dart';
 
-/// Session counter (e.g., "4/4") and Total Focus time (e.g., "2.5h") cards.
+/// Tarjetas de contador de sesión (ej. "4/4") y Tiempo Total de Enfoque (ej. "2.5h").
 class SessionInfoCard extends StatelessWidget {
   final int completedSessions;
   final int totalFocusMinutes;

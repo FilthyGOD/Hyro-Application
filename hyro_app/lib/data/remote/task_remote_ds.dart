@@ -1,32 +1,32 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-/// Remote data source for tasks via Supabase.
+/// Fuente de datos remota para tasks v\u00eda Supabase.
 class TaskRemoteDataSource {
   final SupabaseClient _client;
 
   TaskRemoteDataSource(this._client);
 
-  /// Insert a single task.
+  /// Inserta una tarea.
   Future<void> insertTask(Map<String, dynamic> data) async {
     await _client.from('tareas').insert(data);
   }
 
-  /// Update a task by ID.
+  /// Actualiza una tarea por ID.
   Future<void> updateTask(String id, Map<String, dynamic> data) async {
     await _client.from('tareas').update(data).eq('id', id);
   }
 
-  /// Delete a task by ID.
+  /// Elimina un task por ID.
   Future<void> deleteTask(String id) async {
-    // Delete child records first (Supabase doesn't auto-cascade)
+    // Eliminar registros hijos primero (Supabase no hace cascada autom\u00e1tica)
     await _client.from('tarea_cards').delete().eq('tarea_id', id);
     await _client.from('tarea_notas').delete().eq('tarea_id', id);
     await _client.from('tarea_fuentes').delete().eq('tarea_id', id);
     await _client.from('tareas').delete().eq('id', id);
   }
 
-  /// Fetch all tasks for a user from Supabase.
+  /// Obtiene todas las tareas de un usuario desde Supabase.
   Future<List<Map<String, dynamic>>> fetchAllForUser(String userId) async {
     final response = await _client
         .from('tareas')
@@ -35,7 +35,7 @@ class TaskRemoteDataSource {
     return List<Map<String, dynamic>>.from(response);
   }
 
-  /// Bulk upsert for initial sync. Uses ON CONFLICT DO NOTHING semantics.
+  /// Upsert masivo para sincronizaci\u00f3n inicial. Usa sem\u00e1ntica ON CONFLICT DO NOTHING.
   Future<void> bulkUpsert(List<Map<String, dynamic>> tasks) async {
     if (tasks.isEmpty) return;
     try {

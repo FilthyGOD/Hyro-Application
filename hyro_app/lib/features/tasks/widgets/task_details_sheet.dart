@@ -43,17 +43,17 @@ class _TaskDetailsDialogState extends State<TaskDetailsDialog>
 
   late TaskModel _currentTask;
   bool _isUploadingDocument = false;
-  int _selectedTab = 1; // Start on Chat tab
+  int _selectedTab = 1; // Comienza en la pestaña Chat
 
-  // Flashcards state — backed by CardRepository
+  // Estado de Flashcards — respaldado por CardRepository
   final List<TareaCardModel> _flashcards = [];
   late TextEditingController _cardFrontController;
   late TextEditingController _cardBackController;
 
-  // Notes — backed by NoteRepository
+  // Notas — respaldado por NoteRepository
   final List<TareaNotaModel> _chatNotes = [];
 
-  // Fuentes (documents) — backed by SourceRepository
+  // Fuentes (documentos) — respaldado por SourceRepository
   final List<TareaFuenteModel> _fuentes = [];
 
   late NoteRepository _noteRepo;
@@ -70,7 +70,7 @@ class _TaskDetailsDialogState extends State<TaskDetailsDialog>
     _cardFrontController = TextEditingController();
     _cardBackController = TextEditingController();
 
-    // Build repositories
+    // Construir repositorios
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final auth = context.read<AuthProvider>();
       final supabaseClient = Supabase.instance.client;
@@ -113,7 +113,7 @@ class _TaskDetailsDialogState extends State<TaskDetailsDialog>
       });
     }
 
-    // Migrate old attached document URLs to TareaFuenteModel
+    // Migrar antiguas URL de documentos adjuntos a TareaFuenteModel
     if (_currentTask.attachedDocumentUrls != null &&
         _currentTask.attachedDocumentUrls!.isNotEmpty) {
       final oldUrls = List<String>.from(_currentTask.attachedDocumentUrls!);
@@ -121,7 +121,7 @@ class _TaskDetailsDialogState extends State<TaskDetailsDialog>
       bool hasMigrated = false;
 
       for (final url in oldUrls) {
-        // Prevent duplicate migration
+        // Prevenir migración duplicada
         if (!_fuentes.any((f) => f.rutaArchivo == url)) {
           final uri = Uri.tryParse(url);
           final originalName = uri?.pathSegments.last.split('_').skip(1).join('_') ?? 'Documento';
@@ -168,13 +168,13 @@ class _TaskDetailsDialogState extends State<TaskDetailsDialog>
   }
 
   void _saveTask() {
-    // Rebuild notes from chat note models
+    // Reconstruir notas a partir de modelos de notas de chat
     final allNotes = _chatNotes.map((n) => n.contenido).join('\n---\n');
     final updated = _currentTask.copyWith(notes: allNotes);
     context.read<TaskProvider>().updateTask(updated);
   }
 
-  // ── Fuentes (Documents) ──────────────────────────────────────────────────
+  // ── Fuentes (Documentos) ────────────────────────────────────────────────
 
   Future<void> _pickAndUploadDocument() async {
     try {
@@ -192,17 +192,17 @@ class _TaskDetailsDialogState extends State<TaskDetailsDialog>
         final fuenteId = const Uuid().v4();
         final storageName = '${fuenteId}_$sanitizedName';
 
-        // Determine file extension for tipo_archivo
+        // Determinar extensión de archivo para tipo_archivo
         final ext = originalName.contains('.')
             ? originalName.split('.').last.toLowerCase()
             : null;
 
-        // Check if user is authenticated — upload to bucket
+        // Comprobar si el usuario está autenticado — subir al bucket
         final auth = context.read<AuthProvider>();
         String rutaArchivo;
 
         if (auth.isAuthenticated) {
-          // Upload to Supabase Storage bucket
+          // Subir al bucket de Supabase Storage
           await Supabase.instance.client.storage
               .from('task_documents')
               .upload(storageName, file);
@@ -211,11 +211,11 @@ class _TaskDetailsDialogState extends State<TaskDetailsDialog>
               .from('task_documents')
               .getPublicUrl(storageName);
         } else {
-          // Guest mode — store local path; will be uploaded during sync
+          // Modo invitado — almacenar ruta local; se subirá durante la sincronización
           rutaArchivo = file.path;
         }
 
-        // Create the TareaFuenteModel and persist via repository
+        // Crear TareaFuenteModel y persistirlo mediante el repositorio
         final fuente = TareaFuenteModel(
           id: fuenteId,
           tareaId: _currentTask.id,
@@ -251,14 +251,14 @@ class _TaskDetailsDialogState extends State<TaskDetailsDialog>
     try {
       await _sourceRepo.deleteSource(fuente.id);
 
-      // Try to remove file from bucket if it's a remote URL
+      // Intentar eliminar el archivo del bucket si es una URL remota
       if (!fuente.isLocal) {
         try {
-          // Extract the storage path from the public URL
+          // Extraer la ruta de almacenamiento de la URL pública
           final uri = Uri.tryParse(fuente.rutaArchivo);
           if (uri != null) {
             final segments = uri.pathSegments;
-            // URL pattern: .../storage/v1/object/public/task_documents/{file}
+            // Patrón de URL: .../storage/v1/object/public/task_documents/{file}
             final bucketIdx = segments.indexOf('task_documents');
             if (bucketIdx != -1 && bucketIdx + 1 < segments.length) {
               final storagePath = segments.sublist(bucketIdx + 1).join('/');
@@ -280,7 +280,7 @@ class _TaskDetailsDialogState extends State<TaskDetailsDialog>
     }
   }
 
-  // ── Chat (Notes) ────────────────────────────────────────────────────────
+  // ── Chat (Notas) ────────────────────────────────────────────────────────
 
   void _sendChatMessage() {
     final text = _chatInputController.text.trim();
@@ -350,7 +350,7 @@ class _TaskDetailsDialogState extends State<TaskDetailsDialog>
     );
   }
 
-  // ── Cards (Flashcards) ──────────────────────────────────────────────────
+  // ── Tarjetas (Flashcards) ───────────────────────────────────────────────
 
   void _addFlashcard() {
     final front = _cardFrontController.text.trim();
@@ -482,7 +482,7 @@ class _TaskDetailsDialogState extends State<TaskDetailsDialog>
     );
   }
 
-  // ── Helpers ──────────────────────────────────────────────────────────────
+  // ── Funciones Auxiliares ────────────────────────────────────────────────
 
   IconData _iconForExtension(String fileName) {
     final lower = fileName.toLowerCase();
@@ -503,7 +503,7 @@ class _TaskDetailsDialogState extends State<TaskDetailsDialog>
   }
 
   // ═════════════════════════════════════════════════════════════════════════
-  // BUILD
+  // CONSTRUCCIÓN
   // ═════════════════════════════════════════════════════════════════════════
 
   @override
@@ -517,10 +517,10 @@ class _TaskDetailsDialogState extends State<TaskDetailsDialog>
           padding: EdgeInsets.zero,
           child: Column(
             children: [
-              // ── Header ──
+              // ── Encabezado ──
               _buildHeader(),
 
-              // ── Tab content ──
+              // ── Contenido de Pestaña ──
               Expanded(
                 child: AnimatedSwitcher(
                   duration: const Duration(milliseconds: 250),
@@ -528,7 +528,7 @@ class _TaskDetailsDialogState extends State<TaskDetailsDialog>
                 ),
               ),
 
-              // ── Bottom Navigation ──
+              // ── Navegación Inferior ──
               _buildBottomNav(),
             ],
           ),
@@ -537,7 +537,7 @@ class _TaskDetailsDialogState extends State<TaskDetailsDialog>
     );
   }
 
-  // ── HEADER ──────────────────────────────────────────────────────────────
+  // ── ENCABEZADO ──────────────────────────────────────────────────────────
 
   Widget _buildHeader() {
     return Container(
@@ -549,7 +549,7 @@ class _TaskDetailsDialogState extends State<TaskDetailsDialog>
       ),
       child: Row(
         children: [
-          // Activity icon
+          // Icono de actividad
           Container(
             width: 36,
             height: 36,
@@ -595,7 +595,7 @@ class _TaskDetailsDialogState extends State<TaskDetailsDialog>
     );
   }
 
-  // ── TAB CONTENT ─────────────────────────────────────────────────────────
+  // ── CONTENIDO DE PESTAÑA ────────────────────────────────────────────────
 
   Widget _buildTabContent() {
     switch (_selectedTab) {
@@ -610,7 +610,7 @@ class _TaskDetailsDialogState extends State<TaskDetailsDialog>
     }
   }
 
-  // ── FUENTES TAB ─────────────────────────────────────────────────────────
+  // ── PESTAÑA FUENTES ─────────────────────────────────────────────────────
 
   Widget _buildFuentesTab() {
     return Padding(
@@ -619,11 +619,11 @@ class _TaskDetailsDialogState extends State<TaskDetailsDialog>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Upload button
+          // Botón de subir
           _buildUploadArea(),
           const SizedBox(height: 16),
 
-          // File count
+          // Conteo de archivos
           Row(
             children: [
               Icon(Icons.folder_open_rounded,
@@ -639,7 +639,7 @@ class _TaskDetailsDialogState extends State<TaskDetailsDialog>
           ),
           const SizedBox(height: 12),
 
-          // Document list
+          // Lista de documentos
           Expanded(
             child: _fuentes.isEmpty
                 ? Center(
@@ -751,13 +751,13 @@ class _TaskDetailsDialogState extends State<TaskDetailsDialog>
               onTap: () async {
                 final url = fuente.rutaArchivo;
                 if (fuente.isLocal) {
-                  // Open local file
+                  // Abrir archivo local
                   final localUri = Uri.file(url);
                   if (await canLaunchUrl(localUri)) {
                     await launchUrl(localUri);
                   }
                 } else {
-                  // Open remote URL
+                  // Abrir URL remota
                   final remoteUri = Uri.parse(url);
                   if (await canLaunchUrl(remoteUri)) {
                     await launchUrl(remoteUri);
@@ -800,7 +800,7 @@ class _TaskDetailsDialogState extends State<TaskDetailsDialog>
     );
   }
 
-  // ── NOTAS TAB ───────────────────────────────────────────────────────────
+  // ── PESTAÑA NOTAS ───────────────────────────────────────────────────────
 
   Widget _buildChatTab() {
     return Padding(
@@ -808,7 +808,7 @@ class _TaskDetailsDialogState extends State<TaskDetailsDialog>
       padding: const EdgeInsets.all(0),
       child: Column(
         children: [
-          // Messages area
+          // Área de mensajes
           Expanded(
             child: _chatNotes.isEmpty
                 ? Center(
@@ -838,7 +838,7 @@ class _TaskDetailsDialogState extends State<TaskDetailsDialog>
                   ),
           ),
 
-          // Disclaimer
+          // Aviso legal
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
             child: Text(
@@ -850,7 +850,7 @@ class _TaskDetailsDialogState extends State<TaskDetailsDialog>
             ),
           ),
 
-          // Input area
+          // Área de entrada
           _buildChatInput(),
         ],
       ),
@@ -890,7 +890,7 @@ class _TaskDetailsDialogState extends State<TaskDetailsDialog>
               Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  // Copy button
+                  // Botón de copiar
                   _chatActionIcon(Icons.copy_rounded, () async {
                     await Clipboard.setData(ClipboardData(text: text));
                     if (mounted) {
@@ -900,10 +900,10 @@ class _TaskDetailsDialogState extends State<TaskDetailsDialog>
                     }
                   }),
                   const SizedBox(width: 8),
-                  // Edit button
+                  // Botón de editar
                   _chatActionIcon(Icons.edit_rounded, () => _showEditNoteDialog(index)),
                   const SizedBox(width: 8),
-                  // Delete button
+                  // Botón de eliminar
                   _chatActionIcon(Icons.delete_outline_rounded, () {
                     showDialog(
                       context: context,
@@ -1007,7 +1007,7 @@ class _TaskDetailsDialogState extends State<TaskDetailsDialog>
     );
   }
 
-  // ── CARDS TAB ───────────────────────────────────────────────────────────
+  // ── PESTAÑA TARJETAS ────────────────────────────────────────────────────
 
   Widget _buildCardsTab() {
     return Padding(
@@ -1015,11 +1015,11 @@ class _TaskDetailsDialogState extends State<TaskDetailsDialog>
       padding: const EdgeInsets.all(16),
       child: Column(
         children: [
-          // Card creator
+          // Creador de tarjetas
           _buildCardCreator(),
           const SizedBox(height: 16),
 
-          // Card count
+          // Conteo de tarjetas
           Row(
             children: [
               Icon(Icons.style_rounded,
@@ -1035,7 +1035,7 @@ class _TaskDetailsDialogState extends State<TaskDetailsDialog>
           ),
           const SizedBox(height: 12),
 
-          // Flashcard list
+          // Lista de Flashcards
           Expanded(
             child: _flashcards.isEmpty
                 ? Center(
@@ -1251,7 +1251,7 @@ class _TaskDetailsDialogState extends State<TaskDetailsDialog>
 
 
 
-  // ── BOTTOM NAVIGATION BAR ──────────────────────────────────────────────
+  // ── BARRA DE NAVEGACIÓN INFERIOR ────────────────────────────────────────
 
   Widget _buildBottomNav() {
     return Container(

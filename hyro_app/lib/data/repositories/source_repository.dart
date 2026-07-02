@@ -3,7 +3,7 @@ import '../local/source_local_ds.dart';
 import '../remote/source_remote_ds.dart';
 import '../models/tarea_fuente_model.dart';
 
-/// Repository that abstracts local and remote task source operations.
+/// Repositorio que abstrae las operaciones locales y remotas de fuentes de tareas.
 class SourceRepository {
   final SourceLocalDataSource _local;
   final SourceRemoteDataSource _remote;
@@ -20,12 +20,12 @@ class SourceRepository {
         _isAuthenticated = isAuthenticated,
         _getUserId = getUserId;
 
-  /// Get all sources for a task from local storage.
+  /// Obtiene todas las fuentes de una tarea desde el almacenamiento local.
   List<TareaFuenteModel> getSourcesForTask(String tareaId) {
     return _local.getSourcesForTask(tareaId);
   }
 
-  /// Pull all sources from Supabase and replace local data.
+  /// Descarga todas las fuentes de Supabase y reemplaza los datos locales.
   Future<void> pullRemoteToLocal() async {
     final userId = _getUserId();
     if (userId == null) return;

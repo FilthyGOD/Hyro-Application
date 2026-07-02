@@ -1,11 +1,11 @@
-﻿import 'dart:async';
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../features/shop/models/shop_item.dart';
 import 'package:hyro/models/user_profile.dart';
 import 'package:isar/isar.dart';
 
-/// Manages the shop catalog, user inventory, and purchases via Supabase or Isar.
+/// Administra el catálogo de la tienda, el inventario del usuario y las compras a través de Supabase o Isar.
 class ShopProvider extends ChangeNotifier {
   final _supabase = Supabase.instance.client;
   final Isar isar;
@@ -17,7 +17,7 @@ class ShopProvider extends ChangeNotifier {
   bool isLoading = false;
   String? error;
 
-  // â”€â”€â”€ Load Catalog + Inventory â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─── Cargar Catálogo e Inventario ──────────────────────────────────────────
 
   static const List<ShopItem> _defaultCatalog = [
     ShopItem(
@@ -38,7 +38,7 @@ class ShopProvider extends ChangeNotifier {
       categoria: 'Sombrero',
       precio: 1,
     ),
-    ShopItem(id: 201, nombre: 'MonÃ³culo', categoria: 'Cara', precio: 1),
+    ShopItem(id: 201, nombre: 'Monóculo', categoria: 'Cara', precio: 1),
     ShopItem(id: 202, nombre: 'Gafas de Sol', categoria: 'Cara', precio: 1),
     ShopItem(id: 203, nombre: 'Nariz de Payaso', categoria: 'Cara', precio: 1),
     ShopItem(id: 301, nombre: 'Smoking', categoria: 'Traje', precio: 1),
@@ -46,7 +46,7 @@ class ShopProvider extends ChangeNotifier {
     ShopItem(id: 303, nombre: 'Traje Payaso', categoria: 'Traje', precio: 1),
   ];
 
-  /// Fetches the full store catalog and the user's owned items.
+  /// Obtiene el catálogo completo de la tienda y los artículos propiedad del usuario.
   Future<void> loadShop(String? userId) async {
     isLoading = true;
     error = null;
@@ -54,7 +54,7 @@ class ShopProvider extends ChangeNotifier {
 
     try {
       try {
-        // 1. Load catalog from Supabase
+        // 1. Cargar catálogo desde Supabase
         final catalogData =
             await _supabase
                     .from('objetos_tienda')
@@ -64,7 +64,7 @@ class ShopProvider extends ChangeNotifier {
 
         if (catalogData.isEmpty) {
           throw Exception(
-            'CatÃ¡logo vacÃ­o (posible bloqueo de RLS o sin conexiÃ³n)',
+            'Catálogo vacío (posible bloqueo de RLS o sin conexión)',
           );
         }
 
@@ -73,12 +73,12 @@ class ShopProvider extends ChangeNotifier {
                 .map((e) => ShopItem.fromJson(Map<String, dynamic>.from(e)))
                 .toList();
       } catch (e) {
-        debugPrint('Fallback to local catalog due to DB error: $e');
+        debugPrint('Usando catálogo local por error de BD: $e');
         catalog = List.from(_defaultCatalog);
       }
 
       if (userId == null) {
-        // Local inventory and coins
+        // Inventario local y monedas
         final activeUser =
             await isar.userProfiles
                 .filter()
@@ -88,7 +88,7 @@ class ShopProvider extends ChangeNotifier {
           ownedItemIds = activeUser.comprasLocales.toSet();
         }
       } else {
-        // Cloud inventory
+        // Inventario en la nube
         final inventoryData =
             await _supabase
                     .from('inventario_usuarios')
@@ -108,11 +108,11 @@ class ShopProvider extends ChangeNotifier {
     }
   }
 
-  // â”€â”€â”€ Purchase â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─── Compra ──────────────────────────────────────────────────────────────
 
-  /// Attempts to purchase an item.
+  /// Intenta comprar un artículo.
   Future<bool> purchaseItem(String? userId, int itemId) async {
-    // Local pre-check
+    // Verificación previa local
     if (ownedItemIds.contains(itemId)) {
       error = 'Ya posees este objeto';
       notifyListeners();
@@ -121,7 +121,7 @@ class ShopProvider extends ChangeNotifier {
 
     try {
       if (userId == null) {
-        // Local purchase
+        // Compra local
         final item = catalog.firstWhere((i) => i.id == itemId);
         final activeUser =
             await isar.userProfiles
@@ -162,7 +162,7 @@ class ShopProvider extends ChangeNotifier {
       }
     } on PostgrestException catch (e) {
       error = _friendlyError(e.message);
-      debugPrint('Purchase error: ${e.message}');
+      debugPrint('Error en la compra: ${e.message}');
       notifyListeners();
       return false;
     } catch (e) {
@@ -173,12 +173,12 @@ class ShopProvider extends ChangeNotifier {
     }
   }
 
-  // â”€â”€â”€ Helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─── Funciones Auxiliares ──────────────────────────────────────────
 
-  /// Whether the user owns a given item.
+  /// Comprueba si el usuario posee un artículo dado.
   bool ownsItem(int itemId) => ownedItemIds.contains(itemId);
 
-  /// Get catalog items filtered by category keyword.
+  /// Obtiene los artículos del catálogo filtrados por palabra clave de categoría.
   List<ShopItem> itemsByCategory(String category) =>
       catalog
           .where(
@@ -187,7 +187,7 @@ class ShopProvider extends ChangeNotifier {
           )
           .toList();
 
-  /// Translate Postgres exceptions into user-friendly messages.
+  /// Traduce las excepciones de Postgres a mensajes fáciles de entender por el usuario.
   String _friendlyError(String pgMsg) {
     if (pgMsg.contains('Monedas insuficientes')) {
       return 'No tienes suficientes monedas';

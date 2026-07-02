@@ -76,7 +76,7 @@ class StrictModeViolationCard extends StatelessWidget {
     // Ej: com.whatsapp, org.telegram.messenger, com.instagram.android
     final parts = name.split('.');
     if (parts.length >= 2) {
-      // Generalmente la segunda palabra es el nombre si empieza con com, org, net etc
+      // Generalmente la segunda palabra es el nombre si empieza con com, org, net, etc.
       if (['com', 'org', 'net', 'io'].contains(parts[0])) {
         name = parts[1];
       } else {

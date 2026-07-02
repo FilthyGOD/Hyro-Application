@@ -3,7 +3,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import '../../../core/theme/app_typography.dart';
 
-/// Full screen overlay shown when the timer is paused.
+/// Pantalla superpuesta a pantalla completa que se muestra cuando el temporizador está pausado.
 class PauseOverlay extends StatefulWidget {
   final VoidCallback onResume;
 
@@ -16,7 +16,7 @@ class PauseOverlay extends StatefulWidget {
 class _PauseOverlayState extends State<PauseOverlay>
     with SingleTickerProviderStateMixin {
   Timer? _timer;
-  int _remainingSeconds = 300; // 5 minutes
+  int _remainingSeconds = 300; // 5 minutos
 
   late AnimationController _fadeController;
   late Animation<double> _fadeAnimation;
@@ -44,7 +44,7 @@ class _PauseOverlayState extends State<PauseOverlay>
           _remainingSeconds--;
         });
       } else {
-        // Stops tracking at 00:00 wait for user to confirm
+        // Deja de rastrear en 00:00, espera a que el usuario confirme
         _timer?.cancel();
       }
     });

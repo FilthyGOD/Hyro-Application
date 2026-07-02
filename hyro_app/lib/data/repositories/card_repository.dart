@@ -4,7 +4,7 @@ import '../local/task_local_ds.dart';
 import '../remote/card_remote_ds.dart';
 import '../models/tarea_card_model.dart';
 
-/// Repository that abstracts local and remote flashcard operations.
+/// Repositorio que abstrae las operaciones locales y remotas de flashcards.
 class CardRepository {
   final CardLocalDataSource _local;
   final CardRemoteDataSource _remote;
@@ -18,13 +18,13 @@ class CardRepository {
         _remote = remote,
         _isAuthenticated = isAuthenticated;
 
-  /// Get all flashcards for a task from local storage.
+  /// Obtiene todas las flashcards de una tarea desde el almacenamiento local.
   List<TareaCardModel> getCardsForTask(String tareaId) {
     return _local.getCardsForTask(tareaId);
   }
 
-  /// Pull all cards from Supabase and replace local data.
-  /// Cards are fetched by task IDs (they don't have usuario_id).
+  /// Descarga todas las flashcards de Supabase y reemplaza los datos locales.
+  /// Las flashcards se obtienen por IDs de tarea (no tienen usuario_id).
   Future<void> pullRemoteToLocal() async {
     try {
       final taskLocal = TaskLocalDataSource();

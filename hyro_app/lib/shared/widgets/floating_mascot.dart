@@ -6,8 +6,8 @@ import '../../core/theme/app_colors.dart';
 import '../../core/utils/responsive.dart';
 import '../../features/mascot/mascot_controller.dart';
 
-/// Floating, draggable mascot bubble that follows the user across all screens.
-/// Hidden when [visible] is false (e.g. on the Shop screen).
+/// Burbuja de mascota flotante y arrastrable que sigue al usuario en todas las pantallas.
+/// Se oculta cuando [visible] es falso (por ejemplo, en la pantalla de la Tienda).
 class FloatingMascot extends StatefulWidget {
   final bool visible;
 
@@ -22,7 +22,7 @@ class _FloatingMascotState extends State<FloatingMascot>
   late final AnimationController _breatheController;
   late final Animation<double> _breatheAnimation;
 
-  // Drag position — null until first layout, then initialized to default corner
+  // Posición de arrastre — nulo hasta el primer diseño, luego se inicializa a la esquina predeterminada
   double? _posX;
   double? _posY;
   bool _isDragging = false;
@@ -50,7 +50,7 @@ class _FloatingMascotState extends State<FloatingMascot>
 
   void _initPositionIfNeeded(Size screenSize, double bubbleSize) {
     if (_posX == null || _posY == null) {
-      // Default: bottom-right corner
+      // Por defecto: esquina inferior derecha
       _posX = screenSize.width - bubbleSize - 24;
       _posY = screenSize.height - bubbleSize - 100;
     }
@@ -67,14 +67,14 @@ class _FloatingMascotState extends State<FloatingMascot>
     final bubbleSize = _getBubbleSize(isMobile);
     final screenSize = MediaQuery.sizeOf(context);
 
-    // Re-check position if screen size changed
+    // Volver a verificar la posición si el tamaño de la pantalla cambió
     if (_posX != null && _posY != null) {
        _clampPosition(screenSize, bubbleSize);
     } else {
        _initPositionIfNeeded(screenSize, bubbleSize);
     }
 
-    // When hidden, slide off to the right edge
+    // Cuando se oculta, desliza hacia el borde derecho
     final targetX = widget.visible ? _posX! : screenSize.width + 20;
     final targetY = _posY!;
 

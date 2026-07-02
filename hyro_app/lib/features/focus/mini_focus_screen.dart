@@ -21,7 +21,7 @@ class MiniFocusScreen extends StatelessWidget {
       backgroundColor: AppColors.background,
       body: Stack(
         children: [
-          // Drag area for the window
+          // Área de arrastre para la ventana
           Positioned(
             top: 0,
             left: 0,
@@ -30,7 +30,7 @@ class MiniFocusScreen extends StatelessWidget {
             child: GestureDetector(
               behavior: HitTestBehavior.translucent,
               onPanStart: (details) {
-                // If using window_manager, dragging can be implemented using windowManager.startDragging()
+                // Si usas window_manager, arrastrar puede implementarse usando windowManager.startDragging()
               },
               child: Container(),
             ),
@@ -41,7 +41,7 @@ class MiniFocusScreen extends StatelessWidget {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const SizedBox(height: 20), // Top spacing
+                  const SizedBox(height: 20), // Espacio superior
                   Align(
                     alignment: Alignment.topLeft,
                     child: Padding(

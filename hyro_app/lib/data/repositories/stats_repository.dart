@@ -7,12 +7,12 @@ class StatsRepository {
 
   StatsRepository(this._statsBox);
 
-  /// Helper to format date consistently
+  /// Ayudante para formatear fecha consistentemente
   String _formatDate(DateTime date) {
     return DateFormat('yyyy-MM-dd').format(date);
   }
 
-  /// Add a completed session to today's stats
+  /// A\u00f1ade una sesi\u00f3n completada a las estad\u00edsticas de hoy
   Future<void> addSession(int durationMinutes) async {
     final todayStr = _formatDate(DateTime.now());
     var stats = _statsBox.get(todayStr);
@@ -31,12 +31,12 @@ class StatsRepository {
     }
   }
 
-  /// Get stats for a specific date
+  /// Obtiene las estad\u00edsticas de una fecha espec\u00edfica
   DailyStats? getStatsForDate(DateTime date) {
     return _statsBox.get(_formatDate(date));
   }
 
-  /// Get stats for today specifically
+  /// Obtiene las estad\u00edsticas de hoy espec\u00edficamente
   DailyStats? getTodaysStats() {
     return getStatsForDate(DateTime.now());
   }
@@ -59,13 +59,13 @@ class StatsRepository {
     return result;
   }
 
-  /// Get the current week's focus minutes relative to goal (Monday to Sunday)
+  /// Obtiene los minutos de enfoque de la semana actual relativo a la meta (lunes a domingo)
   List<double> getCurrentWeekFocusMinutesRelative() {
     List<double> result = [];
     final maxMinutesTarget = 120.0; // Two hours goal per day
 
     DateTime now = DateTime.now();
-    // Dart DateTime.weekday is 1 for Monday, 7 for Sunday.
+    // Dart DateTime.weekday es 1 para lunes, 7 para domingo.
     DateTime startOfWeek = now.subtract(Duration(days: now.weekday - 1));
 
     for (int i = 0; i < 7; i++) {
@@ -82,7 +82,7 @@ class StatsRepository {
     return result;
   }
 
-  /// Get stats for a specific month (for the calendar)
+  /// Obtiene las estad\u00edsticas de un mes espec\u00edfico (para el calendario)
   Map<String, DailyStats> getStatsForMonth(int year, int month) {
     final Map<String, DailyStats> result = {};
     for (var key in _statsBox.keys) {
@@ -97,7 +97,7 @@ class StatsRepository {
     return result;
   }
 
-  /// Calculate the current streak of consecutive days with at least 1 focus session
+  /// Calcula la racha actual de d\u00edas consecutivos con al menos 1 sesi\u00f3n de enfoque
   int getCurrentStreak() {
     int streak = 0;
     DateTime dateToCheck = DateTime.now();
@@ -110,7 +110,7 @@ class StatsRepository {
         streak++;
         dateToCheck = dateToCheck.subtract(const Duration(days: 1));
       } else {
-        // If today has no stats yet, check yesterday to keep streak alive
+        // Si hoy no tiene estad\u00edsticas a\u00fan, revisar ayer para mantener la racha viva
         if (streak == 0 &&
             _formatDate(dateToCheck) == _formatDate(DateTime.now())) {
           dateToCheck = dateToCheck.subtract(const Duration(days: 1));
@@ -129,7 +129,7 @@ class StatsRepository {
     return streak;
   }
 
-  /// Calculate total focus hours across all time
+  /// Calcula el total de horas de enfoque de todos los tiempos
   double getTotalFocusHours() {
     int totalMinutes = 0;
     for (var stats in _statsBox.values) {

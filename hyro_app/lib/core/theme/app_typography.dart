@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-/// Hyro App typography — premium font styles using Inter.
+/// Tipografía de la aplicación Hyro — estilos de fuente premium usando Inter.
 class AppTypography {
   AppTypography._();
 
-  // ── Base font family ──
+  // ── Familia de fuentes base ──
   static String get _fontFamily => GoogleFonts.inter().fontFamily!;
 
   // ── Display ──
@@ -17,7 +17,7 @@ class AppTypography {
     color: Colors.white,
   );
 
-  // ── Headings ──
+  // ── Encabezados ──
   static TextStyle get h1 => TextStyle(
     fontFamily: _fontFamily,
     fontSize: 32,
@@ -40,7 +40,7 @@ class AppTypography {
     color: Colors.white,
   );
 
-  // ── Timer specific ──
+  // ── Específico del Temporizador ──
   static TextStyle get timerDisplay => TextStyle(
     fontFamily: _fontFamily,
     fontSize: 104,
@@ -61,7 +61,7 @@ class AppTypography {
     color: const Color(0xFF8B95B0),
   );
 
-  // ── Body ──
+  // ── Cuerpo ──
   static TextStyle get bodyLarge => TextStyle(
     fontFamily: _fontFamily,
     fontSize: 16,
@@ -83,7 +83,7 @@ class AppTypography {
     color: const Color(0xFF8B95B0),
   );
 
-  // ── Labels ──
+  // ── Etiquetas ──
   static TextStyle get labelLarge => TextStyle(
     fontFamily: _fontFamily,
     fontSize: 14,
@@ -100,7 +100,7 @@ class AppTypography {
     color: const Color(0xFF8B95B0),
   );
 
-  // ── Sidebar ──
+  // ── Barra Lateral ──
   static TextStyle get sidebarItem => TextStyle(
     fontFamily: _fontFamily,
     fontSize: 15,
@@ -123,7 +123,7 @@ class AppTypography {
     color: Colors.white,
   );
 
-  // ── Card stat numbers ──
+  // ── Números de estadísticas de tarjeta ──
   static TextStyle get statNumber => TextStyle(
     fontFamily: _fontFamily,
     fontSize: 28,

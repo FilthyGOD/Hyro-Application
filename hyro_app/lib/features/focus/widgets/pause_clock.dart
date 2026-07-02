@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/utils/format_time.dart';
 
-/// Inline pause clock that replaces the main circular timer when paused.
+/// Reloj de pausa integrado que reemplaza al temporizador circular principal cuando está pausado.
 class PauseClock extends StatefulWidget {
   final double size;
 
@@ -15,7 +15,7 @@ class PauseClock extends StatefulWidget {
 
 class _PauseClockState extends State<PauseClock> {
   Timer? _timer;
-  int _remainingSeconds = 300; // 5 minutes
+  int _remainingSeconds = 300; // 5 minutos
 
   @override
   void initState() {

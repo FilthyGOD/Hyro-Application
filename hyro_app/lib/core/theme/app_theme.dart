@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'app_colors.dart';
 
-/// Creates the full dark ThemeData for Hyro.
+/// Crea el ThemeData oscuro completo para Hyro.
 class AppTheme {
   AppTheme._();
 

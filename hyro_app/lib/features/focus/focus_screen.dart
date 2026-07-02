@@ -22,7 +22,7 @@ import '../../data/local/card_local_ds.dart';
 import '../../data/local/note_local_ds.dart';
 import 'widgets/strict_mode_violation_card.dart';
 
-/// The main Focus screen with the Pomodoro timer and sidebar widgets.
+/// La pantalla principal de Enfoque con el temporizador Pomodoro y widgets laterales.
 class FocusScreen extends StatelessWidget {
   const FocusScreen({super.key});
 
@@ -72,7 +72,7 @@ class FocusScreen extends StatelessWidget {
               builder: (_) => FocusQuizDialog(flashcards: cards, notas: notes),
             ).then((_) {
               mascot.resumeEstudio();
-              // only resume if it's currently paused
+              // solo reanuda si actualmente está pausado
               if (!context.mounted) return;
               if (context.read<TimerCubit>().state.isPaused) {
                 context.read<TimerCubit>().resume();
@@ -82,7 +82,7 @@ class FocusScreen extends StatelessWidget {
             context.read<TimerCubit>().acknowledgeQuiz();
           }
         } else if (state.quizDue) {
-          // Do not override mascot state if a quiz pause is active.
+          // No sobrescribas el estado de la mascota si hay una pausa de cuestionario activa.
         } else if (state.isRunning && state.mode == TimerMode.pomodoro) {
           mascot.triggerEstudiando();
         } else if (state.isRunning &&
@@ -140,7 +140,7 @@ class FocusScreen extends StatelessWidget {
   }
 }
 
-// ── Desktop: two-column layout ──
+// ── Escritorio: diseño de dos columnas ──
 class _DesktopLayout extends StatelessWidget {
   final TimerState state;
   final int streak;
@@ -181,7 +181,7 @@ class _DesktopLayout extends StatelessWidget {
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // ── Left column: timer (SCROLLABLE IF NEEDED) ──
+                    // ── Columna izquierda: temporizador (DESPLAZABLE SI ES NECESARIO) ──
                     Expanded(
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
@@ -191,13 +191,13 @@ class _DesktopLayout extends StatelessWidget {
                             flex: 10,
                             child: LayoutBuilder(
                               builder: (context, constraints) {
-                                // Calculate a dynamic size based on available height,
-                                // ensuring it leaves room for controls and spacing.
-                                // Max size 460, Min size 160 (to force it to fit without scroll).
+                                // Calcula un tamaño dinámico basado en la altura disponible,
+                                // asegurando que quede espacio para los controles y el espaciado.
+                                // Tamaño máximo 460, Tamaño mínimo 160 (para forzar a que quepa sin desplazamiento).
                                 final availableHeight = constraints.maxHeight;
                                 final desiredTimerSize =
                                     availableHeight -
-                                    240; // 240px reserved for controls and padding
+                                    240; // 240px reservados para controles y relleno
                                 final settings =
                                     context.watch<SettingsProvider>();
                                 final timerSize =
@@ -215,7 +215,7 @@ class _DesktopLayout extends StatelessWidget {
                                       ),
                                       const SizedBox(height: 24),
                                     ],
-                                    // The content (Timer, Controls, Scroller)
+                                    // El contenido (Temporizador, Controles, Desplazamiento)
                                     if (state.isPaused && state.isManualPause)
                                       PauseClock(size: timerSize)
                                     else
@@ -267,12 +267,12 @@ class _DesktopLayout extends StatelessWidget {
                         ],
                       ),
                     ),
-                    // ── Right column: info cards (SCROLLABLE) ──
+                    // ── Columna derecha: tarjetas de información (DESPLAZABLES) ──
                     if (!state.isRunning && !settings.hideFocusCards) ...[
                       const SizedBox(width: 48),
                       SizedBox(
                         width:
-                            320, // Fixed width so data cards aren't stretched
+                            320, // Ancho fijo para que las tarjetas de datos no se estiren
                         child: ListView(
                           children: [
                             const MiniTaskList(),
@@ -352,7 +352,7 @@ class _DesktopLayout extends StatelessWidget {
   }
 }
 
-// ── Mobile: single-column scrollable layout ──
+// ── Móvil: diseño desplazable de una sola columna ──
 class _MobileLayout extends StatelessWidget {
   final TimerState state;
   final int streak;
@@ -371,7 +371,7 @@ class _MobileLayout extends StatelessWidget {
     final cubit = context.read<TimerCubit>();
     final settings = context.watch<SettingsProvider>();
 
-    // When timer is running, use Center layout instead of scroll
+    // Cuando el temporizador está en marcha, usa un diseño Centrado en lugar de desplazamiento
     if (state.isRunning) {
       return Center(
         child: Padding(
@@ -453,7 +453,7 @@ class _MobileLayout extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             if (!state.isRunning) ...[
-              // Header
+              // Encabezado
               Text('Sesión de Trabajo Profundo', style: AppTypography.h2),
               const SizedBox(height: 4),
               Text(
@@ -462,7 +462,7 @@ class _MobileLayout extends StatelessWidget {
               ),
               const SizedBox(height: 24),
             ],
-            // Timer
+            // Temporizador
             Center(
               child: LayoutBuilder(
                 builder: (context, constraints) {
@@ -484,7 +484,7 @@ class _MobileLayout extends StatelessWidget {
             ),
             const SizedBox(height: 16),
             const SizedBox(height: 8),
-            // Controls
+            // Controles
             TimerControls(
               isRunning: state.isRunning,
               isPaused: state.isPaused,

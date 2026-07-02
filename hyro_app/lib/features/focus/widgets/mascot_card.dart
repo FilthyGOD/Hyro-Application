@@ -6,7 +6,7 @@ import '../../../core/theme/app_typography.dart';
 import '../../../shared/widgets/glass_card.dart';
 import '../../mascot/mascot_controller.dart';
 
-/// The mascot motivation card — Rive animated Hyro character.
+/// La tarjeta de motivación de la mascota — personaje Hyro animado en Rive.
 class MascotCard extends StatelessWidget {
   const MascotCard({super.key});
 
@@ -24,7 +24,7 @@ class MascotCard extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 12),
-          // Rive mascot animation
+          // Animación de la mascota en Rive
           Consumer<MascotController>(
             builder: (context, mascot, _) {
               if (!mascot.isLoaded) {

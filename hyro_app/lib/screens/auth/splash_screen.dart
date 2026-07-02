@@ -14,7 +14,7 @@ class SplashScreen extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-                  // Rive cargando animation (SM starts in cargando state)
+                  // Animación de carga de Rive (SM inicia en estado de carga)
                   Consumer<MascotController>(
                     builder: (context, mascot, _) {
                       if (!mascot.isLoaded) {

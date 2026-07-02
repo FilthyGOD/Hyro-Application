@@ -21,8 +21,8 @@ class TasksScreen extends StatefulWidget {
 }
 
 class _TasksScreenState extends State<TasksScreen> {
-  // ── Demo data ──
-  // ── Categories will be dynamic ──
+  // ── Datos de prueba ──
+  // ── Las categorías serán dinámicas ──
   String? _selectedCategoryName;
   bool _showAllCategoriesDesktop = false;
 
@@ -174,7 +174,7 @@ class _TasksScreenState extends State<TasksScreen> {
       'Nov',
       'Dic',
     ];
-    // weekday is 1-7 (Mon-Sun), days[0] is Sunday
+    // weekday es 1-7 (Lun-Dom), days[0] es Domingo
     return '${days[now.weekday % 7]}, ${now.day} de ${months[now.month - 1]}';
   }
 
@@ -375,7 +375,7 @@ class _TasksScreenState extends State<TasksScreen> {
             children: [
               Text('Análisis de Tareas', style: AppTypography.h3),
               const SizedBox(height: 20),
-              // Circular chart
+              // Gráfico circular
               Center(
                 child: SizedBox(
                   width: 140,
@@ -405,7 +405,7 @@ class _TasksScreenState extends State<TasksScreen> {
                 ),
               ),
               const SizedBox(height: 20),
-              // Stats
+              // Estadísticas
               _buildStatRow(
                 color: AppColors.primary,
                 label: 'Completadas',

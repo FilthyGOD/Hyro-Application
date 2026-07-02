@@ -126,14 +126,16 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   style: TextStyle(color: Colors.white),
                 ),
                 content: const Text(
-                  'Hemos enviado un enlace de confirmaciÃ³n a tu correo. Por favor, revÃ­salo para verificar tu cuenta y poder iniciar sesiÃ³n.',
+                  'Hemos enviado un enlace de confirmacion a tu correo. Por favor, revÃ­salo para verificar tu cuenta y poder iniciar sesion.',
                   style: TextStyle(color: Colors.white70),
                 ),
                 actions: [
                   TextButton(
                     onPressed: () {
                       Navigator.of(context).pop(); // Cerrar diálogo
-                      Navigator.of(context).pop(); // Regresar a la pantalla de Login
+                      Navigator.of(
+                        context,
+                      ).pop(); // Regresar a la pantalla de Login
                     },
                     child: const Text(
                       'Entendido',
@@ -258,8 +260,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         ),
                         const SizedBox(height: 24),
                         _buildInputField(
-                          label: 'CONTRASEÃ‘A',
-                          hint: 'â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢',
+                          label: 'CONTRASEÑA',
+                          hint: '...........',
                           controller: _passwordController,
                           prefixIcon: Icons.lock_outline,
                           isPassword: true,
@@ -270,7 +272,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           onPressed: _register,
                         ),
                         const SizedBox(height: 32),
-                        _buildDivider('O REGÃSTRATE CON'),
+                        _buildDivider('O REGISTRATE CON'),
                         const SizedBox(height: 24),
                         Row(
                           children: [
@@ -383,7 +385,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 ),
                 const SizedBox(height: 24),
                 const Text(
-                  'Ãšnete a miles de personas que estÃ¡n\nmejorando sus vidas con Hyro.',
+                  'Unete a miles de personas que estan\nmejorando sus vidas con Hyro.',
                   style: TextStyle(
                     fontSize: 20,
                     color: Colors.white70,
@@ -449,8 +451,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     ),
                     const SizedBox(height: 24),
                     _buildInputField(
-                      label: 'CONTRASEÃ‘A',
-                      hint: 'â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢',
+                      label: 'CONTRASEÑA',
+                      hint: '.........',
                       controller: _passwordController,
                       prefixIcon: Icons.lock_outline,
                       isPassword: true,
@@ -463,7 +465,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       isDesktop: true,
                     ),
                     const SizedBox(height: 32),
-                    _buildDivider('O REGÃSTRATE CON'),
+                    _buildDivider('O REGISTRATE CON'),
                     const SizedBox(height: 24),
                     Row(
                       children: [
@@ -689,8 +691,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
     final textColor = Colors.white54;
     final actionColor =
         isMobile ? const Color(0xFF3CDCF8) : const Color(0xFFCC88FF);
-    const prefix = "Â¿Ya tienes una cuenta? ";
-    const suffix = "Iniciar sesiÃ³n";
+    const prefix = "¿Ya tienes una cuenta? ";
+    const suffix = "Iniciar sesion";
 
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,

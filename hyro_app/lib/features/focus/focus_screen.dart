@@ -1,4 +1,5 @@
 import 'dart:io';
+import '../../shared/widgets/mobile_stats_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../core/theme/app_typography.dart';
@@ -439,75 +440,86 @@ class _MobileLayout extends StatelessWidget {
       );
     }
 
-    return SingleChildScrollView(
-      padding: EdgeInsets.only(
-        top: MediaQuery.of(context).padding.top + 72,
-        bottom: 20,
-        left: 20,
-        right: 20,
-      ),
-      child: Container(
-        width: double.infinity,
-        alignment: Alignment.topCenter,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            if (!state.isRunning) ...[
-              // Encabezado
-              Text('Sesión de Trabajo Profundo', style: AppTypography.h2),
-              const SizedBox(height: 4),
-              Text(
-                'Racha de Enfoque: $streak días 🔥',
-                style: AppTypography.bodySmall,
-              ),
-              const SizedBox(height: 24),
-            ],
-            // Temporizador
-            Center(
-              child: LayoutBuilder(
-                builder: (context, constraints) {
-                  final availableWidth = constraints.maxWidth;
-                  final settings = context.watch<SettingsProvider>();
-                  final size =
-                      (availableWidth * 0.75).clamp(160.0, 260.0) *
-                      settings.timerSizeMultiplier;
-                  if (state.isPaused && state.isManualPause) {
-                    return PauseClock(size: size);
-                  }
-                  return CircularTimer(
-                    remainingSeconds: state.remainingSeconds,
-                    progress: state.progress,
-                    size: size,
-                  );
-                },
-              ),
+    return Stack(
+      children: [
+        SingleChildScrollView(
+          padding: EdgeInsets.only(
+            top: MediaQuery.of(context).padding.top + 72,
+            bottom: 20,
+            left: 20,
+            right: 20,
+          ),
+          child: Container(
+            width: double.infinity,
+            alignment: Alignment.topCenter,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                if (!state.isRunning) ...[
+                  // Encabezado
+                  Text('Sesión de Trabajo Profundo', style: AppTypography.h2),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Racha de Enfoque: $streak días 🔥',
+                    style: AppTypography.bodySmall,
+                  ),
+                  const SizedBox(height: 24),
+                ],
+                // Temporizador
+                Center(
+                  child: LayoutBuilder(
+                    builder: (context, constraints) {
+                      final availableWidth = constraints.maxWidth;
+                      final settings = context.watch<SettingsProvider>();
+                      final size =
+                          (availableWidth * 0.75).clamp(160.0, 260.0) *
+                          settings.timerSizeMultiplier;
+                      if (state.isPaused && state.isManualPause) {
+                        return PauseClock(size: size);
+                      }
+                      return CircularTimer(
+                        remainingSeconds: state.remainingSeconds,
+                        progress: state.progress,
+                        size: size,
+                      );
+                    },
+                  ),
+                ),
+                const SizedBox(height: 16),
+                const SizedBox(height: 8),
+                // Controles
+                TimerControls(
+                  isRunning: state.isRunning,
+                  isPaused: state.isPaused,
+                  onStart: () => _handleStart(context, cubit),
+                  onPause: cubit.pause,
+                  onResume: cubit.resume,
+                  onReset: cubit.reset,
+                  onStop: cubit.stop,
+                ),
+                const SizedBox(height: 24),
+                if (!state.isRunning && !state.isPaused)
+                  ModeSelector(
+                    currentMode: state.mode,
+                    onStart: () => _handleStart(context, cubit),
+                  ),
+                if (!state.isRunning && !settings.hideFocusCards) ...[
+                  const SizedBox(height: 24),
+                  const MiniTaskList(),
+                ],
+                const SizedBox(height: 80),
+              ],
             ),
-            const SizedBox(height: 16),
-            const SizedBox(height: 8),
-            // Controles
-            TimerControls(
-              isRunning: state.isRunning,
-              isPaused: state.isPaused,
-              onStart: () => _handleStart(context, cubit),
-              onPause: cubit.pause,
-              onResume: cubit.resume,
-              onReset: cubit.reset,
-              onStop: cubit.stop,
-            ),
-            const SizedBox(height: 24),
-            if (!state.isRunning && !state.isPaused)
-              ModeSelector(
-                currentMode: state.mode,
-                onStart: () => _handleStart(context, cubit),
-              ),
-            if (!state.isRunning && !settings.hideFocusCards) ...[
-              const SizedBox(height: 24),
-              const MiniTaskList(),
-            ],
-            const SizedBox(height: 80),
-          ],
+          ),
         ),
-      ),
+        // Barra superior con racha y monedas
+        const Positioned(
+          top: 0,
+          left: 0,
+          right: 0,
+          child: MobileStatsBar(),
+        ),
+      ],
     );
   }
 }

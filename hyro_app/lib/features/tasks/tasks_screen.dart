@@ -12,6 +12,7 @@ import '../../providers/ui_provider.dart';
 import '../categories/category_provider.dart';
 import 'widgets/task_details_sheet.dart';
 import '../../data/models/category_model.dart';
+import '../../shared/widgets/mobile_stats_bar.dart';
 
 class TasksScreen extends StatefulWidget {
   const TasksScreen({super.key});
@@ -50,7 +51,7 @@ class _TasksScreenState extends State<TasksScreen> {
         builder: (context, constraints) {
           final isLargeScreen = constraints.maxWidth > 800;
 
-          return SingleChildScrollView(
+          final content = SingleChildScrollView(
             child: Padding(
               padding: isLargeScreen
                   ? const EdgeInsets.only(
@@ -82,6 +83,23 @@ class _TasksScreenState extends State<TasksScreen> {
               ),
             ),
           );
+
+          // En móvil, envolver en Stack para mostrar la barra de stats arriba
+          if (!isLargeScreen) {
+            return Stack(
+              children: [
+                content,
+                const Positioned(
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  child: MobileStatsBar(),
+                ),
+              ],
+            );
+          }
+
+          return content;
         },
       ),
     );

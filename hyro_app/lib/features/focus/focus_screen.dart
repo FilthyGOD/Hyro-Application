@@ -276,6 +276,8 @@ class _DesktopLayout extends StatelessWidget {
                             320, // Ancho fijo para que las tarjetas de datos no se estiren
                         child: ListView(
                           children: [
+                            const MobileStatsBar(),
+                            const SizedBox(height: 24),
                             const MiniTaskList(),
                             const SizedBox(height: 32),
                           ],

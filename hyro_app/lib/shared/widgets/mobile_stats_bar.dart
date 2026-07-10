@@ -21,14 +21,8 @@ class MobileStatsBar extends StatelessWidget {
         left: 20,
         right: 20,
       ),
-      decoration: BoxDecoration(
-        color: AppColors.surface.withValues(alpha: 0.85),
-        border: Border(
-          bottom: BorderSide(
-            color: AppColors.cardBorder.withValues(alpha: 0.5),
-            width: 1,
-          ),
-        ),
+      decoration: const BoxDecoration(
+        color: Colors.transparent,
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,

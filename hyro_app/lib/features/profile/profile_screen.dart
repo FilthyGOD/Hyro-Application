@@ -10,7 +10,8 @@ import '../../shared/widgets/glass_card.dart';
 import '../../providers/ui_provider.dart';
 import '../mascot/mascot_controller.dart';
 import '../settings/settings_screen.dart';
-
+import '../../shared/widgets/achievement_summary.dart';
+import '../../shared/widgets/recent_milestones.dart';
 /// Profile screen showing user info, level/XP, coins, and daily missions.
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -182,6 +183,13 @@ class ProfileScreen extends StatelessWidget {
             ),
           ),
 
+          const SizedBox(height: 24),
+          
+          // ── Logros ──
+          const AchievementSummaryGrid(),
+          const SizedBox(height: 24),
+          const RecentMilestonesCard(),
+          
           const SizedBox(height: 32),
 
           // ── Action Button (Login for Guests, Logout for Users) ──

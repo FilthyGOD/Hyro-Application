@@ -337,15 +337,8 @@ class _DesktopLayout extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('Sesión de Trabajo Profundo', style: AppTypography.h1),
-            const SizedBox(height: 4),
-            Text(
-              '${dayNames[now.weekday - 1]}, ${now.day} de ${monthNames[now.month - 1]} • Racha de Enfoque: $streak días 🔥',
-              style: AppTypography.bodyMedium,
-            ),
+        Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+
           ],
         ),
       ],
@@ -459,10 +452,6 @@ class _MobileLayout extends StatelessWidget {
                   // Encabezado
                   Text('Sesión de Trabajo Profundo', style: AppTypography.h2),
                   const SizedBox(height: 4),
-                  Text(
-                    'Racha de Enfoque: $streak días 🔥',
-                    style: AppTypography.bodySmall,
-                  ),
                   const SizedBox(height: 24),
                 ],
                 // Temporizador
@@ -513,12 +502,7 @@ class _MobileLayout extends StatelessWidget {
           ),
         ),
         // Barra superior con racha y monedas
-        const Positioned(
-          top: 0,
-          left: 0,
-          right: 0,
-          child: MobileStatsBar(),
-        ),
+        const Positioned(top: 0, left: 0, right: 0, child: MobileStatsBar()),
       ],
     );
   }

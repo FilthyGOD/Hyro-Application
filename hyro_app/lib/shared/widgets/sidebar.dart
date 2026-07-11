@@ -42,6 +42,12 @@ class Sidebar extends StatelessWidget {
       label: 'Tienda',
       targetIndex: 0,
     ),
+    _SidebarItemData(
+      icon: Icons.people_outline_rounded,
+      activeIcon: Icons.people_rounded,
+      label: 'Amigos',
+      targetIndex: 4,
+    ),
   ];
 
   @override
@@ -106,7 +112,7 @@ class Sidebar extends StatelessWidget {
   }
 
   Widget _buildUserInfo(BuildContext context) {
-    final isActive = selectedIndex == 4;
+    final isActive = selectedIndex == 5;
     final String? rawName = context.watch<AuthProvider>().currentUser?.name;
     final String userName =
         (rawName != null && rawName.isNotEmpty) ? rawName : 'Usuario';
@@ -118,7 +124,7 @@ class Sidebar extends StatelessWidget {
         color: Colors.transparent,
         child: InkWell(
           borderRadius: BorderRadius.circular(12),
-          onTap: () => onItemSelected(4),
+          onTap: () => onItemSelected(5),
           child: Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(

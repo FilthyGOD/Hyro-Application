@@ -9,6 +9,7 @@ import 'features/tasks/tasks_screen.dart';
 import 'features/stats/stats_screen.dart';
 import 'features/shop/shop_screen.dart';
 import 'features/profile/profile_screen.dart';
+import 'features/friends/friends_screen.dart';
 import 'features/tasks/tasks_provider.dart';
 import 'features/stats/stats_provider.dart';
 import 'features/mascot/mascot_controller.dart';
@@ -251,7 +252,8 @@ class AppShellState extends State<AppShell>
     StatsScreen(), // 1
     FocusScreen(), // 2
     TasksScreen(), // 3
-    ProfileScreen(), // 4
+    FriendsScreen(), // 4
+    ProfileScreen(), // 5
   ];
 
   @override
@@ -333,7 +335,7 @@ class AppShellState extends State<AppShell>
   }
 
   void navigateTo(int index) {
-    if (index == 5 && _selectedIndex == 5) {
+    if (index == 6 && _selectedIndex == 6) {
       index = _previousIndex;
     }
 
@@ -360,7 +362,7 @@ class AppShellState extends State<AppShell>
       _selectedIndex = index;
     });
 
-    if (index != 5) {
+    if (index != 6) {
       if (!Responsive.isMobile(context)) {
         _pageController.jumpToPage(index);
       } else {
@@ -460,7 +462,7 @@ class AppShellState extends State<AppShell>
             ],
           ),
         ),
-        // Capa superpuesta de la mascota flotante — visible solo en Focus (0) y Tareas (1), y no durante la vista de sesión completada
+        // Capa superpuesta de la mascota flotante — visible solo en Focus (2), Tareas (3) y Amigos (4), y no durante la vista de sesión completada
         Builder(
           builder: (context) {
             final timerState = context.watch<TimerCubit>().state;
@@ -471,7 +473,7 @@ class AppShellState extends State<AppShell>
 
             final isQuizActive = timerState.quizDue;
             final isVisible =
-                (_selectedIndex == 2 || _selectedIndex == 3) &&
+                (_selectedIndex == 2 || _selectedIndex == 3 || _selectedIndex == 4) &&
                 !isPomodoroFinished &&
                 !isQuizActive;
             return FloatingMascot(visible: isVisible);

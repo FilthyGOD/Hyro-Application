@@ -209,7 +209,7 @@ class _MainLayoutState extends State<MainLayout> {
                 child: BottomNavigationBar(
                   backgroundColor: AppColors.surface,
                   type: BottomNavigationBarType.fixed,
-                  currentIndex: widget.selectedIndex < 5 ? widget.selectedIndex : 4,
+                  currentIndex: widget.selectedIndex < 6 ? widget.selectedIndex : 5,
                   selectedItemColor: AppColors.primary,
                   unselectedItemColor: AppColors.textSecondary,
                   selectedFontSize: 11,
@@ -238,6 +238,11 @@ class _MainLayoutState extends State<MainLayout> {
                       icon: Icon(Icons.check_circle_outline),
                       activeIcon: Icon(Icons.check_circle),
                       label: 'Tareas',
+                    ),
+                    BottomNavigationBarItem(
+                      icon: Icon(Icons.people_outline_rounded),
+                      activeIcon: Icon(Icons.people_rounded),
+                      label: 'Amigos',
                     ),
                     BottomNavigationBarItem(
                       icon: Icon(Icons.person_outline),
@@ -286,4 +291,3 @@ class _MainLayoutState extends State<MainLayout> {
     );
   }
 }
-

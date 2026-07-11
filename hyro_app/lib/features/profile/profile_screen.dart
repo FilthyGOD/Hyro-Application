@@ -12,6 +12,7 @@ import '../mascot/mascot_controller.dart';
 import '../settings/settings_screen.dart';
 import '../../shared/widgets/achievement_summary.dart';
 import '../../shared/widgets/recent_milestones.dart';
+
 /// Profile screen showing user info, level/XP, coins, and daily missions.
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -22,21 +23,25 @@ class ProfileScreen extends StatelessWidget {
     final profile = context.watch<ProfileProvider>();
 
     return SingleChildScrollView(
-      padding: MediaQuery.of(context).size.width < 800
-          ? EdgeInsets.only(
-              top: MediaQuery.of(context).padding.top + 72,
-              bottom: 32,
-              left: 24,
-              right: 24,
-            )
-          : const EdgeInsets.all(32),
+      padding:
+          MediaQuery.of(context).size.width < 800
+              ? EdgeInsets.only(
+                top: MediaQuery.of(context).padding.top + 72,
+                bottom: 32,
+                left: 24,
+                right: 24,
+              )
+              : const EdgeInsets.all(32),
       child: Column(
         children: [
           Row(
             mainAxisAlignment: MainAxisAlignment.end,
             children: [
               IconButton(
-                icon: const Icon(Icons.settings_outlined, color: Colors.white70),
+                icon: const Icon(
+                  Icons.settings_outlined,
+                  color: Colors.white70,
+                ),
                 onPressed: () {
                   Navigator.of(context).push(
                     MaterialPageRoute(builder: (_) => const SettingsScreen()),
@@ -54,7 +59,8 @@ class ProfileScreen extends StatelessWidget {
                   radius: 72,
                   backgroundColor: AppColors.primary,
                   child: Text(
-                    auth.currentUser?.name?.substring(0, 1).toUpperCase() ?? 'H',
+                    auth.currentUser?.name?.substring(0, 1).toUpperCase() ??
+                        'H',
                     style: AppTypography.h1.copyWith(fontSize: 48),
                   ),
                 );
@@ -184,12 +190,12 @@ class ProfileScreen extends StatelessWidget {
           ),
 
           const SizedBox(height: 24),
-          
+
           // ── Logros ──
           const AchievementSummaryGrid(),
           const SizedBox(height: 24),
           const RecentMilestonesCard(),
-          
+
           const SizedBox(height: 32),
 
           // ── Action Button (Login for Guests, Logout for Users) ──
@@ -241,4 +247,3 @@ class ProfileScreen extends StatelessWidget {
     );
   }
 }
-

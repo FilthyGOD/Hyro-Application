@@ -5,9 +5,12 @@ import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_typography.dart';
 
 /// Barra superior estilo AppBar para móvil que muestra la racha y monedas del usuario.
-/// Se usa en las pantallas de Enfoque y Tareas.
+/// Se usa en las pantallas de Enfoque, Tareas y Perfil.
 class MobileStatsBar extends StatelessWidget {
-  const MobileStatsBar({super.key});
+  /// Widget opcional que se muestra al final de la barra (ej: botón de ajustes).
+  final Widget? trailing;
+
+  const MobileStatsBar({super.key, this.trailing});
 
   @override
   Widget build(BuildContext context) {
@@ -18,36 +21,39 @@ class MobileStatsBar extends StatelessWidget {
       padding: EdgeInsets.only(
         top: topPadding + 8,
         bottom: 12,
-        left: 20,
-        right: 20,
+        left: 180,
+        right: 150,
       ),
-      decoration: const BoxDecoration(
-        color: Colors.transparent,
-      ),
+      decoration: const BoxDecoration(color: Colors.transparent),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           // ── Racha ──
           _StatChip(
-            icon: profile.rachaActual > 0
-                ? const Text('🔥', style: TextStyle(fontSize: 18))
-                : Icon(
-                    Icons.local_fire_department_outlined,
-                    color: AppColors.textSecondary,
-                    size: 20,
-                  ),
+            icon:
+                profile.rachaActual > 0
+                    ? const Text('🔥', style: TextStyle(fontSize: 18))
+                    : Icon(
+                      Icons.local_fire_department_outlined,
+                      color: AppColors.textSecondary,
+                      size: 20,
+                    ),
             value: '${profile.rachaActual}',
-            label: 'racha',
           ),
           // ── Monedas ──
-          _StatChip(
-            icon: const Icon(
-              Icons.monetization_on,
-              color: Colors.amber,
-              size: 20,
-            ),
-            value: _formatNumber(profile.monedas),
-            label: 'monedas',
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _StatChip(
+                icon: const Icon(
+                  Icons.monetization_on,
+                  color: Colors.amber,
+                  size: 20,
+                ),
+                value: _formatNumber(profile.monedas),
+              ),
+              if (trailing != null) ...[const SizedBox(width: 8), trailing!],
+            ],
           ),
         ],
       ),
@@ -64,18 +70,13 @@ class MobileStatsBar extends StatelessWidget {
 class _StatChip extends StatelessWidget {
   final Widget icon;
   final String value;
-  final String label;
 
-  const _StatChip({
-    required this.icon,
-    required this.value,
-    required this.label,
-  });
+  const _StatChip({required this.icon, required this.value});
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
         color: AppColors.surfaceLight.withValues(alpha: 0.6),
         borderRadius: BorderRadius.circular(20),

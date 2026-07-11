@@ -38,7 +38,7 @@ class FriendsScreen extends StatelessWidget {
 
             // ── Ranking semanal ──
             _buildWeeklyRanking(),
-            const SizedBox(height: 100),
+            const SizedBox(height: 24),
 
             // ── Amigos en línea ──
             _buildSectionHeader('En Línea', '3'),
@@ -112,7 +112,10 @@ class FriendsScreen extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         gradient: const LinearGradient(
-          colors: [AppColors.primary, Color(0xFF6A25F4)],
+          colors: [
+            Color.fromARGB(255, 0, 149, 255),
+            Color.fromARGB(255, 32, 43, 200),
+          ],
         ),
         borderRadius: BorderRadius.circular(12),
         boxShadow: [

@@ -10,6 +10,7 @@ import '../../shared/widgets/glass_card.dart';
 import '../../providers/ui_provider.dart';
 import '../mascot/mascot_controller.dart';
 import '../settings/settings_screen.dart';
+import '../../shared/widgets/mobile_stats_bar.dart';
 import '../../shared/widgets/achievement_summary.dart';
 import '../../shared/widgets/recent_milestones.dart';
 
@@ -22,9 +23,11 @@ class ProfileScreen extends StatelessWidget {
     final auth = context.watch<AuthProvider>();
     final profile = context.watch<ProfileProvider>();
 
-    return SingleChildScrollView(
+    final isMobile = MediaQuery.of(context).size.width < 800;
+
+    final content = SingleChildScrollView(
       padding:
-          MediaQuery.of(context).size.width < 800
+          isMobile
               ? EdgeInsets.only(
                 top: MediaQuery.of(context).padding.top + 72,
                 bottom: 32,
@@ -34,23 +37,24 @@ class ProfileScreen extends StatelessWidget {
               : const EdgeInsets.all(32),
       child: Column(
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: [
-              IconButton(
-                icon: const Icon(
-                  Icons.settings_outlined,
-                  color: Colors.white70,
+          if (!isMobile)
+            Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                IconButton(
+                  icon: const Icon(
+                    Icons.settings_outlined,
+                    color: Colors.white70,
+                  ),
+                  onPressed: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(builder: (_) => const SettingsScreen()),
+                    );
+                  },
                 ),
-                onPressed: () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute(builder: (_) => const SettingsScreen()),
-                  );
-                },
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
+              ],
+            ),
+          if (!isMobile) const SizedBox(height: 8),
           // ── Mascot Avatar ──
           Consumer<MascotController>(
             builder: (context, mascot, _) {
@@ -245,5 +249,44 @@ class ProfileScreen extends StatelessWidget {
         ],
       ),
     );
+
+    if (isMobile) {
+      final topPadding = MediaQuery.of(context).padding.top;
+      return Stack(
+        children: [
+          content,
+          Positioned(
+            top: topPadding + 8,
+            right: 20,
+            child: Container(
+              decoration: BoxDecoration(
+                color: AppColors.surfaceLight.withValues(alpha: 0.6),
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: AppColors.cardBorder.withValues(alpha: 0.4),
+                  width: 1,
+                ),
+              ),
+              child: IconButton(
+                icon: const Icon(
+                  Icons.settings_outlined,
+                  color: Colors.white70,
+                  size: 20,
+                ),
+                padding: const EdgeInsets.all(8),
+                constraints: const BoxConstraints(),
+                onPressed: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(builder: (_) => const SettingsScreen()),
+                  );
+                },
+              ),
+            ),
+          ),
+        ],
+      );
+    }
+
+    return content;
   }
 }

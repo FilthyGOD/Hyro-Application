@@ -452,8 +452,7 @@ class _MobileLayout extends StatelessWidget {
               children: [
                 if (!state.isRunning) ...[
                   // Encabezado
-                  Text('Sesión de Trabajo Profundo', style: AppTypography.h2),
-                  const SizedBox(height: 4),
+                  const SizedBox(height: 50),
                   const SizedBox(height: 24),
                 ],
                 // Temporizador
@@ -495,7 +494,7 @@ class _MobileLayout extends StatelessWidget {
                     onStart: () => _handleStart(context, cubit),
                   ),
                 if (!state.isRunning && !settings.hideFocusCards) ...[
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 40),
                   const MiniTaskList(),
                 ],
                 const SizedBox(height: 80),

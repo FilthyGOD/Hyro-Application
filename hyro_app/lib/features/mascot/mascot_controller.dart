@@ -3,6 +3,8 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:rive/rive.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../services/friends_service.dart';
 
 // ignore_for_file: deprecated_member_use
 
@@ -247,6 +249,8 @@ class MascotController extends ChangeNotifier {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setInt('equipped_sombrero', id);
     } catch (_) {}
+    // Sincronizar con Supabase (fire-and-forget)
+    _syncCosmeticsToSupabase();
   }
 
   void previewSombrero(int id) {
@@ -261,6 +265,8 @@ class MascotController extends ChangeNotifier {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setInt('equipped_cara', id);
     } catch (_) {}
+    // Sincronizar con Supabase (fire-and-forget)
+    _syncCosmeticsToSupabase();
   }
 
   void previewCara(int id) {
@@ -275,6 +281,8 @@ class MascotController extends ChangeNotifier {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setInt('equipped_cuerpo', id);
     } catch (_) {}
+    // Sincronizar con Supabase (fire-and-forget)
+    _syncCosmeticsToSupabase();
   }
 
   void previewCuerpo(int id) {
@@ -285,6 +293,21 @@ class MascotController extends ChangeNotifier {
     _sombrero?.value = equippedSombrero.toDouble();
     _cara?.value = equippedCara.toDouble();
     _cuerpo?.value = equippedCuerpo.toDouble();
+  }
+
+  /// Sincroniza los cosméticos equipados actualmente a Supabase.
+  /// Mapeo: equippedCara (Rive 'cara') → BD 'cosmetico', equippedCuerpo (Rive 'cuerpo') → BD 'traje'
+  void _syncCosmeticsToSupabase() {
+    final userId = Supabase.instance.client.auth.currentUser?.id;
+    if (userId == null) return; // Sin sesión, no sincronizar
+
+    // Fire-and-forget: no bloquea la UI
+    FriendsService().syncCosmetics(
+      userId,
+      sombrero: equippedSombrero,
+      cosmetico: equippedCara,   // Rive 'cara' → BD 'cosmetico'
+      traje: equippedCuerpo,     // Rive 'cuerpo' → BD 'traje'
+    );
   }
 
   @override

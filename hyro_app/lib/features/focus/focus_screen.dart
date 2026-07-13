@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:provider/provider.dart';
 import '../../shared/widgets/mobile_stats_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -16,6 +17,7 @@ import '../stats/stats_provider.dart';
 import '../tasks/tasks_provider.dart';
 import '../settings/settings_provider.dart';
 import '../../providers/ui_provider.dart';
+import '../../providers/profile_provider.dart';
 import '../mascot/mascot_controller.dart';
 import 'widgets/focus_quiz_dialog.dart';
 import 'widgets/pause_clock.dart';
@@ -276,7 +278,75 @@ class _DesktopLayout extends StatelessWidget {
                             320, // Ancho fijo para que las tarjetas de datos no se estiren
                         child: ListView(
                           children: [
-                            const MobileStatsBar(),
+                            const SizedBox(height: 56), // Empuja hacia abajo para no chocar con el botón PiP
+                            Consumer<ProfileProvider>(
+                              builder: (context, profile, _) {
+                                return Center(
+                                  child: Wrap(
+                                    spacing: 16,
+                                    alignment: WrapAlignment.center,
+                                    children: [
+                                      // Racha chip
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                        decoration: BoxDecoration(
+                                          color: AppColors.surfaceLight.withValues(alpha: 0.6),
+                                          borderRadius: BorderRadius.circular(20),
+                                          border: Border.all(
+                                            color: AppColors.cardBorder.withValues(alpha: 0.4),
+                                          ),
+                                        ),
+                                        child: Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            if (profile.rachaActual > 0)
+                                              const Text('🔥', style: TextStyle(fontSize: 16))
+                                            else
+                                              Icon(Icons.local_fire_department_outlined,
+                                                  color: AppColors.textSecondary, size: 18),
+                                            const SizedBox(width: 6),
+                                            Text(
+                                              '${profile.rachaActual}',
+                                              style: AppTypography.labelLarge.copyWith(
+                                                fontSize: 14,
+                                                fontWeight: FontWeight.w700,
+                                                color: Colors.white,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                      // Monedas chip
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                        decoration: BoxDecoration(
+                                          color: AppColors.surfaceLight.withValues(alpha: 0.6),
+                                          borderRadius: BorderRadius.circular(20),
+                                          border: Border.all(
+                                            color: AppColors.cardBorder.withValues(alpha: 0.4),
+                                          ),
+                                        ),
+                                        child: Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            const Icon(Icons.monetization_on, color: Colors.amber, size: 18),
+                                            const SizedBox(width: 6),
+                                            Text(
+                                              '${profile.monedas}',
+                                              style: AppTypography.labelLarge.copyWith(
+                                                fontSize: 14,
+                                                fontWeight: FontWeight.w700,
+                                                color: Colors.white,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                );
+                              },
+                            ),
                             const SizedBox(height: 24),
                             const MiniTaskList(),
                             const SizedBox(height: 32),
@@ -339,8 +409,15 @@ class _DesktopLayout extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Sesión de Trabajo Profundo', style: AppTypography.h1),
+            const SizedBox(height: 4),
+            Text(
+              '${dayNames[now.weekday - 1]}, ${now.day} de ${monthNames[now.month - 1]} • Racha de Enfoque: $streak días 🔥',
+              style: AppTypography.bodyMedium,
+            ),
           ],
         ),
       ],
@@ -452,7 +529,12 @@ class _MobileLayout extends StatelessWidget {
               children: [
                 if (!state.isRunning) ...[
                   // Encabezado
-                  const SizedBox(height: 50),
+                  Text('Sesión de Trabajo Profundo', style: AppTypography.h2),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Racha de Enfoque: $streak días 🔥',
+                    style: AppTypography.bodySmall,
+                  ),
                   const SizedBox(height: 24),
                 ],
                 // Temporizador

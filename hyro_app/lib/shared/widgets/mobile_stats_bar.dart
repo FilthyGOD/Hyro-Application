@@ -21,8 +21,8 @@ class MobileStatsBar extends StatelessWidget {
       padding: EdgeInsets.only(
         top: topPadding + 8,
         bottom: 12,
-        left: 180,
-        right: 150,
+        left: 20,
+        right: 20,
       ),
       decoration: const BoxDecoration(color: Colors.transparent),
       child: Row(

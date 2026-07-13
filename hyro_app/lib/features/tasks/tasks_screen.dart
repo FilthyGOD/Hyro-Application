@@ -35,14 +35,29 @@ class _TasksScreenState extends State<TasksScreen> {
         builder: (context, ui, _) {
           return Padding(
             padding: EdgeInsets.only(bottom: ui.isMusicBarVisible ? 80 : 0),
-            child: FloatingActionButton(
-              onPressed: _showAddCategoryDialog,
-              backgroundColor: AppColors.timerColor,
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
+            child: GestureDetector(
+              onTap: _showAddCategoryDialog,
+              child: Container(
+                width: 56,
+                height: 56,
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [
+                      Color.fromARGB(255, 0, 149, 255),
+                      Color.fromARGB(255, 32, 43, 200),
+                    ],
+                  ),
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppColors.primary.withAlpha(60),
+                      blurRadius: 12,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: const Icon(Icons.add, color: Colors.white, size: 28),
               ),
-              child: const Icon(Icons.add, size: 28),
             ),
           );
         },
@@ -768,8 +783,8 @@ class _TasksScreenState extends State<TasksScreen> {
                   onPressed: () => Navigator.pop(ctx),
                   child: const Text('Cancelar'),
                 ),
-                ElevatedButton(
-                  onPressed: () {
+                GestureDetector(
+                  onTap: () {
                     final title = titleController.text.trim();
                     if (title.isEmpty) return;
 
@@ -783,7 +798,33 @@ class _TasksScreenState extends State<TasksScreen> {
                     context.read<CategoryProvider>().addCategory(cat);
                     Navigator.pop(ctx);
                   },
-                  child: const Text('Crear Categoría'),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        colors: [
+                          Color.fromARGB(255, 0, 149, 255),
+                          Color.fromARGB(255, 32, 43, 200),
+                        ],
+                      ),
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: [
+                        BoxShadow(
+                          color: AppColors.primary.withAlpha(60),
+                          blurRadius: 12,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: const Text(
+                      'Crear Categoría',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 14,
+                      ),
+                    ),
+                  ),
                 ),
               ],
             );
@@ -909,8 +950,8 @@ class _TasksScreenState extends State<TasksScreen> {
                   onPressed: () => Navigator.pop(ctx),
                   child: const Text('Cancelar'),
                 ),
-                ElevatedButton(
-                  onPressed: () {
+                GestureDetector(
+                  onTap: () {
                     final title = titleController.text.trim();
                     if (title.isEmpty) return;
 
@@ -974,7 +1015,33 @@ class _TasksScreenState extends State<TasksScreen> {
                     context.read<TaskProvider>().addTask(task);
                     Navigator.pop(ctx);
                   },
-                  child: const Text('Agregar Tarea'),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        colors: [
+                          Color.fromARGB(255, 0, 149, 255),
+                          Color.fromARGB(255, 32, 43, 200),
+                        ],
+                      ),
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: [
+                        BoxShadow(
+                          color: AppColors.primary.withAlpha(60),
+                          blurRadius: 12,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: const Text(
+                      'Agregar Tarea',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 14,
+                      ),
+                    ),
+                  ),
                 ),
               ],
             );

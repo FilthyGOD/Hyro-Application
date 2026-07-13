@@ -508,11 +508,22 @@ class _ShopButton extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 200),
-          padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 14),
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
           decoration: BoxDecoration(
-            color: color,
+            gradient: const LinearGradient(
+              colors: [
+                Color.fromARGB(255, 0, 149, 255),
+                Color.fromARGB(255, 32, 43, 200),
+              ],
+            ),
             borderRadius: BorderRadius.circular(12),
-            boxShadow: AppColors.glowShadow(color, blur: 20),
+            boxShadow: [
+              BoxShadow(
+                color: AppColors.primary.withAlpha(60),
+                blurRadius: 12,
+                offset: const Offset(0, 4),
+              ),
+            ],
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,

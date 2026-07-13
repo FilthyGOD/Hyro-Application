@@ -60,32 +60,28 @@ class TimerControls extends StatelessWidget {
       children: [
         // Detener
         _ControlButton(
-          icon: Icons.stop,
-          size: 60 * buttonSizeMultiplier,
+          icon: Icons.stop_rounded,
+          label: 'Detener',
           onTap: () {
              _confirmAction(context, 'Detener', '¿Deseas detener y salir de la sesión actual?', onStop);
           },
-          backgroundColor: AppColors.surfaceLight,
+          isSecondary: true,
         ),
-        SizedBox(width: 32 * buttonSizeMultiplier),
+        SizedBox(width: 16 * buttonSizeMultiplier),
         // Pausar / Reanudar
         if (isRunning)
           _ControlButton(
-            icon: Icons.pause,
-            size: 60 * buttonSizeMultiplier,
+            icon: Icons.pause_rounded,
+            label: 'Pausar',
             onTap: onPause,
-            backgroundColor: AppColors.timerColor,
-            iconColor: Colors.white,
-            elevation: true,
+            isSecondary: false,
           )
         else if (isPaused)
           _ControlButton(
-            icon: Icons.play_arrow,
-            size: 60 * buttonSizeMultiplier,
+            icon: Icons.play_arrow_rounded,
+            label: 'Reanudar',
             onTap: onResume,
-            backgroundColor: AppColors.timerColor,
-            iconColor: Colors.white,
-            elevation: true,
+            isSecondary: false,
           ),
       ],
     );
@@ -94,19 +90,15 @@ class TimerControls extends StatelessWidget {
 
 class _ControlButton extends StatefulWidget {
   final IconData icon;
-  final double size;
+  final String label;
   final VoidCallback onTap;
-  final Color backgroundColor;
-  final Color? iconColor;
-  final bool elevation;
+  final bool isSecondary;
 
   const _ControlButton({
     required this.icon,
-    required this.size,
+    required this.label,
     required this.onTap,
-    required this.backgroundColor,
-    this.iconColor,
-    this.elevation = false,
+    this.isSecondary = false,
   });
 
   @override
@@ -127,7 +119,7 @@ class _ControlButtonState extends State<_ControlButton>
     );
     _scaleAnimation = Tween<double>(
       begin: 1.0,
-      end: 0.92,
+      end: 0.95,
     ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
   }
 
@@ -139,37 +131,67 @@ class _ControlButtonState extends State<_ControlButton>
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTapDown: (_) => _controller.forward(),
-      onTapUp: (_) {
-        _controller.reverse();
-        widget.onTap();
-      },
-      onTapCancel: () => _controller.reverse(),
-      child: AnimatedBuilder(
-        animation: _scaleAnimation,
-        builder: (context, child) {
-          return Transform.scale(scale: _scaleAnimation.value, child: child);
+    return MouseRegion(
+      cursor: SystemMouseCursors.click,
+      child: GestureDetector(
+        onTapDown: (_) => _controller.forward(),
+        onTapUp: (_) {
+          _controller.reverse();
+          widget.onTap();
         },
-        child: Container(
-          width: widget.size,
-          height: widget.size,
-          decoration: BoxDecoration(
-            color: widget.backgroundColor,
-            shape: BoxShape.circle,
-            boxShadow:
-                widget.elevation
-                    ? AppColors.glowShadow(AppColors.timerColor, blur: 24)
-                    : null,
-            border: Border.all(
-              color: AppColors.cardBorder,
-              width: widget.elevation ? 0 : 1,
+        onTapCancel: () => _controller.reverse(),
+        child: AnimatedBuilder(
+          animation: _scaleAnimation,
+          builder: (context, child) {
+            return Transform.scale(scale: _scaleAnimation.value, child: child);
+          },
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+            decoration: BoxDecoration(
+              gradient: widget.isSecondary 
+                  ? const LinearGradient(
+                      colors: [
+                        Color(0xFF2A2E3D),
+                        Color(0xFF1E212D),
+                      ],
+                    )
+                  : const LinearGradient(
+                      colors: [
+                        Color.fromARGB(255, 0, 149, 255),
+                        Color.fromARGB(255, 32, 43, 200),
+                      ],
+                    ),
+              borderRadius: BorderRadius.circular(12),
+              border: widget.isSecondary ? Border.all(color: AppColors.cardBorder) : null,
+              boxShadow: widget.isSecondary 
+                  ? null 
+                  : [
+                      BoxShadow(
+                        color: AppColors.primary.withAlpha(60),
+                        blurRadius: 12,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
             ),
-          ),
-          child: Icon(
-            widget.icon,
-            color: widget.iconColor ?? AppColors.textSecondary,
-            size: widget.size * 0.45,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  widget.icon,
+                  color: widget.isSecondary ? AppColors.textSecondary : Colors.white,
+                  size: 20,
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  widget.label,
+                  style: TextStyle(
+                    color: widget.isSecondary ? AppColors.textSecondary : Colors.white,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 14,
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),

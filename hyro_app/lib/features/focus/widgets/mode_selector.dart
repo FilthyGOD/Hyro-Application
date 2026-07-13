@@ -23,8 +23,6 @@ class ModeSelector extends StatelessWidget {
       children: [
         _ModeChip(
           label: 'Iniciar',
-          isActive: true,
-          activeColor: AppColors.timerColor,
           onTap: onStart,
         ),
       ],
@@ -34,14 +32,10 @@ class ModeSelector extends StatelessWidget {
 
 class _ModeChip extends StatefulWidget {
   final String label;
-  final bool isActive;
-  final Color activeColor;
   final VoidCallback onTap;
 
   const _ModeChip({
     required this.label,
-    required this.isActive,
-    required this.activeColor,
     required this.onTap,
   });
 
@@ -49,36 +43,82 @@ class _ModeChip extends StatefulWidget {
   State<_ModeChip> createState() => _ModeChipState();
 }
 
-class _ModeChipState extends State<_ModeChip> {
-  bool _hovering = false;
+class _ModeChipState extends State<_ModeChip> 
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _scaleAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 100),
+    );
+    _scaleAnimation = Tween<double>(
+      begin: 1.0,
+      end: 0.95,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     return MouseRegion(
-      onEnter: (_) => setState(() => _hovering = true),
-      onExit: (_) => setState(() => _hovering = false),
+      cursor: SystemMouseCursors.click,
       child: GestureDetector(
-        onTap: widget.onTap,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-          decoration: BoxDecoration(
-            color:
-                widget.isActive
-                    ? widget.activeColor
-                    : _hovering
-                    ? AppColors.surfaceLight
-                    : AppColors.surface,
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(
-              color:
-                  widget.isActive ? widget.activeColor : AppColors.cardBorder,
+        onTapDown: (_) => _controller.forward(),
+        onTapUp: (_) {
+          _controller.reverse();
+          widget.onTap();
+        },
+        onTapCancel: () => _controller.reverse(),
+        child: AnimatedBuilder(
+          animation: _scaleAnimation,
+          builder: (context, child) {
+            return Transform.scale(scale: _scaleAnimation.value, child: child);
+          },
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: [
+                  Color.fromARGB(255, 0, 149, 255),
+                  Color.fromARGB(255, 32, 43, 200),
+                ],
+              ),
+              borderRadius: BorderRadius.circular(12),
+              boxShadow: [
+                BoxShadow(
+                  color: AppColors.primary.withAlpha(60),
+                  blurRadius: 12,
+                  offset: const Offset(0, 4),
+                ),
+              ],
             ),
-          ),
-          child: Text(
-            widget.label,
-            style: AppTypography.chip.copyWith(
-              color: widget.isActive ? Colors.white : AppColors.textSecondary,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(
+                  Icons.play_arrow_rounded,
+                  color: Colors.white,
+                  size: 20,
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  widget.label,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 15,
+                  ),
+                ),
+              ],
             ),
           ),
         ),

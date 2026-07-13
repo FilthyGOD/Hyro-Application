@@ -92,3 +92,125 @@ class SearchResult {
     );
   }
 }
+
+/// Resultado de búsqueda por nombre (pantalla de búsqueda estilo Duolingo).
+class UserSearchResult {
+  final String id;
+  final String nombreUsuario;
+  final int codigoAmigo;
+
+  const UserSearchResult({
+    required this.id,
+    required this.nombreUsuario,
+    required this.codigoAmigo,
+  });
+
+  /// Formato completo: NombreUsuario#Código
+  String get displayTag => '$nombreUsuario#$codigoAmigo';
+
+  factory UserSearchResult.fromJson(Map<String, dynamic> json) {
+    return UserSearchResult(
+      id: json['id'] as String,
+      nombreUsuario: json['nombre_usuario'] as String? ?? 'Usuario',
+      codigoAmigo: (json['codigo_amigo'] as num?)?.toInt() ?? 0,
+    );
+  }
+}
+
+/// Perfil completo para la vista previa de un usuario tercero.
+class UserProfilePreview {
+  final String id;
+  final String nombreUsuario;
+  final int codigoAmigo;
+  final int nivel;
+  final int experiencia;
+  final int rachaActual;
+  final int rachaMaxima;
+  final int minutosEnfoqueTotal;
+  final int sombrero;
+  final int cosmetico;
+  final int traje;
+
+  const UserProfilePreview({
+    required this.id,
+    required this.nombreUsuario,
+    required this.codigoAmigo,
+    required this.nivel,
+    required this.experiencia,
+    required this.rachaActual,
+    required this.rachaMaxima,
+    required this.minutosEnfoqueTotal,
+    required this.sombrero,
+    required this.cosmetico,
+    required this.traje,
+  });
+
+  /// Formato completo: NombreUsuario#Código
+  String get displayTag => '$nombreUsuario#$codigoAmigo';
+
+  /// Horas totales de enfoque (conversión de minutos a horas).
+  double get horasTotales => minutosEnfoqueTotal / 60.0;
+
+  /// XP requerida para el siguiente nivel.
+  int get xpForNextLevel => nivel * 100;
+
+  /// Progreso de nivel (0.0 – 1.0).
+  double get levelProgress {
+    final required = xpForNextLevel;
+    if (required <= 0) return 0.0;
+    return (experiencia / required).clamp(0.0, 1.0);
+  }
+
+  factory UserProfilePreview.fromJson(Map<String, dynamic> json) {
+    final rawCosmeticos = json['mascota_cosmeticos'];
+    Map<String, dynamic> cosmeticData = {};
+    if (rawCosmeticos is List && rawCosmeticos.isNotEmpty) {
+      cosmeticData = Map<String, dynamic>.from(rawCosmeticos.first as Map);
+    } else if (rawCosmeticos is Map) {
+      cosmeticData = Map<String, dynamic>.from(rawCosmeticos);
+    }
+
+    return UserProfilePreview(
+      id: json['id'] as String,
+      nombreUsuario: json['nombre_usuario'] as String? ?? 'Usuario',
+      codigoAmigo: (json['codigo_amigo'] as num?)?.toInt() ?? 0,
+      nivel: (json['nivel'] as num?)?.toInt() ?? 1,
+      experiencia: (json['experiencia'] as num?)?.toInt() ?? 0,
+      rachaActual: (json['racha_actual'] as num?)?.toInt() ?? 0,
+      rachaMaxima: (json['racha_maxima'] as num?)?.toInt() ?? 0,
+      minutosEnfoqueTotal: (json['minutos_enfoque_total'] as num?)?.toInt() ?? 0,
+      sombrero: (cosmeticData['sombrero'] as num?)?.toInt() ?? 100,
+      cosmetico: (cosmeticData['cara'] as num?)?.toInt() ?? 200,
+      traje: (cosmeticData['traje'] as num?)?.toInt() ?? 300,
+    );
+  }
+}
+
+/// Estado de la relación entre el usuario actual y un perfil visitado.
+enum RelationshipStatus {
+  /// No hay relación previa
+  none,
+  /// El usuario actual envió solicitud
+  requestSent,
+  /// El usuario visitado envió solicitud al actual
+  requestReceived,
+  /// Ya son amigos confirmados
+  friends,
+  /// El usuario está bloqueado
+  blocked,
+}
+
+/// Información completa de la relación incluyendo el ID de la fila de amistad.
+class RelationshipInfo {
+  final RelationshipStatus status;
+  final String? friendshipId; // ID de la fila en tabla amistades (para update/delete)
+
+  const RelationshipInfo({
+    required this.status,
+    this.friendshipId,
+  });
+
+  const RelationshipInfo.none()
+      : status = RelationshipStatus.none,
+        friendshipId = null;
+}

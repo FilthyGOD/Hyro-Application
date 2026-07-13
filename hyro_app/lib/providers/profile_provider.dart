@@ -23,6 +23,16 @@ class ProfileProvider extends ChangeNotifier {
   int minutosEnfoqueTotal = 0;
   int tareasCompletadas = 0;
   int sesionesMes = 0;
+
+  // Identificador único del usuario (nombre_usuario + codigo_amigo)
+  String? nombreUsuario;
+  int? codigoAmigo;
+
+  /// Formato completo: NombreUsuario#Código (o null si no se ha cargado).
+  String? get displayTag {
+    if (nombreUsuario == null || codigoAmigo == null) return null;
+    return '$nombreUsuario#$codigoAmigo';
+  }
   
   bool isLoading = false;
   String? _error;
@@ -61,7 +71,7 @@ class ProfileProvider extends ChangeNotifier {
         try {
           final response = await _supabase
               .from('perfiles')
-              .select('nivel, experiencia, monedas, racha_actual, racha_maxima, minutos_enfoque_total, tareas_completadas_total')
+              .select('nivel, experiencia, monedas, racha_actual, racha_maxima, minutos_enfoque_total, tareas_completadas_total, nombre_usuario, codigo_amigo')
               .eq('id', userId)
               .maybeSingle();
 
@@ -100,6 +110,12 @@ class ProfileProvider extends ChangeNotifier {
             minutosEnfoqueTotal = activeUser.minutosEnfoqueTotal;
             tareasCompletadas = activeUser.tareasCompletadasTotal;
             sesionesMes = activeUser.sesionesMes;
+          }
+
+          // Cargar nombre_usuario y codigo_amigo para el identificador único
+          if (response != null) {
+            nombreUsuario = response['nombre_usuario'] as String?;
+            codigoAmigo = (response['codigo_amigo'] as num?)?.toInt();
           }
         } catch (syncError) {
           debugPrint('Error de sincronización con Supabase (ignorado por Offline-First): $syncError');

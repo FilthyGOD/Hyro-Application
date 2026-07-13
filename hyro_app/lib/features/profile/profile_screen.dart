@@ -92,6 +92,26 @@ class ProfileScreen extends StatelessWidget {
             style: AppTypography.h2,
           ),
           const SizedBox(height: 4),
+          // ── Identificador único: NombreUsuario#Código ──
+          if (!auth.isGuest && profile.displayTag != null)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 4),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withAlpha(15),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: AppColors.primary.withAlpha(40)),
+                ),
+                child: Text(
+                  profile.displayTag!,
+                  style: AppTypography.bodySmall.copyWith(
+                    color: AppColors.primary,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ),
           if (!auth.isGuest)
             Text(
               auth.currentUser?.usernameOrEmail ?? '',

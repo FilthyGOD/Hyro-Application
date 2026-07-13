@@ -177,4 +177,51 @@ class FriendsProvider extends ChangeNotifier {
     actionMessage = null;
     notifyListeners();
   }
+
+  // ─── Búsqueda por Nombre (Pantalla Dedicada) ──────────────────────
+
+  List<UserSearchResult> nameSearchResults = [];
+  bool isSearchingByName = false;
+  String? searchByNameError;
+
+  /// Busca usuarios por nombre usando ilike.
+  /// Dispara la consulta al servicio y actualiza el estado.
+  Future<void> searchUsersByName(String query, String currentUserId) async {
+    if (query.trim().isEmpty) {
+      nameSearchResults = [];
+      searchByNameError = null;
+      notifyListeners();
+      return;
+    }
+
+    isSearchingByName = true;
+    searchByNameError = null;
+    notifyListeners();
+
+    try {
+      final data = await _service.searchUsersByName(query.trim(), currentUserId);
+      nameSearchResults = data
+          .map((json) => UserSearchResult.fromJson(json))
+          .toList();
+
+      if (nameSearchResults.isEmpty) {
+        searchByNameError = 'No se encontraron usuarios con ese nombre';
+      }
+    } catch (e) {
+      searchByNameError = 'Error en la búsqueda: $e';
+      nameSearchResults = [];
+      debugPrint(searchByNameError);
+    } finally {
+      isSearchingByName = false;
+      notifyListeners();
+    }
+  }
+
+  /// Limpia los resultados de búsqueda por nombre.
+  void clearNameSearch() {
+    nameSearchResults = [];
+    searchByNameError = null;
+    isSearchingByName = false;
+    notifyListeners();
+  }
 }

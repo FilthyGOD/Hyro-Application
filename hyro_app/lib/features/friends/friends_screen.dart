@@ -6,6 +6,8 @@ import '../../providers/auth_provider.dart';
 import '../../providers/friends_provider.dart';
 import 'models/friends_models.dart';
 import 'widgets/static_mascot_widget.dart';
+import 'search_friends_screen.dart';
+import 'user_profile_preview_screen.dart';
 
 /// Pantalla de Amigos — Ranking semanal, solicitudes pendientes y búsqueda por código.
 class FriendsScreen extends StatefulWidget {
@@ -141,7 +143,13 @@ class _FriendsScreenState extends State<FriendsScreen> {
         color: Colors.transparent,
         child: InkWell(
           borderRadius: BorderRadius.circular(12),
-          onTap: () => _showSearchDialog(context),
+          onTap: () {
+            Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (_) => const SearchFriendsScreen(),
+              ),
+            );
+          },
           child: const Padding(
             padding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
             child: Row(
@@ -165,8 +173,9 @@ class _FriendsScreenState extends State<FriendsScreen> {
     );
   }
 
-  // ─── Diálogo de Búsqueda ────────────────────────────────────────────
+  // ─── Diálogo de Búsqueda por Código Exacto (alternativa) ───────────
 
+  // ignore: unused_element
   void _showSearchDialog(BuildContext context) {
     final searchController = TextEditingController();
     final auth = context.read<AuthProvider>();
@@ -704,12 +713,19 @@ class _FriendsScreenState extends State<FriendsScreen> {
     final rankColor = rankColors[rank] ?? AppColors.textSecondary;
     final isMe = entry.isCurrentUser;
 
-    // onTap preparado para perfil futuro
+    // onTap navega al perfil completo del amigo
     return GestureDetector(
-      onTap: () {
-        // TODO: Navegar al perfil completo del amigo
-        // (experiencia total, días de racha, etc.)
-      },
+      onTap: isMe
+          ? null
+          : () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => UserProfilePreviewScreen(
+                    targetUserId: entry.usuarioId,
+                  ),
+                ),
+              );
+            },
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
         decoration: BoxDecoration(
@@ -971,7 +987,13 @@ class _FriendsScreenState extends State<FriendsScreen> {
                 color: Colors.transparent,
                 child: InkWell(
                   borderRadius: BorderRadius.circular(12),
-                  onTap: () => _showSearchDialog(context),
+                  onTap: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => const SearchFriendsScreen(),
+                      ),
+                    );
+                  },
                   child: const Padding(
                     padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                     child: Row(

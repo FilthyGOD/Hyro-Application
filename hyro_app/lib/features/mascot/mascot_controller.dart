@@ -13,6 +13,7 @@ import '../../services/friends_service.dart';
 class MascotController extends ChangeNotifier {
   File? _file;
   RiveWidgetController? _riveController;
+  StreamSubscription<AuthState>? _authSubscription;
 
   // Disparadores
   TriggerInput? _triggerSaludo;
@@ -50,6 +51,7 @@ class MascotController extends ChangeNotifier {
 
   MascotController() {
     _initPrefsAndLoadRive();
+    _listenToAuthChanges();
   }
 
   Future<void> _initPrefsAndLoadRive() async {
@@ -58,6 +60,29 @@ class MascotController extends ChangeNotifier {
       equippedSombrero = prefs.getInt('equipped_sombrero') ?? 100;
       equippedCara = prefs.getInt('equipped_cara') ?? 200;
       equippedCuerpo = prefs.getInt('equipped_cuerpo') ?? 300;
+
+      final userId = Supabase.instance.client.auth.currentUser?.id;
+      if (userId != null) {
+        try {
+          final response = await Supabase.instance.client
+              .from('mascota_cosmeticos')
+              .select('sombrero, cara, traje')
+              .eq('usuario_id', userId)
+              .maybeSingle();
+
+          if (response != null) {
+            equippedSombrero = (response['sombrero'] as num?)?.toInt() ?? 100;
+            equippedCara = (response['cara'] as num?)?.toInt() ?? 200;
+            equippedCuerpo = (response['traje'] as num?)?.toInt() ?? 300;
+
+            await prefs.setInt('equipped_sombrero', equippedSombrero);
+            await prefs.setInt('equipped_cara', equippedCara);
+            await prefs.setInt('equipped_cuerpo', equippedCuerpo);
+          }
+        } catch (e) {
+          debugPrint('Error cargando cosméticos remotos al iniciar: $e');
+        }
+      }
     } catch (e) {
       debugPrint('Error loading prefs: $e');
     }
@@ -310,9 +335,49 @@ class MascotController extends ChangeNotifier {
     );
   }
 
+  void _listenToAuthChanges() {
+    _authSubscription = Supabase.instance.client.auth.onAuthStateChange.listen((data) {
+      final event = data.event;
+      final session = data.session;
+      if (event == AuthChangeEvent.signedIn && session != null) {
+        loadCosmeticsFromSupabase(session.user.id);
+      }
+    });
+  }
+
+  Future<void> loadCosmeticsFromSupabase(String userId) async {
+    try {
+      final response = await Supabase.instance.client
+          .from('mascota_cosmeticos')
+          .select('sombrero, cara, traje')
+          .eq('usuario_id', userId)
+          .maybeSingle();
+
+      if (response != null) {
+        equippedSombrero = (response['sombrero'] as num?)?.toInt() ?? 100;
+        equippedCara = (response['cara'] as num?)?.toInt() ?? 200;
+        equippedCuerpo = (response['traje'] as num?)?.toInt() ?? 300;
+
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setInt('equipped_sombrero', equippedSombrero);
+        await prefs.setInt('equipped_cara', equippedCara);
+        await prefs.setInt('equipped_cuerpo', equippedCuerpo);
+
+        // Actualizar inputs si está cargado
+        _sombrero?.value = equippedSombrero.toDouble();
+        _cara?.value = equippedCara.toDouble();
+        _cuerpo?.value = equippedCuerpo.toDouble();
+        notifyListeners();
+      }
+    } catch (e) {
+      debugPrint('Error cargando cosméticos de Supabase: $e');
+    }
+  }
+
   @override
   void dispose() {
     _cancelIdleLoop();
+    _authSubscription?.cancel();
     _triggerSaludo?.dispose();
     _triggerEstudiando?.dispose();
     _triggerHueva?.dispose();

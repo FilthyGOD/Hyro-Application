@@ -26,7 +26,7 @@ class MobileStatsBar extends StatelessWidget {
       ),
       decoration: const BoxDecoration(color: Colors.transparent),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
           // ── Racha ──
           _StatChip(
@@ -40,6 +40,7 @@ class MobileStatsBar extends StatelessWidget {
                     ),
             value: '${profile.rachaActual}',
           ),
+          const SizedBox(width: 24),
           // ── Monedas ──
           Row(
             mainAxisSize: MainAxisSize.min,

@@ -204,13 +204,36 @@ enum RelationshipStatus {
 class RelationshipInfo {
   final RelationshipStatus status;
   final String? friendshipId; // ID de la fila en tabla amistades (para update/delete)
+  final String? blockerId; // ID del usuario que bloqueó
 
   const RelationshipInfo({
     required this.status,
     this.friendshipId,
+    this.blockerId,
   });
 
   const RelationshipInfo.none()
       : status = RelationshipStatus.none,
-        friendshipId = null;
+        friendshipId = null,
+        blockerId = null;
 }
+
+/// Representa un regalo recibido pendiente de confirmación.
+class GiftWithDetails {
+  final String id;
+  final String remitenteId;
+  final String remitenteNombre;
+  final int objetoId;
+  final String objetoNombre;
+  final DateTime enviadoEn;
+
+  const GiftWithDetails({
+    required this.id,
+    required this.remitenteId,
+    required this.remitenteNombre,
+    required this.objetoId,
+    required this.objetoNombre,
+    required this.enviadoEn,
+  });
+}
+

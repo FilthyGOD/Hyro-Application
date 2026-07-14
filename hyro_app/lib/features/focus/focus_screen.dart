@@ -342,6 +342,58 @@ class _DesktopLayout extends StatelessWidget {
                                           ],
                                         ),
                                       ),
+                                      // Protectores chip
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                        decoration: BoxDecoration(
+                                          color: AppColors.surfaceLight.withValues(alpha: 0.6),
+                                          borderRadius: BorderRadius.circular(20),
+                                          border: Border.all(
+                                            color: AppColors.cardBorder.withValues(alpha: 0.4),
+                                          ),
+                                        ),
+                                        child: Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            const Text('🛡️', style: TextStyle(fontSize: 16)),
+                                            const SizedBox(width: 6),
+                                            Text(
+                                              '${profile.protectoresRachaActivos}',
+                                              style: AppTypography.labelLarge.copyWith(
+                                                fontSize: 14,
+                                                fontWeight: FontWeight.w700,
+                                                color: Colors.white,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                      // XP Doble chip
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                        decoration: BoxDecoration(
+                                          color: AppColors.surfaceLight.withValues(alpha: 0.6),
+                                          borderRadius: BorderRadius.circular(20),
+                                          border: Border.all(
+                                            color: AppColors.cardBorder.withValues(alpha: 0.4),
+                                          ),
+                                        ),
+                                        child: Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            const Text('🧪', style: TextStyle(fontSize: 16)),
+                                            const SizedBox(width: 6),
+                                            Text(
+                                              '${profile.sesionesXPDobleRestantes}',
+                                              style: AppTypography.labelLarge.copyWith(
+                                                fontSize: 14,
+                                                fontWeight: FontWeight.w700,
+                                                color: Colors.white,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
                                     ],
                                   ),
                                 );

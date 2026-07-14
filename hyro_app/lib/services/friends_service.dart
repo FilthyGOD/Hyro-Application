@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../features/friends/models/friends_models.dart';
+
 
 /// Servicio centralizado para operaciones de Supabase relacionadas con amigos y cosméticos.
 class FriendsService {
@@ -211,16 +213,27 @@ class FriendsService {
     }
   }
 
+  /// Obtiene los IDs de usuarios que han bloqueado al usuario actual.
+  Future<Set<String>> getUsersWhoBlockedMe(String userId) async {
+    final response = await _supabase
+        .from('bloqueos')
+        .select('bloqueador_id')
+        .eq('bloqueado_id', userId)
+        as List<dynamic>;
+
+    return response.map((row) => row['bloqueador_id'] as String).toSet();
+  }
+
   // ─── Búsqueda por Nombre (estilo Duolingo) ────────────────────────
 
   /// Busca usuarios cuyo nombre_usuario coincida parcialmente con [query]
-  /// usando ilike. Excluye al usuario actual y usuarios bloqueados.
+  /// usando ilike. Excluye al usuario actual y usuarios que bloquearon al actual.
   Future<List<Map<String, dynamic>>> searchUsersByName(
     String query,
     String currentUserId,
   ) async {
-    // 1. Obtener IDs bloqueados (en ambas direcciones)
-    final blockedIds = await getBlockedUserIds(currentUserId);
+    // 1. Obtener IDs de usuarios que bloquearon al actual
+    final blockedMeIds = await getUsersWhoBlockedMe(currentUserId);
 
     // 2. Buscar usuarios con ilike
     final response =
@@ -232,11 +245,11 @@ class FriendsService {
                 .limit(20)
             as List<dynamic>;
 
-    // 3. Filtrar bloqueados en el cliente
+    // 3. Filtrar en el cliente los que nos bloquearon
     final results =
         response
             .cast<Map<String, dynamic>>()
-            .where((user) => !blockedIds.contains(user['id'] as String))
+            .where((user) => !blockedMeIds.contains(user['id'] as String))
             .toList();
 
     return results;
@@ -333,7 +346,11 @@ class FriendsService {
             .maybeSingle();
 
     if (block != null) {
-      return {'status': 'blocked'};
+      return {
+        'status': 'blocked',
+        'friendshipId': null,
+        'blockerId': block['bloqueador_id'] as String?,
+      };
     }
 
     // 2. Verificar amistad
@@ -399,5 +416,131 @@ class FriendsService {
   /// Elimina una amistad confirmada.
   Future<void> removeFriend(String friendshipId) async {
     await _supabase.from('amistades').delete().eq('id', friendshipId);
+  }
+
+  /// Desbloquea a un usuario. Elimina de la tabla bloqueos.
+  Future<void> unblockUser(String blockerId, String blockedId) async {
+    await _supabase
+        .from('bloqueos')
+        .delete()
+        .eq('bloqueador_id', blockerId)
+        .eq('bloqueado_id', blockedId);
+  }
+
+  /// Realiza la compra de un regalo y lo registra en Supabase.
+  Future<void> sendGift({
+    required String senderId,
+    required String recipientId,
+    required int itemId,
+    required int price,
+  }) async {
+    // 1. Obtener monedas actuales del remitente
+    final profileRes = await _supabase
+        .from('perfiles')
+        .select('monedas')
+        .eq('id', senderId)
+        .single();
+    final currentCoins = (profileRes['monedas'] as num).toInt();
+
+    if (currentCoins < price) {
+      throw Exception('Monedas insuficientes');
+    }
+
+    // 2. Descontar las monedas del perfil
+    await _supabase
+        .from('perfiles')
+        .update({'monedas': currentCoins - price})
+        .eq('id', senderId);
+
+    // 3. Insertar el regalo pendiente
+    await _supabase.from('regalos').insert({
+      'remitente_id': senderId,
+      'destinatario_id': recipientId,
+      'objeto_id': itemId,
+      'estado': 'pendiente',
+    });
+  }
+
+  final Map<String, String> _senderNamesCache = {};
+  final Map<int, String> _itemNamesCache = {};
+
+  Future<String> _getSenderName(String userId) async {
+    if (_senderNamesCache.containsKey(userId)) {
+      return _senderNamesCache[userId]!;
+    }
+    try {
+      final res = await _supabase
+          .from('perfiles')
+          .select('nombre_usuario')
+          .eq('id', userId)
+          .maybeSingle();
+      final name = res?['nombre_usuario'] as String? ?? 'Usuario';
+      _senderNamesCache[userId] = name;
+      return name;
+    } catch (e) {
+      return 'Usuario';
+    }
+  }
+
+  Future<String> _getItemName(int itemId) async {
+    if (_itemNamesCache.containsKey(itemId)) {
+      return _itemNamesCache[itemId]!;
+    }
+    try {
+      final res = await _supabase
+          .from('objetos_tienda')
+          .select('nombre')
+          .eq('id', itemId)
+          .maybeSingle();
+      final name = res?['nombre'] as String? ?? 'Objeto';
+      _itemNamesCache[itemId] = name;
+      return name;
+    } catch (e) {
+      switch (itemId) {
+        case 401: return 'Protector de Racha';
+        default: return 'Objeto';
+      }
+    }
+  }
+
+  /// Retorna un Stream con los regalos recibidos pendientes en tiempo real.
+  Stream<List<GiftWithDetails>> getPendingGiftsStream(String currentUserId) {
+    return _supabase
+        .from('regalos')
+        .stream(primaryKey: ['id'])
+        .eq('destinatario_id', currentUserId)
+        .asyncMap((rawGifts) async {
+          final List<GiftWithDetails> detailedGifts = [];
+          for (final gift in rawGifts) {
+            // Filter by pending state client-side since stream eq cannot be chained
+            if (gift['estado'] != 'pendiente') continue;
+
+            final senderId = gift['remitente_id'] as String;
+            final itemId = (gift['objeto_id'] as num).toInt();
+            
+            final senderName = await _getSenderName(senderId);
+            final itemName = await _getItemName(itemId);
+            
+            detailedGifts.add(GiftWithDetails(
+              id: gift['id'] as String,
+              remitenteId: senderId,
+              remitenteNombre: senderName,
+              objetoId: itemId,
+              objetoNombre: itemName,
+              enviadoEn: DateTime.parse(gift['enviado_en'] as String),
+            ));
+          }
+          return detailedGifts;
+        });
+  }
+
+  /// Acepta el regalo recibido llamando a la RPC.
+  Future<void> acceptGift(String giftId) async {
+    await _supabase.rpc('aceptar_regalo', params: {'p_regalo_id': giftId});
+  }
+
+  /// Rechaza el regalo recibido llamando a la RPC.
+  Future<void> rejectGift(String giftId) async {
+    await _supabase.rpc('rechazar_regalo', params: {'p_regalo_id': giftId});
   }
 }

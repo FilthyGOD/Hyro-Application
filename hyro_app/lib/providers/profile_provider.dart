@@ -28,6 +28,10 @@ class ProfileProvider extends ChangeNotifier {
   String? nombreUsuario;
   int? codigoAmigo;
 
+  // Buffs activos
+  int protectoresRachaActivos = 0;
+  int sesionesXPDobleRestantes = 0;
+
   /// Formato completo: NombreUsuario#Código (o null si no se ha cargado).
   String? get displayTag {
     if (nombreUsuario == null || codigoAmigo == null) return null;
@@ -71,7 +75,7 @@ class ProfileProvider extends ChangeNotifier {
         try {
           final response = await _supabase
               .from('perfiles')
-              .select('nivel, experiencia, monedas, racha_actual, racha_maxima, minutos_enfoque_total, tareas_completadas_total, nombre_usuario, codigo_amigo')
+              .select('nivel, experiencia, monedas, racha_actual, racha_maxima, minutos_enfoque_total, tareas_completadas_total, nombre_usuario, codigo_amigo, protectores_racha_activos, sesiones_xp_doble_restantes')
               .eq('id', userId)
               .maybeSingle();
 
@@ -116,6 +120,8 @@ class ProfileProvider extends ChangeNotifier {
           if (response != null) {
             nombreUsuario = response['nombre_usuario'] as String?;
             codigoAmigo = (response['codigo_amigo'] as num?)?.toInt();
+            protectoresRachaActivos = (response['protectores_racha_activos'] as num?)?.toInt() ?? 0;
+            sesionesXPDobleRestantes = (response['sesiones_xp_doble_restantes'] as num?)?.toInt() ?? 0;
           }
         } catch (syncError) {
           debugPrint('Error de sincronización con Supabase (ignorado por Offline-First): $syncError');

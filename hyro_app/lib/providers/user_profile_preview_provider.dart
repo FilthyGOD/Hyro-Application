@@ -75,8 +75,9 @@ class UserProfilePreviewProvider extends ChangeNotifier {
           friendshipId: friendshipId,
         );
       case 'blocked':
-        return const RelationshipInfo(
+        return RelationshipInfo(
           status: RelationshipStatus.blocked,
+          blockerId: data['blockerId'] as String?,
         );
       default:
         return const RelationshipInfo.none();
@@ -171,11 +172,30 @@ class UserProfilePreviewProvider extends ChangeNotifier {
     try {
       await _service.blockUser(blockerId, blockedId);
       actionMessage = 'Usuario bloqueado.';
-      relationship = const RelationshipInfo(
+      relationship = RelationshipInfo(
         status: RelationshipStatus.blocked,
+        blockerId: blockerId,
       );
     } catch (e) {
       actionMessage = 'Error al bloquear: $e';
+    } finally {
+      isActioning = false;
+      notifyListeners();
+    }
+  }
+
+  /// Desbloquea a un usuario.
+  Future<void> unblockUser(String blockerId, String blockedId) async {
+    isActioning = true;
+    actionMessage = null;
+    notifyListeners();
+
+    try {
+      await _service.unblockUser(blockerId, blockedId);
+      actionMessage = 'Usuario desbloqueado.';
+      relationship = const RelationshipInfo.none();
+    } catch (e) {
+      actionMessage = 'Error al desbloquear: $e';
     } finally {
       isActioning = false;
       notifyListeners();

@@ -14,6 +14,7 @@ class ShopProvider extends ChangeNotifier {
 
   List<ShopItem> catalog = [];
   Set<int> ownedItemIds = {};
+  Map<int, int> ownedQuantities = {};
   bool isLoading = false;
   String? error;
 
@@ -86,18 +87,23 @@ class ShopProvider extends ChangeNotifier {
                 .findFirst();
         if (activeUser != null) {
           ownedItemIds = activeUser.comprasLocales.toSet();
+          ownedQuantities = {for (var id in activeUser.comprasLocales) id: 1};
         }
       } else {
         // Inventario en la nube
         final inventoryData =
             await _supabase
                     .from('inventario_usuarios')
-                    .select('objeto_id')
+                    .select('objeto_id, cantidad')
                     .eq('usuario_id', userId)
                 as List<dynamic>;
 
         ownedItemIds =
             inventoryData.map((e) => (e['objeto_id'] as num).toInt()).toSet();
+        ownedQuantities = {
+          for (var e in inventoryData)
+            (e['objeto_id'] as num).toInt(): (e['cantidad'] as num?)?.toInt() ?? 1
+        };
       }
     } catch (e) {
       error = 'Error cargando tienda: $e';
@@ -112,8 +118,14 @@ class ShopProvider extends ChangeNotifier {
 
   /// Intenta comprar un artículo.
   Future<bool> purchaseItem(String? userId, int itemId) async {
+    final item = catalog.firstWhere(
+      (i) => i.id == itemId,
+      orElse: () => _defaultCatalog.firstWhere((i) => i.id == itemId),
+    );
+    final isStackable = item.categoria.toLowerCase() == 'objeto' || itemId >= 400;
+
     // Verificación previa local
-    if (ownedItemIds.contains(itemId)) {
+    if (!isStackable && ownedItemIds.contains(itemId)) {
       error = 'Ya posees este objeto';
       notifyListeners();
       return false;

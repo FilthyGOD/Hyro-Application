@@ -40,18 +40,30 @@ class MobileStatsBar extends StatelessWidget {
                     ),
             value: '${profile.rachaActual}',
           ),
-          const SizedBox(width: 24),
+          const SizedBox(width: 12),
           // ── Monedas ──
+          _StatChip(
+            icon: const Icon(
+              Icons.monetization_on,
+              color: Colors.amber,
+              size: 20,
+            ),
+            value: _formatNumber(profile.monedas),
+          ),
+          const SizedBox(width: 12),
+          // ── Protectores ──
+          _StatChip(
+            icon: const Text('🛡️', style: TextStyle(fontSize: 18)),
+            value: '${profile.protectoresRachaActivos}',
+          ),
+          const SizedBox(width: 12),
+          // ── XP Doble ──
           Row(
             mainAxisSize: MainAxisSize.min,
             children: [
               _StatChip(
-                icon: const Icon(
-                  Icons.monetization_on,
-                  color: Colors.amber,
-                  size: 20,
-                ),
-                value: _formatNumber(profile.monedas),
+                icon: const Text('🧪', style: TextStyle(fontSize: 18)),
+                value: '${profile.sesionesXPDobleRestantes}',
               ),
               if (trailing != null) ...[const SizedBox(width: 8), trailing!],
             ],

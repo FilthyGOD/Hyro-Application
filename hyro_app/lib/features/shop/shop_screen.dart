@@ -9,6 +9,7 @@ import '../mascot/mascot_controller.dart';
 import '../../providers/shop_provider.dart';
 import '../../providers/profile_provider.dart';
 import '../../providers/auth_provider.dart';
+import '../../services/friends_service.dart';
 import 'models/shop_item.dart';
 
 // ── Cosmetic category enum ──
@@ -285,7 +286,6 @@ class _ShopScreenState extends State<ShopScreen>
               child: CircularProgressIndicator(color: AppColors.primary),
             )
           else
-            // ── Tabs ──
             GlassCard(
               padding: const EdgeInsets.all(16),
               child: Column(
@@ -319,6 +319,9 @@ class _ShopScreenState extends State<ShopScreen>
                 ],
               ),
             ),
+          const SizedBox(height: 24),
+          if (!shop.isLoading)
+            _buildConsumiblesSection(shop),
           const SizedBox(height: 80),
         ],
       ),
@@ -481,6 +484,358 @@ class _ShopScreenState extends State<ShopScreen>
       icon: Icons.shopping_cart,
       color: AppColors.timerColor,
       onTap: _isPurchasing ? () {} : () => _onBuy(category, selected),
+    );
+  }
+
+  Widget _buildActionSheetButton({
+    required String label,
+    required IconData icon,
+    required VoidCallback onPressed,
+  }) {
+    return SizedBox(
+      width: double.infinity,
+      child: ElevatedButton.icon(
+        onPressed: onPressed,
+        icon: Icon(icon, size: 20, color: Colors.white),
+        label: Text(label, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: AppColors.primary,
+          padding: const EdgeInsets.symmetric(vertical: 14),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showObjectActionSheet(int itemId) {
+    final shop = context.read<ShopProvider>();
+    final item = shop.catalog.firstWhere((i) => i.id == itemId);
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: const Color(0xFF0F1528),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (sheetContext) {
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  item.icon,
+                  style: const TextStyle(fontSize: 48),
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  item.nombre,
+                  style: AppTypography.h3,
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Precio: ${item.precio} 🪙',
+                  style: AppTypography.labelLarge.copyWith(color: Colors.amber),
+                ),
+                const SizedBox(height: 24),
+                _buildActionSheetButton(
+                  label: 'Comprar para mí',
+                  icon: Icons.shopping_bag_rounded,
+                  onPressed: () {
+                    Navigator.of(sheetContext).pop();
+                    _onBuy(_CosmeticCategory.sombrero, itemId);
+                  },
+                ),
+                const SizedBox(height: 12),
+                _buildActionSheetButton(
+                  label: 'Regalar a un amigo',
+                  icon: Icons.card_giftcard_rounded,
+                  onPressed: () {
+                    Navigator.of(sheetContext).pop();
+                    _showFriendsGiftSelectionList(item);
+                  },
+                ),
+                const SizedBox(height: 12),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  void _showFriendsGiftSelectionList(ShopItem item) {
+    final auth = context.read<AuthProvider>();
+    final currentUserId = auth.supabaseUserId;
+    if (currentUserId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Inicia sesión para enviar regalos.')),
+      );
+      return;
+    }
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: const Color(0xFF0F1528),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (sheetContext) {
+        return FutureBuilder<List<Map<String, dynamic>>>(
+          future: FriendsService().getFriendsRanking(currentUserId),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const SizedBox(
+                height: 250,
+                child: Center(
+                  child: CircularProgressIndicator(color: AppColors.primary),
+                ),
+              );
+            }
+            if (snapshot.hasError || !snapshot.hasData) {
+              return SizedBox(
+                height: 250,
+                child: Center(
+                  child: Text(
+                    'Error cargando amigos',
+                    style: AppTypography.bodyMedium,
+                  ),
+                ),
+              );
+            }
+
+            final friends = snapshot.data!
+                .where((f) => f['usuario_id'] != currentUserId)
+                .toList();
+
+            if (friends.isEmpty) {
+              return SizedBox(
+                height: 250,
+                child: Center(
+                  child: Padding(
+                    padding: const EdgeInsets.all(24.0),
+                    child: Text(
+                      'No tienes amigos agregados aún para enviar regalos.',
+                      style: AppTypography.bodyMedium,
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                ),
+              );
+            }
+
+            return SafeArea(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(24, 20, 24, 10),
+                    child: Text(
+                      'Regalar a...',
+                      style: AppTypography.h3,
+                    ),
+                  ),
+                  Flexible(
+                    child: ListView.builder(
+                      shrinkWrap: true,
+                      itemCount: friends.length,
+                      itemBuilder: (context, index) {
+                        final friend = friends[index];
+                        final friendId = friend['usuario_id'] as String;
+                        final friendName = friend['nombre_usuario'] as String? ?? 'Usuario';
+
+                        return ListTile(
+                          leading: CircleAvatar(
+                            backgroundColor: AppColors.surfaceLight,
+                            child: const Icon(Icons.person, color: AppColors.primary),
+                          ),
+                          title: Text(
+                            friendName,
+                            style: const TextStyle(color: AppColors.textPrimary),
+                          ),
+                          trailing: ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppColors.primary,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                            ),
+                            onPressed: () {
+                              Navigator.of(sheetContext).pop();
+                              _confirmAndSendGift(friendId, friendName, item);
+                            },
+                            child: const Text('Enviar', style: TextStyle(color: Colors.white)),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  void _confirmAndSendGift(String friendId, String friendName, ShopItem item) async {
+    final auth = context.read<AuthProvider>();
+    final profile = context.read<ProfileProvider>();
+    final currentUserId = auth.supabaseUserId;
+    if (currentUserId == null) return;
+
+    if (profile.monedas < item.precio) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('No tienes suficientes monedas'),
+          backgroundColor: Colors.red.shade700,
+        ),
+      );
+      return;
+    }
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => const Center(child: CircularProgressIndicator(color: AppColors.primary)),
+    );
+
+    try {
+      await FriendsService().sendGift(
+        senderId: currentUserId,
+        recipientId: friendId,
+        itemId: item.id,
+        price: item.precio,
+      );
+
+      if (mounted) Navigator.of(context).pop();
+
+      await profile.loadProfile(currentUserId);
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('¡Regalo enviado con éxito a $friendName!'),
+            backgroundColor: AppColors.breakGreen,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) Navigator.of(context).pop();
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error al enviar regalo: $e'),
+            backgroundColor: Colors.red.shade700,
+          ),
+        );
+      }
+    }
+  }
+
+  Widget _buildConsumiblesSection(ShopProvider shop) {
+    final items = shop.itemsByCategory('Objeto');
+
+    return GlassCard(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Consumibles',
+            style: AppTypography.h2.copyWith(fontSize: 20),
+          ),
+          const SizedBox(height: 16),
+          Wrap(
+            spacing: 12,
+            runSpacing: 12,
+            alignment: WrapAlignment.center,
+            children: items.map((item) {
+              final quantityOwned = shop.ownedQuantities[item.id] ?? 0;
+
+              return GestureDetector(
+                onTap: () => _showObjectActionSheet(item.id),
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  width: 105,
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: AppColors.surfaceLight.withValues(alpha: 0.4),
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(
+                      color: AppColors.cardBorder.withValues(alpha: 0.2),
+                      width: 1.5,
+                    ),
+                  ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        item.icon,
+                        style: const TextStyle(fontSize: 32),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        item.nombre,
+                        style: AppTypography.bodySmall.copyWith(
+                          color: AppColors.textPrimary,
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                        ),
+                        textAlign: TextAlign.center,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 4),
+                      
+                      // Mostrar cantidad de cada cosa que ya se posee
+                      if (quantityOwned > 0) ...[
+                        Text(
+                          'Posees: $quantityOwned',
+                          style: AppTypography.bodySmall.copyWith(
+                            color: AppColors.timerColor,
+                            fontSize: 10,
+                            fontWeight: FontWeight.w600,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 4),
+                      ],
+
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(
+                            Icons.monetization_on,
+                            color: Colors.amber,
+                            size: 12,
+                          ),
+                          const SizedBox(width: 2),
+                          Text(
+                            '${item.precio}',
+                            style: AppTypography.bodySmall.copyWith(
+                              color: Colors.amber,
+                              fontSize: 10,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            }).toList(),
+          ),
+        ],
+      ),
     );
   }
 }

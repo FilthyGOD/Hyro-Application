@@ -31,6 +31,8 @@ class ShopItem {
       case 301: return '🤵';
       case 302: return '🇲🇽';
       case 303: return '🎪';
+      case 401: return '🛡️';
+      case 402: return '🧪';
       default:  return '❓';
     }
   }

@@ -4,9 +4,14 @@ import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_typography.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/user_profile_preview_provider.dart';
+import '../../providers/shop_provider.dart';
+import '../../providers/profile_provider.dart';
+import '../../services/friends_service.dart';
+import '../shop/models/shop_item.dart';
 import '../../shared/widgets/glass_card.dart';
 import 'models/friends_models.dart';
 import 'widgets/static_mascot_widget.dart';
+
 
 /// Pantalla de vista previa del perfil de un usuario tercero.
 /// Replica la estructura visual del perfil propio con botones de acción
@@ -135,6 +140,7 @@ class _UserProfilePreviewBody extends StatelessWidget {
     UserProfilePreviewProvider provider,
   ) {
     final profile = provider.profile!;
+    final isBlocked = provider.relationship.status == RelationshipStatus.blocked;
 
     return SingleChildScrollView(
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
@@ -185,98 +191,100 @@ class _UserProfilePreviewBody extends StatelessWidget {
 
           const SizedBox(height: 24),
 
-          // ── Nivel y XP ──
-          GlassCard(
-            padding: const EdgeInsets.all(20),
-            child: Column(
+          // ── Nivel y XP (Ocultar si está bloqueado) ──
+          if (!isBlocked) ...[
+            GlassCard(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 6,
+                            ),
+                            decoration: BoxDecoration(
+                              gradient: const LinearGradient(
+                                colors: [Color(0xFF6A25F4), Color(0xFFA855F7)],
+                              ),
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: Text(
+                              'Nv. ${profile.nivel}',
+                              style: AppTypography.labelLarge.copyWith(
+                                fontSize: 14,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Text(
+                            '${profile.experiencia} / ${profile.xpForNextLevel} XP',
+                            style: AppTypography.bodyMedium,
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  // XP progress bar
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(8),
+                    child: LinearProgressIndicator(
+                      value: profile.levelProgress,
+                      minHeight: 8,
+                      backgroundColor: AppColors.surfaceLight,
+                      valueColor: const AlwaysStoppedAnimation<Color>(
+                        AppColors.primary,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 16),
+
+            // ── Estadísticas ──
+            Row(
               children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 6,
-                          ),
-                          decoration: BoxDecoration(
-                            gradient: const LinearGradient(
-                              colors: [Color(0xFF6A25F4), Color(0xFFA855F7)],
-                            ),
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          child: Text(
-                            'Nv. ${profile.nivel}',
-                            style: AppTypography.labelLarge.copyWith(
-                              fontSize: 14,
-                              color: Colors.white,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Text(
-                          '${profile.experiencia} / ${profile.xpForNextLevel} XP',
-                          style: AppTypography.bodyMedium,
-                        ),
-                      ],
-                    ),
-                  ],
+                Expanded(
+                  child: _buildStatCard(
+                    icon: Icons.local_fire_department_rounded,
+                    iconColor: const Color(0xFFFFA726),
+                    label: 'Racha',
+                    value: '${profile.rachaActual}',
+                    subtitle: 'días',
+                  ),
                 ),
-                const SizedBox(height: 12),
-                // XP progress bar
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(8),
-                  child: LinearProgressIndicator(
-                    value: profile.levelProgress,
-                    minHeight: 8,
-                    backgroundColor: AppColors.surfaceLight,
-                    valueColor: const AlwaysStoppedAnimation<Color>(
-                      AppColors.primary,
-                    ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _buildStatCard(
+                    icon: Icons.emoji_events_rounded,
+                    iconColor: const Color(0xFFFFD700),
+                    label: 'Mejor racha',
+                    value: '${profile.rachaMaxima}',
+                    subtitle: 'días',
                   ),
                 ),
               ],
             ),
-          ),
+            const SizedBox(height: 12),
+            _buildStatCard(
+              icon: Icons.timer_rounded,
+              iconColor: AppColors.primary,
+              label: 'Tiempo total de enfoque',
+              value: profile.horasTotales.toStringAsFixed(1),
+              subtitle: 'horas',
+              fullWidth: true,
+            ),
 
-          const SizedBox(height: 16),
-
-          // ── Estadísticas ──
-          Row(
-            children: [
-              Expanded(
-                child: _buildStatCard(
-                  icon: Icons.local_fire_department_rounded,
-                  iconColor: const Color(0xFFFFA726),
-                  label: 'Racha',
-                  value: '${profile.rachaActual}',
-                  subtitle: 'días',
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: _buildStatCard(
-                  icon: Icons.emoji_events_rounded,
-                  iconColor: const Color(0xFFFFD700),
-                  label: 'Mejor racha',
-                  value: '${profile.rachaMaxima}',
-                  subtitle: 'días',
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          _buildStatCard(
-            icon: Icons.timer_rounded,
-            iconColor: AppColors.primary,
-            label: 'Tiempo total de enfoque',
-            value: profile.horasTotales.toStringAsFixed(1),
-            subtitle: 'horas',
-            fullWidth: true,
-          ),
-
-          const SizedBox(height: 28),
+            const SizedBox(height: 28),
+          ],
 
           // ── Mensaje de acción ──
           if (provider.actionMessage != null) ...[
@@ -459,6 +467,15 @@ class _UserProfilePreviewBody extends StatelessWidget {
       case RelationshipStatus.friends:
         return Column(
           children: [
+            _buildPrimaryButton(
+              label: 'Enviar Regalo',
+              icon: Icons.card_giftcard_rounded,
+              isLoading: provider.isActioning,
+              onPressed: provider.isActioning
+                  ? null
+                  : () => _showSendGiftMenu(context, currentUserId, targetUserId),
+            ),
+            const SizedBox(height: 10),
             _buildDestructiveButton(
               label: 'Eliminar amigo',
               icon: Icons.person_remove_rounded,
@@ -486,10 +503,21 @@ class _UserProfilePreviewBody extends StatelessWidget {
 
       // ── Bloqueado ──
       case RelationshipStatus.blocked:
-        return _buildDisabledButton(
-          label: 'Usuario bloqueado',
-          icon: Icons.block_rounded,
-        );
+        if (relationship.blockerId == currentUserId) {
+          return _buildPrimaryButton(
+            label: 'Desbloquear',
+            icon: Icons.lock_open_rounded,
+            isLoading: provider.isActioning,
+            onPressed: provider.isActioning
+                ? null
+                : () => provider.unblockUser(currentUserId, targetUserId),
+          );
+        } else {
+          return _buildDisabledButton(
+            label: 'Usuario bloqueado',
+            icon: Icons.block_rounded,
+          );
+        }
     }
   }
 
@@ -780,5 +808,203 @@ class _UserProfilePreviewBody extends StatelessWidget {
         );
       },
     );
+  }
+
+  void _showSendGiftMenu(BuildContext context, String currentUserId, String targetUserId) {
+    final shop = context.read<ShopProvider>();
+    final profile = context.read<ProfileProvider>();
+    
+    // Filtramos los objetos del catálogo que tienen categoría 'Objeto' o ID >= 400
+    final objectItems = shop.catalog.where((item) => item.categoria.toLowerCase() == 'objeto' || item.id >= 400).toList();
+
+    if (objectItems.isEmpty) {
+      shop.loadShop(currentUserId).then((_) {
+        if (!context.mounted) return;
+        final refreshedItems = shop.catalog.where((item) => item.categoria.toLowerCase() == 'objeto' || item.id >= 400).toList();
+        if (refreshedItems.isEmpty) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('No hay objetos disponibles en la tienda en este momento.')),
+          );
+        } else {
+          _displayGiftItemsSheet(context, refreshedItems, currentUserId, targetUserId, profile);
+        }
+      });
+      return;
+    }
+
+    _displayGiftItemsSheet(context, objectItems, currentUserId, targetUserId, profile);
+  }
+
+  void _displayGiftItemsSheet(
+    BuildContext context,
+    List<ShopItem> items,
+    String currentUserId,
+    String targetUserId,
+    ProfileProvider profile,
+  ) {
+    final shop = context.read<ShopProvider>();
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: const Color(0xFF0F1528),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (sheetContext) {
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(24, 20, 24, 10),
+                child: Text(
+                  'Selecciona un regalo',
+                  style: AppTypography.h3,
+                ),
+              ),
+              Flexible(
+                child: ListView.builder(
+                  shrinkWrap: true,
+                  itemCount: items.length,
+                  itemBuilder: (context, index) {
+                    final item = items[index];
+
+                    return ListTile(
+                      leading: Text(
+                        item.icon,
+                        style: const TextStyle(fontSize: 28),
+                      ),
+                      title: Text(
+                        item.nombre,
+                        style: const TextStyle(color: AppColors.textPrimary),
+                      ),
+                      subtitle: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            '${item.precio} monedas',
+                            style: const TextStyle(color: Colors.amber),
+                          ),
+                          if ((shop.ownedQuantities[item.id] ?? 0) > 0)
+                            Text(
+                              'Posees: ${shop.ownedQuantities[item.id]}',
+                              style: const TextStyle(
+                                color: AppColors.timerColor,
+                                fontSize: 11,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                        ],
+                      ),
+                      trailing: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.primary,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                        onPressed: () {
+                          Navigator.of(sheetContext).pop();
+                          _confirmAndSendGift(context, currentUserId, targetUserId, item, profile);
+                        },
+                        child: const Text('Regalar', style: TextStyle(color: Colors.white)),
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  void _confirmAndSendGift(
+    BuildContext context,
+    String currentUserId,
+    String targetUserId,
+    ShopItem item,
+    ProfileProvider profile,
+  ) async {
+    if (profile.monedas < item.precio) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('No tienes suficientes monedas'),
+          backgroundColor: Colors.red.shade700,
+        ),
+      );
+      return;
+    }
+
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        backgroundColor: const Color(0xFF0F1528),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+          side: const BorderSide(color: AppColors.cardBorder),
+        ),
+        title: Text(
+          '¿Confirmar regalo?',
+          style: AppTypography.h3.copyWith(fontSize: 18),
+        ),
+        content: Text(
+          '¿Deseas comprar y regalar ${item.nombre} por ${item.precio} monedas?',
+          style: AppTypography.bodyMedium,
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: Text('Cancelar', style: TextStyle(color: AppColors.textSecondary)),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            child: const Text('Confirmar', style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.w600)),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm != true || !context.mounted) return;
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => const Center(child: CircularProgressIndicator(color: AppColors.primary)),
+    );
+
+    try {
+      await FriendsService().sendGift(
+        senderId: currentUserId,
+        recipientId: targetUserId,
+        itemId: item.id,
+        price: item.precio,
+      );
+
+      if (context.mounted) Navigator.of(context).pop();
+
+      await profile.loadProfile(currentUserId);
+
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('¡Regalo de ${item.nombre} enviado con éxito!'),
+            backgroundColor: AppColors.breakGreen,
+          ),
+        );
+      }
+    } catch (e) {
+      if (context.mounted) Navigator.of(context).pop();
+
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error al enviar regalo: $e'),
+            backgroundColor: Colors.red.shade700,
+          ),
+        );
+      }
+    }
   }
 }

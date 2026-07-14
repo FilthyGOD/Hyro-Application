@@ -4,10 +4,14 @@ import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_typography.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/friends_provider.dart';
+import '../../providers/profile_provider.dart';
+import '../../providers/shop_provider.dart';
+import '../../services/friends_service.dart';
 import 'models/friends_models.dart';
 import 'widgets/static_mascot_widget.dart';
 import 'search_friends_screen.dart';
 import 'user_profile_preview_screen.dart';
+
 
 /// Pantalla de Amigos — Ranking semanal, solicitudes pendientes y búsqueda por código.
 class FriendsScreen extends StatefulWidget {
@@ -54,6 +58,9 @@ class _FriendsScreenState extends State<FriendsScreen> {
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
           child: Consumer<FriendsProvider>(
             builder: (context, friends, _) {
+              final auth = context.read<AuthProvider>();
+              final userId = auth.supabaseUserId;
+
               return Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -67,7 +74,15 @@ class _FriendsScreenState extends State<FriendsScreen> {
                       color: AppColors.textSecondary,
                     ),
                   ),
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 16),
+
+                  // Buzón de regalos pendientes
+                  if (userId != null) ...[
+                    _buildGiftsBuzon(context, userId),
+                    const SizedBox(height: 16),
+                  ],
+
+                  const SizedBox(height: 8),
 
                   // ── Mensaje de acción temporal ──
                   if (friends.actionMessage != null)
@@ -1059,6 +1074,179 @@ class _FriendsScreenState extends State<FriendsScreen> {
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildGiftsBuzon(BuildContext context, String currentUserId) {
+    return StreamBuilder<List<GiftWithDetails>>(
+      stream: FriendsService().getPendingGiftsStream(currentUserId),
+      builder: (context, snapshot) {
+        if (!snapshot.hasData || snapshot.data!.isEmpty) {
+          return const SizedBox.shrink();
+        }
+
+        final pendingGifts = snapshot.data!;
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _buildSectionHeader(
+              'Regalos Pendientes',
+              '${pendingGifts.length}',
+            ),
+            const SizedBox(height: 12),
+            ...pendingGifts.map((gift) {
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 8.0),
+                child: _buildGiftBanner(context, gift, currentUserId),
+              );
+            }),
+            const SizedBox(height: 16),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildGiftBanner(BuildContext context, GiftWithDetails gift, String currentUserId) {
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [Color(0xFF1E2640), Color(0xFF15182B)],
+        ),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.amber.withAlpha(80), width: 1.5),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.amber.withAlpha(20),
+            blurRadius: 8,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 48,
+            height: 48,
+            decoration: BoxDecoration(
+              color: Colors.amber.withAlpha(20),
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(
+                color: Colors.amber.withAlpha(100),
+                width: 1.5,
+              ),
+            ),
+            child: const Center(
+              child: Icon(
+                Icons.card_giftcard_rounded,
+                color: Colors.amber,
+                size: 26,
+              ),
+            ),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                RichText(
+                  text: TextSpan(
+                    style: const TextStyle(color: Colors.white, fontSize: 14),
+                    children: [
+                      TextSpan(
+                        text: gift.remitenteNombre,
+                        style: const TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                      const TextSpan(text: ' te envió un regalo: '),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  gift.objetoNombre,
+                  style: const TextStyle(
+                    color: Colors.amber,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 13,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 8),
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _buildActionButton(
+                icon: Icons.close_rounded,
+                color: Colors.redAccent,
+                bgColor: AppColors.surfaceLight,
+                onTap: () async {
+                  try {
+                    await FriendsService().rejectGift(gift.id);
+                    if (context.mounted) {
+                      await context.read<ProfileProvider>().loadProfile(currentUserId);
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Regalo rechazado y monedas reembolsadas al remitente.'),
+                            backgroundColor: Colors.redAccent,
+                          ),
+                        );
+                      }
+                    }
+                  } catch (e) {
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('Error al rechazar regalo: $e'),
+                          backgroundColor: Colors.red.shade700,
+                        ),
+                      );
+                    }
+                  }
+                },
+              ),
+              const SizedBox(width: 8),
+              _buildActionButton(
+                icon: Icons.check_rounded,
+                color: Colors.white,
+                bgColor: AppColors.breakGreen,
+                onTap: () async {
+                  try {
+                    await FriendsService().acceptGift(gift.id);
+                    if (context.mounted) {
+                      await context.read<ProfileProvider>().loadProfile(currentUserId);
+                      await context.read<ShopProvider>().loadShop(currentUserId);
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('¡Regalo de ${gift.objetoNombre} aceptado con éxito!'),
+                            backgroundColor: AppColors.breakGreen,
+                          ),
+                        );
+                      }
+                    }
+                  } catch (e) {
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('Error al aceptar regalo: $e'),
+                          backgroundColor: Colors.red.shade700,
+                        ),
+                      );
+                    }
+                  }
+                },
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }

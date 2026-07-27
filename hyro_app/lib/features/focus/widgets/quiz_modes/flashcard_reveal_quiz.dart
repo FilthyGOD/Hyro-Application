@@ -7,8 +7,14 @@ import '../../../../data/models/tarea_card_model.dart';
 class FlashcardRevealQuiz extends StatefulWidget {
   final List<TareaCardModel> flashcards;
   final void Function(bool isCorrect, String question, String userAnswer, String correctAnswer) onAnswer;
+  final Color subjectColor;
 
-  const FlashcardRevealQuiz({super.key, required this.flashcards, required this.onAnswer});
+  const FlashcardRevealQuiz({
+    super.key,
+    required this.flashcards,
+    required this.onAnswer,
+    this.subjectColor = const Color(0xFF00F2FF),
+  });
 
   @override
   State<FlashcardRevealQuiz> createState() => _FlashcardRevealQuizState();
@@ -68,28 +74,39 @@ class _FlashcardRevealQuizState extends State<FlashcardRevealQuiz> with SingleTi
   Widget build(BuildContext context) {
     final shownSide = _showFront ? _card.frente : _card.reverso;
     final hiddenSide = _showFront ? _card.reverso : _card.frente;
+    final color = widget.subjectColor;
+    final gradientLight = Color.lerp(color, Colors.white, 0.15)!;
+    final gradientDark = Color.lerp(color, Colors.black, 0.15)!;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       mainAxisSize: MainAxisSize.min,
       children: [
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-          decoration: BoxDecoration(
-            color: AppColors.primary.withAlpha(30),
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Icon(Icons.flip_rounded, color: AppColors.primary, size: 16),
-              const SizedBox(width: 6),
-              Text('FLASHCARD', style: AppTypography.labelSmall.copyWith(color: AppColors.primary)),
-            ],
+        // Badge centrado
+        Center(
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            decoration: BoxDecoration(
+              color: AppColors.primary.withAlpha(30),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.flip_rounded, color: AppColors.primary, size: 16),
+                const SizedBox(width: 6),
+                Text('FLASHCARD', style: AppTypography.labelSmall.copyWith(color: AppColors.primary)),
+              ],
+            ),
           ),
         ),
         const SizedBox(height: 16),
-        Text(_showFront ? '¿Qué hay en el reverso?' : '¿Qué hay en el frente?', style: AppTypography.labelSmall),
+        // Texto centrado
+        Text(
+          _showFront ? '¿Qué hay en el reverso?' : '¿Qué hay en el frente?',
+          style: AppTypography.labelSmall,
+          textAlign: TextAlign.center,
+        ),
         const SizedBox(height: 8),
         // Visual de la tarjeta
         AnimatedBuilder(
@@ -153,17 +170,47 @@ class _FlashcardRevealQuizState extends State<FlashcardRevealQuiz> with SingleTi
             onSubmitted: (_) => _check(),
           ),
           const SizedBox(height: 16),
-          Align(
-            alignment: Alignment.centerRight,
-            child: ElevatedButton(
-              onPressed: _check,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primary,
-                foregroundColor: AppColors.background,
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          // Botón Responder con degradado, centrado
+          Center(
+            child: Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [gradientDark, color, gradientLight],
+                  begin: Alignment.centerLeft,
+                  end: Alignment.centerRight,
+                ),
+                borderRadius: BorderRadius.circular(12),
+                boxShadow: [
+                  BoxShadow(
+                    color: color.withValues(alpha: 0.35),
+                    blurRadius: 12,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
               ),
-              child: const Text('Responder', style: TextStyle(fontWeight: FontWeight.bold)),
+              child: Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  onTap: _check,
+                  borderRadius: BorderRadius.circular(12),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
+                    child: Text(
+                      'Responder',
+                      style: AppTypography.labelLarge.copyWith(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        shadows: [
+                          Shadow(
+                            color: Colors.black.withValues(alpha: 0.25),
+                            blurRadius: 3,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
             ),
           ),
         ],
@@ -171,4 +218,3 @@ class _FlashcardRevealQuizState extends State<FlashcardRevealQuiz> with SingleTi
     );
   }
 }
-

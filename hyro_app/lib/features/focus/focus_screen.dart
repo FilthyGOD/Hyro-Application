@@ -69,10 +69,24 @@ class FocusScreen extends StatelessWidget {
             context.read<TimerCubit>().pause(manual: false);
             mascot.triggerPensando();
 
+            // Obtener el color de la materia activa
+            Color subjectColor = AppColors.primary;
+            try {
+              final tasksProvider = context.read<TaskProvider>();
+              final task = tasksProvider.tasks.firstWhere(
+                (t) => t.id == state.activeTaskId,
+              );
+              subjectColor = Color(task.priorityColorValue);
+            } catch (_) {}
+
             showDialog(
               context: context,
               barrierDismissible: false,
-              builder: (_) => FocusQuizDialog(flashcards: cards, notas: notes),
+              builder: (_) => FocusQuizDialog(
+                flashcards: cards,
+                notas: notes,
+                subjectColor: subjectColor,
+              ),
             ).then((_) {
               mascot.resumeEstudio();
               // solo reanuda si actualmente está pausado
@@ -278,7 +292,9 @@ class _DesktopLayout extends StatelessWidget {
                             320, // Ancho fijo para que las tarjetas de datos no se estiren
                         child: ListView(
                           children: [
-                            const SizedBox(height: 56), // Empuja hacia abajo para no chocar con el botón PiP
+                            const SizedBox(
+                              height: 56,
+                            ), // Empuja hacia abajo para no chocar con el botón PiP
                             Consumer<ProfileProvider>(
                               builder: (context, profile, _) {
                                 return Center(
@@ -288,108 +304,157 @@ class _DesktopLayout extends StatelessWidget {
                                     children: [
                                       // Racha chip
                                       Container(
-                                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 12,
+                                          vertical: 6,
+                                        ),
                                         decoration: BoxDecoration(
-                                          color: AppColors.surfaceLight.withValues(alpha: 0.6),
-                                          borderRadius: BorderRadius.circular(20),
+                                          color: AppColors.surfaceLight
+                                              .withValues(alpha: 0.6),
+                                          borderRadius: BorderRadius.circular(
+                                            20,
+                                          ),
                                           border: Border.all(
-                                            color: AppColors.cardBorder.withValues(alpha: 0.4),
+                                            color: AppColors.cardBorder
+                                                .withValues(alpha: 0.4),
                                           ),
                                         ),
                                         child: Row(
                                           mainAxisSize: MainAxisSize.min,
                                           children: [
                                             if (profile.rachaActual > 0)
-                                              const Text('🔥', style: TextStyle(fontSize: 16))
+                                              const Text(
+                                                '🔥',
+                                                style: TextStyle(fontSize: 16),
+                                              )
                                             else
-                                              Icon(Icons.local_fire_department_outlined,
-                                                  color: AppColors.textSecondary, size: 18),
+                                              Icon(
+                                                Icons
+                                                    .local_fire_department_outlined,
+                                                color: AppColors.textSecondary,
+                                                size: 18,
+                                              ),
                                             const SizedBox(width: 6),
                                             Text(
                                               '${profile.rachaActual}',
-                                              style: AppTypography.labelLarge.copyWith(
-                                                fontSize: 14,
-                                                fontWeight: FontWeight.w700,
-                                                color: Colors.white,
-                                              ),
+                                              style: AppTypography.labelLarge
+                                                  .copyWith(
+                                                    fontSize: 14,
+                                                    fontWeight: FontWeight.w700,
+                                                    color: Colors.white,
+                                                  ),
                                             ),
                                           ],
                                         ),
                                       ),
                                       // Monedas chip
                                       Container(
-                                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 12,
+                                          vertical: 6,
+                                        ),
                                         decoration: BoxDecoration(
-                                          color: AppColors.surfaceLight.withValues(alpha: 0.6),
-                                          borderRadius: BorderRadius.circular(20),
+                                          color: AppColors.surfaceLight
+                                              .withValues(alpha: 0.6),
+                                          borderRadius: BorderRadius.circular(
+                                            20,
+                                          ),
                                           border: Border.all(
-                                            color: AppColors.cardBorder.withValues(alpha: 0.4),
+                                            color: AppColors.cardBorder
+                                                .withValues(alpha: 0.4),
                                           ),
                                         ),
                                         child: Row(
                                           mainAxisSize: MainAxisSize.min,
                                           children: [
-                                            const Icon(Icons.monetization_on, color: Colors.amber, size: 18),
+                                            const Icon(
+                                              Icons.monetization_on,
+                                              color: Colors.amber,
+                                              size: 18,
+                                            ),
                                             const SizedBox(width: 6),
                                             Text(
                                               '${profile.monedas}',
-                                              style: AppTypography.labelLarge.copyWith(
-                                                fontSize: 14,
-                                                fontWeight: FontWeight.w700,
-                                                color: Colors.white,
-                                              ),
+                                              style: AppTypography.labelLarge
+                                                  .copyWith(
+                                                    fontSize: 14,
+                                                    fontWeight: FontWeight.w700,
+                                                    color: Colors.white,
+                                                  ),
                                             ),
                                           ],
                                         ),
                                       ),
                                       // Protectores chip
                                       Container(
-                                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 12,
+                                          vertical: 6,
+                                        ),
                                         decoration: BoxDecoration(
-                                          color: AppColors.surfaceLight.withValues(alpha: 0.6),
-                                          borderRadius: BorderRadius.circular(20),
+                                          color: AppColors.surfaceLight
+                                              .withValues(alpha: 0.6),
+                                          borderRadius: BorderRadius.circular(
+                                            20,
+                                          ),
                                           border: Border.all(
-                                            color: AppColors.cardBorder.withValues(alpha: 0.4),
+                                            color: AppColors.cardBorder
+                                                .withValues(alpha: 0.4),
                                           ),
                                         ),
                                         child: Row(
                                           mainAxisSize: MainAxisSize.min,
                                           children: [
-                                            const Text('🛡️', style: TextStyle(fontSize: 16)),
+                                            const Text(
+                                              '🛡️',
+                                              style: TextStyle(fontSize: 16),
+                                            ),
                                             const SizedBox(width: 6),
                                             Text(
                                               '${profile.protectoresRachaActivos}',
-                                              style: AppTypography.labelLarge.copyWith(
-                                                fontSize: 14,
-                                                fontWeight: FontWeight.w700,
-                                                color: Colors.white,
-                                              ),
+                                              style: AppTypography.labelLarge
+                                                  .copyWith(
+                                                    fontSize: 14,
+                                                    fontWeight: FontWeight.w700,
+                                                    color: Colors.white,
+                                                  ),
                                             ),
                                           ],
                                         ),
                                       ),
                                       // XP Doble chip
                                       Container(
-                                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 12,
+                                          vertical: 6,
+                                        ),
                                         decoration: BoxDecoration(
-                                          color: AppColors.surfaceLight.withValues(alpha: 0.6),
-                                          borderRadius: BorderRadius.circular(20),
+                                          color: AppColors.surfaceLight
+                                              .withValues(alpha: 0.6),
+                                          borderRadius: BorderRadius.circular(
+                                            20,
+                                          ),
                                           border: Border.all(
-                                            color: AppColors.cardBorder.withValues(alpha: 0.4),
+                                            color: AppColors.cardBorder
+                                                .withValues(alpha: 0.4),
                                           ),
                                         ),
                                         child: Row(
                                           mainAxisSize: MainAxisSize.min,
                                           children: [
-                                            const Text('🧪', style: TextStyle(fontSize: 16)),
+                                            const Text(
+                                              '🧪',
+                                              style: TextStyle(fontSize: 16),
+                                            ),
                                             const SizedBox(width: 6),
                                             Text(
                                               '${profile.sesionesXPDobleRestantes}',
-                                              style: AppTypography.labelLarge.copyWith(
-                                                fontSize: 14,
-                                                fontWeight: FontWeight.w700,
-                                                color: Colors.white,
-                                              ),
+                                              style: AppTypography.labelLarge
+                                                  .copyWith(
+                                                    fontSize: 14,
+                                                    fontWeight: FontWeight.w700,
+                                                    color: Colors.white,
+                                                  ),
                                             ),
                                           ],
                                         ),
@@ -458,20 +523,8 @@ class _DesktopLayout extends StatelessWidget {
       'Dic',
     ];
 
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('Sesión de Trabajo Profundo', style: AppTypography.h1),
-            const SizedBox(height: 4),
-            Text(
-              '${dayNames[now.weekday - 1]}, ${now.day} de ${monthNames[now.month - 1]} • Racha de Enfoque: $streak días 🔥',
-              style: AppTypography.bodyMedium,
-            ),
-          ],
-        ),
+    return Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+
       ],
     );
   }
@@ -581,13 +634,7 @@ class _MobileLayout extends StatelessWidget {
               children: [
                 if (!state.isRunning) ...[
                   // Encabezado
-                  Text('Sesión de Trabajo Profundo', style: AppTypography.h2),
-                  const SizedBox(height: 4),
-                  Text(
-                    'Racha de Enfoque: $streak días 🔥',
-                    style: AppTypography.bodySmall,
-                  ),
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 120),
                 ],
                 // Temporizador
                 Center(

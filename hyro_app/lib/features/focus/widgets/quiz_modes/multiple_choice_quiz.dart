@@ -72,23 +72,25 @@ class _MultipleChoiceQuizState extends State<MultipleChoiceQuiz> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       mainAxisSize: MainAxisSize.min,
       children: [
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-          decoration: BoxDecoration(
-            color: const Color(0xFF6A25F4).withAlpha(40),
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Icon(Icons.quiz_rounded, color: Color(0xFFA855F7), size: 16),
-              const SizedBox(width: 6),
-              Text('OPCIÓN MÚLTIPLE', style: AppTypography.labelSmall.copyWith(color: const Color(0xFFA855F7))),
-            ],
+        Center(
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            decoration: BoxDecoration(
+              color: const Color(0xFF6A25F4).withAlpha(40),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.quiz_rounded, color: Color(0xFFA855F7), size: 16),
+                const SizedBox(width: 6),
+                Text('OPCIÓN MÚLTIPLE', style: AppTypography.labelSmall.copyWith(color: const Color(0xFFA855F7))),
+              ],
+            ),
           ),
         ),
         const SizedBox(height: 16),
-        Text('¿Cuál es la respuesta correcta?', style: AppTypography.labelSmall),
+        Text('¿Cuál es la respuesta correcta?', style: AppTypography.labelSmall, textAlign: TextAlign.center),
         const SizedBox(height: 8),
         Container(
           padding: const EdgeInsets.all(16),

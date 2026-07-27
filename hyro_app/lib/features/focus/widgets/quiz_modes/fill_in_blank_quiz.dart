@@ -9,8 +9,15 @@ class FillInBlankQuiz extends StatefulWidget {
   final List<TareaCardModel> flashcards;
   final List<TareaNotaModel> notas;
   final void Function(bool isCorrect, String question, String userAnswer, String correctAnswer) onAnswer;
+  final Color subjectColor;
 
-  const FillInBlankQuiz({super.key, required this.flashcards, required this.notas, required this.onAnswer});
+  const FillInBlankQuiz({
+    super.key,
+    required this.flashcards,
+    required this.notas,
+    required this.onAnswer,
+    this.subjectColor = const Color(0xFF00F2FF),
+  });
 
   @override
   State<FillInBlankQuiz> createState() => _FillInBlankQuizState();
@@ -84,28 +91,36 @@ class _FillInBlankQuizState extends State<FillInBlankQuiz> {
 
   @override
   Widget build(BuildContext context) {
+    final color = widget.subjectColor;
+    final gradientLight = Color.lerp(color, Colors.white, 0.15)!;
+    final gradientDark = Color.lerp(color, Colors.black, 0.15)!;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       mainAxisSize: MainAxisSize.min,
       children: [
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-          decoration: BoxDecoration(
-            color: const Color(0xFF10B981).withAlpha(40),
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Icon(Icons.edit_note_rounded, color: Color(0xFF34D399), size: 16),
-              const SizedBox(width: 6),
-              Text('COMPLETAR', style: AppTypography.labelSmall.copyWith(color: const Color(0xFF34D399))),
-            ],
+        // Badge centrado
+        Center(
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            decoration: BoxDecoration(
+              color: const Color(0xFF10B981).withAlpha(40),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.edit_note_rounded, color: Color(0xFF34D399), size: 16),
+                const SizedBox(width: 6),
+                Text('COMPLETAR', style: AppTypography.labelSmall.copyWith(color: const Color(0xFF34D399))),
+              ],
+            ),
           ),
         ),
         const SizedBox(height: 16),
         if (_contextText != null) ...[
-          Text('Frente de la tarjeta:', style: AppTypography.labelSmall),
+          // Texto centrado
+          Text('Frente de la tarjeta:', style: AppTypography.labelSmall, textAlign: TextAlign.center),
           const SizedBox(height: 8),
           Container(
             padding: const EdgeInsets.all(16),
@@ -114,11 +129,12 @@ class _FillInBlankQuizState extends State<FillInBlankQuiz> {
               borderRadius: BorderRadius.circular(12),
               border: Border.all(color: AppColors.cardBorder),
             ),
-            child: Text(_contextText!, style: AppTypography.bodyLarge),
+            child: Text(_contextText!, style: AppTypography.bodyLarge, textAlign: TextAlign.center),
           ),
           const SizedBox(height: 12),
         ],
-        Text(_label, style: AppTypography.labelSmall),
+        // Label centrado
+        Text(_label, style: AppTypography.labelSmall, textAlign: TextAlign.center),
         const SizedBox(height: 8),
         Container(
           padding: const EdgeInsets.all(16),
@@ -127,7 +143,7 @@ class _FillInBlankQuizState extends State<FillInBlankQuiz> {
             borderRadius: BorderRadius.circular(12),
             border: Border.all(color: AppColors.cardBorder),
           ),
-          child: Text(_displayText, style: AppTypography.bodyLarge),
+          child: Text(_displayText, style: AppTypography.bodyLarge, textAlign: TextAlign.center),
         ),
         if (!_answered) ...[
           const SizedBox(height: 16),
@@ -147,17 +163,47 @@ class _FillInBlankQuizState extends State<FillInBlankQuiz> {
             onSubmitted: (_) => _check(),
           ),
           const SizedBox(height: 16),
-          Align(
-            alignment: Alignment.centerRight,
-            child: ElevatedButton(
-              onPressed: _check,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primary,
-                foregroundColor: AppColors.background,
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          // Botón Responder con degradado, centrado
+          Center(
+            child: Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [gradientDark, color, gradientLight],
+                  begin: Alignment.centerLeft,
+                  end: Alignment.centerRight,
+                ),
+                borderRadius: BorderRadius.circular(12),
+                boxShadow: [
+                  BoxShadow(
+                    color: color.withValues(alpha: 0.35),
+                    blurRadius: 12,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
               ),
-              child: const Text('Responder', style: TextStyle(fontWeight: FontWeight.bold)),
+              child: Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  onTap: _check,
+                  borderRadius: BorderRadius.circular(12),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
+                    child: Text(
+                      'Responder',
+                      style: AppTypography.labelLarge.copyWith(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        shadows: [
+                          Shadow(
+                            color: Colors.black.withValues(alpha: 0.25),
+                            blurRadius: 3,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
             ),
           ),
         ],

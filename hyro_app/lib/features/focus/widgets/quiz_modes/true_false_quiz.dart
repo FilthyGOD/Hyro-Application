@@ -65,23 +65,25 @@ class _TrueFalseQuizState extends State<TrueFalseQuiz> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       mainAxisSize: MainAxisSize.min,
       children: [
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-          decoration: BoxDecoration(
-            color: const Color(0xFF0EA5E9).withAlpha(40),
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Icon(Icons.check_circle_outline_rounded, color: Color(0xFF38BDF8), size: 16),
-              const SizedBox(width: 6),
-              Text('VERDADERO O FALSO', style: AppTypography.labelSmall.copyWith(color: const Color(0xFF38BDF8))),
-            ],
+        Center(
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            decoration: BoxDecoration(
+              color: const Color(0xFF0EA5E9).withAlpha(40),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.check_circle_outline_rounded, color: Color(0xFF38BDF8), size: 16),
+                const SizedBox(width: 6),
+                Text('VERDADERO O FALSO', style: AppTypography.labelSmall.copyWith(color: const Color(0xFF38BDF8))),
+              ],
+            ),
           ),
         ),
         const SizedBox(height: 16),
-        Text('¿Esta relación es correcta?', style: AppTypography.labelSmall),
+        Text('¿Esta relación es correcta?', style: AppTypography.labelSmall, textAlign: TextAlign.center),
         const SizedBox(height: 8),
         Container(
           padding: const EdgeInsets.all(16),

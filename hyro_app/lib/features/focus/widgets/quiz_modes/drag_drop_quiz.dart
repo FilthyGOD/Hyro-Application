@@ -7,8 +7,9 @@ import '../../../../data/models/tarea_nota_model.dart';
 class DragDropQuiz extends StatefulWidget {
   final List<TareaNotaModel> notas;
   final void Function(bool isCorrect, String question, String userAnswer, String correctAnswer) onAnswer;
+  final Color subjectColor;
 
-  const DragDropQuiz({super.key, required this.notas, required this.onAnswer});
+  const DragDropQuiz({super.key, required this.notas, required this.onAnswer, this.subjectColor = const Color(0xFF00F2FF)});
 
   @override
   State<DragDropQuiz> createState() => _DragDropQuizState();
@@ -88,23 +89,25 @@ class _DragDropQuizState extends State<DragDropQuiz> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       mainAxisSize: MainAxisSize.min,
       children: [
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-          decoration: BoxDecoration(
-            color: const Color(0xFFF59E0B).withAlpha(40),
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Icon(Icons.drag_indicator_rounded, color: Color(0xFFFBBF24), size: 16),
-              const SizedBox(width: 6),
-              Text('ARRASTRA Y COLOCA', style: AppTypography.labelSmall.copyWith(color: const Color(0xFFFBBF24))),
-            ],
+        Center(
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            decoration: BoxDecoration(
+              color: const Color(0xFFF59E0B).withAlpha(40),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.drag_indicator_rounded, color: Color(0xFFFBBF24), size: 16),
+                const SizedBox(width: 6),
+                Text('ARRASTRA Y COLOCA', style: AppTypography.labelSmall.copyWith(color: const Color(0xFFFBBF24))),
+              ],
+            ),
           ),
         ),
         const SizedBox(height: 16),
-        Text('Coloca las palabras en su lugar correcto:', style: AppTypography.labelSmall),
+        Text('Coloca las palabras en su lugar correcto:', style: AppTypography.labelSmall, textAlign: TextAlign.center),
         const SizedBox(height: 12),
         // Texto con objetivos para soltar
         Container(
@@ -142,15 +145,54 @@ class _DragDropQuizState extends State<DragDropQuiz> {
         ),
         if (!_answered && _placed.values.every((v) => v != null)) ...[
           const SizedBox(height: 16),
-          ElevatedButton(
-            onPressed: _checkAnswer,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.primary,
-              foregroundColor: AppColors.background,
-              padding: const EdgeInsets.symmetric(vertical: 14),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-            ),
-            child: const Text('Verificar', style: TextStyle(fontWeight: FontWeight.bold)),
+          Builder(
+            builder: (context) {
+              final color = widget.subjectColor;
+              final gradientLight = Color.lerp(color, Colors.white, 0.15)!;
+              final gradientDark = Color.lerp(color, Colors.black, 0.15)!;
+              return Center(
+                child: Container(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [gradientDark, color, gradientLight],
+                      begin: Alignment.centerLeft,
+                      end: Alignment.centerRight,
+                    ),
+                    borderRadius: BorderRadius.circular(12),
+                    boxShadow: [
+                      BoxShadow(
+                        color: color.withValues(alpha: 0.35),
+                        blurRadius: 12,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      onTap: _checkAnswer,
+                      borderRadius: BorderRadius.circular(12),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
+                        child: Text(
+                          'Verificar',
+                          style: AppTypography.labelLarge.copyWith(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            shadows: [
+                              Shadow(
+                                color: Colors.black.withValues(alpha: 0.25),
+                                blurRadius: 3,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              );
+            },
           ),
         ],
       ],

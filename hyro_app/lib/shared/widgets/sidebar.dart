@@ -81,7 +81,7 @@ class Sidebar extends StatelessWidget {
           }),
           const Spacer(),
           // ── Avatar del usuario ──
-          if (!collapsed) _buildUserInfo(context),
+          _buildUserInfo(context),
           const SizedBox(height: 20),
         ],
       ),
@@ -119,14 +119,14 @@ class Sidebar extends StatelessWidget {
     final String initial = userName.substring(0, 1).toUpperCase();
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
+      padding: EdgeInsets.symmetric(horizontal: collapsed ? 8 : 16),
       child: Material(
         color: Colors.transparent,
         child: InkWell(
           borderRadius: BorderRadius.circular(12),
           onTap: () => onItemSelected(5),
           child: Container(
-            padding: const EdgeInsets.all(12),
+            padding: EdgeInsets.all(collapsed ? 6 : 12),
             decoration: BoxDecoration(
               color: isActive ? AppColors.sidebarActive : AppColors.surface,
               borderRadius: BorderRadius.circular(12),
@@ -135,27 +135,30 @@ class Sidebar extends StatelessWidget {
               ),
             ),
             child: Row(
+              mainAxisAlignment: collapsed ? MainAxisAlignment.center : MainAxisAlignment.start,
               children: [
                 CircleAvatar(
-                  radius: 16,
+                  radius: collapsed ? 14 : 16,
                   backgroundColor: AppColors.primary,
-                  child: Text(initial, style: AppTypography.labelLarge),
+                  child: Text(initial, style: AppTypography.labelLarge.copyWith(fontSize: collapsed ? 12 : 14)),
                 ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        userName,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: AppTypography.labelLarge.copyWith(fontSize: 13),
-                      ),
-                    ],
+                if (!collapsed) ...[
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          userName,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: AppTypography.labelLarge.copyWith(fontSize: 13),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
+                ],
               ],
             ),
           ),

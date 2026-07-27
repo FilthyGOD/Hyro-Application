@@ -21,11 +21,13 @@ enum QuizMode { fillInNote, fillInCard, writeCardBack, writeCardFront, multipleC
 class FocusQuizDialog extends StatefulWidget {
   final List<TareaCardModel> flashcards;
   final List<TareaNotaModel> notas;
+  final Color subjectColor;
 
   const FocusQuizDialog({
     super.key,
     required this.flashcards,
     required this.notas,
+    this.subjectColor = const Color(0xFF00F2FF),
   });
 
   @override
@@ -132,53 +134,99 @@ class _FocusQuizDialogState extends State<FocusQuizDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final color = widget.subjectColor;
+    // Colores derivados para el degradado
+    final gradientLight = Color.lerp(color, Colors.white, 0.15)!;
+    final gradientDark = Color.lerp(color, Colors.black, 0.25)!;
+
     return Dialog(
       backgroundColor: Colors.transparent,
       insetPadding: const EdgeInsets.symmetric(horizontal: 16),
       child: GlassCard(
         width: 420,
-        padding: const EdgeInsets.all(24),
+        padding: EdgeInsets.zero, // Sin padding para que la barra toque los bordes
         child: SingleChildScrollView(
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // Encabezado
-              Row(
-                children: [
-                  const Icon(Icons.psychology_alt_rounded, color: AppColors.primary, size: 28),
-                  const SizedBox(width: 12),
-                  Expanded(child: Text('Verificación de Enfoque', style: AppTypography.h3)),
-                ],
-              ),
-              const SizedBox(height: 12),
-              // Mascota
-              Consumer<MascotController>(
-                builder: (context, mascot, _) {
-                  if (!mascot.isLoaded) return const SizedBox();
-                  return SizedBox(
-                    height: 120,
-                    child: Center(
-                      child: Transform.scale(
-                        scale: 1.4,
-                        child: Transform.translate(
-                          offset: const Offset(0, 8),
-                          child: RiveWidget(controller: mascot.controller!, fit: Fit.contain),
-                        ),
+              // ── Barra superior con degradado del color de la materia ──
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [gradientDark, color, gradientLight],
+                    begin: Alignment.centerLeft,
+                    end: Alignment.centerRight,
+                  ),
+                  borderRadius: const BorderRadius.vertical(
+                    top: Radius.circular(16),
+                  ),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.psychology_alt_rounded,
+                      color: Colors.white.withValues(alpha: 0.95),
+                      size: 22,
+                    ),
+                    const SizedBox(width: 10),
+                    Text(
+                      'Verificación de Enfoque',
+                      style: AppTypography.h3.copyWith(
+                        color: Colors.white,
+                        fontSize: 17,
+                        fontWeight: FontWeight.w700,
+                        shadows: [
+                          Shadow(
+                            color: Colors.black.withValues(alpha: 0.3),
+                            blurRadius: 4,
+                          ),
+                        ],
                       ),
                     ),
-                  );
-                },
+                  ],
+                ),
               ),
-              const SizedBox(height: 12),
-              // Contenido del cuestionario
-              _buildQuizContent(),
-              const SizedBox(height: 20),
-              // Botones de resultado o acción
-              if (_revealed)
-                _buildResult()
-              else
-                _buildActions(),
+              // ── Contenido con padding ──
+              Padding(
+                padding: const EdgeInsets.fromLTRB(24, 12, 24, 24),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    // Mascota
+                    Consumer<MascotController>(
+                      builder: (context, mascot, _) {
+                        if (!mascot.isLoaded) return const SizedBox();
+                        return SizedBox(
+                          height: 120,
+                          child: Center(
+                            child: Transform.scale(
+                              scale: 1.4,
+                              child: Transform.translate(
+                                offset: const Offset(0, 8),
+                                child: RiveWidget(controller: mascot.controller!, fit: Fit.contain),
+                              ),
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                    const SizedBox(height: 12),
+                    // Contenido del cuestionario
+                    _buildQuizContent(),
+                    const SizedBox(height: 20),
+                    // Botones de resultado o acción
+                    if (_revealed)
+                      _buildResult()
+                    else
+                      _buildActions(),
+                  ],
+                ),
+              ),
             ],
           ),
         ),
@@ -203,28 +251,56 @@ class _FocusQuizDialogState extends State<FocusQuizDialog> {
         return FlashcardRevealQuiz(
           flashcards: widget.flashcards,
           onAnswer: _onAnswer,
+          subjectColor: widget.subjectColor,
         );
       case QuizMode.dragDrop:
         return DragDropQuiz(
           notas: widget.notas,
           onAnswer: _onAnswer,
+          subjectColor: widget.subjectColor,
         );
       default:
         return FillInBlankQuiz(
           flashcards: widget.flashcards,
           notas: widget.notas,
           onAnswer: _onAnswer,
+          subjectColor: widget.subjectColor,
         );
     }
   }
 
   Widget _buildActions() {
+    final color = widget.subjectColor;
+
     return Row(
-      mainAxisAlignment: MainAxisAlignment.end,
+      mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        TextButton(
-          onPressed: _skip,
-          child: Text('Saltar', style: AppTypography.bodyMedium),
+        // Botón Saltar
+        Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: color.withValues(alpha: 0.4),
+              width: 1.5,
+            ),
+          ),
+          child: Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: _skip,
+              borderRadius: BorderRadius.circular(12),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 12),
+                child: Text(
+                  'Saltar',
+                  style: AppTypography.labelLarge.copyWith(
+                    color: Colors.white.withValues(alpha: 0.8),
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ),
+          ),
         ),
       ],
     );

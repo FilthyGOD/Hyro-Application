@@ -215,7 +215,7 @@ class _FocusQuizDialogState extends State<FocusQuizDialog> {
                         );
                       },
                     ),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 24),
                     // Contenido del cuestionario
                     _buildQuizContent(),
                     const SizedBox(height: 20),

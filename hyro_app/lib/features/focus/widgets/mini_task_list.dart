@@ -86,20 +86,24 @@ class MiniTaskList extends StatelessWidget {
   Widget _buildTaskItem(BuildContext context, TaskModel task) {
     final categories = context.read<CategoryProvider>().categories;
     String categoryName = 'Sin Categoría';
+    Color taskColor = Color(task.priorityColorValue);
 
-    if (task.category != null && task.category!.isNotEmpty) {
-      categoryName = task.category!;
-    } else if (task.categoryId != null) {
+    if (task.categoryId != null) {
       try {
         final cat = categories.firstWhere((c) => c.id == task.categoryId);
         categoryName = cat.name;
+        taskColor = Color(cat.colorValue);
       } catch (_) {}
+    }
+
+    if (task.category != null && task.category!.isNotEmpty && categoryName == 'Sin Categoría') {
+      categoryName = task.category!;
     }
 
     return _TaskItem(
       title: task.title,
       subtitle: categoryName,
-      color: Color(task.priorityColorValue),
+      color: taskColor,
     );
   }
 }

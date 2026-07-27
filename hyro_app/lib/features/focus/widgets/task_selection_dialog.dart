@@ -244,10 +244,19 @@ class _TaskSelectionDialogState extends State<TaskSelectionDialog> {
       itemCount: pending.length,
       itemBuilder: (context, index) {
         final task = pending[index];
+        // Usar color de la categoría si existe
+        Color taskColor = Color(task.priorityColorValue);
+        if (task.categoryId != null) {
+          try {
+            final categories = context.read<CategoryProvider>().categories;
+            final cat = categories.firstWhere((c) => c.id == task.categoryId);
+            taskColor = Color(cat.colorValue);
+          } catch (_) {}
+        }
         return ListTile(
           leading: Icon(
             Icons.check_circle_outline,
-            color: Color(task.priorityColorValue),
+            color: taskColor,
           ),
           title: Text(task.title, style: AppTypography.bodyMedium),
           subtitle: Text(

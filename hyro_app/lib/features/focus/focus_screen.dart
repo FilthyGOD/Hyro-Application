@@ -16,6 +16,7 @@ import 'widgets/task_selection_dialog.dart';
 import '../stats/stats_provider.dart';
 import '../tasks/tasks_provider.dart';
 import '../settings/settings_provider.dart';
+import '../categories/category_provider.dart';
 import '../../providers/ui_provider.dart';
 import '../../providers/profile_provider.dart';
 import '../mascot/mascot_controller.dart';
@@ -76,7 +77,18 @@ class FocusScreen extends StatelessWidget {
               final task = tasksProvider.tasks.firstWhere(
                 (t) => t.id == state.activeTaskId,
               );
-              subjectColor = Color(task.priorityColorValue);
+              // Usar color de la categoría/materia si existe
+              if (task.categoryId != null) {
+                try {
+                  final categories = context.read<CategoryProvider>().categories;
+                  final cat = categories.firstWhere((c) => c.id == task.categoryId);
+                  subjectColor = Color(cat.colorValue);
+                } catch (_) {
+                  subjectColor = Color(task.priorityColorValue);
+                }
+              } else {
+                subjectColor = Color(task.priorityColorValue);
+              }
             } catch (_) {}
 
             showDialog(
@@ -724,7 +736,18 @@ class _ActiveTaskBadge extends StatelessWidget {
     try {
       final tasksProvider = context.watch<TaskProvider>();
       final task = tasksProvider.tasks.firstWhere((t) => t.id == taskId);
-      color = Color(task.priorityColorValue);
+      // Usar el color de la categoría/materia si existe
+      if (task.categoryId != null) {
+        try {
+          final categories = context.read<CategoryProvider>().categories;
+          final cat = categories.firstWhere((c) => c.id == task.categoryId);
+          color = Color(cat.colorValue);
+        } catch (_) {
+          color = Color(task.priorityColorValue);
+        }
+      } else {
+        color = Color(task.priorityColorValue);
+      }
     } catch (_) {}
 
     return Container(

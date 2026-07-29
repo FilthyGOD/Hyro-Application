@@ -315,21 +315,10 @@ class _DesktopLayout extends StatelessWidget {
                                     alignment: WrapAlignment.center,
                                     children: [
                                       // Racha chip
-                                      Container(
+                                      Padding(
                                         padding: const EdgeInsets.symmetric(
                                           horizontal: 12,
                                           vertical: 6,
-                                        ),
-                                        decoration: BoxDecoration(
-                                          color: AppColors.surfaceLight
-                                              .withValues(alpha: 0.6),
-                                          borderRadius: BorderRadius.circular(
-                                            20,
-                                          ),
-                                          border: Border.all(
-                                            color: AppColors.cardBorder
-                                                .withValues(alpha: 0.4),
-                                          ),
                                         ),
                                         child: Row(
                                           mainAxisSize: MainAxisSize.min,
@@ -360,21 +349,10 @@ class _DesktopLayout extends StatelessWidget {
                                         ),
                                       ),
                                       // Monedas chip
-                                      Container(
+                                      Padding(
                                         padding: const EdgeInsets.symmetric(
                                           horizontal: 12,
                                           vertical: 6,
-                                        ),
-                                        decoration: BoxDecoration(
-                                          color: AppColors.surfaceLight
-                                              .withValues(alpha: 0.6),
-                                          borderRadius: BorderRadius.circular(
-                                            20,
-                                          ),
-                                          border: Border.all(
-                                            color: AppColors.cardBorder
-                                                .withValues(alpha: 0.4),
-                                          ),
                                         ),
                                         child: Row(
                                           mainAxisSize: MainAxisSize.min,
@@ -398,21 +376,10 @@ class _DesktopLayout extends StatelessWidget {
                                         ),
                                       ),
                                       // Protectores chip
-                                      Container(
+                                      Padding(
                                         padding: const EdgeInsets.symmetric(
                                           horizontal: 12,
                                           vertical: 6,
-                                        ),
-                                        decoration: BoxDecoration(
-                                          color: AppColors.surfaceLight
-                                              .withValues(alpha: 0.6),
-                                          borderRadius: BorderRadius.circular(
-                                            20,
-                                          ),
-                                          border: Border.all(
-                                            color: AppColors.cardBorder
-                                                .withValues(alpha: 0.4),
-                                          ),
                                         ),
                                         child: Row(
                                           mainAxisSize: MainAxisSize.min,
@@ -435,21 +402,10 @@ class _DesktopLayout extends StatelessWidget {
                                         ),
                                       ),
                                       // XP Doble chip
-                                      Container(
+                                      Padding(
                                         padding: const EdgeInsets.symmetric(
                                           horizontal: 12,
                                           vertical: 6,
-                                        ),
-                                        decoration: BoxDecoration(
-                                          color: AppColors.surfaceLight
-                                              .withValues(alpha: 0.6),
-                                          borderRadius: BorderRadius.circular(
-                                            20,
-                                          ),
-                                          border: Border.all(
-                                            color: AppColors.cardBorder
-                                                .withValues(alpha: 0.4),
-                                          ),
                                         ),
                                         child: Row(
                                           mainAxisSize: MainAxisSize.min,

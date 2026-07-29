@@ -23,6 +23,7 @@ import '../mascot/mascot_controller.dart';
 import 'widgets/focus_quiz_dialog.dart';
 import 'widgets/pause_clock.dart';
 import '../../data/local/card_local_ds.dart';
+import '../shop/premium_shop_screen.dart';
 import '../../data/local/note_local_ds.dart';
 import 'widgets/strict_mode_violation_card.dart';
 
@@ -349,82 +350,106 @@ class _DesktopLayout extends StatelessWidget {
                                         ),
                                       ),
                                       // Monedas chip
-                                      Padding(
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: 12,
-                                          vertical: 6,
-                                        ),
-                                        child: Row(
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            const Icon(
-                                              Icons.monetization_on,
-                                              color: Colors.amber,
-                                              size: 18,
-                                            ),
-                                            const SizedBox(width: 6),
-                                            Text(
-                                              '${profile.monedas}',
-                                              style: AppTypography.labelLarge
-                                                  .copyWith(
-                                                    fontSize: 14,
-                                                    fontWeight: FontWeight.w700,
-                                                    color: Colors.white,
-                                                  ),
-                                            ),
-                                          ],
+                                      GestureDetector(
+                                        onTap: () {
+                                          Navigator.of(context).push(
+                                            MaterialPageRoute(builder: (_) => const PremiumShopScreen()),
+                                          );
+                                        },
+                                        behavior: HitTestBehavior.opaque,
+                                        child: Padding(
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 12,
+                                            vertical: 6,
+                                          ),
+                                          child: Row(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              const Icon(
+                                                Icons.monetization_on,
+                                                color: Colors.amber,
+                                                size: 18,
+                                              ),
+                                              const SizedBox(width: 6),
+                                              Text(
+                                                '${profile.monedas}',
+                                                style: AppTypography.labelLarge
+                                                    .copyWith(
+                                                      fontSize: 14,
+                                                      fontWeight: FontWeight.w700,
+                                                      color: Colors.white,
+                                                    ),
+                                              ),
+                                            ],
+                                          ),
                                         ),
                                       ),
                                       // Protectores chip
-                                      Padding(
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: 12,
-                                          vertical: 6,
-                                        ),
-                                        child: Row(
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            const Text(
-                                              '🛡️',
-                                              style: TextStyle(fontSize: 16),
-                                            ),
-                                            const SizedBox(width: 6),
-                                            Text(
-                                              '${profile.protectoresRachaActivos}',
-                                              style: AppTypography.labelLarge
-                                                  .copyWith(
-                                                    fontSize: 14,
-                                                    fontWeight: FontWeight.w700,
-                                                    color: Colors.white,
-                                                  ),
-                                            ),
-                                          ],
+                                      GestureDetector(
+                                        onTap: () {
+                                          Navigator.of(context).push(
+                                            MaterialPageRoute(builder: (_) => const PremiumShopScreen()),
+                                          );
+                                        },
+                                        behavior: HitTestBehavior.opaque,
+                                        child: Padding(
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 12,
+                                            vertical: 6,
+                                          ),
+                                          child: Row(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              const Text(
+                                                '🛡️',
+                                                style: TextStyle(fontSize: 16),
+                                              ),
+                                              const SizedBox(width: 6),
+                                              Text(
+                                                '${profile.protectoresRachaActivos}',
+                                                style: AppTypography.labelLarge
+                                                    .copyWith(
+                                                      fontSize: 14,
+                                                      fontWeight: FontWeight.w700,
+                                                      color: Colors.white,
+                                                    ),
+                                              ),
+                                            ],
+                                          ),
                                         ),
                                       ),
                                       // XP Doble chip
-                                      Padding(
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: 12,
-                                          vertical: 6,
-                                        ),
-                                        child: Row(
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            const Text(
-                                              '🧪',
-                                              style: TextStyle(fontSize: 16),
-                                            ),
-                                            const SizedBox(width: 6),
-                                            Text(
-                                              '${profile.sesionesXPDobleRestantes}',
-                                              style: AppTypography.labelLarge
-                                                  .copyWith(
-                                                    fontSize: 14,
-                                                    fontWeight: FontWeight.w700,
-                                                    color: Colors.white,
-                                                  ),
-                                            ),
-                                          ],
+                                      GestureDetector(
+                                        onTap: () {
+                                          Navigator.of(context).push(
+                                            MaterialPageRoute(builder: (_) => const PremiumShopScreen()),
+                                          );
+                                        },
+                                        behavior: HitTestBehavior.opaque,
+                                        child: Padding(
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 12,
+                                            vertical: 6,
+                                          ),
+                                          child: Row(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              const Text(
+                                                '🧪',
+                                                style: TextStyle(fontSize: 16),
+                                              ),
+                                              const SizedBox(width: 6),
+                                              Text(
+                                                '${profile.sesionesXPDobleRestantes}',
+                                                style: AppTypography.labelLarge
+                                                    .copyWith(
+                                                      fontSize: 14,
+                                                      fontWeight: FontWeight.w700,
+                                                      color: Colors.white,
+                                                    ),
+                                              ),
+                                            ],
+                                          ),
                                         ),
                                       ),
                                     ],

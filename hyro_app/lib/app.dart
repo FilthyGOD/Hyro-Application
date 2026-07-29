@@ -23,6 +23,7 @@ import 'providers/friends_provider.dart';
 import 'package:isar/isar.dart';
 import 'providers/auth_provider.dart';
 import 'screens/auth/splash_screen.dart';
+import 'screens/auth/welcome_screen.dart';
 import 'shared/layout/main_layout.dart';
 import 'shared/widgets/floating_mascot.dart';
 import 'features/focus/mini_focus_screen.dart';
@@ -83,7 +84,10 @@ class HyroApp extends StatelessWidget {
               if (auth.isLoading) {
                 return const SplashScreen();
               }
-              // Todos entran al shell (invitados o usuarios logueados)
+              if (auth.isGuest) {
+                return const WelcomeScreen();
+              }
+              // Solo los usuarios logueados o que hayan pasado el tutorial entrarán al shell
               return AppShell(key: appShellKey, authProvider: auth);
             },
           ),

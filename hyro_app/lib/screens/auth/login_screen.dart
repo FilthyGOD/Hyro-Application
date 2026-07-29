@@ -559,13 +559,16 @@ class _LoginScreenState extends State<LoginScreen> {
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(12),
         gradient: const LinearGradient(
-          colors: [Color(0xFF3CDCF8), Color(0xFFCC88FF)], // De Cian a Púrpura
+          colors: [
+            Color.fromARGB(255, 0, 149, 255),
+            Color.fromARGB(255, 32, 43, 200),
+          ],
           begin: Alignment.centerLeft,
           end: Alignment.centerRight,
         ),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF3CDCF8).withValues(alpha: 0.3),
+            color: const Color.fromARGB(255, 0, 149, 255).withValues(alpha: 0.3),
             blurRadius: 20,
             offset: const Offset(0, 8),
           ),

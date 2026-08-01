@@ -20,6 +20,7 @@ import 'providers/ui_provider.dart';
 import 'providers/profile_provider.dart';
 import 'providers/shop_provider.dart';
 import 'providers/friends_provider.dart';
+import 'providers/versus_provider.dart';
 import 'package:isar/isar.dart';
 import 'providers/auth_provider.dart';
 import 'screens/auth/splash_screen.dart';
@@ -52,6 +53,7 @@ class HyroApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => ProfileProvider(isar)),
         ChangeNotifierProvider(create: (_) => ShopProvider(isar)),
         ChangeNotifierProvider(create: (_) => FriendsProvider()),
+        ChangeNotifierProvider(create: (_) => VersusProvider()),
         ChangeNotifierProxyProvider<ProfileProvider, MissionsProvider>(
           create:
               (ctx) => MissionsProvider(
@@ -309,6 +311,10 @@ class AppShellState extends State<AppShell>
     if (userId != null) {
       final friendsProvider = context.read<FriendsProvider>();
       friendsProvider.loadFriendsData(userId);
+
+      // Inicializar el stream de batallas Versus
+      final versusProvider = context.read<VersusProvider>();
+      versusProvider.initStream(userId);
     }
     if (!mounted) return;
 

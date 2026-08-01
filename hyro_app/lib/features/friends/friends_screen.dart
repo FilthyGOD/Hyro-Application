@@ -6,11 +6,18 @@ import '../../providers/auth_provider.dart';
 import '../../providers/friends_provider.dart';
 import '../../providers/profile_provider.dart';
 import '../../providers/shop_provider.dart';
+import '../../providers/versus_provider.dart';
 import '../../services/friends_service.dart';
 import 'models/friends_models.dart';
 import 'widgets/static_mascot_widget.dart';
 import 'search_friends_screen.dart';
 import 'user_profile_preview_screen.dart';
+import '../versus/widgets/versus_active_battles_section.dart';
+import '../versus/versus_intro_screen.dart';
+import '../versus/models/versus_models.dart';
+import '../versus/widgets/category_selector_sheet.dart';
+import '../../data/models/category_model.dart';
+import '../categories/category_provider.dart';
 
 
 /// Pantalla de Amigos — Ranking semanal, solicitudes pendientes y búsqueda por código.
@@ -36,6 +43,7 @@ class _FriendsScreenState extends State<FriendsScreen> {
     final userId = auth.supabaseUserId;
     if (userId != null) {
       context.read<FriendsProvider>().loadFriendsData(userId);
+      context.read<VersusProvider>().initStream(userId);
     }
   }
 
@@ -82,6 +90,37 @@ class _FriendsScreenState extends State<FriendsScreen> {
                     const SizedBox(height: 16),
                   ],
 
+                  // ── Duelos Pendientes (Modo Versus) ──
+                  Consumer<VersusProvider>(
+                    builder: (context, versus, _) {
+                      final pendingChallenges = versus.activeBattles
+                          .where((match) => !match.isChallenger && match.estadoDb == 'pendiente')
+                          .toList();
+
+                      if (pendingChallenges.isEmpty) {
+                        return const SizedBox.shrink();
+                      }
+
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          _buildSectionHeader(
+                            'Retos Versus Recibidos',
+                            '${pendingChallenges.length}',
+                          ),
+                          const SizedBox(height: 12),
+                          ...pendingChallenges.map((match) {
+                            return Padding(
+                              padding: const EdgeInsets.only(bottom: 8.0),
+                              child: _buildPendingChallengeBanner(context, match),
+                            );
+                          }),
+                          const SizedBox(height: 16),
+                        ],
+                      );
+                    },
+                  ),
+
                   const SizedBox(height: 8),
 
                   // ── Mensaje de acción temporal ──
@@ -113,6 +152,36 @@ class _FriendsScreenState extends State<FriendsScreen> {
                     _buildEmptyState(context)
                   else
                     _buildWeeklyRanking(friends.ranking),
+
+                  const SizedBox(height: 24),
+
+                  // ── Sección Modo Versus (datos reales desde Supabase) ──
+                  Consumer<VersusProvider>(
+                    builder: (context, versus, _) {
+                      return VersusActiveBattlesSection(
+                        activeMatches: versus.activeBattles.where((match) {
+                          if (match.estadoDb == 'pendiente' && !match.isChallenger) {
+                            return false;
+                          }
+                          return true;
+                        }).toList(),
+                        onResumeMatch: (match) {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => VersusIntroScreen(match: match),
+                            ),
+                          );
+                        },
+                        onStartDuel: (opponent) {
+                          // El modal CreateVersusModal se abre desde
+                          // VersusActiveBattlesSection y crea la batalla
+                          // a través del VersusProvider.
+                          debugPrint('⚔️ Duelo iniciado contra ${opponent.username}');
+                        },
+                      );
+                    },
+                  ),
 
                   const SizedBox(height: 24),
                 ],
@@ -1239,6 +1308,144 @@ class _FriendsScreenState extends State<FriendsScreen> {
                           content: Text('Error al aceptar regalo: $e'),
                           backgroundColor: Colors.red.shade700,
                         ),
+                      );
+                    }
+                  }
+                },
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPendingChallengeBanner(BuildContext context, VersusMatch match) {
+    final opponent = match.opponent;
+
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [Color(0xFF2E1A47), Color(0xFF130E26)],
+        ),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.primary.withValues(alpha: 0.6), width: 1.5),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.primary.withValues(alpha: 0.15),
+            blurRadius: 8,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          // Avatar de quien reta
+          Container(
+            width: 48,
+            height: 48,
+            decoration: BoxDecoration(
+              color: AppColors.surfaceLight,
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(
+                color: AppColors.primary.withValues(alpha: 0.5),
+                width: 1.5,
+              ),
+            ),
+            child: ClipOval(
+              child: StaticMascotWidget(
+                sombrero: opponent.sombreroId,
+                cosmetico: opponent.cosmeticoId,
+                traje: opponent.trajeId,
+              ),
+            ),
+          ),
+          const SizedBox(width: 12),
+
+          // Información del duelo
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '¡Reto de ${opponent.username}!',
+                  style: AppTypography.bodyMedium.copyWith(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  'Apuesta: ${match.betCoins * 2} monedas · ${match.battleMode.title}',
+                  style: AppTypography.bodySmall.copyWith(
+                    color: AppColors.textSecondary,
+                    fontSize: 11,
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          // Botones de acción
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Rechazar
+              _buildActionButton(
+                icon: Icons.close_rounded,
+                color: const Color(0xFFEF4444),
+                bgColor: const Color(0xFFEF4444).withValues(alpha: 0.15),
+                onTap: () {
+                  context.read<VersusProvider>().rechazarBatalla(match.id);
+                },
+              ),
+              const SizedBox(width: 8),
+              // Aceptar
+              _buildActionButton(
+                icon: Icons.check_rounded,
+                color: Colors.black,
+                bgColor: AppColors.primary,
+                onTap: () async {
+                  final versusProvider = context.read<VersusProvider>();
+                  if (match.battleMode == BattleMode.clashSubjects) {
+                    final categorias = context.read<CategoryProvider>().categories;
+                    if (categorias.isEmpty) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Crea una materia primero antes de aceptar el duelo.')),
+                      );
+                      return;
+                    }
+
+                    // Mostrar modal para seleccionar categoría
+                    final selectedCategory = await showModalBottomSheet<CategoryModel>(
+                      context: context,
+                      backgroundColor: Colors.transparent,
+                      builder: (ctx) => CategorySelectorSheet(categorias: categorias),
+                    );
+
+                    if (selectedCategory == null) return; // Canceló
+
+                    final exito = await versusProvider.aceptarBatalla(
+                      batallaId: match.id,
+                      categoriaOponenteId: selectedCategory.id,
+                    );
+
+                    if (context.mounted && exito) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('¡Duelo aceptado! Comienza el combate.')),
+                      );
+                    }
+                  } else {
+                    final exito = await versusProvider.aceptarBatalla(
+                      batallaId: match.id,
+                      categoriaOponenteId: null,
+                    );
+                    if (context.mounted && exito) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('¡Duelo aceptado! Comienza el combate.')),
                       );
                     }
                   }

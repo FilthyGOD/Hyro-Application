@@ -62,7 +62,7 @@ class VersusActiveBattlesSection extends StatelessWidget {
 
         // Lista Horizontal: Botón "Iniciar Duelo" + Tarjetas de Combates
         SizedBox(
-          height: 140,
+          height: 160,
           child: ListView(
             scrollDirection: Axis.horizontal,
             physics: const BouncingScrollPhysics(),
@@ -297,40 +297,53 @@ class VersusActiveBattlesSection extends StatelessWidget {
 
                 // Pie: Marcador de rondas O Botones si está completada
                 if (isCompleted)
-                  SizedBox(
-                    width: double.infinity,
-                    height: 28,
-                    child: ElevatedButton(
-                      onPressed: () {
-                        if (isWinner && !match.premioReclamado) {
-                          context.read<VersusProvider>().reclamarPremio(match.id);
-                          _showClaimDialog(context, match.betCoins * 2);
-                        } else {
-                          context.read<VersusProvider>().archivarBatalla(match.id, match.isChallenger);
-                        }
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: isWinner && !match.premioReclamado ? const Color(0xFF10B981) : const Color(0xFFEF4444),
-                        foregroundColor: Colors.white,
-                        padding: EdgeInsets.zero,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                  Column(
+                    children: [
+                      Text(
+                        'Marcador Final: ${match.localRoundsWon} - ${match.opponentRoundsWon}',
+                        style: AppTypography.bodySmall.copyWith(
+                          color: AppColors.textPrimary,
+                          fontWeight: FontWeight.w700,
+                          fontSize: 10,
+                        ),
                       ),
-                      child: Text(
-                        isWinner && !match.premioReclamado ? 'Reclamar' : 'Eliminar',
-                        style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
+                      const SizedBox(height: 4),
+                      SizedBox(
+                        width: double.infinity,
+                        height: 28,
+                        child: ElevatedButton(
+                          onPressed: () {
+                            if (isWinner && !match.premioReclamado) {
+                              context.read<VersusProvider>().reclamarPremio(match.id);
+                              _showClaimDialog(context, match.betCoins * 2);
+                            } else {
+                              context.read<VersusProvider>().archivarBatalla(match.id, match.isChallenger);
+                            }
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: isWinner && !match.premioReclamado ? const Color(0xFF10B981) : const Color(0xFFEF4444),
+                            foregroundColor: Colors.white,
+                            padding: EdgeInsets.zero,
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                          ),
+                          child: Text(
+                            isWinner && !match.premioReclamado ? 'Reclamar' : 'Eliminar',
+                            style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
+                          ),
+                        ),
                       ),
-                    ),
+                    ],
                   )
                 else
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  Column(
                     children: [
                       Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           const Icon(Icons.monetization_on_rounded, size: 12, color: Color(0xFFF59E0B)),
                           const SizedBox(width: 3),
                           Text(
-                            '${match.betCoins * 2}',
+                            '${match.betCoins * 2} Monedas',
                             style: AppTypography.bodySmall.copyWith(
                               color: AppColors.textSecondary,
                               fontSize: 10,
@@ -338,6 +351,7 @@ class VersusActiveBattlesSection extends StatelessWidget {
                           ),
                         ],
                       ),
+                      const SizedBox(height: 4),
                       Text(
                         'Ronda ${match.currentRound}   |   ${match.localRoundsWon} - ${match.opponentRoundsWon}',
                         style: AppTypography.bodySmall.copyWith(

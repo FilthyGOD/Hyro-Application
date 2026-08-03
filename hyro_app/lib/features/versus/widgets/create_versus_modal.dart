@@ -8,6 +8,7 @@ import '../../../../providers/versus_provider.dart';
 import '../../../../providers/profile_provider.dart';
 import '../../../../features/tasks/tasks_provider.dart';
 import '../../../../data/models/tarea_card_model.dart';
+import '../../../../data/models/category_model.dart';
 import '../models/versus_models.dart';
 
 /// Modal para configurar y enviar un reto de Versus a un amigo.
@@ -53,19 +54,12 @@ class _CreateVersusModalState extends State<CreateVersusModal> {
   // Opciones de apuesta disponibles
   static const List<int> _opcionesApuesta = [20, 50, 100];
 
+  CategoryModel? _selectedCategory;
+
   @override
   void initState() {
     super.initState();
-    // Pre-seleccionar la primera tarea del usuario
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final tasks = context.read<TaskProvider>().tasks;
-      if (tasks.isNotEmpty && mounted) {
-        setState(() {
-          _tareaSeleccionadaId = tasks.first.id;
-          _categoriaSeleccionadaId = tasks.first.categoryId;
-        });
-      }
-    });
+    // No pre-seleccionamos tarea, el usuario debe seleccionar materia y luego tarea.
   }
   /// Lanza el reto llamando a VersusProvider.crearBatalla (conexión real con Supabase).
   Future<void> _lanzarReto() async {
@@ -263,56 +257,11 @@ class _CreateVersusModalState extends State<CreateVersusModal> {
           else
             SizedBox(
               height: 52,
-              child: ListView.separated(
-                scrollDirection: Axis.horizontal,
-                itemCount: tasks.length,
-                separatorBuilder: (_, __) => const SizedBox(width: 8),
-                itemBuilder: (context, index) {
-                  final task = tasks[index];
-                  final isSelected = _tareaSeleccionadaId == task.id;
-                  final numCards = Hive.box<TareaCardModel>('cardsBox').values.where((c) => c.tareaId == task.id).length;
-                  final color = Color(task.priorityColorValue);
-
-                  return ChoiceChip(
-                    label: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          task.title,
-                          style: AppTypography.bodySmall.copyWith(
-                            color: isSelected ? Colors.black : AppColors.textPrimary,
-                            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                          ),
-                        ),
-                        Text(
-                          '$numCards cards',
-                          style: TextStyle(
-                            fontSize: 9,
-                            color: isSelected ? Colors.black87 : AppColors.textSecondary,
-                          ),
-                        ),
-                      ],
-                    ),
-                    selected: isSelected,
-                    selectedColor: color,
-                    backgroundColor: AppColors.surfaceLight,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      side: BorderSide(
-                        color: isSelected ? color : AppColors.cardBorder,
-                      ),
-                    ),
-                    onSelected: (selected) {
-                      if (selected) {
-                        setState(() {
-                          _tareaSeleccionadaId = task.id;
-                          _categoriaSeleccionadaId = task.categoryId;
-                        });
-                      }
-                    },
-                  );
-                },
+              child: AnimatedSwitcher(
+                duration: const Duration(milliseconds: 300),
+                child: _selectedCategory == null
+                    ? _buildCategoriesList(tasks)
+                    : _buildTasksList(tasks),
               ),
             ),
 
@@ -464,7 +413,6 @@ class _CreateVersusModalState extends State<CreateVersusModal> {
 
   Widget _buildModeOption(BattleMode mode) {
     final isSelected = _modoSeleccionado == mode;
-
     return Padding(
       padding: const EdgeInsets.only(bottom: 8.0),
       child: Material(
@@ -472,40 +420,24 @@ class _CreateVersusModalState extends State<CreateVersusModal> {
         child: InkWell(
           onTap: () => setState(() => _modoSeleccionado = mode),
           borderRadius: BorderRadius.circular(16),
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: isSelected ? AppColors.primary.withValues(alpha: 0.12) : AppColors.surfaceLight,
+              color: isSelected
+                  ? AppColors.primary.withValues(alpha: 0.1)
+                  : AppColors.surfaceLight,
               borderRadius: BorderRadius.circular(16),
               border: Border.all(
                 color: isSelected ? AppColors.primary : AppColors.cardBorder,
-                width: isSelected ? 1.8 : 1.0,
+                width: isSelected ? 1.5 : 1.0,
               ),
             ),
             child: Row(
               children: [
-                Container(
-                  width: 20,
-                  height: 20,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    border: Border.all(
-                      color: isSelected ? AppColors.primary : AppColors.textTertiary,
-                      width: 2,
-                    ),
-                  ),
-                  child: isSelected
-                      ? Center(
-                          child: Container(
-                            width: 10,
-                            height: 10,
-                            decoration: const BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: AppColors.primary,
-                            ),
-                          ),
-                        )
-                      : null,
+                Icon(
+                  isSelected ? Icons.radio_button_checked : Icons.radio_button_unchecked,
+                  color: isSelected ? AppColors.primary : AppColors.textTertiary,
                 ),
                 const SizedBox(width: 12),
                 Expanded(
@@ -535,6 +467,153 @@ class _CreateVersusModalState extends State<CreateVersusModal> {
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildCategoriesList(List<dynamic> tasks) {
+    final categoriesBox = Hive.box<CategoryModel>('categoriesBox');
+    final catIds = tasks.map((t) => t.categoryId).where((id) => id != null).toSet();
+    final categories = categoriesBox.values.where((c) => catIds.contains(c.id)).toList();
+
+    return ListView.separated(
+      key: const ValueKey('categories'),
+      scrollDirection: Axis.horizontal,
+      itemCount: categories.length,
+      separatorBuilder: (_, __) => const SizedBox(width: 8),
+      itemBuilder: (context, index) {
+        final category = categories[index];
+        final color = Color(category.colorValue);
+        final taskCount = tasks.where((t) => t.categoryId == category.id).length;
+
+        return ChoiceChip(
+          label: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                category.iconCodePoint != null ? IconData(category.iconCodePoint!, fontFamily: 'MaterialIcons') : Icons.folder,
+                color: color,
+                size: 18,
+              ),
+              const SizedBox(width: 6),
+              Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    category.name,
+                    style: AppTypography.bodySmall.copyWith(
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                  Text(
+                    '$taskCount tareas',
+                    style: const TextStyle(
+                      fontSize: 9,
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+          selected: false,
+          backgroundColor: AppColors.surfaceLight,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+            side: const BorderSide(color: AppColors.cardBorder),
+          ),
+          onSelected: (_) {
+            setState(() {
+              _selectedCategory = category;
+            });
+          },
+        );
+      },
+    );
+  }
+
+  Widget _buildTasksList(List<dynamic> allTasks) {
+    final tasks = allTasks.where((t) => t.categoryId == _selectedCategory!.id).toList();
+
+    return Row(
+      key: ValueKey('tasks_${_selectedCategory!.id}'),
+      children: [
+        // Back Button
+        InkWell(
+          onTap: () {
+            setState(() {
+              _selectedCategory = null;
+              _tareaSeleccionadaId = null;
+              _categoriaSeleccionadaId = null;
+            });
+          },
+          borderRadius: BorderRadius.circular(12),
+          child: Container(
+            width: 52,
+            height: 52,
+            decoration: BoxDecoration(
+              color: AppColors.surfaceLight,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: AppColors.cardBorder),
+            ),
+            child: const Icon(Icons.arrow_back_rounded, color: AppColors.textPrimary),
+          ),
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            itemCount: tasks.length,
+            separatorBuilder: (_, __) => const SizedBox(width: 8),
+            itemBuilder: (context, index) {
+              final task = tasks[index];
+              final isSelected = _tareaSeleccionadaId == task.id;
+              final numCards = Hive.box<TareaCardModel>('cardsBox').values.where((c) => c.tareaId == task.id).length;
+              final color = Color(task.priorityColorValue);
+
+              return ChoiceChip(
+                label: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      task.title,
+                      style: AppTypography.bodySmall.copyWith(
+                        color: isSelected ? Colors.black : AppColors.textPrimary,
+                        fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                      ),
+                    ),
+                    Text(
+                      '$numCards cards',
+                      style: TextStyle(
+                        fontSize: 9,
+                        color: isSelected ? Colors.black87 : AppColors.textSecondary,
+                      ),
+                    ),
+                  ],
+                ),
+                selected: isSelected,
+                selectedColor: color,
+                backgroundColor: AppColors.surfaceLight,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  side: BorderSide(
+                    color: isSelected ? color : AppColors.cardBorder,
+                  ),
+                ),
+                onSelected: (selected) {
+                  if (selected) {
+                    setState(() {
+                      _tareaSeleccionadaId = task.id;
+                      _categoriaSeleccionadaId = task.categoryId;
+                    });
+                  }
+                },
+              );
+            },
+          ),
+        ),
+      ],
     );
   }
 }

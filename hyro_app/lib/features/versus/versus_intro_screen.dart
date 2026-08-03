@@ -23,7 +23,8 @@ class VersusIntroScreen extends StatefulWidget {
   State<VersusIntroScreen> createState() => _VersusIntroScreenState();
 }
 
-class _VersusIntroScreenState extends State<VersusIntroScreen> with SingleTickerProviderStateMixin {
+class _VersusIntroScreenState extends State<VersusIntroScreen>
+    with SingleTickerProviderStateMixin {
   late AnimationController _animController;
   late Animation<Offset> _topSlideAnimation;
   late Animation<Offset> _bottomSlideAnimation;
@@ -43,25 +44,31 @@ class _VersusIntroScreenState extends State<VersusIntroScreen> with SingleTicker
     _topSlideAnimation = Tween<Offset>(
       begin: const Offset(0, -1.2),
       end: Offset.zero,
-    ).animate(CurvedAnimation(
-      parent: _animController,
-      curve: const Interval(0.0, 0.7, curve: Curves.easeOutCubic),
-    ));
+    ).animate(
+      CurvedAnimation(
+        parent: _animController,
+        curve: const Interval(0.0, 0.7, curve: Curves.easeOutCubic),
+      ),
+    );
 
     // Animación del oponente deslizándose desde abajo
     _bottomSlideAnimation = Tween<Offset>(
       begin: const Offset(0, 1.2),
       end: Offset.zero,
-    ).animate(CurvedAnimation(
-      parent: _animController,
-      curve: const Interval(0.0, 0.7, curve: Curves.easeOutCubic),
-    ));
+    ).animate(
+      CurvedAnimation(
+        parent: _animController,
+        curve: const Interval(0.0, 0.7, curve: Curves.easeOutCubic),
+      ),
+    );
 
     // Animación de escala/pop para el emblema "VS"
-    _vsScaleAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(CurvedAnimation(
-      parent: _animController,
-      curve: const Interval(0.5, 1.0, curve: Curves.elasticOut),
-    ));
+    _vsScaleAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _animController,
+        curve: const Interval(0.5, 1.0, curve: Curves.elasticOut),
+      ),
+    );
 
     _animController.forward();
   }
@@ -80,7 +87,9 @@ class _VersusIntroScreenState extends State<VersusIntroScreen> with SingleTicker
       final tasks = context.read<TaskProvider>().tasks;
       if (tasks.isEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Crea una tarea primero antes de aceptar el duelo.')),
+          const SnackBar(
+            content: Text('Crea una tarea primero antes de aceptar el duelo.'),
+          ),
         );
         return;
       }
@@ -132,12 +141,18 @@ class _VersusIntroScreenState extends State<VersusIntroScreen> with SingleTicker
           );
           Navigator.pushReplacement(
             context,
-            MaterialPageRoute(builder: (_) => VersusCombatScreen(match: updatedMatch)),
+            MaterialPageRoute(
+              builder: (_) => VersusCombatScreen(match: updatedMatch),
+            ),
           );
         } else {
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(versusProvider.actionMessage ?? 'Error al aceptar el duelo')),
+              SnackBar(
+                content: Text(
+                  versusProvider.actionMessage ?? 'Error al aceptar el duelo',
+                ),
+              ),
             );
           }
         }
@@ -173,7 +188,8 @@ class _VersusIntroScreenState extends State<VersusIntroScreen> with SingleTicker
             opponentRoundsWon: widget.match.opponentRoundsWon,
             lastActivity: DateTime.now(),
             categoriaRetadorId: widget.match.categoriaRetadorId,
-            categoriaOponenteId: widget.match.categoriaRetadorId, // misma materia
+            categoriaOponenteId:
+                widget.match.categoriaRetadorId, // misma materia
             tareaRetadorId: widget.match.tareaRetadorId,
             tareaOponenteId: widget.match.tareaRetadorId,
             estadoDb: 'activa',
@@ -181,12 +197,18 @@ class _VersusIntroScreenState extends State<VersusIntroScreen> with SingleTicker
           );
           Navigator.pushReplacement(
             context,
-            MaterialPageRoute(builder: (_) => VersusCombatScreen(match: updatedMatch)),
+            MaterialPageRoute(
+              builder: (_) => VersusCombatScreen(match: updatedMatch),
+            ),
           );
         } else {
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(versusProvider.actionMessage ?? 'Error al aceptar el duelo')),
+              SnackBar(
+                content: Text(
+                  versusProvider.actionMessage ?? 'Error al aceptar el duelo',
+                ),
+              ),
             );
           }
         }
@@ -202,12 +224,16 @@ class _VersusIntroScreenState extends State<VersusIntroScreen> with SingleTicker
       setState(() => _isCargando = false);
       if (exito) {
         Navigator.pop(context);
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Duelo rechazado.')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Duelo rechazado.')));
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(versusProvider.actionMessage ?? 'Error al rechazar el duelo')),
+          SnackBar(
+            content: Text(
+              versusProvider.actionMessage ?? 'Error al rechazar el duelo',
+            ),
+          ),
         );
       }
     }
@@ -224,7 +250,10 @@ class _VersusIntroScreenState extends State<VersusIntroScreen> with SingleTicker
     await versusProvider.reclamarPremio(widget.match.id);
 
     // 2. Archivar batalla (ocultar)
-    await versusProvider.archivarBatalla(widget.match.id, widget.match.isChallenger);
+    await versusProvider.archivarBatalla(
+      widget.match.id,
+      widget.match.isChallenger,
+    );
 
     // 3. Recargar perfil local
     if (userId != null) {
@@ -239,11 +268,16 @@ class _VersusIntroScreenState extends State<VersusIntroScreen> with SingleTicker
           backgroundColor: AppColors.surfaceLight,
           content: Row(
             children: [
-              const Icon(Icons.monetization_on_rounded, color: Color(0xFFF59E0B)),
+              const Icon(
+                Icons.monetization_on_rounded,
+                color: Color(0xFFF59E0B),
+              ),
               const SizedBox(width: 10),
               Text(
                 '¡Reclamaste ${widget.match.betCoins * 2} monedas!',
-                style: AppTypography.bodyMedium.copyWith(color: AppColors.textPrimary),
+                style: AppTypography.bodyMedium.copyWith(
+                  color: AppColors.textPrimary,
+                ),
               ),
             ],
           ),
@@ -257,7 +291,10 @@ class _VersusIntroScreenState extends State<VersusIntroScreen> with SingleTicker
     final versusProvider = context.read<VersusProvider>();
 
     // Archivar batalla
-    await versusProvider.archivarBatalla(widget.match.id, widget.match.isChallenger);
+    await versusProvider.archivarBatalla(
+      widget.match.id,
+      widget.match.isChallenger,
+    );
 
     if (mounted) {
       setState(() => _isCargando = false);
@@ -328,7 +365,10 @@ class _VersusIntroScreenState extends State<VersusIntroScreen> with SingleTicker
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       IconButton(
-                        icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white),
+                        icon: const Icon(
+                          Icons.arrow_back_ios_new_rounded,
+                          color: Colors.white,
+                        ),
                         onPressed: () => Navigator.pop(context),
                       ),
                       Column(
@@ -343,12 +383,74 @@ class _VersusIntroScreenState extends State<VersusIntroScreen> with SingleTicker
                           ),
                           Text(
                             'Tarea: ${widget.match.subjectName}',
-                            style: AppTypography.bodySmall.copyWith(color: AppColors.textSecondary),
+                            style: AppTypography.bodySmall.copyWith(
+                              color: AppColors.textSecondary,
+                            ),
                           ),
+                          if (widget.match.estadoDb != 'completada') ...[
+                            const SizedBox(height: 6),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 10,
+                                vertical: 4,
+                              ),
+                              decoration: BoxDecoration(
+                                color: AppColors.background.withValues(
+                                  alpha: 0.5,
+                                ),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Text(
+                                'Ronda ${widget.match.currentRound}: ${widget.match.localRoundsWon} - ${widget.match.opponentRoundsWon}',
+                                style: AppTypography.bodySmall.copyWith(
+                                  color: Colors.white,
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                            if (widget.match.currentRound == 3) ...[
+                              const SizedBox(height: 6),
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 4,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: AppColors.primary.withValues(
+                                    alpha: 0.2,
+                                  ),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    const Icon(
+                                      Icons.timer_outlined,
+                                      size: 12,
+                                      color: AppColors.primary,
+                                    ),
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      'Desempate, se tomara en cuenta el tiempo de respuesta',
+                                      style: AppTypography.bodySmall.copyWith(
+                                        color: AppColors.primary,
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 10,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ],
                         ],
                       ),
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 6,
+                        ),
                         decoration: BoxDecoration(
                           color: const Color(0xFFF59E0B).withValues(alpha: 0.2),
                           borderRadius: BorderRadius.circular(12),
@@ -356,7 +458,11 @@ class _VersusIntroScreenState extends State<VersusIntroScreen> with SingleTicker
                         ),
                         child: Row(
                           children: [
-                            const Icon(Icons.monetization_on_rounded, color: Color(0xFFF59E0B), size: 16),
+                            const Icon(
+                              Icons.monetization_on_rounded,
+                              color: Color(0xFFF59E0B),
+                              size: 16,
+                            ),
                             const SizedBox(width: 4),
                             Text(
                               '${widget.match.betCoins * 2}',
@@ -374,51 +480,66 @@ class _VersusIntroScreenState extends State<VersusIntroScreen> with SingleTicker
 
                 if (widget.match.estadoDb == 'completada') ...[
                   Expanded(
-                    child: _buildResultBody(widget.match.ganadorId == widget.match.localPlayer.id),
+                    child: _buildResultBody(
+                      widget.match.ganadorId == widget.match.localPlayer.id,
+                    ),
                   ),
                   Padding(
                     padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
-                    child: _isCargando
-                        ? const Center(child: CircularProgressIndicator(color: AppColors.primary))
-                        : SizedBox(
-                            width: double.infinity,
-                            height: 56,
-                            child: ElevatedButton(
-                              onPressed: widget.match.ganadorId == widget.match.localPlayer.id
-                                  ? _reclamarPremio
-                                  : _cerrarDuelo,
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: widget.match.ganadorId == widget.match.localPlayer.id
-                                    ? AppColors.primary
-                                    : AppColors.surfaceLight,
-                                foregroundColor: widget.match.ganadorId == widget.match.localPlayer.id
-                                    ? Colors.black
-                                    : Colors.white,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(20),
-                                ),
+                    child:
+                        _isCargando
+                            ? const Center(
+                              child: CircularProgressIndicator(
+                                color: AppColors.primary,
                               ),
-                              child: Text(
-                                widget.match.ganadorId == widget.match.localPlayer.id
-                                    ? 'RECLAMAR PREMIO'
-                                    : 'CERRAR DUELO',
-                                style: AppTypography.labelLarge.copyWith(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w900,
+                            )
+                            : SizedBox(
+                              width: double.infinity,
+                              height: 56,
+                              child: ElevatedButton(
+                                onPressed:
+                                    widget.match.ganadorId ==
+                                                widget.match.localPlayer.id &&
+                                            !widget.match.premioReclamado
+                                        ? _reclamarPremio
+                                        : _cerrarDuelo,
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor:
+                                      widget.match.ganadorId ==
+                                                  widget.match.localPlayer.id &&
+                                              !widget.match.premioReclamado
+                                          ? AppColors.primary
+                                          : AppColors.surfaceLight,
+                                  foregroundColor:
+                                      widget.match.ganadorId ==
+                                                  widget.match.localPlayer.id &&
+                                              !widget.match.premioReclamado
+                                          ? Colors.black
+                                          : Colors.white,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(20),
+                                  ),
+                                ),
+                                child: Text(
+                                  widget.match.ganadorId ==
+                                              widget.match.localPlayer.id &&
+                                          !widget.match.premioReclamado
+                                      ? 'RECLAMAR PREMIO'
+                                      : 'CERRAR DUELO',
+                                  style: AppTypography.labelLarge.copyWith(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w900,
+                                  ),
                                 ),
                               ),
                             ),
-                          ),
                   ),
                 ] else ...[
                   // 1. Mitad Superior: Usuario Local
                   Expanded(
                     child: SlideTransition(
                       position: _topSlideAnimation,
-                      child: _buildPlayerCard(
-                        player: local,
-                        isLocal: true,
-                      ),
+                      child: _buildPlayerCard(player: local, isLocal: true),
                     ),
                   ),
 
@@ -426,149 +547,172 @@ class _VersusIntroScreenState extends State<VersusIntroScreen> with SingleTicker
                   Expanded(
                     child: SlideTransition(
                       position: _bottomSlideAnimation,
-                      child: _buildPlayerCard(
-                        player: opponent,
-                        isLocal: false,
-                      ),
+                      child: _buildPlayerCard(player: opponent, isLocal: false),
                     ),
                   ),
 
                   // Botón al pie (con lógica de aceptación/espera si está pendiente)
                   Padding(
                     padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
-                    child: _isCargando
-                        ? const Center(child: CircularProgressIndicator(color: AppColors.primary))
-                        : widget.match.estadoDb == 'pendiente'
+                    child:
+                        _isCargando
+                            ? const Center(
+                              child: CircularProgressIndicator(
+                                color: AppColors.primary,
+                              ),
+                            )
+                            : widget.match.estadoDb == 'pendiente'
                             ? widget.match.isChallenger
                                 ? SizedBox(
-                                    width: double.infinity,
-                                    height: 56,
-                                    child: ElevatedButton(
-                                      onPressed: null,
-                                      style: ElevatedButton.styleFrom(
-                                        backgroundColor: AppColors.surfaceLight,
-                                        disabledBackgroundColor: AppColors.surfaceLight.withValues(alpha: 0.5),
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(20),
-                                        ),
-                                      ),
-                                      child: Text(
-                                        'ESPERANDO QUE RIVAL ACEPTE',
-                                        style: AppTypography.labelLarge.copyWith(
-                                          color: AppColors.textSecondary,
-                                          fontSize: 14,
-                                          fontWeight: FontWeight.w900,
-                                        ),
+                                  width: double.infinity,
+                                  height: 56,
+                                  child: ElevatedButton(
+                                    onPressed: null,
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: AppColors.surfaceLight,
+                                      disabledBackgroundColor: AppColors
+                                          .surfaceLight
+                                          .withValues(alpha: 0.5),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(20),
                                       ),
                                     ),
-                                  )
-                                : Row(
-                                    children: [
-                                      Expanded(
-                                        child: SizedBox(
-                                          height: 56,
-                                          child: ElevatedButton(
-                                            onPressed: _rechazarDuelo,
-                                            style: ElevatedButton.styleFrom(
-                                              backgroundColor: const Color(0xFFEF4444).withValues(alpha: 0.2),
-                                              foregroundColor: const Color(0xFFEF4444),
-                                              side: const BorderSide(color: Color(0xFFEF4444)),
-                                              shape: RoundedRectangleBorder(
-                                                borderRadius: BorderRadius.circular(20),
-                                              ),
-                                            ),
-                                            child: Text(
-                                              'RECHAZAR',
-                                              style: AppTypography.labelLarge.copyWith(
-                                                fontSize: 14,
-                                                fontWeight: FontWeight.w900,
-                                              ),
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                      const SizedBox(width: 12),
-                                      Expanded(
-                                        child: SizedBox(
-                                          height: 56,
-                                          child: ElevatedButton(
-                                            onPressed: _aceptarDuelo,
-                                            style: ElevatedButton.styleFrom(
-                                              backgroundColor: AppColors.primary,
-                                              foregroundColor: Colors.black,
-                                              shape: RoundedRectangleBorder(
-                                                borderRadius: BorderRadius.circular(20),
-                                              ),
-                                            ),
-                                            child: Text(
-                                              'ACEPTAR DUELO',
-                                              style: AppTypography.labelLarge.copyWith(
-                                                fontSize: 14,
-                                                fontWeight: FontWeight.w900,
-                                              ),
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  )
-                            : widget.match.status == VersusStatus.waitingOpponent
-                                ? SizedBox(
-                                    width: double.infinity,
-                                    height: 56,
-                                    child: ElevatedButton(
-                                      onPressed: null,
-                                      style: ElevatedButton.styleFrom(
-                                        backgroundColor: AppColors.surfaceLight,
-                                        disabledBackgroundColor: AppColors.surfaceLight.withValues(alpha: 0.5),
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(20),
-                                        ),
-                                      ),
-                                      child: Text(
-                                        'ESPERANDO TURNO DEL RIVAL',
-                                        style: AppTypography.labelLarge.copyWith(
-                                          color: AppColors.textSecondary,
-                                          fontSize: 14,
-                                          fontWeight: FontWeight.w900,
-                                        ),
-                                      ),
-                                    ),
-                                  )
-                                : SizedBox(
-                                    width: double.infinity,
-                                    height: 56,
-                                    child: ElevatedButton(
-                                      onPressed: _startCombat,
-                                      style: ElevatedButton.styleFrom(
-                                        backgroundColor: AppColors.breakGreen,
-                                        foregroundColor: Colors.black,
-                                        elevation: 8,
-                                        shadowColor: AppColors.breakGreen.withValues(alpha: 0.6),
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(20),
-                                        ),
-                                      ),
-                                      child: Row(
-                                        mainAxisAlignment: MainAxisAlignment.center,
-                                        children: [
-                                          const Icon(Icons.sports_esports_rounded, size: 24, color: Colors.black),
-                                          const SizedBox(width: 10),
-                                          Text(
-                                            '¡COMENZAR COMBATE!',
-                                            style: AppTypography.labelLarge.copyWith(
-                                              color: Colors.black,
-                                              fontSize: 16,
-                                              fontWeight: FontWeight.w900,
-                                              letterSpacing: 1.2,
-                                            ),
-                                          ),
-                                        ],
+                                    child: Text(
+                                      'ESPERANDO QUE RIVAL ACEPTE',
+                                      style: AppTypography.labelLarge.copyWith(
+                                        color: AppColors.textSecondary,
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w900,
                                       ),
                                     ),
                                   ),
+                                )
+                                : Row(
+                                  children: [
+                                    Expanded(
+                                      child: SizedBox(
+                                        height: 56,
+                                        child: ElevatedButton(
+                                          onPressed: _rechazarDuelo,
+                                          style: ElevatedButton.styleFrom(
+                                            backgroundColor: const Color(
+                                              0xFFEF4444,
+                                            ).withValues(alpha: 0.2),
+                                            foregroundColor: const Color(
+                                              0xFFEF4444,
+                                            ),
+                                            side: const BorderSide(
+                                              color: Color(0xFFEF4444),
+                                            ),
+                                            shape: RoundedRectangleBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(20),
+                                            ),
+                                          ),
+                                          child: Text(
+                                            'RECHAZAR',
+                                            style: AppTypography.labelLarge
+                                                .copyWith(
+                                                  fontSize: 14,
+                                                  fontWeight: FontWeight.w900,
+                                                ),
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 12),
+                                    Expanded(
+                                      child: SizedBox(
+                                        height: 56,
+                                        child: ElevatedButton(
+                                          onPressed: _aceptarDuelo,
+                                          style: ElevatedButton.styleFrom(
+                                            backgroundColor: AppColors.primary,
+                                            foregroundColor: Colors.black,
+                                            shape: RoundedRectangleBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(20),
+                                            ),
+                                          ),
+                                          child: Text(
+                                            'ACEPTAR DUELO',
+                                            style: AppTypography.labelLarge
+                                                .copyWith(
+                                                  fontSize: 14,
+                                                  fontWeight: FontWeight.w900,
+                                                ),
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                )
+                            : widget.match.status ==
+                                VersusStatus.waitingOpponent
+                            ? SizedBox(
+                              width: double.infinity,
+                              height: 56,
+                              child: ElevatedButton(
+                                onPressed: null,
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: AppColors.surfaceLight,
+                                  disabledBackgroundColor: AppColors
+                                      .surfaceLight
+                                      .withValues(alpha: 0.5),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(20),
+                                  ),
+                                ),
+                                child: Text(
+                                  'ESPERANDO TURNO DEL RIVAL',
+                                  style: AppTypography.labelLarge.copyWith(
+                                    color: AppColors.textSecondary,
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w900,
+                                  ),
+                                ),
+                              ),
+                            )
+                            : SizedBox(
+                              width: double.infinity,
+                              height: 56,
+                              child: ElevatedButton(
+                                onPressed: _startCombat,
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: AppColors.breakGreen,
+                                  foregroundColor: Colors.black,
+                                  elevation: 8,
+                                  shadowColor: AppColors.breakGreen.withValues(
+                                    alpha: 0.6,
+                                  ),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(20),
+                                  ),
+                                ),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    const Icon(
+                                      Icons.sports_esports_rounded,
+                                      size: 24,
+                                      color: Colors.black,
+                                    ),
+                                    const SizedBox(width: 10),
+                                    Text(
+                                      '¡COMENZAR COMBATE!',
+                                      style: AppTypography.labelLarge.copyWith(
+                                        color: Colors.black,
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w900,
+                                        letterSpacing: 1.2,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
                   ),
-                ]
+                ],
               ],
             ),
           ),
@@ -604,10 +748,7 @@ class _VersusIntroScreenState extends State<VersusIntroScreen> with SingleTicker
                         fontWeight: FontWeight.w900,
                         fontStyle: FontStyle.italic,
                         shadows: [
-                          const Shadow(
-                            color: Colors.black,
-                            blurRadius: 10,
-                          ),
+                          const Shadow(color: Colors.black, blurRadius: 10),
                         ],
                       ),
                     ),
@@ -620,8 +761,12 @@ class _VersusIntroScreenState extends State<VersusIntroScreen> with SingleTicker
     );
   }
 
-  Widget _buildPlayerCard({required VersusPlayer player, required bool isLocal}) {
-    final accentColor = isLocal ? AppColors.primary : AppColors.pomodoroRedLight;
+  Widget _buildPlayerCard({
+    required VersusPlayer player,
+    required bool isLocal,
+  }) {
+    final accentColor =
+        isLocal ? AppColors.primary : AppColors.pomodoroRedLight;
 
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
@@ -672,7 +817,9 @@ class _VersusIntroScreenState extends State<VersusIntroScreen> with SingleTicker
             border: Border.all(color: accentColor.withValues(alpha: 0.5)),
           ),
           child: Text(
-            isLocal ? 'TÚ (Nivel ${player.level})' : 'RIVAL (Nivel ${player.level})',
+            isLocal
+                ? 'TÚ (Nivel ${player.level})'
+                : 'RIVAL (Nivel ${player.level})',
             style: AppTypography.bodySmall.copyWith(
               color: accentColor,
               fontWeight: FontWeight.w700,
@@ -685,11 +832,13 @@ class _VersusIntroScreenState extends State<VersusIntroScreen> with SingleTicker
 
   Widget _buildResultBody(bool isWinner) {
     final title = isWinner ? '¡Ganaste el Duelo! 🏆' : 'Perdiste el Duelo 😢';
-    final desc = isWinner 
-        ? '¡Excelente trabajo! Has demostrado tu superioridad en los temas estudiados.' 
-        : '¡No te rindas! Sigue repasando tus apuntes y flashcards para la próxima.';
+    final desc =
+        isWinner
+            ? '¡Excelente trabajo! Has demostrado tu superioridad en los temas estudiados.'
+            : '¡No te rindas! Sigue repasando tus apuntes y flashcards para la próxima.';
     final color = isWinner ? const Color(0xFF10B981) : const Color(0xFFEF4444);
-    final glowColor = isWinner ? const Color(0xFF10B981) : const Color(0xFFEF4444);
+    final glowColor =
+        isWinner ? const Color(0xFF10B981) : const Color(0xFFEF4444);
 
     return Center(
       child: Container(
@@ -719,7 +868,9 @@ class _VersusIntroScreenState extends State<VersusIntroScreen> with SingleTicker
                 color: color.withValues(alpha: 0.15),
               ),
               child: Icon(
-                isWinner ? Icons.emoji_events_rounded : Icons.sentiment_very_dissatisfied_rounded,
+                isWinner
+                    ? Icons.emoji_events_rounded
+                    : Icons.sentiment_very_dissatisfied_rounded,
                 color: color,
                 size: 64,
               ),
@@ -758,13 +909,16 @@ class _VersusIntroScreenState extends State<VersusIntroScreen> with SingleTicker
                     children: [
                       Text(
                         'Tu puntuación',
-                        style: AppTypography.bodySmall.copyWith(color: AppColors.textTertiary),
+                        style: AppTypography.bodySmall.copyWith(
+                          color: AppColors.textTertiary,
+                        ),
                       ),
                       const SizedBox(height: 4),
                       Text(
                         '${widget.match.localRoundsWon} Rondas',
                         style: AppTypography.bodyLarge.copyWith(
-                          color: isWinner ? const Color(0xFF10B981) : Colors.white,
+                          color:
+                              isWinner ? const Color(0xFF10B981) : Colors.white,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
@@ -775,13 +929,18 @@ class _VersusIntroScreenState extends State<VersusIntroScreen> with SingleTicker
                     children: [
                       Text(
                         'Rival',
-                        style: AppTypography.bodySmall.copyWith(color: AppColors.textTertiary),
+                        style: AppTypography.bodySmall.copyWith(
+                          color: AppColors.textTertiary,
+                        ),
                       ),
                       const SizedBox(height: 4),
                       Text(
                         '${widget.match.opponentRoundsWon} Rondas',
                         style: AppTypography.bodyLarge.copyWith(
-                          color: !isWinner ? const Color(0xFF10B981) : Colors.white,
+                          color:
+                              !isWinner
+                                  ? const Color(0xFF10B981)
+                                  : Colors.white,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
@@ -796,7 +955,11 @@ class _VersusIntroScreenState extends State<VersusIntroScreen> with SingleTicker
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Icon(Icons.monetization_on_rounded, color: Color(0xFFF59E0B), size: 28),
+                  const Icon(
+                    Icons.monetization_on_rounded,
+                    color: Color(0xFFF59E0B),
+                    size: 28,
+                  ),
                   const SizedBox(width: 8),
                   Text(
                     '+${widget.match.betCoins * 2} Monedas',

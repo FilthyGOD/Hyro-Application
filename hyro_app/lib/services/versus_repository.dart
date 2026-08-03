@@ -86,10 +86,12 @@ class VersusRepository {
           ? response['id']?.toString() ?? response.toString()
           : response.toString();
 
-      // Generar y guardar las preguntas en la tabla batalla_preguntas
       await _generarPreguntasParaBatalla(
         batallaId: batallaId,
-        tareaRetadorId: tareaRetadorId,
+        tareaId: tareaRetadorId,
+        indicesPorRonda: modoBatalla == 'cruzado' 
+            ? {1: [0, 1, 2, 3, 4], 3: [0, 1, 2]} 
+            : {1: [0, 1, 2, 3, 4], 2: [0, 1, 2, 3, 4], 3: [0, 1, 2, 3, 4, 5]},
       );
 
       debugPrint('⚔️ [VersusRepo] Batalla creada via RPC con preguntas: $batallaId');
@@ -109,48 +111,53 @@ class VersusRepository {
     }
   }
 
-  /// Genera 16 preguntas para la batalla basadas en las flashcards y notas de la tarea y las guarda en batalla_preguntas.
+  /// Genera preguntas para la batalla basadas en las flashcards y notas de la tarea y las guarda en batalla_preguntas.
   Future<void> _generarPreguntasParaBatalla({
     required String batallaId,
-    required String tareaRetadorId,
+    required String tareaId,
+    required Map<int, List<int>> indicesPorRonda,
   }) async {
     try {
       final cardsResponse = await _supabase
           .from('tarea_cards')
           .select()
-          .eq('tarea_id', tareaRetadorId) as List<dynamic>;
+          .eq('tarea_id', tareaId) as List<dynamic>;
 
       final notasResponse = await _supabase
           .from('tarea_notas')
           .select()
-          .eq('tarea_id', tareaRetadorId) as List<dynamic>;
+          .eq('tarea_id', tareaId) as List<dynamic>;
 
       final questionsToInsert = <Map<String, dynamic>>[];
-      final totalQuestions = 16; // 5 en ronda 1, 5 en ronda 2, 6 en ronda 3 (desempate)
+      int totalQuestions = indicesPorRonda.values.fold(0, (sum, list) => sum + list.length);
 
       if (cardsResponse.isEmpty && notasResponse.isEmpty) {
         // Fallback: Si no hay flashcards ni notas, generar preguntas genéricas de estudio
-        for (int i = 0; i < totalQuestions; i++) {
-          final ronda = i < 5 ? 1 : (i < 10 ? 2 : 3);
-          final indice = i < 5 ? i : (i < 10 ? i - 5 : i - 10);
-          final options = ['Opción A', 'Opción B', 'Opción C', 'Opción D'];
-          questionsToInsert.add({
-            'batalla_id': batallaId,
-            'ronda': ronda,
-            'indice': indice,
-            'tipo_pregunta': 'multiple_choice',
-            'pregunta_texto': 'Pregunta de estudio #${i + 1} sobre tu tarea',
-            'respuesta_correcta': 'Opción A',
-            'datos_extra': {
-              'options': options..shuffle(),
-            },
-          });
+        int i = 0;
+        for (final entry in indicesPorRonda.entries) {
+          final ronda = entry.key;
+          for (final indice in entry.value) {
+            final options = ['Opción A', 'Opción B', 'Opción C', 'Opción D'];
+            questionsToInsert.add({
+              'batalla_id': batallaId,
+              'ronda': ronda,
+              'indice': indice,
+              'tipo_pregunta': 'multiple_choice',
+              'pregunta_texto': 'Pregunta de estudio #${i + 1} sobre tu tarea',
+              'respuesta_correcta': 'Opción A',
+              'datos_extra': {
+                'options': options..shuffle(),
+              },
+            });
+            i++;
+          }
         }
       } else {
         // Combinar generación de flashcards (multiple_choice, true_false) y notas (drag_drop)
-        for (int i = 0; i < totalQuestions; i++) {
-          final ronda = i < 5 ? 1 : (i < 10 ? 2 : 3);
-          final indice = i < 5 ? i : (i < 10 ? i - 5 : i - 10);
+        int i = 0;
+        for (final entry in indicesPorRonda.entries) {
+          final ronda = entry.key;
+          for (final indice in entry.value) {
           
           final availableTypes = <String>[];
           if (cardsResponse.isNotEmpty) {
@@ -249,7 +256,9 @@ class VersusRepository {
               'datos_extra': {'blanks': orderedBlanks, 'available_words': availableWords},
             });
           }
+          i++;
         }
+      }
       }
 
       await _supabase.from('batalla_preguntas').insert(questionsToInsert);
@@ -362,6 +371,19 @@ class VersusRepository {
         'p_tarea_oponente_id': tareaOponenteId,
       });
 
+      // Si es choque de materias, el oponente eligió su propia tarea. 
+      // Generamos las preguntas de la ronda 2 y la otra mitad de la ronda 3.
+      if (tareaOponenteId != null) {
+        await _generarPreguntasParaBatalla(
+          batallaId: batallaId,
+          tareaId: tareaOponenteId,
+          indicesPorRonda: {
+            2: [0, 1, 2, 3, 4], 
+            3: [3, 4, 5],
+          },
+        );
+      }
+
       debugPrint('✅ [VersusRepo] Batalla aceptada via RPC: $batallaId');
       return response is Map<String, dynamic>
           ? response
@@ -408,203 +430,7 @@ class VersusRepository {
     }
   }
 
-  Future<Map<String, dynamic>> calcularEstadoBatalla({
-    required String batallaId,
-    required String retadorId,
-    required String oponenteId,
-    required String estadoDb,
-  }) async {
-    // Si la batalla está pendiente, no ha sido aceptada, por lo que no realizamos cálculos.
-    if (estadoDb == 'pendiente') {
-      return {
-        'ronda': 1,
-        'retador_completado_ronda': false,
-        'oponente_completado_ronda': false,
-        'rondas_ganadas_retador': 0,
-        'rondas_ganadas_oponente': 0,
-        'ganador_id': null,
-        'estado_calculado': 'pendiente',
-      };
-    }
 
-    // Si la batalla ya está completada, reclamada o cancelada, no recalculamos
-    if (estadoDb == 'completada' || estadoDb == 'reclamada' || estadoDb == 'cancelada') {
-      return {
-        'ronda': 1,
-        'retador_completado_ronda': true,
-        'oponente_completado_ronda': true,
-        'rondas_ganadas_retador': 0,
-        'rondas_ganadas_oponente': 0,
-        'ganador_id': null,
-        'estado_calculado': estadoDb,
-      };
-    }
-
-    try {
-      // 1. Obtener todas las preguntas de la batalla
-      final preguntasRes = await _supabase
-          .from('batalla_preguntas')
-          .select('id, ronda')
-          .eq('batalla_id', batallaId);
-      
-      final preguntas = preguntasRes as List<dynamic>? ?? [];
-
-      // Agrupar preguntas por ronda
-      final preguntasPorRonda = <int, List<String>>{1: [], 2: [], 3: []};
-      for (final p in preguntas) {
-        final r = (p['ronda'] as num?)?.toInt() ?? 1;
-        final id = p['id']?.toString();
-        if (id != null) {
-          preguntasPorRonda[r] = (preguntasPorRonda[r] ?? [])..add(id);
-        }
-      }
-
-      // 2. Obtener todas las respuestas de ambos jugadores
-      final respuestasRes = await _supabase
-          .from('batalla_respuestas')
-          .select('pregunta_id, jugador_id, es_correcta, tiempo_respuesta_ms')
-          .eq('batalla_id', batallaId);
-      
-      final respuestas = respuestasRes as List<dynamic>? ?? [];
-
-      final respuestasRetador = respuestas.where((r) => r['jugador_id'] == retadorId).toList();
-      final respuestasOponente = respuestas.where((r) => r['jugador_id'] == oponenteId).toList();
-
-      // Comprobar completitud por ronda
-      bool retadorCompletado(int ronda) {
-        final qIds = preguntasPorRonda[ronda] ?? [];
-        if (qIds.isEmpty) return false;
-        return qIds.every((qId) => respuestasRetador.any((r) => r['pregunta_id'] == qId));
-      }
-
-      bool oponenteCompletado(int ronda) {
-        final qIds = preguntasPorRonda[ronda] ?? [];
-        if (qIds.isEmpty) return false;
-        return qIds.every((qId) => respuestasOponente.any((r) => r['pregunta_id'] == qId));
-      }
-
-      // Calcular ganador de una ronda
-      String? determinarGanadorRonda(int ronda) {
-        final qIds = preguntasPorRonda[ronda] ?? [];
-        if (qIds.isEmpty) return null;
-
-        final respR = respuestasRetador.where((r) => qIds.contains(r['pregunta_id'])).toList();
-        final respO = respuestasOponente.where((r) => qIds.contains(r['pregunta_id'])).toList();
-
-        if (respR.length < qIds.length || respO.length < qIds.length) return null;
-
-        final aciertosR = respR.where((r) => r['es_correcta'] == true).length;
-        final aciertosO = respO.where((r) => r['es_correcta'] == true).length;
-
-        if (aciertosR > aciertosO) {
-          return 'retador';
-        } else if (aciertosO > aciertosR) {
-          return 'oponente';
-        } else {
-          // Desempate por tiempo total de respuesta
-          final tiempoR = respR.fold<int>(0, (sum, r) => sum + ((r['tiempo_respuesta_ms'] as num?)?.toInt() ?? 0));
-          final tiempoO = respO.fold<int>(0, (sum, r) => sum + ((r['tiempo_respuesta_ms'] as num?)?.toInt() ?? 0));
-          if (tiempoR < tiempoO) return 'retador';
-          return 'oponente';
-        }
-      }
-
-      // Calcular estado ronda por ronda
-      int rondaActual = 1;
-      int rondasGanadasRetador = 0;
-      int rondasGanadasOponente = 0;
-      String? ganadorId;
-      String estadoFinal = 'activa';
-
-      // Ronda 1
-      final r1Retador = retadorCompletado(1);
-      final r1Oponente = oponenteCompletado(1);
-
-      if (r1Retador && r1Oponente) {
-        final w1 = determinarGanadorRonda(1);
-        if (w1 == 'retador') {
-          rondasGanadasRetador++;
-        } else if (w1 == 'oponente') {
-          rondasGanadasOponente++;
-        }
-
-        // Pasar a Ronda 2
-        rondaActual = 2;
-        final r2Retador = retadorCompletado(2);
-        final r2Oponente = oponenteCompletado(2);
-
-        if (r2Retador && r2Oponente) {
-          final w2 = determinarGanadorRonda(2);
-          if (w2 == 'retador') {
-            rondasGanadasRetador++;
-          } else if (w2 == 'oponente') {
-            rondasGanadasOponente++;
-          }
-
-          // Comprobar si hay ganador absoluto (2-0 o 0-2)
-          if (rondasGanadasRetador >= 2) {
-            ganadorId = retadorId;
-            estadoFinal = 'completada';
-          } else if (rondasGanadasOponente >= 2) {
-            ganadorId = oponenteId;
-            estadoFinal = 'completada';
-          } else {
-            // Empate (1-1), pasar a Ronda 3 (Desempate)
-            rondaActual = 3;
-            final r3Retador = retadorCompletado(3);
-            final r3Oponente = oponenteCompletado(3);
-
-            if (r3Retador && r3Oponente) {
-              final w3 = determinarGanadorRonda(3);
-              if (w3 == 'retador') {
-                rondasGanadasRetador++;
-                ganadorId = retadorId;
-              } else {
-                rondasGanadasOponente++;
-                ganadorId = oponenteId;
-              }
-              estadoFinal = 'completada';
-            }
-          }
-        }
-      }
-
-      // Si ha cambiado el estado a completada, actualizarlo en Supabase
-      if (estadoFinal == 'completada' && estadoDb != 'completada') {
-        await _supabase
-            .from('batallas_versus')
-            .update({
-              'estado': 'completada',
-              'ganador_id': ganadorId,
-              'rondas_ganadas_retador': rondasGanadasRetador,
-              'rondas_ganadas_oponente': rondasGanadasOponente,
-              'finalizado_en': DateTime.now().toUtc().toIso8601String(),
-            })
-            .eq('id', batallaId);
-      }
-
-      return {
-        'ronda': rondaActual,
-        'retador_completado_ronda': r1Retador ? retadorCompletado(rondaActual) : false,
-        'oponente_completado_ronda': r1Oponente ? oponenteCompletado(rondaActual) : false,
-        'rondas_ganadas_retador': rondasGanadasRetador,
-        'rondas_ganadas_oponente': rondasGanadasOponente,
-        'ganador_id': ganadorId,
-        'estado_calculado': estadoFinal,
-      };
-    } catch (e) {
-      debugPrint('❌ [VersusRepo] Error al calcular estado de batalla: $e');
-      return {
-        'ronda': 1,
-        'retador_completado_ronda': false,
-        'oponente_completado_ronda': false,
-        'rondas_ganadas_retador': 0,
-        'rondas_ganadas_oponente': 0,
-        'ganador_id': null,
-        'estado_calculado': estadoDb,
-      };
-    }
-  }
 
   // ═════════════════════════════════════════════════════════════════════
   // FINALIZAR TURNO (Cambio de turno entre jugadores)
@@ -636,15 +462,15 @@ class VersusRepository {
     try {
       final updates = <String, dynamic>{};
 
-      if (isChallenger) {
-        // Retador terminó → pasar turno al oponente
-        updates['turno_actual_id'] = oponenteId;
+      if (!isChallenger) {
+        // Oponente terminó su turno (primer turno de la ronda) → pasar al Retador
+        updates['turno_actual_id'] = oponenteId; // oponenteId apunta al otro jugador (el Retador)
         debugPrint(
-          '🔄 [VersusRepo] Turno pasado al oponente $oponenteId '
+          '🔄 [VersusRepo] Turno pasado al retador $oponenteId '
           '(Ronda $rondaActual, Batalla $batallaId)',
         );
       } else {
-        // Oponente terminó → ambos completaron la ronda
+        // Retador terminó (segundo turno de la ronda) → ambos completaron
         updates['turno_actual_id'] = null;
         debugPrint(
           '🔄 [VersusRepo] Ambos jugadores completaron la ronda $rondaActual '
@@ -660,7 +486,8 @@ class VersusRepository {
       // ────────────────────────────────────────────────────────────────────────
       // EVALUACIÓN DE RONDA — Llamada a Supabase RPC
       // ────────────────────────────────────────────────────────────────────────
-      if (!isChallenger) {
+      if (isChallenger) {
+        // Ahora el Retador es quien tira al final y gatilla la evaluación
         await _supabase.rpc('evaluar_ronda_versus', params: {
           'p_batalla_id': batallaId,
         });

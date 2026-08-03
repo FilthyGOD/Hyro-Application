@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../core/theme/app_colors.dart';
@@ -34,7 +35,8 @@ class _VersusCombatScreenState extends State<VersusCombatScreen> {
   int _opponentRoundsWon = 0;
 
   int _currentQuestionIndex = 0;
-  late int _totalQuestionsInRound; // 5 en rondas 1 y 2, 6 en ronda 3 (desempate)
+  late int
+  _totalQuestionsInRound; // 5 en rondas 1 y 2, 6 en ronda 3 (desempate)
   late List<AnswerStatus> _dashProgress;
 
   int? _selectedAnswerIndex;
@@ -66,6 +68,9 @@ class _VersusCombatScreenState extends State<VersusCombatScreen> {
     ),
   ];
 
+  int _timeLeft = 30;
+  Timer? _questionTimer;
+
   @override
   void initState() {
     super.initState();
@@ -78,12 +83,40 @@ class _VersusCombatScreenState extends State<VersusCombatScreen> {
     _cargarPreguntas();
   }
 
+  @override
+  void dispose() {
+    _questionTimer?.cancel();
+    _answerStopwatch.stop();
+    super.dispose();
+  }
+
+  void _startTimer() {
+    _questionTimer?.cancel();
+    setState(() {
+      _timeLeft = 30;
+    });
+    _questionTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (!mounted) return;
+      if (_timeLeft > 0) {
+        setState(() {
+          _timeLeft--;
+        });
+      } else {
+        timer.cancel();
+        _onAnswerSelected(isTimeout: true);
+      }
+    });
+  }
+
   /// Inicializa la cantidad de espacios de la barra por guiones según la regla estricta:
   /// - Rondas 1 y 2: 5 guiones (5 preguntas)
   /// - Ronda 3 (Desempate): 6 guiones (3 de tus apuntes + 3 del rival)
   void _initRoundProgress() {
     _totalQuestionsInRound = (_currentRound == 3) ? 6 : 5;
-    _dashProgress = List.generate(_totalQuestionsInRound, (_) => AnswerStatus.pending);
+    _dashProgress = List.generate(
+      _totalQuestionsInRound,
+      (_) => AnswerStatus.pending,
+    );
     _currentQuestionIndex = 0;
     _selectedAnswerIndex = null;
     _answered = false;
@@ -108,11 +141,15 @@ class _VersusCombatScreenState extends State<VersusCombatScreen> {
           _questions = preguntas.isNotEmpty ? preguntas : _fallbackQuestions;
           // Ajustar la barra de progreso al número real de preguntas
           _totalQuestionsInRound = _questions.length;
-          _dashProgress = List.generate(_totalQuestionsInRound, (_) => AnswerStatus.pending);
+          _dashProgress = List.generate(
+            _totalQuestionsInRound,
+            (_) => AnswerStatus.pending,
+          );
           _isLoadingQuestions = false;
           // Iniciar cronómetro para la primera pregunta
           _answerStopwatch.reset();
           _answerStopwatch.start();
+          _startTimer();
         });
       }
     } catch (e) {
@@ -121,27 +158,40 @@ class _VersusCombatScreenState extends State<VersusCombatScreen> {
           _loadError = 'Error cargando preguntas: $e';
           _questions = _fallbackQuestions;
           _totalQuestionsInRound = _questions.length;
-          _dashProgress = List.generate(_totalQuestionsInRound, (_) => AnswerStatus.pending);
+          _dashProgress = List.generate(
+            _totalQuestionsInRound,
+            (_) => AnswerStatus.pending,
+          );
           _isLoadingQuestions = false;
         });
       }
     }
   }
 
-  void _onAnswerSelected({int? index, String? textAnswer, bool? overrideIsCorrect}) {
+  void _onAnswerSelected({
+    int? index,
+    String? textAnswer,
+    bool? overrideIsCorrect,
+    bool isTimeout = false,
+  }) {
     if (_answered) return;
+
+    _questionTimer?.cancel();
+    _answerStopwatch.stop();
+    final tiempoMs = _answerStopwatch.elapsedMilliseconds;
+
     final currentQ = _questions[_currentQuestionIndex];
     final auth = context.read<AuthProvider>();
     final userId = auth.supabaseUserId;
     final versus = context.read<VersusProvider>();
 
-    _answerStopwatch.stop();
-    final tiempoMs = _answerStopwatch.elapsedMilliseconds;
-
     bool isCorrect = false;
     String finalAnswer = '';
 
-    if (overrideIsCorrect != null) {
+    if (isTimeout) {
+      isCorrect = false;
+      finalAnswer = 'Timeout';
+    } else if (overrideIsCorrect != null) {
       isCorrect = overrideIsCorrect;
       finalAnswer = textAnswer ?? '';
     } else if (index != null) {
@@ -152,7 +202,8 @@ class _VersusCombatScreenState extends State<VersusCombatScreen> {
     setState(() {
       _selectedAnswerIndex = index;
       _answered = true;
-      _dashProgress[_currentQuestionIndex] = isCorrect ? AnswerStatus.correct : AnswerStatus.incorrect;
+      _dashProgress[_currentQuestionIndex] =
+          isCorrect ? AnswerStatus.correct : AnswerStatus.incorrect;
     });
 
     if (userId != null && currentQ.id != 'fallback_1') {
@@ -176,6 +227,7 @@ class _VersusCombatScreenState extends State<VersusCombatScreen> {
         // Reiniciar cronómetro para la siguiente pregunta
         _answerStopwatch.reset();
         _answerStopwatch.start();
+        _startTimer();
       });
     } else {
       _finishRound();
@@ -183,62 +235,72 @@ class _VersusCombatScreenState extends State<VersusCombatScreen> {
   }
 
   void _finishRound() {
-    final correctCount = _dashProgress.where((s) => s == AnswerStatus.correct).length;
+    final correctCount =
+        _dashProgress.where((s) => s == AnswerStatus.correct).length;
     final roundWon = correctCount >= (_totalQuestionsInRound / 2).ceil();
 
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (_) => AlertDialog(
-        backgroundColor: AppColors.surface,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: Row(
-          children: [
-            Icon(
-              roundWon ? Icons.emoji_events_rounded : Icons.sentiment_dissatisfied_rounded,
-              color: roundWon ? AppColors.breakGreen : AppColors.pomodoroRedLight,
+      builder:
+          (_) => AlertDialog(
+            backgroundColor: AppColors.surface,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
             ),
-            const SizedBox(width: 10),
-            Text(
-              roundWon ? '¡Ronda Ganada!' : 'Ronda Perdida',
-              style: AppTypography.h3.copyWith(color: AppColors.textPrimary),
+            title: Row(
+              children: [
+                Icon(
+                  roundWon
+                      ? Icons.emoji_events_rounded
+                      : Icons.emoji_events_rounded,
+                  color: roundWon ? AppColors.breakGreen : AppColors.breakGreen,
+                ),
+                const SizedBox(width: 10),
+                Text(
+                  roundWon ? '¡Ronda Finalizada!' : '¡Ronda Finalizada!',
+                  style: AppTypography.h3.copyWith(
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+              ],
             ),
-          ],
-        ),
-        content: Text(
-          'Acertaste $correctCount de $_totalQuestionsInRound preguntas en la Ronda $_currentRound.',
-          style: AppTypography.bodyMedium.copyWith(color: AppColors.textSecondary),
-        ),
-        actions: [
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.primary,
-              foregroundColor: Colors.black,
+            content: Text(
+              'Acertaste $correctCount de $_totalQuestionsInRound preguntas en la Ronda $_currentRound.',
+              style: AppTypography.bodyMedium.copyWith(
+                color: AppColors.textSecondary,
+              ),
             ),
-            onPressed: () {
-              final versusProvider = context.read<VersusProvider>();
-              final auth = context.read<AuthProvider>();
-              final battleId = widget.match.id;
-              final userId = auth.supabaseUserId;
+            actions: [
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  foregroundColor: Colors.black,
+                ),
+                onPressed: () {
+                  final versusProvider = context.read<VersusProvider>();
+                  final auth = context.read<AuthProvider>();
+                  final battleId = widget.match.id;
+                  final userId = auth.supabaseUserId;
 
-              Navigator.pop(context); // Cierra el dialogo
-              Navigator.pop(context); // Cierra la pantalla de combate
+                  Navigator.pop(context); // Cierra el dialogo
+                  Navigator.pop(context); // Cierra la pantalla de combate
 
-              // ── Finalizar turno: pasar turno al oponente o marcar ronda completa ──
-              if (userId != null) {
-                versusProvider.finalizarTurno(
-                  batallaId: battleId,
-                  jugadorActualId: userId,
-                  oponenteId: widget.match.opponent.id,
-                  isChallenger: widget.match.isChallenger,
-                  rondaActual: _currentRound,
-                );
-              }
-            },
-            child: const Text('Continuar'),
+                  // ── Finalizar turno: pasar turno al oponente o marcar ronda completa ──
+                  if (userId != null) {
+                    versusProvider.finalizarTurno(
+                      batallaId: battleId,
+                      jugadorActualId: userId,
+                      oponenteId: widget.match.opponent.id,
+                      isChallenger: widget.match.isChallenger,
+                      rondaActual: _currentRound,
+                    );
+                  }
+                },
+                child: const Text('Continuar'),
+              ),
+            ],
           ),
-        ],
-      ),
     );
   }
 
@@ -255,11 +317,41 @@ class _VersusCombatScreenState extends State<VersusCombatScreen> {
             // ─────────────────────────────────────────────────────────────
             // 1. CABECERA STRICTA DE COMBATE (Header)
             // ─────────────────────────────────────────────────────────────
+            if (_currentRound == 3)
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(
+                  vertical: 6,
+                  horizontal: 16,
+                ),
+                color: AppColors.primary.withValues(alpha: 0.2),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(
+                      Icons.timer_outlined,
+                      size: 16,
+                      color: AppColors.primary,
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Desempate, se tomará en cuenta el tiempo de las respuestas',
+                      style: AppTypography.bodySmall.copyWith(
+                        color: AppColors.primary,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 10,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               decoration: const BoxDecoration(
                 color: AppColors.surface,
-                border: Border(bottom: BorderSide(color: AppColors.cardBorder, width: 1.5)),
+                border: Border(
+                  bottom: BorderSide(color: AppColors.cardBorder, width: 1.5),
+                ),
               ),
               child: Column(
                 children: [
@@ -306,18 +398,26 @@ class _VersusCombatScreenState extends State<VersusCombatScreen> {
                             (index) => Expanded(
                               child: Container(
                                 height: 6,
-                                margin: const EdgeInsets.symmetric(horizontal: 3),
+                                margin: const EdgeInsets.symmetric(
+                                  horizontal: 3,
+                                ),
                                 decoration: BoxDecoration(
-                                  color: _getDashColor(_dashProgress[index], index == _currentQuestionIndex),
+                                  color: _getDashColor(
+                                    _dashProgress[index],
+                                    index == _currentQuestionIndex,
+                                  ),
                                   borderRadius: BorderRadius.circular(3),
-                                  boxShadow: _dashProgress[index] == AnswerStatus.correct
-                                      ? [
-                                          BoxShadow(
-                                            color: AppColors.breakGreen.withValues(alpha: 0.6),
-                                            blurRadius: 6,
-                                          )
-                                        ]
-                                      : null,
+                                  boxShadow:
+                                      _dashProgress[index] ==
+                                              AnswerStatus.correct
+                                          ? [
+                                            BoxShadow(
+                                              color: AppColors.breakGreen
+                                                  .withValues(alpha: 0.6),
+                                              blurRadius: 6,
+                                            ),
+                                          ]
+                                          : null,
                                 ),
                               ),
                             ),
@@ -325,6 +425,20 @@ class _VersusCombatScreenState extends State<VersusCombatScreen> {
                         ),
                       ),
                     ],
+                  ),
+                  const SizedBox(height: 12),
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(4),
+                    child: LinearProgressIndicator(
+                      value: _timeLeft / 30.0,
+                      minHeight: 4,
+                      backgroundColor: AppColors.surfaceLight,
+                      valueColor: AlwaysStoppedAnimation<Color>(
+                        _timeLeft > 10
+                            ? AppColors.primary
+                            : AppColors.pomodoroRedLight,
+                      ),
+                    ),
                   ),
                 ],
               ),
@@ -357,18 +471,29 @@ class _VersusCombatScreenState extends State<VersusCombatScreen> {
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Icon(Icons.error_outline, color: Color(0xFFEF4444), size: 48),
+                        const Icon(
+                          Icons.error_outline,
+                          color: Color(0xFFEF4444),
+                          size: 48,
+                        ),
                         const SizedBox(height: 16),
                         Text(
                           _loadError!,
                           textAlign: TextAlign.center,
-                          style: const TextStyle(color: AppColors.textSecondary),
+                          style: const TextStyle(
+                            color: AppColors.textSecondary,
+                          ),
                         ),
                         const SizedBox(height: 16),
                         ElevatedButton(
                           onPressed: _cargarPreguntas,
-                          style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
-                          child: const Text('Reintentar', style: TextStyle(color: Colors.black)),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.primary,
+                          ),
+                          child: const Text(
+                            'Reintentar',
+                            style: TextStyle(color: Colors.black),
+                          ),
                         ),
                       ],
                     ),
@@ -387,11 +512,16 @@ class _VersusCombatScreenState extends State<VersusCombatScreen> {
                         Align(
                           alignment: Alignment.centerLeft,
                           child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 4,
+                            ),
                             decoration: BoxDecoration(
                               color: AppColors.primary.withValues(alpha: 0.15),
                               borderRadius: BorderRadius.circular(8),
-                              border: Border.all(color: AppColors.primary.withValues(alpha: 0.4)),
+                              border: Border.all(
+                                color: AppColors.primary.withValues(alpha: 0.4),
+                              ),
                             ),
                             child: Text(
                               _questions[_currentQuestionIndex].authorName!,
@@ -404,14 +534,31 @@ class _VersusCombatScreenState extends State<VersusCombatScreen> {
                         ),
                       const SizedBox(height: 12),
 
-                      if (_questions[_currentQuestionIndex].questionType == 'drag_drop')
+                      if (_questions[_currentQuestionIndex].questionType ==
+                          'drag_drop')
                         VersusDragDropWidget(
-                          textWithBlanks: _questions[_currentQuestionIndex].questionText,
-                          originalBlanks: (_questions[_currentQuestionIndex].extraData['blanks'] as List<dynamic>?)?.map((e) => e.toString()).toList() ?? [],
-                          availableWords: (_questions[_currentQuestionIndex].extraData['available_words'] as List<dynamic>?)?.map((e) => e.toString()).toList() ?? [],
+                          textWithBlanks:
+                              _questions[_currentQuestionIndex].questionText,
+                          originalBlanks:
+                              (_questions[_currentQuestionIndex]
+                                          .extraData['blanks']
+                                      as List<dynamic>?)
+                                  ?.map((e) => e.toString())
+                                  .toList() ??
+                              [],
+                          availableWords:
+                              (_questions[_currentQuestionIndex]
+                                          .extraData['available_words']
+                                      as List<dynamic>?)
+                                  ?.map((e) => e.toString())
+                                  .toList() ??
+                              [],
                           answered: _answered,
                           onVerify: (isCorrect, answerText) {
-                            _onAnswerSelected(overrideIsCorrect: isCorrect, textAnswer: answerText);
+                            _onAnswerSelected(
+                              overrideIsCorrect: isCorrect,
+                              textAnswer: answerText,
+                            );
                           },
                         )
                       else ...[
@@ -438,8 +585,12 @@ class _VersusCombatScreenState extends State<VersusCombatScreen> {
                           _questions[_currentQuestionIndex].options.length,
                           (index) => _buildOptionButton(
                             index: index,
-                            text: _questions[_currentQuestionIndex].options[index],
-                            correctIndex: _questions[_currentQuestionIndex].correctOptionIndex,
+                            text:
+                                _questions[_currentQuestionIndex]
+                                    .options[index],
+                            correctIndex:
+                                _questions[_currentQuestionIndex]
+                                    .correctOptionIndex,
                           ),
                         ),
                       ],
@@ -460,10 +611,14 @@ class _VersusCombatScreenState extends State<VersusCombatScreen> {
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppColors.primary,
                         foregroundColor: Colors.black,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
                       ),
                       child: Text(
-                        _currentQuestionIndex < _totalQuestionsInRound - 1 ? 'SIGUIENTE PREGUNTA' : 'FINALIZAR RONDA',
+                        _currentQuestionIndex < _totalQuestionsInRound - 1
+                            ? 'SIGUIENTE PREGUNTA'
+                            : 'FINALIZAR RONDA',
                         style: AppTypography.labelLarge.copyWith(
                           color: Colors.black,
                           fontWeight: FontWeight.w800,
@@ -537,35 +692,40 @@ class _VersusCombatScreenState extends State<VersusCombatScreen> {
     );
 
     return Row(
-      children: isLocal
-          ? [
-              avatarWidget,
-              const SizedBox(width: 8),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    player.username,
-                    style: AppTypography.labelLarge.copyWith(color: AppColors.textPrimary),
-                  ),
-                  roundsIndicator,
-                ],
-              ),
-            ]
-          : [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Text(
-                    player.username,
-                    style: AppTypography.labelLarge.copyWith(color: AppColors.textPrimary),
-                  ),
-                  roundsIndicator,
-                ],
-              ),
-              const SizedBox(width: 8),
-              avatarWidget,
-            ],
+      children:
+          isLocal
+              ? [
+                avatarWidget,
+                const SizedBox(width: 8),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      player.username,
+                      style: AppTypography.labelLarge.copyWith(
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
+                    roundsIndicator,
+                  ],
+                ),
+              ]
+              : [
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Text(
+                      player.username,
+                      style: AppTypography.labelLarge.copyWith(
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
+                    roundsIndicator,
+                  ],
+                ),
+                const SizedBox(width: 8),
+                avatarWidget,
+              ],
     );
   }
 
@@ -576,14 +736,20 @@ class _VersusCombatScreenState extends State<VersusCombatScreen> {
       decoration: BoxDecoration(
         color: const Color(0xFFF59E0B).withValues(alpha: 0.18),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFF59E0B).withValues(alpha: 0.5)),
+        border: Border.all(
+          color: const Color(0xFFF59E0B).withValues(alpha: 0.5),
+        ),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           Row(
             children: [
-              const Icon(Icons.monetization_on_rounded, color: Color(0xFFF59E0B), size: 18),
+              const Icon(
+                Icons.monetization_on_rounded,
+                color: Color(0xFFF59E0B),
+                size: 18,
+              ),
               const SizedBox(width: 4),
               Text(
                 '${widget.match.betCoins * 2}',
@@ -660,7 +826,13 @@ class _VersusCombatScreenState extends State<VersusCombatScreen> {
             decoration: BoxDecoration(
               color: buttonColor,
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: borderColor, width: isSelected || (_answered && index == correctIndex) ? 2.0 : 1.0),
+              border: Border.all(
+                color: borderColor,
+                width:
+                    isSelected || (_answered && index == correctIndex)
+                        ? 2.0
+                        : 1.0,
+              ),
             ),
             child: Row(
               children: [
@@ -692,7 +864,10 @@ class _VersusCombatScreenState extends State<VersusCombatScreen> {
                   ),
                 ),
                 if (_answered && index == correctIndex)
-                  const Icon(Icons.check_circle_rounded, color: AppColors.breakGreen),
+                  const Icon(
+                    Icons.check_circle_rounded,
+                    color: AppColors.breakGreen,
+                  ),
                 if (_answered && isSelected && index != correctIndex)
                   const Icon(Icons.cancel_rounded, color: Color(0xFFEF4444)),
               ],

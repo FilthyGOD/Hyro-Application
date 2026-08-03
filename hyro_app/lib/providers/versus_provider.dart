@@ -320,14 +320,6 @@ class VersusProvider extends ChangeNotifier {
           subjectColor = await _resolveCategoryColor(categoriaId);
         }
 
-        // Calcular estado dinámico de la batalla (rondas, completitud y ganador)
-        final estadoCalc = await _repo.calcularEstadoBatalla(
-          batallaId: row['id'].toString(),
-          retadorId: retadorId,
-          oponenteId: oponenteId,
-          estadoDb: row['estado'] as String? ?? 'pendiente',
-        );
-
         matches.add(VersusMatch.fromSupabase(
           row: row,
           currentUserId: currentUserId,
@@ -335,13 +327,6 @@ class VersusProvider extends ChangeNotifier {
           opponentPlayer: opponentPlayer,
           subjectName: subjectName,
           subjectColor: subjectColor,
-          currentRound: estadoCalc['ronda'] as int?,
-          rondasGanadasRetador: estadoCalc['rondas_ganadas_retador'] as int?,
-          rondasGanadasOponente: estadoCalc['rondas_ganadas_oponente'] as int?,
-          ganadorId: estadoCalc['ganador_id'] as String?,
-          retadorCompletado: estadoCalc['retador_completado_ronda'] as bool?,
-          oponenteCompletado: estadoCalc['oponente_completado_ronda'] as bool?,
-          estadoCalculado: estadoCalc['estado_calculado'] as String?,
         ));
       } catch (e) {
         debugPrint('⚠️ [VersusProvider] Error mapeando fila: $e');

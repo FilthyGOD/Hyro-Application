@@ -171,16 +171,9 @@ class VersusMatch {
     required VersusPlayer opponentPlayer,
     String subjectName = 'Sin materia',
     Color subjectColor = const Color(0xFF00F2FF),
-    int? currentRound,
-    int? rondasGanadasRetador,
-    int? rondasGanadasOponente,
-    String? ganadorId,
-    bool? retadorCompletado,
-    bool? oponenteCompletado,
-    String? estadoCalculado,
   }) {
     final isRetador = row['retador_id'] == currentUserId;
-    final estado = estadoCalculado ?? row['estado'] as String? ?? 'pendiente';
+    final estado = row['estado'] as String? ?? 'pendiente';
     final premioReclamado = row['premio_reclamado'] == true;
 
     // ── Determinar turno usando turno_actual_id como fuente de verdad ──
@@ -203,11 +196,11 @@ class VersusMatch {
       }
     }
 
-    final rRetador = rondasGanadasRetador ?? (row['rondas_ganadas_retador'] as num?)?.toInt() ?? 0;
-    final rOponente = rondasGanadasOponente ?? (row['rondas_ganadas_oponente'] as num?)?.toInt() ?? 0;
+    final rRetador = (row['rondas_ganadas_retador'] as num?)?.toInt() ?? 0;
+    final rOponente = (row['rondas_ganadas_oponente'] as num?)?.toInt() ?? 0;
 
     // Leer ronda_actual directamente de la BD si existe
-    final rondaActualDb = (row['ronda_actual'] as num?)?.toInt();
+    final rondaActualDb = (row['ronda_actual'] as num?)?.toInt() ?? 1;
 
     return VersusMatch(
       id: row['id'].toString(),
@@ -218,7 +211,7 @@ class VersusMatch {
       subjectColor: subjectColor,
       betCoins: (row['apuesta_monedas'] as num?)?.toInt() ?? 50,
       status: status,
-      currentRound: rondaActualDb ?? currentRound ?? (rRetador + rOponente + 1).clamp(1, 3),
+      currentRound: rondaActualDb,
       localRoundsWon: isRetador ? rRetador : rOponente,
       opponentRoundsWon: isRetador ? rOponente : rRetador,
       lastActivity: DateTime.tryParse(row['created_at']?.toString() ?? '') ?? DateTime.now(),
@@ -228,7 +221,7 @@ class VersusMatch {
       tareaOponenteId: row['tarea_oponente_id']?.toString(),
       estadoDb: estado,
       isChallenger: isRetador,
-      ganadorId: ganadorId ?? row['ganador_id']?.toString(),
+      ganadorId: row['ganador_id']?.toString(),
       turnoActualId: turnoActualId,
       premioReclamado: premioReclamado,
     );

@@ -19,7 +19,6 @@ import '../versus/widgets/task_selector_sheet.dart';
 import '../../data/models/task_model.dart';
 import '../tasks/tasks_provider.dart';
 
-
 /// Pantalla de Amigos — Ranking semanal, solicitudes pendientes y búsqueda por código.
 class FriendsScreen extends StatefulWidget {
   const FriendsScreen({super.key});
@@ -93,9 +92,14 @@ class _FriendsScreenState extends State<FriendsScreen> {
                   // ── Duelos Pendientes (Modo Versus) ──
                   Consumer<VersusProvider>(
                     builder: (context, versus, _) {
-                      final pendingChallenges = versus.activeBattles
-                          .where((match) => !match.isChallenger && match.estadoDb == 'pendiente')
-                          .toList();
+                      final pendingChallenges =
+                          versus.activeBattles
+                              .where(
+                                (match) =>
+                                    !match.isChallenger &&
+                                    match.estadoDb == 'pendiente',
+                              )
+                              .toList();
 
                       if (pendingChallenges.isEmpty) {
                         return const SizedBox.shrink();
@@ -112,7 +116,10 @@ class _FriendsScreenState extends State<FriendsScreen> {
                           ...pendingChallenges.map((match) {
                             return Padding(
                               padding: const EdgeInsets.only(bottom: 8.0),
-                              child: _buildPendingChallengeBanner(context, match),
+                              child: _buildPendingChallengeBanner(
+                                context,
+                                match,
+                              ),
                             );
                           }),
                           const SizedBox(height: 16),
@@ -159,12 +166,14 @@ class _FriendsScreenState extends State<FriendsScreen> {
                   Consumer<VersusProvider>(
                     builder: (context, versus, _) {
                       return VersusActiveBattlesSection(
-                        activeMatches: versus.activeBattles.where((match) {
-                          if (match.estadoDb == 'pendiente' && !match.isChallenger) {
-                            return false;
-                          }
-                          return true;
-                        }).toList(),
+                        activeMatches:
+                            versus.activeBattles.where((match) {
+                              if (match.estadoDb == 'pendiente' &&
+                                  !match.isChallenger) {
+                                return false;
+                              }
+                              return true;
+                            }).toList(),
                         onResumeMatch: (match) {
                           Navigator.push(
                             context,
@@ -177,7 +186,9 @@ class _FriendsScreenState extends State<FriendsScreen> {
                           // El modal CreateVersusModal se abre desde
                           // VersusActiveBattlesSection y crea la batalla
                           // a través del VersusProvider.
-                          debugPrint('⚔️ Duelo iniciado contra ${opponent.username}');
+                          debugPrint(
+                            '⚔️ Duelo iniciado contra ${opponent.username}',
+                          );
                         },
                       );
                     },
@@ -229,9 +240,7 @@ class _FriendsScreenState extends State<FriendsScreen> {
           borderRadius: BorderRadius.circular(12),
           onTap: () {
             Navigator.of(context).push(
-              MaterialPageRoute(
-                builder: (_) => const SearchFriendsScreen(),
-              ),
+              MaterialPageRoute(builder: (_) => const SearchFriendsScreen()),
             );
           },
           child: const Padding(
@@ -332,30 +341,32 @@ class _FriendsScreenState extends State<FriendsScreen> {
                               horizontal: 16,
                               vertical: 14,
                             ),
-                            suffixIcon: friends.isSearching
-                                ? const Padding(
-                                    padding: EdgeInsets.all(12),
-                                    child: SizedBox(
-                                      width: 20,
-                                      height: 20,
-                                      child: CircularProgressIndicator(
-                                        strokeWidth: 2,
+                            suffixIcon:
+                                friends.isSearching
+                                    ? const Padding(
+                                      padding: EdgeInsets.all(12),
+                                      child: SizedBox(
+                                        width: 20,
+                                        height: 20,
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 2,
+                                          color: AppColors.primary,
+                                        ),
+                                      ),
+                                    )
+                                    : IconButton(
+                                      icon: const Icon(
+                                        Icons.search_rounded,
                                         color: AppColors.primary,
                                       ),
+                                      onPressed: () {
+                                        final query =
+                                            searchController.text.trim();
+                                        if (query.isNotEmpty) {
+                                          friends.searchUser(query, userId);
+                                        }
+                                      },
                                     ),
-                                  )
-                                : IconButton(
-                                    icon: const Icon(
-                                      Icons.search_rounded,
-                                      color: AppColors.primary,
-                                    ),
-                                    onPressed: () {
-                                      final query = searchController.text.trim();
-                                      if (query.isNotEmpty) {
-                                        friends.searchUser(query, userId);
-                                      }
-                                    },
-                                  ),
                           ),
                           onSubmitted: (value) {
                             final query = value.trim();
@@ -378,7 +389,11 @@ class _FriendsScreenState extends State<FriendsScreen> {
                           ),
                           child: Row(
                             children: [
-                              const Icon(Icons.error_outline, color: Colors.redAccent, size: 18),
+                              const Icon(
+                                Icons.error_outline,
+                                color: Colors.redAccent,
+                                size: 18,
+                              ),
                               const SizedBox(width: 8),
                               Expanded(
                                 child: Text(
@@ -408,11 +423,17 @@ class _FriendsScreenState extends State<FriendsScreen> {
                           decoration: BoxDecoration(
                             color: AppColors.breakGreen.withAlpha(15),
                             borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: AppColors.breakGreen.withAlpha(40)),
+                            border: Border.all(
+                              color: AppColors.breakGreen.withAlpha(40),
+                            ),
                           ),
                           child: Row(
                             children: [
-                              const Icon(Icons.check_circle_outline, color: AppColors.breakGreen, size: 18),
+                              const Icon(
+                                Icons.check_circle_outline,
+                                color: AppColors.breakGreen,
+                                size: 18,
+                              ),
                               const SizedBox(width: 8),
                               Expanded(
                                 child: Text(
@@ -559,31 +580,36 @@ class _FriendsScreenState extends State<FriendsScreen> {
                 color: Colors.transparent,
                 child: InkWell(
                   borderRadius: BorderRadius.circular(10),
-                  onTap: friends.isSendingRequest
-                      ? null
-                      : () => friends.sendRequest(currentUserId, result.usuarioId),
+                  onTap:
+                      friends.isSendingRequest
+                          ? null
+                          : () => friends.sendRequest(
+                            currentUserId,
+                            result.usuarioId,
+                          ),
                   child: Padding(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 14,
                       vertical: 8,
                     ),
-                    child: friends.isSendingRequest
-                        ? const SizedBox(
-                            width: 16,
-                            height: 16,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: Colors.white,
+                    child:
+                        friends.isSendingRequest
+                            ? const SizedBox(
+                              width: 16,
+                              height: 16,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.white,
+                              ),
+                            )
+                            : const Text(
+                              'Enviar',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w600,
+                                fontSize: 12,
+                              ),
                             ),
-                          )
-                        : const Text(
-                            'Enviar',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.w600,
-                              fontSize: 12,
-                            ),
-                          ),
                   ),
                 ),
               ),
@@ -675,7 +701,10 @@ class _FriendsScreenState extends State<FriendsScreen> {
                 color: AppColors.textSecondary,
                 bgColor: AppColors.surfaceLight,
                 onTap: () {
-                  context.read<FriendsProvider>().rejectRequest(request.id, userId);
+                  context.read<FriendsProvider>().rejectRequest(
+                    request.id,
+                    userId,
+                  );
                 },
               ),
               const SizedBox(width: 8),
@@ -684,7 +713,10 @@ class _FriendsScreenState extends State<FriendsScreen> {
                 color: Colors.white,
                 bgColor: const Color(0xFF6A25F4),
                 onTap: () {
-                  context.read<FriendsProvider>().acceptRequest(request.id, userId);
+                  context.read<FriendsProvider>().acceptRequest(
+                    request.id,
+                    userId,
+                  );
                 },
               ),
             ],
@@ -772,11 +804,10 @@ class _FriendsScreenState extends State<FriendsScreen> {
           const SizedBox(height: 16),
           ...List.generate(ranking.length, (index) {
             return Padding(
-              padding: EdgeInsets.only(bottom: index < ranking.length - 1 ? 8 : 0),
-              child: _buildRankingItem(
-                rank: index + 1,
-                entry: ranking[index],
+              padding: EdgeInsets.only(
+                bottom: index < ranking.length - 1 ? 8 : 0,
               ),
+              child: _buildRankingItem(rank: index + 1, entry: ranking[index]),
             );
           }),
         ],
@@ -784,10 +815,7 @@ class _FriendsScreenState extends State<FriendsScreen> {
     );
   }
 
-  Widget _buildRankingItem({
-    required int rank,
-    required RankingEntry entry,
-  }) {
+  Widget _buildRankingItem({required int rank, required RankingEntry entry}) {
     final rankColors = {
       1: const Color(0xFFFFD700),
       2: const Color(0xFFC0C0C0),
@@ -799,17 +827,19 @@ class _FriendsScreenState extends State<FriendsScreen> {
 
     // onTap navega al perfil completo del amigo
     return GestureDetector(
-      onTap: isMe
-          ? null
-          : () {
-              Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (_) => UserProfilePreviewScreen(
-                    targetUserId: entry.usuarioId,
+      onTap:
+          isMe
+              ? null
+              : () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder:
+                        (_) => UserProfilePreviewScreen(
+                          targetUserId: entry.usuarioId,
+                        ),
                   ),
-                ),
-              );
-            },
+                );
+              },
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
         decoration: BoxDecoration(
@@ -843,9 +873,10 @@ class _FriendsScreenState extends State<FriendsScreen> {
                   color: AppColors.surfaceLight,
                   borderRadius: BorderRadius.circular(10),
                   border: Border.all(
-                    color: isMe
-                        ? AppColors.primary.withAlpha(60)
-                        : AppColors.cardBorder,
+                    color:
+                        isMe
+                            ? AppColors.primary.withAlpha(60)
+                            : AppColors.cardBorder,
                     width: 1,
                   ),
                 ),
@@ -966,17 +997,11 @@ class _FriendsScreenState extends State<FriendsScreen> {
       child: const Center(
         child: Column(
           children: [
-            CircularProgressIndicator(
-              color: AppColors.primary,
-              strokeWidth: 2,
-            ),
+            CircularProgressIndicator(color: AppColors.primary, strokeWidth: 2),
             SizedBox(height: 16),
             Text(
               'Cargando ranking...',
-              style: TextStyle(
-                color: AppColors.textSecondary,
-                fontSize: 13,
-              ),
+              style: TextStyle(color: AppColors.textSecondary, fontSize: 13),
             ),
           ],
         ),
@@ -1083,7 +1108,11 @@ class _FriendsScreenState extends State<FriendsScreen> {
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(Icons.person_add_rounded, color: Colors.white, size: 18),
+                        Icon(
+                          Icons.person_add_rounded,
+                          color: Colors.white,
+                          size: 18,
+                        ),
                         SizedBox(width: 8),
                         Text(
                           'Agregar amigo',
@@ -1160,10 +1189,7 @@ class _FriendsScreenState extends State<FriendsScreen> {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _buildSectionHeader(
-              'Regalos Pendientes',
-              '${pendingGifts.length}',
-            ),
+            _buildSectionHeader('Regalos Pendientes', '${pendingGifts.length}'),
             const SizedBox(height: 12),
             ...pendingGifts.map((gift) {
               return Padding(
@@ -1178,7 +1204,11 @@ class _FriendsScreenState extends State<FriendsScreen> {
     );
   }
 
-  Widget _buildGiftBanner(BuildContext context, GiftWithDetails gift, String currentUserId) {
+  Widget _buildGiftBanner(
+    BuildContext context,
+    GiftWithDetails gift,
+    String currentUserId,
+  ) {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
@@ -1259,11 +1289,15 @@ class _FriendsScreenState extends State<FriendsScreen> {
                   try {
                     await FriendsService().rejectGift(gift.id);
                     if (context.mounted) {
-                      await context.read<ProfileProvider>().loadProfile(currentUserId);
+                      await context.read<ProfileProvider>().loadProfile(
+                        currentUserId,
+                      );
                       if (context.mounted) {
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(
-                            content: Text('Regalo rechazado y monedas reembolsadas al remitente.'),
+                            content: Text(
+                              'Regalo rechazado y monedas reembolsadas al remitente.',
+                            ),
                             backgroundColor: Colors.redAccent,
                           ),
                         );
@@ -1290,12 +1324,18 @@ class _FriendsScreenState extends State<FriendsScreen> {
                   try {
                     await FriendsService().acceptGift(gift.id);
                     if (context.mounted) {
-                      await context.read<ProfileProvider>().loadProfile(currentUserId);
-                      await context.read<ShopProvider>().loadShop(currentUserId);
+                      await context.read<ProfileProvider>().loadProfile(
+                        currentUserId,
+                      );
+                      await context.read<ShopProvider>().loadShop(
+                        currentUserId,
+                      );
                       if (context.mounted) {
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
-                            content: Text('¡Regalo de ${gift.objetoNombre} aceptado con éxito!'),
+                            content: Text(
+                              '¡Regalo de ${gift.objetoNombre} aceptado con éxito!',
+                            ),
                             backgroundColor: AppColors.breakGreen,
                           ),
                         );
@@ -1332,7 +1372,10 @@ class _FriendsScreenState extends State<FriendsScreen> {
           colors: [Color(0xFF2E1A47), Color(0xFF130E26)],
         ),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.primary.withValues(alpha: 0.6), width: 1.5),
+        border: Border.all(
+          color: AppColors.primary.withValues(alpha: 0.6),
+          width: 1.5,
+        ),
         boxShadow: [
           BoxShadow(
             color: AppColors.primary.withValues(alpha: 0.15),
@@ -1379,7 +1422,7 @@ class _FriendsScreenState extends State<FriendsScreen> {
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  'Apuesta: ${match.betCoins * 2} monedas · ${match.battleMode.title}',
+                  'Apuesta: ${match.betCoins} monedas · ${match.battleMode.title}',
                   style: AppTypography.bodySmall.copyWith(
                     color: AppColors.textSecondary,
                     fontSize: 11,
@@ -1414,7 +1457,11 @@ class _FriendsScreenState extends State<FriendsScreen> {
                     final tasks = context.read<TaskProvider>().tasks;
                     if (tasks.isEmpty) {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Crea una tarea primero antes de aceptar el duelo.')),
+                        const SnackBar(
+                          content: Text(
+                            'Crea una tarea primero antes de aceptar el duelo.',
+                          ),
+                        ),
                       );
                       return;
                     }
@@ -1435,12 +1482,17 @@ class _FriendsScreenState extends State<FriendsScreen> {
                     );
 
                     if (context.mounted && exito) {
-                      final userId = context.read<AuthProvider>().supabaseUserId;
+                      final userId =
+                          context.read<AuthProvider>().supabaseUserId;
                       await context.read<ProfileProvider>().loadProfile(userId);
 
                       if (context.mounted) {
                         ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('¡Duelo aceptado! Comienza el combate.')),
+                          const SnackBar(
+                            content: Text(
+                              '¡Duelo aceptado! Comienza el combate.',
+                            ),
+                          ),
                         );
                       }
                     }
@@ -1451,12 +1503,17 @@ class _FriendsScreenState extends State<FriendsScreen> {
                       categoriaOponenteId: null,
                     );
                     if (context.mounted && exito) {
-                      final userId = context.read<AuthProvider>().supabaseUserId;
+                      final userId =
+                          context.read<AuthProvider>().supabaseUserId;
                       await context.read<ProfileProvider>().loadProfile(userId);
 
                       if (context.mounted) {
                         ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('¡Duelo aceptado! Comienza el combate.')),
+                          const SnackBar(
+                            content: Text(
+                              '¡Duelo aceptado! Comienza el combate.',
+                            ),
+                          ),
                         );
                       }
                     }

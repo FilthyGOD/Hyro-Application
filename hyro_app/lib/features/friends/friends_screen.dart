@@ -15,9 +15,9 @@ import 'user_profile_preview_screen.dart';
 import '../versus/widgets/versus_active_battles_section.dart';
 import '../versus/versus_intro_screen.dart';
 import '../versus/models/versus_models.dart';
-import '../versus/widgets/category_selector_sheet.dart';
-import '../../data/models/category_model.dart';
-import '../categories/category_provider.dart';
+import '../versus/widgets/task_selector_sheet.dart';
+import '../../data/models/task_model.dart';
+import '../tasks/tasks_provider.dart';
 
 
 /// Pantalla de Amigos — Ranking semanal, solicitudes pendientes y búsqueda por código.
@@ -1411,42 +1411,54 @@ class _FriendsScreenState extends State<FriendsScreen> {
                 onTap: () async {
                   final versusProvider = context.read<VersusProvider>();
                   if (match.battleMode == BattleMode.clashSubjects) {
-                    final categorias = context.read<CategoryProvider>().categories;
-                    if (categorias.isEmpty) {
+                    final tasks = context.read<TaskProvider>().tasks;
+                    if (tasks.isEmpty) {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Crea una materia primero antes de aceptar el duelo.')),
+                        const SnackBar(content: Text('Crea una tarea primero antes de aceptar el duelo.')),
                       );
                       return;
                     }
 
-                    // Mostrar modal para seleccionar categoría
-                    final selectedCategory = await showModalBottomSheet<CategoryModel>(
+                    // Mostrar modal para seleccionar tarea
+                    final selectedTask = await showModalBottomSheet<TaskModel>(
                       context: context,
                       backgroundColor: Colors.transparent,
-                      builder: (ctx) => CategorySelectorSheet(categorias: categorias),
+                      builder: (ctx) => TaskSelectorSheet(tasks: tasks),
                     );
 
-                    if (selectedCategory == null) return; // Canceló
+                    if (selectedTask == null) return; // Canceló
 
                     final exito = await versusProvider.aceptarBatalla(
                       batallaId: match.id,
-                      categoriaOponenteId: selectedCategory.id,
+                      tareaOponenteId: selectedTask.id,
+                      categoriaOponenteId: selectedTask.categoryId,
                     );
 
                     if (context.mounted && exito) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('¡Duelo aceptado! Comienza el combate.')),
-                      );
+                      final userId = context.read<AuthProvider>().supabaseUserId;
+                      await context.read<ProfileProvider>().loadProfile(userId);
+
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('¡Duelo aceptado! Comienza el combate.')),
+                        );
+                      }
                     }
                   } else {
                     final exito = await versusProvider.aceptarBatalla(
                       batallaId: match.id,
+                      tareaOponenteId: null,
                       categoriaOponenteId: null,
                     );
                     if (context.mounted && exito) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('¡Duelo aceptado! Comienza el combate.')),
-                      );
+                      final userId = context.read<AuthProvider>().supabaseUserId;
+                      await context.read<ProfileProvider>().loadProfile(userId);
+
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('¡Duelo aceptado! Comienza el combate.')),
+                        );
+                      }
                     }
                   }
                 },

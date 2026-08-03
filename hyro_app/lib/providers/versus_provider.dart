@@ -32,6 +32,10 @@ class VersusProvider extends ChangeNotifier {
 
   // ── Cache de nombres de categorías para optimizar realtime ──
   final Map<String, String> _categoryCache = {};
+  // ── Cache de nombres de tareas para optimizar realtime ──
+  final Map<String, String> _taskCache = {};
+  // ── Cache de colores de categorías ──
+  final Map<String, Color> _categoryColorCache = {};
 
   // ═══════════════════════════════════════════════════════════════════════
   // INICIALIZACIÓN Y STREAM EN TIEMPO REAL
@@ -96,10 +100,10 @@ class VersusProvider extends ChangeNotifier {
   /// Crea una nueva batalla y notifica a la UI.
   /// Retorna true si se creó exitosamente, false si hubo error.
   Future<bool> crearBatalla({
-    required String retadorId,
     required String oponenteId,
     required String modoBatalla,
-    required String categoriaRetadorId,
+    required String tareaRetadorId,
+    required String? categoriaRetadorId,
     required int apuestaMonedas,
   }) async {
     isCreating = true;
@@ -108,9 +112,9 @@ class VersusProvider extends ChangeNotifier {
 
     try {
       await _repo.crearBatalla(
-        retadorId: retadorId,
         oponenteId: oponenteId,
         modoBatalla: modoBatalla,
+        tareaRetadorId: tareaRetadorId,
         categoriaRetadorId: categoriaRetadorId,
         apuestaMonedas: apuestaMonedas,
       );
@@ -134,14 +138,16 @@ class VersusProvider extends ChangeNotifier {
   // ═══════════════════════════════════════════════════════════════════════
 
   /// Acepta una batalla pendiente. Para modo 'cruzado',
-  /// el oponente debe elegir su categoría.
+  /// el oponente debe elegir su tarea.
   Future<bool> aceptarBatalla({
     required String batallaId,
+    String? tareaOponenteId,
     String? categoriaOponenteId,
   }) async {
     try {
       await _repo.aceptarBatalla(
         batallaId: batallaId,
+        tareaOponenteId: tareaOponenteId,
         categoriaOponenteId: categoriaOponenteId,
       );
       actionMessage = '¡Batalla aceptada!';
@@ -221,7 +227,7 @@ class VersusProvider extends ChangeNotifier {
   }
 
   // ═══════════════════════════════════════════════════════════════════════
-  // ACTUALIZAR MARCADOR
+  // ACTUALIZAR MARCADOR & REFRESCO REALTIME
   // ═══════════════════════════════════════════════════════════════════════
 
   /// Actualiza el marcador de rondas ganadas al finalizar una ronda.
@@ -238,6 +244,37 @@ class VersusProvider extends ChangeNotifier {
       );
     } on VersusException catch (e) {
       debugPrint('❌ [VersusProvider] Error actualizando marcador: ${e.message}');
+    }
+  }
+
+  /// Gatilla una actualización en la base de datos para notificar al stream Realtime.
+  Future<void> touchBatalla(String batallaId) async {
+    try {
+      await _repo.touchBatalla(batallaId);
+    } catch (e) {
+      debugPrint('❌ [VersusProvider] Error al tocar batalla: $e');
+    }
+  }
+
+  /// Finaliza el turno del jugador actual y pasa el turno al oponente
+  /// (o marca la ronda como lista para evaluación).
+  Future<void> finalizarTurno({
+    required String batallaId,
+    required String jugadorActualId,
+    required String oponenteId,
+    required bool isChallenger,
+    required int rondaActual,
+  }) async {
+    try {
+      await _repo.finalizarTurno(
+        batallaId: batallaId,
+        jugadorActualId: jugadorActualId,
+        oponenteId: oponenteId,
+        isChallenger: isChallenger,
+        rondaActual: rondaActual,
+      );
+    } on VersusException catch (e) {
+      debugPrint('❌ [VersusProvider] Error finalizando turno: ${e.message}');
     }
   }
 
@@ -266,12 +303,30 @@ class VersusProvider extends ChangeNotifier {
         final localPlayer = await _resolvePlayer(localId);
         final opponentPlayer = await _resolvePlayer(opponentId);
 
-        // Resolver nombre de la materia/categoría del retador
+        // Resolver nombre del tema del duelo (titulo de la tarea del retador)
+        final tareaId = row['tarea_retador_id']?.toString();
         final categoriaId = row['categoria_retador_id']?.toString();
-        String subjectName = 'Sin materia';
-        if (categoriaId != null) {
+        String subjectName = 'Sin tarea';
+
+        if (tareaId != null) {
+          subjectName = await _resolveTaskName(tareaId);
+        } else if (categoriaId != null) {
           subjectName = await _resolveCategoryName(categoriaId);
         }
+
+        // Resolver color de la categoría de la tarea
+        Color subjectColor = const Color(0xFF00F2FF);
+        if (categoriaId != null) {
+          subjectColor = await _resolveCategoryColor(categoriaId);
+        }
+
+        // Calcular estado dinámico de la batalla (rondas, completitud y ganador)
+        final estadoCalc = await _repo.calcularEstadoBatalla(
+          batallaId: row['id'].toString(),
+          retadorId: retadorId,
+          oponenteId: oponenteId,
+          estadoDb: row['estado'] as String? ?? 'pendiente',
+        );
 
         matches.add(VersusMatch.fromSupabase(
           row: row,
@@ -279,6 +334,14 @@ class VersusProvider extends ChangeNotifier {
           localPlayer: localPlayer,
           opponentPlayer: opponentPlayer,
           subjectName: subjectName,
+          subjectColor: subjectColor,
+          currentRound: estadoCalc['ronda'] as int?,
+          rondasGanadasRetador: estadoCalc['rondas_ganadas_retador'] as int?,
+          rondasGanadasOponente: estadoCalc['rondas_ganadas_oponente'] as int?,
+          ganadorId: estadoCalc['ganador_id'] as String?,
+          retadorCompletado: estadoCalc['retador_completado_ronda'] as bool?,
+          oponenteCompletado: estadoCalc['oponente_completado_ronda'] as bool?,
+          estadoCalculado: estadoCalc['estado_calculado'] as String?,
         ));
       } catch (e) {
         debugPrint('⚠️ [VersusProvider] Error mapeando fila: $e');
@@ -347,6 +410,69 @@ class VersusProvider extends ChangeNotifier {
     }
   }
 
+  /// Resuelve el título de una tarea por su ID.
+  Future<String> _resolveTaskName(String taskId) async {
+    if (_taskCache.containsKey(taskId)) {
+      return _taskCache[taskId]!;
+    }
+    try {
+      final response = await _supabase
+          .from('tareas')
+          .select('titulo')
+          .eq('id', taskId)
+          .maybeSingle();
+
+      final title = response?['titulo'] as String? ?? 'Sin tarea';
+      _taskCache[taskId] = title;
+      return title;
+    } catch (e) {
+      debugPrint('⚠️ [VersusProvider] Error resolviendo tarea $taskId: $e');
+      return 'Sin tarea';
+    }
+  }
+
+  /// Resuelve el color de una categoría por su ID.
+  Future<Color> _resolveCategoryColor(String categoryId) async {
+    if (_categoryColorCache.containsKey(categoryId)) {
+      return _categoryColorCache[categoryId]!;
+    }
+    try {
+      final response = await _supabase
+          .from('categorias')
+          .select('color')
+          .eq('id', categoryId)
+          .maybeSingle();
+
+      final colorHex = response?['color'] as String?;
+      int val = 0xFF22C55E; // default color
+      if (colorHex != null && colorHex.isNotEmpty) {
+        final clean = colorHex.replaceAll('#', '');
+        val = int.tryParse(clean, radix: 16) ?? 0xFF22C55E;
+      }
+      if (val <= 0xFFFFFF) {
+        val = 0xFF000000 | val; // Asegurar canal alfa
+      }
+      final color = Color(val);
+      _categoryColorCache[categoryId] = color;
+      return color;
+    } catch (e) {
+      debugPrint('⚠️ [VersusProvider] Error resolviendo color de categoría $categoryId: $e');
+      return const Color(0xFF00F2FF);
+    }
+  }
+
+  /// Reclama el premio de una batalla ganada
+  Future<void> reclamarPremio(String batallaId) async {
+    await _repo.reclamarPremio(batallaId);
+    notifyListeners();
+  }
+
+  /// Archiva la batalla actualizándola a estado 'reclamada' en Supabase y ocultándola para el jugador.
+  Future<void> archivarBatalla(String batallaId, bool isChallenger) async {
+    await _repo.archivarBatalla(batallaId, isChallenger);
+    notifyListeners();
+  }
+
   /// Limpia el mensaje de acción temporal.
   void clearActionMessage() {
     actionMessage = null;
@@ -357,6 +483,8 @@ class VersusProvider extends ChangeNotifier {
   void clearCache() {
     _profileCache.clear();
     _categoryCache.clear();
+    _taskCache.clear();
+    _categoryColorCache.clear();
   }
 
   @override

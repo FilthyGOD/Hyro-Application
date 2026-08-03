@@ -44,6 +44,13 @@ class ProfileProvider extends ChangeNotifier {
   String? get error => _error;
 
   final _supabase = Supabase.instance.client;
+  StreamSubscription<List<Map<String, dynamic>>>? _profileSubscription;
+
+  @override
+  void dispose() {
+    _profileSubscription?.cancel();
+    super.dispose();
+  }
 
   /// Carga el perfil desde Supabase o localmente si [userId] es nulo.
   Future<void> loadProfile(String? userId) async {
@@ -90,7 +97,7 @@ class ProfileProvider extends ChangeNotifier {
               .lte('completada_en', endOfMonth)
               .count(CountOption.exact);
 
-          final countVal = sessionsCount.count ?? 0;
+          final countVal = sessionsCount.count;
 
           if (response != null && activeUser != null) {
             await isar.writeTxn(() async {
@@ -126,6 +133,31 @@ class ProfileProvider extends ChangeNotifier {
         } catch (syncError) {
           debugPrint('Error de sincronización con Supabase (ignorado por Offline-First): $syncError');
         }
+
+        // Suscribirse a cambios en tiempo real (ej. monedas desde la RPC del Versus)
+        _profileSubscription?.cancel();
+        _profileSubscription = _supabase
+            .from('perfiles')
+            .stream(primaryKey: ['id'])
+            .eq('id', userId)
+            .listen((data) {
+          if (data.isNotEmpty) {
+            final row = data.first;
+            final dbMonedas = (row['monedas'] as num?)?.toInt() ?? 0;
+            if (dbMonedas != monedas) {
+              monedas = dbMonedas;
+              // También actualizamos en la DB local (Isar)
+              isar.writeTxnSync(() {
+                final activeUser = isar.userProfiles.filter().isActivelyLoggedInEqualTo(true).findFirstSync();
+                if (activeUser != null) {
+                  activeUser.monedas = dbMonedas;
+                  isar.userProfiles.putSync(activeUser);
+                }
+              });
+              notifyListeners();
+            }
+          }
+        });
       }
 
       // 🚀 Juez de Rachas (verificación de racha estilo Duolingo)
@@ -245,6 +277,42 @@ class ProfileProvider extends ChangeNotifier {
           debugPrint('⚠️ Sin conexión para sincronizar gamificación del perfil: $e');
         }
       }
+    }
+  }
+
+  /// Modifica las monedas del usuario (tanto Isar local como Supabase).
+  Future<void> modificarMonedas(String? userId, int cantidad) async {
+    try {
+      final activeUser = await isar.userProfiles.filter().isActivelyLoggedInEqualTo(true).findFirst();
+      if (activeUser != null) {
+        await isar.writeTxn(() async {
+          activeUser.monedas += cantidad;
+          if (activeUser.monedas < 0) activeUser.monedas = 0;
+          await isar.userProfiles.put(activeUser);
+        });
+        monedas = activeUser.monedas;
+        notifyListeners();
+      }
+
+      if (userId != null) {
+        final response = await _supabase
+            .from('perfiles')
+            .select('monedas')
+            .eq('id', userId)
+            .maybeSingle();
+
+        if (response != null) {
+          final currentCoins = (response['monedas'] as num?)?.toInt() ?? 0;
+          int newCoins = currentCoins + cantidad;
+          if (newCoins < 0) newCoins = 0;
+          await _supabase
+              .from('perfiles')
+              .update({'monedas': newCoins})
+              .eq('id', userId);
+        }
+      }
+    } catch (e) {
+      debugPrint('⚠️ Error modificando monedas: $e');
     }
   }
 

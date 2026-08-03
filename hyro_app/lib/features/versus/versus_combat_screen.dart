@@ -6,6 +6,7 @@ import '../../providers/auth_provider.dart';
 import '../../providers/versus_provider.dart';
 import '../friends/widgets/static_mascot_widget.dart';
 import 'models/versus_models.dart';
+import 'widgets/versus_drag_drop_widget.dart';
 
 /// Pantalla de Combate Versus (Durante el juego).
 /// Implementa estrictamente el encabezado (Header) requerido, la barra de progreso por guiones,
@@ -51,9 +52,17 @@ class _VersusCombatScreenState extends State<VersusCombatScreen> {
   static const List<VersusQuestion> _fallbackQuestions = [
     VersusQuestion(
       id: 'fallback_1',
-      questionText: 'Las preguntas para esta ronda aún no han sido generadas. Espera a que se generen.',
-      options: ['Entendido', 'OK', 'Volver', 'Reintentar'],
-      correctOptionIndex: 0,
+      questionType: 'multiple_choice',
+      questionText: '¿Cuál es la capital de Francia?',
+      options: ['Madrid', 'París', 'Roma', 'Berlín'],
+      correctOptionIndex: 1,
+    ),
+    VersusQuestion(
+      id: 'fallback_2',
+      questionType: 'multiple_choice',
+      questionText: '¿Cuál es el resultado de 5 x 5?',
+      options: ['20', '25', '30', '35'],
+      correctOptionIndex: 1,
     ),
   ];
 
@@ -119,15 +128,26 @@ class _VersusCombatScreenState extends State<VersusCombatScreen> {
     }
   }
 
-  void _onAnswerSelected(int index) {
+  void _onAnswerSelected({int? index, String? textAnswer, bool? overrideIsCorrect}) {
     if (_answered) return;
+    final currentQ = _questions[_currentQuestionIndex];
+    final auth = context.read<AuthProvider>();
+    final userId = auth.supabaseUserId;
+    final versus = context.read<VersusProvider>();
 
-    // Detener cronómetro y calcular tiempo
     _answerStopwatch.stop();
     final tiempoMs = _answerStopwatch.elapsedMilliseconds;
 
-    final currentQ = _questions[_currentQuestionIndex];
-    final isCorrect = index == currentQ.correctOptionIndex;
+    bool isCorrect = false;
+    String finalAnswer = '';
+
+    if (overrideIsCorrect != null) {
+      isCorrect = overrideIsCorrect;
+      finalAnswer = textAnswer ?? '';
+    } else if (index != null) {
+      isCorrect = index == currentQ.correctOptionIndex;
+      finalAnswer = currentQ.options[index];
+    }
 
     setState(() {
       _selectedAnswerIndex = index;
@@ -135,17 +155,12 @@ class _VersusCombatScreenState extends State<VersusCombatScreen> {
       _dashProgress[_currentQuestionIndex] = isCorrect ? AnswerStatus.correct : AnswerStatus.incorrect;
     });
 
-    // ── Guardar respuesta en Supabase ──
-    final auth = context.read<AuthProvider>();
-    final versus = context.read<VersusProvider>();
-    final userId = auth.supabaseUserId;
-
     if (userId != null && currentQ.id != 'fallback_1') {
       versus.guardarRespuesta(
         preguntaId: currentQ.id,
         batallaId: widget.match.id,
         jugadorId: userId,
-        respuestaDada: currentQ.options[index],
+        respuestaDada: finalAnswer,
         esCorrecta: isCorrect,
         tiempoRespuestaMs: tiempoMs,
       );
@@ -170,33 +185,6 @@ class _VersusCombatScreenState extends State<VersusCombatScreen> {
   void _finishRound() {
     final correctCount = _dashProgress.where((s) => s == AnswerStatus.correct).length;
     final roundWon = correctCount >= (_totalQuestionsInRound / 2).ceil();
-
-    // ── Actualizar marcador en Supabase ──
-    final versus = context.read<VersusProvider>();
-    int newLocalWon = _localRoundsWon + (roundWon ? 1 : 0);
-    int newOpponentWon = _opponentRoundsWon + (roundWon ? 0 : 1);
-
-    // Determinar quién es retador y quién oponente para el marcador de la BD
-    final auth = context.read<AuthProvider>();
-    final userId = auth.supabaseUserId;
-    // Si el usuario es el retador, localRoundsWon = rondasRetador
-    // Necesitamos reconstruir el marcador absoluto
-    // (el match ya tiene la perspectiva del usuario local)
-    // Para la BD: retador siempre va primero
-    // Pero como VersusMatch.fromSupabase ya mapeó correctamente,
-    // invertimos si el usuario es el oponente
-    if (userId != null) {
-      // Simplificación: el repositorio actualizarMarcador espera
-      // rondas_ganadas_retador y rondas_ganadas_oponente en ese orden.
-      // Desde la perspectiva del modelo, localPlayer puede ser retador u oponente.
-      // Usamos el estado de la BD para determinar el orden correcto.
-      final isRetador = widget.match.localPlayer.id == userId;
-      versus.actualizarMarcador(
-        batallaId: widget.match.id,
-        rondasRetador: isRetador ? newLocalWon : newOpponentWon,
-        rondasOponente: isRetador ? newOpponentWon : newLocalWon,
-      );
-    }
 
     showDialog(
       context: context,
@@ -228,21 +216,24 @@ class _VersusCombatScreenState extends State<VersusCombatScreen> {
               foregroundColor: Colors.black,
             ),
             onPressed: () {
-              Navigator.pop(context);
-              setState(() {
-                _localRoundsWon = newLocalWon;
-                _opponentRoundsWon = newOpponentWon;
+              final versusProvider = context.read<VersusProvider>();
+              final auth = context.read<AuthProvider>();
+              final battleId = widget.match.id;
+              final userId = auth.supabaseUserId;
 
-                if (_localRoundsWon >= 2 || _opponentRoundsWon >= 2 || _currentRound >= 3) {
-                  // Fin de la partida
-                  Navigator.pop(context);
-                } else {
-                  // Avanzar a siguiente ronda
-                  _currentRound++;
-                  _initRoundProgress();
-                  _cargarPreguntas(); // Cargar preguntas de la nueva ronda
-                }
-              });
+              Navigator.pop(context); // Cierra el dialogo
+              Navigator.pop(context); // Cierra la pantalla de combate
+
+              // ── Finalizar turno: pasar turno al oponente o marcar ronda completa ──
+              if (userId != null) {
+                versusProvider.finalizarTurno(
+                  batallaId: battleId,
+                  jugadorActualId: userId,
+                  oponenteId: widget.match.opponent.id,
+                  isChallenger: widget.match.isChallenger,
+                  rondaActual: _currentRound,
+                );
+              }
             },
             child: const Text('Continuar'),
           ),
@@ -413,33 +404,45 @@ class _VersusCombatScreenState extends State<VersusCombatScreen> {
                         ),
                       const SizedBox(height: 12),
 
-                      // Tarjeta de la Pregunta
-                      Container(
-                        padding: const EdgeInsets.all(20),
-                        decoration: BoxDecoration(
-                          color: AppColors.surfaceLight,
-                          borderRadius: BorderRadius.circular(20),
-                          border: Border.all(color: AppColors.cardBorder),
-                        ),
-                        child: Text(
-                          _questions[_currentQuestionIndex].questionText,
-                          style: AppTypography.h3.copyWith(
-                            color: AppColors.textPrimary,
-                            height: 1.3,
+                      if (_questions[_currentQuestionIndex].questionType == 'drag_drop')
+                        VersusDragDropWidget(
+                          textWithBlanks: _questions[_currentQuestionIndex].questionText,
+                          originalBlanks: (_questions[_currentQuestionIndex].extraData['blanks'] as List<dynamic>?)?.map((e) => e.toString()).toList() ?? [],
+                          availableWords: (_questions[_currentQuestionIndex].extraData['available_words'] as List<dynamic>?)?.map((e) => e.toString()).toList() ?? [],
+                          answered: _answered,
+                          onVerify: (isCorrect, answerText) {
+                            _onAnswerSelected(overrideIsCorrect: isCorrect, textAnswer: answerText);
+                          },
+                        )
+                      else ...[
+                        // Tarjeta de la Pregunta
+                        Container(
+                          padding: const EdgeInsets.all(20),
+                          decoration: BoxDecoration(
+                            color: AppColors.surfaceLight,
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(color: AppColors.cardBorder),
+                          ),
+                          child: Text(
+                            _questions[_currentQuestionIndex].questionText,
+                            style: AppTypography.h3.copyWith(
+                              color: AppColors.textPrimary,
+                              height: 1.3,
+                            ),
                           ),
                         ),
-                      ),
-                      const SizedBox(height: 24),
+                        const SizedBox(height: 24),
 
-                      // Opciones de respuesta
-                      ...List.generate(
-                        _questions[_currentQuestionIndex].options.length,
-                        (index) => _buildOptionButton(
-                          index: index,
-                          text: _questions[_currentQuestionIndex].options[index],
-                          correctIndex: _questions[_currentQuestionIndex].correctOptionIndex,
+                        // Opciones de respuesta
+                        ...List.generate(
+                          _questions[_currentQuestionIndex].options.length,
+                          (index) => _buildOptionButton(
+                            index: index,
+                            text: _questions[_currentQuestionIndex].options[index],
+                            correctIndex: _questions[_currentQuestionIndex].correctOptionIndex,
+                          ),
                         ),
-                      ),
+                      ],
                     ],
                   ),
                 ),
@@ -600,6 +603,22 @@ class _VersusCombatScreenState extends State<VersusCombatScreen> {
               fontWeight: FontWeight.bold,
             ),
           ),
+          const SizedBox(height: 4),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+            decoration: BoxDecoration(
+              color: AppColors.background.withValues(alpha: 0.5),
+              borderRadius: BorderRadius.circular(6),
+            ),
+            child: Text(
+              'Ronda $_currentRound: $_localRoundsWon - $_opponentRoundsWon',
+              style: AppTypography.bodySmall.copyWith(
+                color: Colors.white,
+                fontSize: 10,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
         ],
       ),
     );
@@ -633,7 +652,7 @@ class _VersusCombatScreenState extends State<VersusCombatScreen> {
       child: Material(
         color: Colors.transparent,
         child: InkWell(
-          onTap: () => _onAnswerSelected(index),
+          onTap: () => _onAnswerSelected(index: index),
           borderRadius: BorderRadius.circular(16),
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 200),

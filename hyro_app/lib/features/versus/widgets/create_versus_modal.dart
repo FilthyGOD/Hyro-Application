@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:hive/hive.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../providers/auth_provider.dart';
 import '../../../../providers/versus_provider.dart';
-import '../../../../features/categories/category_provider.dart';
+import '../../../../providers/profile_provider.dart';
+import '../../../../features/tasks/tasks_provider.dart';
+import '../../../../data/models/tarea_card_model.dart';
 import '../models/versus_models.dart';
 
 /// Modal para configurar y enviar un reto de Versus a un amigo.
@@ -42,7 +45,8 @@ class CreateVersusModal extends StatefulWidget {
 class _CreateVersusModalState extends State<CreateVersusModal> {
   // ── Variables de Estado ──
   BattleMode _modoSeleccionado = BattleMode.sameSubject;
-  String? _categoriaSeleccionadaId; // ID de CategoryModel
+  String? _tareaSeleccionadaId; // ID de TaskModel
+  String? _categoriaSeleccionadaId; // ID de CategoryModel de la tarea
   int _costoMonedas = 50;
   bool _isLanzando = false;
 
@@ -52,12 +56,13 @@ class _CreateVersusModalState extends State<CreateVersusModal> {
   @override
   void initState() {
     super.initState();
-    // Pre-seleccionar la primera categoría del usuario
+    // Pre-seleccionar la primera tarea del usuario
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final categories = context.read<CategoryProvider>().categories;
-      if (categories.isNotEmpty && mounted) {
+      final tasks = context.read<TaskProvider>().tasks;
+      if (tasks.isNotEmpty && mounted) {
         setState(() {
-          _categoriaSeleccionadaId = categories.first.id;
+          _tareaSeleccionadaId = tasks.first.id;
+          _categoriaSeleccionadaId = tasks.first.categoryId;
         });
       }
     });
@@ -73,8 +78,8 @@ class _CreateVersusModalState extends State<CreateVersusModal> {
       return;
     }
 
-    if (_categoriaSeleccionadaId == null) {
-      _mostrarError('Selecciona una materia antes de lanzar el reto.');
+    if (_tareaSeleccionadaId == null) {
+      _mostrarError('Selecciona una tarea antes de lanzar el reto.');
       return;
     }
 
@@ -83,10 +88,10 @@ class _CreateVersusModalState extends State<CreateVersusModal> {
     final modoBatallaDb = _modoSeleccionado.toDb;
 
     final exito = await versus.crearBatalla(
-      retadorId: userId,
       oponenteId: widget.opponent.id,
       modoBatalla: modoBatallaDb,
-      categoriaRetadorId: _categoriaSeleccionadaId!,
+      tareaRetadorId: _tareaSeleccionadaId!,
+      categoriaRetadorId: _categoriaSeleccionadaId,
       apuestaMonedas: _costoMonedas,
     );
 
@@ -94,10 +99,14 @@ class _CreateVersusModalState extends State<CreateVersusModal> {
     setState(() => _isLanzando = false);
 
     if (exito) {
+      // Recargar perfil local para reflejar la deducción de monedas del retador
+      context.read<ProfileProvider>().loadProfile(userId);
+
       // Notificar al callback si existe
       widget.onChallengeSent?.call({
         'oponente_id': widget.opponent.id,
         'modo_batalla': modoBatallaDb,
+        'tarea_retador_id': _tareaSeleccionadaId,
         'categoria_retador_id': _categoriaSeleccionadaId,
         'apuesta_monedas': _costoMonedas,
       });
@@ -149,8 +158,8 @@ class _CreateVersusModalState extends State<CreateVersusModal> {
 
   @override
   Widget build(BuildContext context) {
-    // Obtener las categorías reales del usuario desde CategoryProvider
-    final categories = context.watch<CategoryProvider>().categories;
+    // Obtener las tareas del usuario desde TaskProvider
+    final tasks = context.watch<TaskProvider>().tasks;
 
     return Container(
       padding: EdgeInsets.only(
@@ -224,13 +233,13 @@ class _CreateVersusModalState extends State<CreateVersusModal> {
 
           const SizedBox(height: 20),
 
-          // 2. Selector de Materia/Categoría (datos reales del usuario)
+          // 2. Selector de Tarea (datos reales del usuario)
           Text(
-            'Tu Materia / Categoría',
+            'Tu Tarea de Estudio',
             style: AppTypography.labelLarge.copyWith(color: AppColors.textSecondary, fontWeight: FontWeight.w600),
           ),
           const SizedBox(height: 10),
-          if (categories.isEmpty)
+          if (tasks.isEmpty)
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
@@ -244,7 +253,7 @@ class _CreateVersusModalState extends State<CreateVersusModal> {
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
-                      'No tienes materias creadas. Crea una en la sección de Tareas.',
+                      'No tienes tareas creadas. Crea una en la sección de Tareas.',
                       style: AppTypography.bodySmall.copyWith(color: AppColors.textSecondary),
                     ),
                   ),
@@ -253,33 +262,34 @@ class _CreateVersusModalState extends State<CreateVersusModal> {
             )
           else
             SizedBox(
-              height: 44,
+              height: 52,
               child: ListView.separated(
                 scrollDirection: Axis.horizontal,
-                itemCount: categories.length,
+                itemCount: tasks.length,
                 separatorBuilder: (_, __) => const SizedBox(width: 8),
                 itemBuilder: (context, index) {
-                  final cat = categories[index];
-                  final isSelected = _categoriaSeleccionadaId == cat.id;
-                  final color = Color(cat.colorValue);
+                  final task = tasks[index];
+                  final isSelected = _tareaSeleccionadaId == task.id;
+                  final numCards = Hive.box<TareaCardModel>('cardsBox').values.where((c) => c.tareaId == task.id).length;
+                  final color = Color(task.priorityColorValue);
 
                   return ChoiceChip(
-                    label: Row(
-                      mainAxisSize: MainAxisSize.min,
+                    label: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Icon(
-                          cat.iconCodePoint != null
-                              ? IconData(cat.iconCodePoint!, fontFamily: 'MaterialIcons')
-                              : Icons.folder_rounded,
-                          size: 16,
-                          color: isSelected ? Colors.black : color,
-                        ),
-                        const SizedBox(width: 6),
                         Text(
-                          cat.name,
+                          task.title,
                           style: AppTypography.bodySmall.copyWith(
                             color: isSelected ? Colors.black : AppColors.textPrimary,
                             fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                          ),
+                        ),
+                        Text(
+                          '$numCards cards',
+                          style: TextStyle(
+                            fontSize: 9,
+                            color: isSelected ? Colors.black87 : AppColors.textSecondary,
                           ),
                         ),
                       ],
@@ -296,7 +306,8 @@ class _CreateVersusModalState extends State<CreateVersusModal> {
                     onSelected: (selected) {
                       if (selected) {
                         setState(() {
-                          _categoriaSeleccionadaId = cat.id;
+                          _tareaSeleccionadaId = task.id;
+                          _categoriaSeleccionadaId = task.categoryId;
                         });
                       }
                     },
@@ -409,7 +420,7 @@ class _CreateVersusModalState extends State<CreateVersusModal> {
             width: double.infinity,
             height: 52,
             child: ElevatedButton(
-              onPressed: (_isLanzando || categories.isEmpty) ? null : _lanzarReto,
+              onPressed: (_isLanzando || tasks.isEmpty) ? null : _lanzarReto,
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.primary,
                 foregroundColor: Colors.black,

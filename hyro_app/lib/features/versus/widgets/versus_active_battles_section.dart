@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../../providers/versus_provider.dart';
 import '../../friends/widgets/static_mascot_widget.dart';
 import '../models/versus_models.dart';
 import 'select_opponent_bottom_sheet.dart';
@@ -153,147 +155,251 @@ class VersusActiveBattlesSection extends StatelessWidget {
     );
   }
 
-  /// Tarjeta de Combate en Proceso
   Widget _buildMatchCard(BuildContext context, VersusMatch match) {
     final isYourTurn = match.status == VersusStatus.yourTurn;
     final isPending = match.estadoDb == 'pendiente';
-    final statusColor = isYourTurn
-        ? AppColors.breakGreen
-        : (isPending ? AppColors.primary : AppColors.pomodoroRedLight);
-    final statusText = isYourTurn
-        ? '¡Tu Turno!'
-        : (isPending ? 'Pendiente' : 'Esperando...');
+    final isCompleted = match.estadoDb == 'completada';
+    final isWinner = isCompleted && match.ganadorId == match.localPlayer.id;
 
-    return Container(
-      width: 145,
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: AppColors.surfaceLight,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: isYourTurn
-              ? AppColors.breakGreen.withValues(alpha: 0.6)
-              : (isPending ? AppColors.primary.withValues(alpha: 0.5) : AppColors.cardBorder),
-          width: (isYourTurn || isPending) ? 1.8 : 1.0,
-        ),
-        boxShadow: isYourTurn
-            ? [
-                BoxShadow(
-                  color: AppColors.breakGreen.withValues(alpha: 0.15),
-                  blurRadius: 8,
-                  spreadRadius: 1,
-                )
-              ]
-            : isPending
-                ? [
-                    BoxShadow(
-                      color: AppColors.primary.withValues(alpha: 0.1),
-                      blurRadius: 6,
-                      spreadRadius: 1,
-                    )
-                  ]
-                : null,
-      ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: () => onResumeMatch(match),
+    final Color statusColor;
+    final String statusText;
+
+    if (isCompleted) {
+      statusColor = isWinner ? const Color(0xFF10B981) : const Color(0xFFEF4444);
+      statusText = isWinner ? '¡Ganaste!' : 'Perdiste';
+    } else if (isYourTurn) {
+      statusColor = AppColors.breakGreen;
+      statusText = '¡Tu Turno!';
+    } else if (isPending) {
+      statusColor = AppColors.primary;
+      statusText = 'Pendiente';
+    } else {
+      statusColor = AppColors.pomodoroRedLight;
+      statusText = 'Esperando a ${match.opponent.username}...';
+    }
+
+    // Determinar si la tarjeta está deshabilitada (no es tu turno y no es pendiente/completada)
+    final isDisabled = !isYourTurn && !isPending && !isCompleted;
+
+    return Opacity(
+      opacity: isDisabled ? 0.6 : 1.0,
+      child: Container(
+        width: 145,
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: AppColors.surfaceLight,
           borderRadius: BorderRadius.circular(20),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              // Avatar de Jairo (Oponente)
-              Row(
-                children: [
+          border: Border.all(
+            color: isCompleted
+                ? statusColor.withValues(alpha: 0.6)
+                : (isYourTurn
+                    ? AppColors.breakGreen.withValues(alpha: 0.6)
+                    : (isPending ? AppColors.primary.withValues(alpha: 0.5) : AppColors.cardBorder)),
+            width: (isYourTurn || isPending || isCompleted) ? 1.8 : 1.0,
+          ),
+          boxShadow: isCompleted
+              ? [
+                  BoxShadow(
+                    color: statusColor.withValues(alpha: 0.15),
+                    blurRadius: 8,
+                    spreadRadius: 1,
+                  )
+                ]
+              : (isYourTurn
+                  ? [
+                      BoxShadow(
+                        color: AppColors.breakGreen.withValues(alpha: 0.15),
+                        blurRadius: 8,
+                        spreadRadius: 1,
+                      )
+                    ]
+                  : (isPending
+                      ? [
+                          BoxShadow(
+                            color: AppColors.primary.withValues(alpha: 0.1),
+                            blurRadius: 6,
+                            spreadRadius: 1,
+                          )
+                        ]
+                      : null)),
+        ),
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: isDisabled ? null : () => onResumeMatch(match),
+            borderRadius: BorderRadius.circular(20),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                // Avatar de Jairo (Oponente)
+                Row(
+                  children: [
+                    SizedBox(
+                      width: 44,
+                      height: 44,
+                      child: StaticMascotWidget(
+                        sombrero: match.opponent.sombreroId,
+                        cosmetico: match.opponent.cosmeticoId,
+                        traje: match.opponent.trajeId,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            match.opponent.username,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: AppTypography.labelLarge.copyWith(
+                              color: AppColors.textPrimary,
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          Text(
+                            match.subjectName,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: AppTypography.bodySmall.copyWith(
+                              color: match.subjectColor,
+                              fontSize: 10,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+
+                // Chip de Estado (Tu Turno / Esperando a [Nombre]... / Terminado)
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(vertical: 4),
+                  decoration: BoxDecoration(
+                    color: statusColor.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: statusColor.withValues(alpha: 0.4)),
+                  ),
+                  child: Text(
+                    statusText,
+                    textAlign: TextAlign.center,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: AppTypography.bodySmall.copyWith(
+                      color: statusColor,
+                      fontSize: 11,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+
+                // Pie: Marcador de rondas O Botones si está completada
+                if (isCompleted)
                   SizedBox(
-                    width: 44,
-                    height: 44,
-                    child: StaticMascotWidget(
-                      sombrero: match.opponent.sombreroId,
-                      cosmetico: match.opponent.cosmeticoId,
-                      traje: match.opponent.trajeId,
+                    width: double.infinity,
+                    height: 28,
+                    child: ElevatedButton(
+                      onPressed: () {
+                        if (isWinner && !match.premioReclamado) {
+                          context.read<VersusProvider>().reclamarPremio(match.id);
+                          _showClaimDialog(context, match.betCoins * 2);
+                        } else {
+                          context.read<VersusProvider>().archivarBatalla(match.id, match.isChallenger);
+                        }
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: isWinner && !match.premioReclamado ? const Color(0xFF10B981) : const Color(0xFFEF4444),
+                        foregroundColor: Colors.white,
+                        padding: EdgeInsets.zero,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                      ),
+                      child: Text(
+                        isWinner && !match.premioReclamado ? 'Reclamar' : 'Eliminar',
+                        style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
+                      ),
                     ),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          match.opponent.username,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: AppTypography.labelLarge.copyWith(
-                            color: AppColors.textPrimary,
-                            fontSize: 12,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        Text(
-                          match.subjectName,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: AppTypography.bodySmall.copyWith(
-                            color: match.subjectColor,
-                            fontSize: 10,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-
-              // Chip de Estado (Tu Turno / Esperando)
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.symmetric(vertical: 4),
-                decoration: BoxDecoration(
-                  color: statusColor.withValues(alpha: 0.15),
-                  borderRadius: BorderRadius.circular(10),
-                  border: Border.all(color: statusColor.withValues(alpha: 0.4)),
-                ),
-                child: Text(
-                  statusText,
-                  textAlign: TextAlign.center,
-                  style: AppTypography.bodySmall.copyWith(
-                    color: statusColor,
-                    fontSize: 11,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-
-              // Pie: Marcador de rondas
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
+                  )
+                else
                   Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Icon(Icons.monetization_on_rounded, size: 12, color: Color(0xFFF59E0B)),
-                      const SizedBox(width: 3),
+                      Row(
+                        children: [
+                          const Icon(Icons.monetization_on_rounded, size: 12, color: Color(0xFFF59E0B)),
+                          const SizedBox(width: 3),
+                          Text(
+                            '${match.betCoins * 2}',
+                            style: AppTypography.bodySmall.copyWith(
+                              color: AppColors.textSecondary,
+                              fontSize: 10,
+                            ),
+                          ),
+                        ],
+                      ),
                       Text(
-                        '${match.betCoins * 2}',
+                        'Ronda ${match.currentRound}   |   ${match.localRoundsWon} - ${match.opponentRoundsWon}',
                         style: AppTypography.bodySmall.copyWith(
-                          color: AppColors.textSecondary,
+                          color: AppColors.textPrimary,
+                          fontWeight: FontWeight.w700,
                           fontSize: 10,
                         ),
                       ),
                     ],
                   ),
-                  Text(
-                    '${match.localRoundsWon} - ${match.opponentRoundsWon}',
-                    style: AppTypography.bodySmall.copyWith(
-                      color: AppColors.textPrimary,
-                      fontWeight: FontWeight.w700,
-                      fontSize: 11,
-                    ),
-                  ),
-                ],
-              ),
-            ],
+              ],
+            ),
           ),
         ),
+      ),
+    );
+  }
+
+  void _showClaimDialog(BuildContext context, int coinsWon) {
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        backgroundColor: AppColors.surface,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Row(
+          children: [
+            Icon(Icons.emoji_events_rounded, color: Color(0xFF10B981)),
+            SizedBox(width: 8),
+            Text('¡Recompensa!', style: TextStyle(color: Colors.white, fontSize: 18)),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text(
+              'Has reclamado tu premio de la batalla:',
+              style: TextStyle(color: AppColors.textSecondary),
+            ),
+            const SizedBox(height: 16),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(Icons.monetization_on_rounded, color: Color(0xFFF59E0B), size: 32),
+                const SizedBox(width: 8),
+                Text(
+                  '+$coinsWon Monedas',
+                  style: const TextStyle(
+                    color: Color(0xFFF59E0B),
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Genial', style: TextStyle(color: AppColors.primary)),
+          ),
+        ],
       ),
     );
   }

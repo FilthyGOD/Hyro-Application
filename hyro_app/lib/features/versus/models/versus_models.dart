@@ -119,13 +119,19 @@ class VersusMatch {
   final int localRoundsWon;
   final int opponentRoundsWon;
   final DateTime lastActivity;
-  // IDs de categoría para referenciar las preguntas
+  // IDs de categoría y tarea para referenciar las preguntas
   final String? categoriaRetadorId;
   final String? categoriaOponenteId;
+  final String? tareaRetadorId;
+  final String? tareaOponenteId;
   // Estado crudo de la BD para lógica interna
   final String? estadoDb;
   // Indica si el usuario local es el retador (creador del duelo)
   final bool isChallenger;
+  final String? ganadorId;
+  // UUID del jugador que debe responder en este momento
+  final String? turnoActualId;
+  final bool premioReclamado;
 
   const VersusMatch({
     required this.id,
@@ -142,8 +148,13 @@ class VersusMatch {
     required this.lastActivity,
     this.categoriaRetadorId,
     this.categoriaOponenteId,
+    this.tareaRetadorId,
+    this.tareaOponenteId,
     this.estadoDb,
     required this.isChallenger,
+    this.ganadorId,
+    this.turnoActualId,
+    this.premioReclamado = false,
   });
 
   /// Crea un VersusMatch a partir de una fila cruda de `batallas_versus`
@@ -160,27 +171,43 @@ class VersusMatch {
     required VersusPlayer opponentPlayer,
     String subjectName = 'Sin materia',
     Color subjectColor = const Color(0xFF00F2FF),
+    int? currentRound,
+    int? rondasGanadasRetador,
+    int? rondasGanadasOponente,
+    String? ganadorId,
+    bool? retadorCompletado,
+    bool? oponenteCompletado,
+    String? estadoCalculado,
   }) {
     final isRetador = row['retador_id'] == currentUserId;
-    final estado = row['estado'] as String? ?? 'pendiente';
+    final estado = estadoCalculado ?? row['estado'] as String? ?? 'pendiente';
+    final premioReclamado = row['premio_reclamado'] == true;
+
+    // ── Determinar turno usando turno_actual_id como fuente de verdad ──
+    final turnoActualId = row['turno_actual_id']?.toString();
 
     VersusStatus status;
     if (estado == 'completada' || estado == 'cancelada') {
       status = VersusStatus.completed;
-    } else {
-      // Para 'pendiente' o 'activa':
-      // Si eres el retador (creador), estás esperando (que acepten o que jueguen).
-      // Si eres el oponente, es tu turno (para aceptar o para jugar).
+    } else if (estado == 'pendiente') {
       status = isRetador ? VersusStatus.waitingOpponent : VersusStatus.yourTurn;
+    } else {
+      // Estado 'activa': turno_actual_id dicta de quién es el turno
+      if (turnoActualId == currentUserId) {
+        status = VersusStatus.yourTurn;
+      } else if (turnoActualId != null) {
+        status = VersusStatus.waitingOpponent;
+      } else {
+        // turno_actual_id == null → ambos terminaron, esperando evaluación
+        status = VersusStatus.waitingOpponent;
+      }
     }
 
-    final rondasRetador = (row['rondas_ganadas_retador'] as num?)?.toInt() ?? 0;
-    final rondasOponente = (row['rondas_ganadas_oponente'] as num?)?.toInt() ?? 0;
+    final rRetador = rondasGanadasRetador ?? (row['rondas_ganadas_retador'] as num?)?.toInt() ?? 0;
+    final rOponente = rondasGanadasOponente ?? (row['rondas_ganadas_oponente'] as num?)?.toInt() ?? 0;
 
-    // Calcular la ronda actual basándose en rondas completadas
-    final rondasJugadas = rondasRetador + rondasOponente;
-    int currentRound = rondasJugadas + 1;
-    if (currentRound > 3) currentRound = 3;
+    // Leer ronda_actual directamente de la BD si existe
+    final rondaActualDb = (row['ronda_actual'] as num?)?.toInt();
 
     return VersusMatch(
       id: row['id'].toString(),
@@ -191,14 +218,19 @@ class VersusMatch {
       subjectColor: subjectColor,
       betCoins: (row['apuesta_monedas'] as num?)?.toInt() ?? 50,
       status: status,
-      currentRound: currentRound,
-      localRoundsWon: isRetador ? rondasRetador : rondasOponente,
-      opponentRoundsWon: isRetador ? rondasOponente : rondasRetador,
+      currentRound: rondaActualDb ?? currentRound ?? (rRetador + rOponente + 1).clamp(1, 3),
+      localRoundsWon: isRetador ? rRetador : rOponente,
+      opponentRoundsWon: isRetador ? rOponente : rRetador,
       lastActivity: DateTime.tryParse(row['created_at']?.toString() ?? '') ?? DateTime.now(),
       categoriaRetadorId: row['categoria_retador_id']?.toString(),
       categoriaOponenteId: row['categoria_oponente_id']?.toString(),
+      tareaRetadorId: row['tarea_retador_id']?.toString(),
+      tareaOponenteId: row['tarea_oponente_id']?.toString(),
       estadoDb: estado,
       isChallenger: isRetador,
+      ganadorId: ganadorId ?? row['ganador_id']?.toString(),
+      turnoActualId: turnoActualId,
+      premioReclamado: premioReclamado,
     );
   }
 }
@@ -206,16 +238,22 @@ class VersusMatch {
 /// Modelo de Pregunta para el Combate
 class VersusQuestion {
   final String id;
+  final String questionType; // 'multiple_choice', 'true_false', 'drag_drop'
   final String questionText;
   final List<String> options;
   final int correctOptionIndex;
+  final String? correctAnswer; // for drag_drop or true_false
   final String? authorName; // 'Tus apuntes' o 'Apuntes de [Oponente]'
+  final Map<String, dynamic> extraData; // Any extra data
 
   const VersusQuestion({
     required this.id,
+    required this.questionType,
     required this.questionText,
     required this.options,
     required this.correctOptionIndex,
+    this.correctAnswer,
     this.authorName,
+    this.extraData = const {},
   });
 }

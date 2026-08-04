@@ -69,16 +69,23 @@ void main(List<String> args) async {
       args,
       "hyro_app_instancia_unica",
       onSecondWindow: (List<String> nuevosArgs) async {
+        debugPrint('🚨 [Hyro Debug] onSecondWindow llamado con ${nuevosArgs.length} args');
+        for (var arg in nuevosArgs) {
+          debugPrint('🚨 [Hyro Debug] Arg: $arg');
+        }
         if (nuevosArgs.isNotEmpty) {
           final enlace = nuevosArgs.first;
           debugPrint('🚨 [Hyro Debug] ¡Link robado del clon!: $enlace');
           try {
-            await Supabase.instance.client.auth.getSessionFromUrl(
+            final response = await Supabase.instance.client.auth.getSessionFromUrl(
               Uri.parse(enlace),
             );
+            debugPrint('🚨 [Hyro Debug] getSessionFromUrl exitoso! User: ${response.session?.user.email}');
           } catch (e) {
-            debugPrint('Error en Supabase: $e');
+            debugPrint('🚨 [Hyro Debug] Error en Supabase getSessionFromUrl: $e');
           }
+        } else {
+          debugPrint('🚨 [Hyro Debug] onSecondWindow: sin args');
         }
       },
     );

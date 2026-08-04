@@ -58,9 +58,12 @@ class AuthProvider extends ChangeNotifier {
     ) async {
       final event = data.event;
       final session = data.session;
+      debugPrint('🚨 [Hyro Auth] Estado de auth cambió: $event, session: ${session != null ? "SÍ" : "NO"}');
 
       if (event == AuthChangeEvent.signedIn && session != null) {
+        debugPrint('🚨 [Hyro Auth] signedIn detectado, sincronizando usuario: ${session.user.email}');
         await _syncSupabaseUserToIsar(session.user);
+        debugPrint('🚨 [Hyro Auth] Sync completado. isGuest=$isGuest, isAuthenticated=$isAuthenticated, isLoading=$isLoading');
       }
     });
   }
@@ -308,9 +311,6 @@ class AuthProvider extends ChangeNotifier {
   // ─── Métodos de Inicio de Sesión ──────────────────────────────────────────
 
   Future<void> signInWithGoogle() async {
-    _isLoading = true;
-    notifyListeners();
-
     try {
       await Supabase.instance.client.auth.signInWithOAuth(
         OAuthProvider.google,
@@ -318,10 +318,10 @@ class AuthProvider extends ChangeNotifier {
       );
       // ─── Acciones de Autenticación ──────────────────────────────────────
       // La redirección será atrapada por Supabase y _listenAuthChanges hará el resto.
+      // NO ponemos _isLoading = true aquí porque el OAuth abre el navegador
+      // y la app no debe cambiar de pantalla hasta que el deep link regrese.
     } catch (e) {
       debugPrint('Google Sign-In error: $e');
-      _isLoading = false;
-      notifyListeners();
       rethrow;
     }
   }

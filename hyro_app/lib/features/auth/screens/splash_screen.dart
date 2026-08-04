@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:rive/rive.dart';
-import '../../features/mascot/mascot_controller.dart';
+import '../../mascot/mascot_controller.dart';
 
 class SplashScreen extends StatelessWidget {
   const SplashScreen({super.key});

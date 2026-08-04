@@ -2,7 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../features/versus/models/versus_models.dart';
-import '../services/versus_repository.dart';
+import '../data/repositories/versus_repository.dart';
 
 /// Estado reactivo para el sistema Versus (Duelos entre usuarios).
 /// Gestiona batallas activas en tiempo real, creación de retos,

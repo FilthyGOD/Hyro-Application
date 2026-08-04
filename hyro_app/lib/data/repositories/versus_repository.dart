@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import '../features/versus/models/versus_models.dart';
+import '../../features/versus/models/versus_models.dart';
 
 /// Excepción personalizada para errores del módulo Versus.
 class VersusException implements Exception {

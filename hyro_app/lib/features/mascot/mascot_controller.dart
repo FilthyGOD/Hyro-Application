@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:rive/rive.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import '../../services/friends_service.dart';
+import '../friends/services/friends_service.dart';
 
 // ignore_for_file: deprecated_member_use
 

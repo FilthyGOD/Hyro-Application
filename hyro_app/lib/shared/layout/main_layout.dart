@@ -10,7 +10,7 @@ import '../../core/services/spotify/spotify_auth_service.dart';
 import '../../core/services/spotify/spotify_player_service.dart';
 import '../widgets/animated_background.dart';
 import 'package:provider/provider.dart';
-import '../../providers/ui_provider.dart';
+import '../../core/providers/ui_provider.dart';
 import '../../features/focus/bloc/timer_cubit.dart';
 
 /// Scaffold del diseño principal con barra lateral responsiva + contenido + barra de radio.

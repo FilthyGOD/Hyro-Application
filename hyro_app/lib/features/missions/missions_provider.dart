@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:intl/intl.dart';
 import 'models/daily_mission.dart';
-import '../../providers/profile_provider.dart';
+import '../profile/providers/profile_provider.dart';
 
 /// Manages daily missions: generation, progress tracking, and claiming.
 class MissionsProvider extends ChangeNotifier {

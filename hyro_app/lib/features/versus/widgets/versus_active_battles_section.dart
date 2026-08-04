@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
-import '../../../../providers/versus_provider.dart';
+import '../providers/versus_provider.dart';
 import '../../friends/widgets/static_mascot_widget.dart';
 import '../models/versus_models.dart';
 import 'select_opponent_bottom_sheet.dart';

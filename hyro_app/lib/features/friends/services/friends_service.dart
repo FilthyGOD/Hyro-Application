@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import '../features/friends/models/friends_models.dart';
+import '../models/friends_models.dart';
 
 
 /// Servicio centralizado para operaciones de Supabase relacionadas con amigos y cosméticos.

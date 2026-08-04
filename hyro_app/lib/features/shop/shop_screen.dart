@@ -6,10 +6,10 @@ import '../../core/theme/app_typography.dart';
 import '../../core/utils/responsive.dart';
 import '../../shared/widgets/glass_card.dart';
 import '../mascot/mascot_controller.dart';
-import '../../providers/shop_provider.dart';
-import '../../providers/profile_provider.dart';
-import '../../providers/auth_provider.dart';
-import '../../services/friends_service.dart';
+import 'providers/shop_provider.dart';
+import '../profile/providers/profile_provider.dart';
+import '../auth/providers/auth_provider.dart';
+import '../friends/services/friends_service.dart';
 import 'models/shop_item.dart';
 
 // ── Cosmetic category enum ──

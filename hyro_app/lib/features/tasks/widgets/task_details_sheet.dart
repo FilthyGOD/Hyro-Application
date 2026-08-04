@@ -22,7 +22,7 @@ import '../../../data/local/source_local_ds.dart';
 import '../../../data/remote/note_remote_ds.dart';
 import '../../../data/remote/card_remote_ds.dart';
 import '../../../data/remote/source_remote_ds.dart';
-import '../../../providers/auth_provider.dart';
+import '../../auth/providers/auth_provider.dart';
 import '../tasks_provider.dart';
 import '../../../shared/widgets/glass_card.dart';
 

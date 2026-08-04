@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../features/friends/models/friends_models.dart';
+import '../models/friends_models.dart';
 import '../services/friends_service.dart';
 
 /// Estado reactivo para el sistema de amigos.

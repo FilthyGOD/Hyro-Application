@@ -12,11 +12,11 @@ import 'data/models/tarea_fuente_model.dart';
 import 'data/models/tarea_card_model.dart';
 import 'package:isar/isar.dart';
 import 'package:path_provider/path_provider.dart';
-import 'models/user_profile.dart';
+import 'data/models/user_profile.dart';
 import 'package:window_manager/window_manager.dart';
 import 'dart:io';
 import 'package:windows_single_instance/windows_single_instance.dart'; // <-- Vuelve el salvador
-import 'services/notifications_service.dart';
+import 'core/services/notifications_service.dart';
 // ignore: unused_import
 
 void main(List<String> args) async {

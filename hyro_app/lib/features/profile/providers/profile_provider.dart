@@ -2,7 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:isar/isar.dart';
-import 'package:hyro/models/user_profile.dart';
+import 'package:hyro/data/models/user_profile.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:hyro/data/models/daily_stats.dart';
 import 'package:hyro/data/repositories/stats_repository.dart';

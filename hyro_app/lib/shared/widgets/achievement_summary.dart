@@ -3,7 +3,7 @@ import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_typography.dart';
 import 'glass_card.dart';
 import 'package:provider/provider.dart';
-import '../../providers/profile_provider.dart';
+import '../../features/profile/providers/profile_provider.dart';
 
 class AchievementCard extends StatelessWidget {
   final IconData icon;

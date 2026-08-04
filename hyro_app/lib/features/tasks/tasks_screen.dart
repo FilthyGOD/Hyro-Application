@@ -8,7 +8,7 @@ import 'package:uuid/uuid.dart';
 import '../../data/models/task_model.dart';
 import 'tasks_provider.dart';
 import '../stats/stats_provider.dart';
-import '../../providers/ui_provider.dart';
+import '../../core/providers/ui_provider.dart';
 import '../categories/category_provider.dart';
 import 'widgets/task_details_sheet.dart';
 import '../../data/models/category_model.dart';

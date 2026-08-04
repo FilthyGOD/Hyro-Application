@@ -1,8 +1,8 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import '../features/shop/models/shop_item.dart';
-import 'package:hyro/models/user_profile.dart';
+import '../models/shop_item.dart';
+import 'package:hyro/data/models/user_profile.dart';
 import 'package:isar/isar.dart';
 
 /// Administra el catálogo de la tienda, el inventario del usuario y las compras a través de Supabase o Isar.

@@ -3,7 +3,7 @@ import '../../data/models/task_model.dart';
 import '../../data/repositories/task_repository.dart';
 import '../../data/local/task_local_ds.dart';
 import '../../data/remote/task_remote_ds.dart';
-import '../../services/notifications_service.dart';
+import '../../core/services/notifications_service.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class TaskProvider extends ChangeNotifier {

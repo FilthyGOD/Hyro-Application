@@ -3,7 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:provider/provider.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
-import '../../../providers/ui_provider.dart';
+import '../../core/providers/ui_provider.dart';
 import 'bloc/timer_cubit.dart';
 import 'bloc/timer_state.dart';
 import 'widgets/circular_timer.dart';

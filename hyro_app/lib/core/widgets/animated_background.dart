@@ -1,7 +1,7 @@
 import 'dart:ui';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
-import '../../core/theme/app_colors.dart';
+import '../theme/app_colors.dart';
 
 /// Un fondo animado que respira y muestra burbujas de color difuminadas
 /// utilizando la paleta de colores de Focus Aura Lucid.

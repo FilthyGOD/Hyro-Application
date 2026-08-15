@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
+
 import 'package:provider/provider.dart';
 import 'core/theme/app_theme.dart';
-import 'features/focus/bloc/timer_cubit.dart';
-import 'features/focus/bloc/timer_state.dart';
-import 'features/focus/focus_screen.dart';
-import 'features/tasks/tasks_screen.dart';
-import 'features/stats/stats_screen.dart';
-import 'features/shop/shop_screen.dart';
-import 'features/profile/profile_screen.dart';
-import 'features/friends/friends_screen.dart';
+import 'features/focus/providers/focus_provider.dart';
+import 'features/focus/providers/focus_state.dart';
+import 'features/focus/screens/focus_screen.dart';
+import 'features/tasks/screens/tasks_screen.dart';
+import 'features/stats/screens/stats_screen.dart';
+import 'features/shop/screens/shop_screen.dart';
+import 'features/profile/screens/profile_screen.dart';
+import 'features/friends/screens/friends_screen.dart';
 import 'features/tasks/tasks_provider.dart';
 import 'features/stats/stats_provider.dart';
 import 'features/mascot/mascot_controller.dart';
@@ -26,8 +26,8 @@ import 'features/auth/providers/auth_provider.dart';
 import 'features/auth/screens/splash_screen.dart';
 import 'features/auth/screens/welcome_screen.dart';
 import 'shared/layout/main_layout.dart';
-import 'shared/widgets/floating_mascot.dart';
-import 'features/focus/mini_focus_screen.dart';
+import 'core/widgets/floating_mascot.dart';
+import 'features/focus/screens/mini_focus_screen.dart';
 import 'core/utils/responsive.dart';
 import 'core/services/notifications_service.dart';
 import 'package:window_manager/window_manager.dart';
@@ -63,21 +63,18 @@ class HyroApp extends StatelessWidget {
               (ctx, profile, previous) =>
                   previous ?? MissionsProvider(profileProvider: profile),
         ),
+        ChangeNotifierProvider(
+          create:
+              (context) => FocusProvider(
+                statsProvider: context.read<StatsProvider>(),
+                settingsProvider: context.read<SettingsProvider>(),
+                profileProvider: context.read<ProfileProvider>(),
+                missionsProvider: context.read<MissionsProvider>(),
+                taskProvider: context.read<TaskProvider>(),
+              ),
+        ),
       ],
-      child: MultiBlocProvider(
-        providers: [
-          BlocProvider(
-            create:
-                (context) => TimerCubit(
-                  statsProvider: context.read<StatsProvider>(),
-                  settingsProvider: context.read<SettingsProvider>(),
-                  profileProvider: context.read<ProfileProvider>(),
-                  missionsProvider: context.read<MissionsProvider>(),
-                  taskProvider: context.read<TaskProvider>(),
-                ),
-          ),
-        ],
-        child: MaterialApp(
+      child: MaterialApp(
           title: 'Hyro',
           debugShowCheckedModeBanner: false,
           theme: AppTheme.darkTheme,
@@ -94,8 +91,7 @@ class HyroApp extends StatelessWidget {
             },
           ),
         ),
-      ),
-    );
+      );
   }
 }
 
@@ -247,10 +243,10 @@ class AppShellState extends State<AppShell>
     if (state == AppLifecycleState.paused ||
         state == AppLifecycleState.inactive ||
         state == AppLifecycleState.detached) {
-      final cubit = context.read<TimerCubit>();
+      final focusProvider = context.read<FocusProvider>();
       final settings = context.read<SettingsProvider>();
-      if (cubit.state.isRunning && settings.autoPauseTimer) {
-        cubit.pause(manual: false);
+      if (focusProvider.state.isRunning && settings.autoPauseTimer) {
+        focusProvider.pause(manual: false);
       }
     }
   }
@@ -277,8 +273,8 @@ class AppShellState extends State<AppShell>
   }
 
   Future<void> _loadGamificationData() async {
-    // Dar acceso de autenticación al TimerCubit para búsqueda de userId
-    context.read<TimerCubit>().authProvider = widget.authProvider;
+    // Dar acceso de autenticación al FocusProvider para búsqueda de userId
+    context.read<FocusProvider>().authProvider = widget.authProvider;
 
     final userId = widget.authProvider.supabaseUserId;
     final isAuth = widget.authProvider.isAuthenticated;
@@ -359,7 +355,7 @@ class AppShellState extends State<AppShell>
     }
 
     final previousIndex = _selectedIndex;
-    final timerState = context.read<TimerCubit>().state;
+    final timerState = context.read<FocusProvider>().state;
     final settings = context.read<SettingsProvider>();
 
     if (settings.strictMode &&
@@ -441,7 +437,7 @@ class AppShellState extends State<AppShell>
                     (Platform.isWindows ||
                             Platform.isMacOS ||
                             Platform.isLinux ||
-                            context.watch<TimerCubit>().state.isRunning)
+                            context.watch<FocusProvider>().state.isRunning)
                         ? const NeverScrollableScrollPhysics() // Bloquea el swipe en PC o si el timer corre
                         : const BouncingScrollPhysics(),
                 onPageChanged: (index) {
@@ -460,7 +456,7 @@ class AppShellState extends State<AppShell>
                     }
                     if (index == 2) {
                       mascot.triggerVolver();
-                      final timerState = context.read<TimerCubit>().state;
+                      final timerState = context.read<FocusProvider>().state;
                       if (timerState.isRunning) {
                         if (timerState.mode == TimerMode.pomodoro) {
                           mascot.triggerEstudiando();
@@ -484,7 +480,7 @@ class AppShellState extends State<AppShell>
         // Capa superpuesta de la mascota flotante — visible solo en Focus (2), Tareas (3) y Amigos (4), y no durante la vista de sesión completada
         Builder(
           builder: (context) {
-            final timerState = context.watch<TimerCubit>().state;
+            final timerState = context.watch<FocusProvider>().state;
             final isPomodoroFinished =
                 timerState.isFinished &&
                 (timerState.mode == TimerMode.shortBreak ||

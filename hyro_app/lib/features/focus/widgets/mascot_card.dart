@@ -3,7 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:rive/rive.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
-import '../../../shared/widgets/glass_card.dart';
+import '../../../core/widgets/glass_card.dart';
 import '../../mascot/mascot_controller.dart';
 
 /// La tarjeta de motivación de la mascota — personaje Hyro animado en Rive.

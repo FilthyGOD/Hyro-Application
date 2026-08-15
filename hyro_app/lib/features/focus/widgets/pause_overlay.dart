@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import '../providers/focus_state.dart';
 import '../../../core/theme/app_typography.dart';
 
 /// Pantalla superpuesta a pantalla completa que se muestra cuando el temporizador está pausado.

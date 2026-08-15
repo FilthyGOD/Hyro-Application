@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
-import '../../../../shared/widgets/glass_card.dart';
+import '../../../../core/widgets/glass_card.dart';
 import '../../../data/models/daily_stats.dart';
 
 class StreakCalendar extends StatelessWidget {

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../core/theme/app_typography.dart';
-import '../../../shared/widgets/glass_card.dart';
+import '../../../core/widgets/glass_card.dart';
 
 /// Tarjetas de contador de sesión (ej. "4/4") y Tiempo Total de Enfoque (ej. "2.5h").
 class SessionInfoCard extends StatelessWidget {

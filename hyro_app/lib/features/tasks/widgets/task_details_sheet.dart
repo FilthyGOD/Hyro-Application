@@ -24,7 +24,7 @@ import '../../../data/remote/card_remote_ds.dart';
 import '../../../data/remote/source_remote_ds.dart';
 import '../../auth/providers/auth_provider.dart';
 import '../tasks_provider.dart';
-import '../../../shared/widgets/glass_card.dart';
+import '../../../core/widgets/glass_card.dart';
 
 class TaskDetailsDialog extends StatefulWidget {
   final TaskModel task;

@@ -5,8 +5,8 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../data/models/tarea_card_model.dart';
 import '../../../data/models/tarea_nota_model.dart';
-import '../bloc/timer_cubit.dart';
-import '../../../shared/widgets/glass_card.dart';
+import '../providers/focus_provider.dart';
+import '../../../core/widgets/glass_card.dart';
 import '../../mascot/mascot_controller.dart';
 import '../models/quiz_result_item.dart';
 import 'package:rive/rive.dart' hide Animation;
@@ -117,18 +117,18 @@ class _FocusQuizDialogState extends State<FocusQuizDialog> {
       quizType: typeLabel,
     );
 
-    context.read<TimerCubit>().recordQuizResult(isCorrect, item);
+    context.read<FocusProvider>().recordQuizResult(isCorrect, item);
 
     Future.delayed(const Duration(seconds: 4), () {
       if (mounted) {
         Navigator.pop(context);
-        context.read<TimerCubit>().acknowledgeQuiz();
+        context.read<FocusProvider>().acknowledgeQuiz();
       }
     });
   }
 
   void _skip() {
-    context.read<TimerCubit>().acknowledgeQuiz();
+    context.read<FocusProvider>().acknowledgeQuiz();
     Navigator.pop(context);
   }
 

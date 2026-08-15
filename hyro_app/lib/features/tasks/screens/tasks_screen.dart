@@ -1,18 +1,18 @@
 import 'package:flutter/material.dart';
 import 'dart:math' as math;
-import '../../core/theme/app_colors.dart';
-import '../../core/theme/app_typography.dart';
-import '../../shared/widgets/glass_card.dart';
+import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_typography.dart';
+import '../../../core/widgets/glass_card.dart';
 import 'package:provider/provider.dart';
 import 'package:uuid/uuid.dart';
-import '../../data/models/task_model.dart';
-import 'tasks_provider.dart';
-import '../stats/stats_provider.dart';
-import '../../core/providers/ui_provider.dart';
-import '../categories/category_provider.dart';
-import 'widgets/task_details_sheet.dart';
-import '../../data/models/category_model.dart';
-import '../../shared/widgets/mobile_stats_bar.dart';
+import '../../../data/models/task_model.dart';
+import '../tasks_provider.dart';
+import '../../stats/stats_provider.dart';
+import '../../../core/providers/ui_provider.dart';
+import '../../categories/category_provider.dart';
+import '../widgets/task_details_sheet.dart';
+import '../../../data/models/category_model.dart';
+import '../../../core/widgets/mobile_stats_bar.dart';
 
 class TasksScreen extends StatefulWidget {
   const TasksScreen({super.key});

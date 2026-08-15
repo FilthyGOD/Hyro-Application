@@ -3,15 +3,15 @@ import 'package:window_manager/window_manager.dart';
 import 'dart:io';
 import '../../core/theme/app_colors.dart';
 import '../../core/utils/responsive.dart';
-import '../widgets/sidebar.dart';
-import '../widgets/spotify_bottom_bar.dart';
-import '../widgets/custom_title_bar.dart';
+import '../../core/widgets/sidebar.dart';
+import '../../core/widgets/spotify_bottom_bar.dart';
+import '../../core/widgets/custom_title_bar.dart';
 import '../../core/services/spotify/spotify_auth_service.dart';
 import '../../core/services/spotify/spotify_player_service.dart';
-import '../widgets/animated_background.dart';
+import '../../core/widgets/animated_background.dart';
 import 'package:provider/provider.dart';
 import '../../core/providers/ui_provider.dart';
-import '../../features/focus/bloc/timer_cubit.dart';
+import '../../features/focus/providers/focus_provider.dart';
 
 /// Scaffold del diseño principal con barra lateral responsiva + contenido + barra de radio.
 class MainLayout extends StatefulWidget {
@@ -61,7 +61,7 @@ class _MainLayoutState extends State<MainLayout> {
   Widget build(BuildContext context) {
     final isMobile = Responsive.isMobile(context);
     final isTablet = Responsive.isTablet(context);
-    final isTimerRunning = context.watch<TimerCubit>().state.isRunning;
+    final isTimerRunning = context.watch<FocusProvider>().state.isRunning;
 
     if (isMobile) {
       return _buildMobileLayout(isTimerRunning);

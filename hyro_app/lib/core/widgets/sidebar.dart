@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../features/auth/providers/auth_provider.dart';
-import '../../core/theme/app_colors.dart';
-import '../../core/theme/app_typography.dart';
+import '../theme/app_colors.dart';
+import '../theme/app_typography.dart';
 
 /// Barra de navegación lateral para la aplicación Hyro.
 class Sidebar extends StatelessWidget {

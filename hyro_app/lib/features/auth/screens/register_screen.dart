@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:rive/rive.dart';
 import 'package:hyro/features/auth/providers/auth_provider.dart';
-import '../../../shared/widgets/animated_background.dart';
+import '../../../core/widgets/animated_background.dart';
 import '../../mascot/mascot_controller.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../app.dart';

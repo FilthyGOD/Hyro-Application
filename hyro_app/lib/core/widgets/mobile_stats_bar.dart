@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../features/profile/providers/profile_provider.dart';
-import '../../core/theme/app_colors.dart';
-import '../../core/theme/app_typography.dart';
-import '../../features/shop/premium_shop_screen.dart';
+import '../theme/app_colors.dart';
+import '../theme/app_typography.dart';
+import '../../features/shop/screens/premium_shop_screen.dart';
 
 /// Barra superior estilo AppBar para móvil que muestra la racha y monedas del usuario.
 /// Se usa en las pantallas de Enfoque, Tareas y Perfil.

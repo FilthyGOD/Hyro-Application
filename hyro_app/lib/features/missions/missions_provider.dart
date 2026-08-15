@@ -156,7 +156,7 @@ class MissionsProvider extends ChangeNotifier {
 
   // ─── Progress Tracking ─────────────────────────────────────────────
 
-  /// Called by TimerCubit or other systems when a relevant event occurs.
+  /// Called by FocusProvider or other systems when a relevant event occurs.
   /// [type] matches DailyMission.type, e.g. 'pomodoro_completed'.
   /// [value] is the amount to add (e.g. 1 for a completed pomodoro).
   void updateProgress(String type, int value) {

@@ -1,16 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../core/theme/app_colors.dart';
-import '../../core/theme/app_typography.dart';
-import '../auth/providers/auth_provider.dart';
-import 'providers/user_profile_preview_provider.dart';
-import '../shop/providers/shop_provider.dart';
-import '../profile/providers/profile_provider.dart';
-import 'services/friends_service.dart';
-import '../shop/models/shop_item.dart';
-import '../../shared/widgets/glass_card.dart';
-import 'models/friends_models.dart';
-import 'widgets/static_mascot_widget.dart';
+import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_typography.dart';
+import '../../auth/providers/auth_provider.dart';
+import '../providers/user_profile_preview_provider.dart';
+import '../../shop/providers/shop_provider.dart';
+import '../../profile/providers/profile_provider.dart';
+import '../services/friends_service.dart';
+import '../../shop/models/shop_item.dart';
+import '../../../core/widgets/glass_card.dart';
+import '../models/friends_models.dart';
+import '../widgets/static_mascot_widget.dart';
 
 
 /// Pantalla de vista previa del perfil de un usuario tercero.

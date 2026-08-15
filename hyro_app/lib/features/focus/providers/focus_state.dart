@@ -1,11 +1,10 @@
-import 'package:equatable/equatable.dart';
 import '../models/quiz_result_item.dart';
 
 enum TimerStatus { idle, running, paused, finished }
 
 enum TimerMode { pomodoro, shortBreak, longBreak }
 
-class TimerState extends Equatable {
+class TimerState {
   final TimerStatus status;
   final TimerMode mode;
   final int remainingSeconds;
@@ -84,23 +83,4 @@ class TimerState extends Equatable {
       quizHistory: quizHistory ?? this.quizHistory,
     );
   }
-
-  @override
-  List<Object?> get props => [
-    status,
-    mode,
-    remainingSeconds,
-    totalSeconds,
-    completedSessions,
-    totalFocusMinutes,
-    activeTaskId,
-    activeTaskTitle,
-    quizDue,
-    quizCorrectCount,
-    quizTotalCount,
-    isStrictModeActive,
-    isManualPause,
-    strictModeViolationApp,
-    quizHistory,
-  ];
 }

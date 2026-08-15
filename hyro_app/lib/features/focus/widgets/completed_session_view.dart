@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:rive/rive.dart' hide Animation;
 import '../../../core/theme/app_typography.dart';
-import '../bloc/timer_cubit.dart';
-import '../bloc/timer_state.dart';
+import '../providers/focus_provider.dart';
+import '../providers/focus_state.dart';
 import '../../auth/providers/auth_provider.dart';
 import '../../settings/settings_provider.dart';
 import '../../../core/providers/ui_provider.dart';
@@ -83,10 +83,10 @@ class _CompletedSessionViewState extends State<CompletedSessionView> {
                       _buildStatCard('TIEMPO', '${pomodoroMins}m Enfoque', context),
                       _buildStatCard('PROGRESO', '+10 XP', context),
                       _buildStatCard('RACHA', '$streak Días de Racha', context),
-                      if (context.read<TimerCubit>().state.quizTotalCount > 0)
+                      if (context.read<FocusProvider>().state.quizTotalCount > 0)
                         _buildStatCard(
                            'QUIZ',
-                           '${context.read<TimerCubit>().state.quizCorrectCount}/${context.read<TimerCubit>().state.quizTotalCount} ✅',
+                           '${context.read<FocusProvider>().state.quizCorrectCount}/${context.read<FocusProvider>().state.quizTotalCount} ✅',
                            context,
                         ),
                     ],
@@ -102,10 +102,10 @@ class _CompletedSessionViewState extends State<CompletedSessionView> {
                         icon: Icons.play_arrow,
                         isPrimary: true,
                         onPressed: () {
-                          final cubit = context.read<TimerCubit>();
-                          final state = cubit.state;
-                          cubit.setMode(TimerMode.pomodoro);
-                          cubit.start(taskId: state.activeTaskId, taskTitle: state.activeTaskTitle);
+                          final focusProvider = context.read<FocusProvider>();
+                          final state = focusProvider.state;
+                          focusProvider.setMode(TimerMode.pomodoro);
+                          focusProvider.start(taskId: state.activeTaskId, taskTitle: state.activeTaskTitle);
                         },
                       ),
                       _buildActionButton(
@@ -113,9 +113,9 @@ class _CompletedSessionViewState extends State<CompletedSessionView> {
                         icon: Icons.coffee,
                         isPrimary: false,
                         onPressed: () {
-                          final cubit = context.read<TimerCubit>();
-                          cubit.setMode(TimerMode.shortBreak);
-                          cubit.start();
+                          final focusProvider = context.read<FocusProvider>();
+                          focusProvider.setMode(TimerMode.shortBreak);
+                          focusProvider.start();
                         },
                       ),
                       _buildActionButton(
@@ -123,16 +123,16 @@ class _CompletedSessionViewState extends State<CompletedSessionView> {
                         icon: Icons.swap_horiz,
                         isPrimary: false,
                         onPressed: () {
-                          context.read<TimerCubit>().reset();
+                          context.read<FocusProvider>().reset();
                         },
                       ),
-                      if (context.read<TimerCubit>().state.quizHistory.isNotEmpty)
+                      if (context.read<FocusProvider>().state.quizHistory.isNotEmpty)
                         _buildActionButton(
                           label: 'Resultados del Quiz',
                           icon: Icons.checklist_rtl_rounded,
                           isPrimary: false,
                           onPressed: () {
-                            _showQuizHistory(context, context.read<TimerCubit>().state.quizHistory);
+                            _showQuizHistory(context, context.read<FocusProvider>().state.quizHistory);
                           },
                         ),
                     ],

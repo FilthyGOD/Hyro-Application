@@ -1,17 +1,17 @@
 import 'package:flutter/material.dart';
-import '../../core/theme/app_colors.dart';
-import '../../core/theme/app_typography.dart';
-import '../../shared/widgets/glass_card.dart';
+import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_typography.dart';
+import '../../../core/widgets/glass_card.dart';
 import 'package:provider/provider.dart';
-import '../../core/providers/ui_provider.dart';
-import 'settings_provider.dart';
-import '../focus/bloc/timer_cubit.dart';
-import '../../core/services/notifications_service.dart';
+import '../../../core/providers/ui_provider.dart';
+import '../settings_provider.dart';
+import '../../focus/providers/focus_provider.dart';
+import '../../../core/services/notifications_service.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import '../tasks/tasks_provider.dart';
-import '../stats/stats_provider.dart';
+import '../../tasks/tasks_provider.dart';
+import '../../stats/stats_provider.dart';
 import 'dart:io';
-import '../../core/services/strict_mode_service.dart';
+import '../../../core/services/strict_mode_service.dart';
 
 /// Settings screen for Pomodoro durations, notifications, and theme.
 class SettingsScreen extends StatefulWidget {
@@ -107,7 +107,7 @@ class _SettingsScreenState extends State<SettingsScreen> with WidgetsBindingObse
                     if (Supabase.instance.client.auth.currentUser?.email != 'jairothehyrax@gmail.com') {
                       settings.setShortBreakDuration(v / 5);
                     }
-                    context.read<TimerCubit>().refreshIfIdle();
+                    context.read<FocusProvider>().refreshIfIdle();
                   },
                 ),
                 if (Supabase.instance.client.auth.currentUser?.email == 'jairothehyrax@gmail.com') ...[
@@ -120,7 +120,7 @@ class _SettingsScreenState extends State<SettingsScreen> with WidgetsBindingObse
                     suffix: 'min',
                     onChanged: (v) {
                       settings.setShortBreakDuration(v);
-                      context.read<TimerCubit>().refreshIfIdle();
+                      context.read<FocusProvider>().refreshIfIdle();
                     },
                   ),
                 ],
@@ -129,7 +129,7 @@ class _SettingsScreenState extends State<SettingsScreen> with WidgetsBindingObse
                   currentSize: settings.timerSize,
                   onSizeChanged: (v) {
                     settings.setTimerSize(v);
-                    context.read<TimerCubit>().refreshIfIdle();
+                    context.read<FocusProvider>().refreshIfIdle();
                   },
                 ),
               ],
@@ -204,7 +204,7 @@ class _SettingsScreenState extends State<SettingsScreen> with WidgetsBindingObse
                   value: settings.focusQuizEnabled,
                   onChanged: (v) {
                     settings.setFocusQuizEnabled(v);
-                    context.read<TimerCubit>().refreshIfIdle();
+                    context.read<FocusProvider>().refreshIfIdle();
                   },
                 ),
                 if (settings.focusQuizEnabled) ...[
@@ -355,7 +355,7 @@ class _SettingsScreenState extends State<SettingsScreen> with WidgetsBindingObse
                           icon: const Icon(Icons.bug_report),
                           label: const Text('🐛 Pantalla de Sesión Completada'),
                           onPressed: () {
-                             context.read<TimerCubit>().debugForceSessionCompleted();
+                             context.read<FocusProvider>().debugForceSessionCompleted();
                              ScaffoldMessenger.of(context).showSnackBar(
                                const SnackBar(content: Text('Simulando fin de sesión. Revisa la pantalla de Focus.')),
                              );

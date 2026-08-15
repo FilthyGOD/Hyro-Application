@@ -1,18 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:rive/rive.dart';
-import '../auth/screens/login_screen.dart';
-import '../auth/providers/auth_provider.dart';
-import 'providers/profile_provider.dart';
-import '../../core/theme/app_colors.dart';
-import '../../core/theme/app_typography.dart';
-import '../../shared/widgets/glass_card.dart';
-import '../../core/providers/ui_provider.dart';
-import '../mascot/mascot_controller.dart';
-import '../settings/settings_screen.dart';
-import '../../shared/widgets/mobile_stats_bar.dart';
-import '../../shared/widgets/achievement_summary.dart';
-import '../../shared/widgets/recent_milestones.dart';
+import '../../auth/screens/login_screen.dart';
+import '../../auth/providers/auth_provider.dart';
+import '../providers/profile_provider.dart';
+import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_typography.dart';
+import '../../../core/widgets/glass_card.dart';
+import '../../../core/providers/ui_provider.dart';
+import '../../mascot/mascot_controller.dart';
+import '../../settings/screens/settings_screen.dart';
+import '../../../core/widgets/mobile_stats_bar.dart';
+import '../../../core/widgets/achievement_summary.dart';
+import '../../../core/widgets/recent_milestones.dart';
 
 /// Profile screen showing user info, level/XP, coins, and daily missions.
 class ProfileScreen extends StatelessWidget {

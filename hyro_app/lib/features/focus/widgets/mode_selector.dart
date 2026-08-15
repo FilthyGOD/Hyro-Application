@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
-import '../bloc/timer_state.dart';
+import '../providers/focus_state.dart';
 
 /// Chips para cambiar entre Pomodoro, Descanso Corto, Descanso Largo.
 class ModeSelector extends StatelessWidget {

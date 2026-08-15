@@ -1,136 +1,166 @@
 import 'dart:io';
 import 'package:provider/provider.dart';
-import '../../shared/widgets/mobile_stats_bar.dart';
+import '../../../core/widgets/mobile_stats_bar.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
-import '../../core/theme/app_typography.dart';
-import 'bloc/timer_cubit.dart';
-import 'bloc/timer_state.dart';
-import 'widgets/circular_timer.dart';
-import 'widgets/timer_controls.dart';
-import 'widgets/mode_selector.dart';
-import 'widgets/completed_session_view.dart';
-import '../../core/theme/app_colors.dart';
-import 'widgets/mini_task_list.dart';
-import 'widgets/task_selection_dialog.dart';
-import '../stats/stats_provider.dart';
-import '../tasks/tasks_provider.dart';
-import '../settings/settings_provider.dart';
-import '../categories/category_provider.dart';
-import '../../core/providers/ui_provider.dart';
-import '../profile/providers/profile_provider.dart';
-import '../mascot/mascot_controller.dart';
-import 'widgets/focus_quiz_dialog.dart';
-import 'widgets/pause_clock.dart';
-import '../../data/local/card_local_ds.dart';
-import '../shop/premium_shop_screen.dart';
-import '../../data/local/note_local_ds.dart';
-import 'widgets/strict_mode_violation_card.dart';
+import '../providers/focus_provider.dart';
+import '../providers/focus_state.dart';
+import '../widgets/circular_timer.dart';
+import '../../../core/theme/app_typography.dart';
+import '../widgets/timer_controls.dart';
+import '../widgets/mode_selector.dart';
+import '../widgets/completed_session_view.dart';
+import '../../../core/theme/app_colors.dart';
+import '../widgets/mini_task_list.dart';
+import '../widgets/task_selection_dialog.dart';
+import '../../stats/stats_provider.dart';
+import '../../tasks/tasks_provider.dart';
+import '../../settings/settings_provider.dart';
+import '../../categories/category_provider.dart';
+import '../../../core/providers/ui_provider.dart';
+import '../../profile/providers/profile_provider.dart';
+import '../../mascot/mascot_controller.dart';
+import '../widgets/focus_quiz_dialog.dart';
+import '../widgets/pause_clock.dart';
+import '../../../data/local/card_local_ds.dart';
+import '../../shop/screens/premium_shop_screen.dart';
+import '../../../data/local/note_local_ds.dart';
+import '../widgets/strict_mode_violation_card.dart';
 
 /// La pantalla principal de Enfoque con el temporizador Pomodoro y widgets laterales.
-class FocusScreen extends StatelessWidget {
+class FocusScreen extends StatefulWidget {
   const FocusScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return BlocListener<TimerCubit, TimerState>(
-      listenWhen:
-          (prev, curr) =>
-              (prev.status != curr.status) ||
-              (prev.quizDue != curr.quizDue) ||
-              (prev.strictModeViolationApp != curr.strictModeViolationApp),
-      listener: (context, state) {
-        final mascot = context.read<MascotController>();
+  State<FocusScreen> createState() => _FocusScreenState();
+}
 
-        if (state.strictModeViolationApp != null) {
+class _FocusScreenState extends State<FocusScreen> {
+  late FocusProvider _focusProvider;
+  TimerState? _previousState;
+
+  @override
+  void initState() {
+    super.initState();
+    _focusProvider = context.read<FocusProvider>();
+    _previousState = _focusProvider.state;
+    _focusProvider.addListener(_onFocusStateChanged);
+  }
+
+  @override
+  void dispose() {
+    _focusProvider.removeListener(_onFocusStateChanged);
+    super.dispose();
+  }
+
+  void _onFocusStateChanged() {
+    if (!mounted) return;
+    final curr = _focusProvider.state;
+    final prev = _previousState!;
+    _previousState = curr;
+
+    if (prev.status != curr.status ||
+        prev.quizDue != curr.quizDue ||
+        prev.strictModeViolationApp != curr.strictModeViolationApp) {
+      
+      final mascot = context.read<MascotController>();
+      final state = curr;
+
+      if (state.strictModeViolationApp != null) {
+        mascot.triggerPensando();
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder:
+              (_) => StrictModeViolationCard(
+                appName: state.strictModeViolationApp!,
+              ),
+        ).then((_) {
+          mascot.resumeEstudio();
+          if (!mounted) return;
+          if (context.read<FocusProvider>().state.isPaused) {
+            context.read<FocusProvider>().resume();
+          }
+        });
+        return;
+      }
+
+      if (state.quizDue && state.isRunning) {
+        final cardLocal = CardLocalDataSource();
+        final noteLocal = NoteLocalDataSource();
+        final cards = cardLocal.getCardsForTask(state.activeTaskId!);
+        final notes = noteLocal.getNotesForTask(state.activeTaskId!);
+
+        if (cards.isNotEmpty || notes.isNotEmpty) {
+          context.read<FocusProvider>().pause(manual: false);
           mascot.triggerPensando();
+
+          // Obtener el color de la materia activa
+          Color subjectColor = AppColors.primary;
+          try {
+            final tasksProvider = context.read<TaskProvider>();
+            final task = tasksProvider.tasks.firstWhere(
+              (t) => t.id == state.activeTaskId,
+            );
+            // Usar color de la categoría/materia si existe
+            if (task.categoryId != null) {
+              try {
+                final categories = context.read<CategoryProvider>().categories;
+                final cat = categories.firstWhere((c) => c.id == task.categoryId);
+                subjectColor = Color(cat.colorValue);
+              } catch (_) {
+                subjectColor = Color(task.priorityColorValue);
+              }
+            } else {
+              subjectColor = Color(task.priorityColorValue);
+            }
+          } catch (_) {}
+
           showDialog(
             context: context,
             barrierDismissible: false,
-            builder:
-                (_) => StrictModeViolationCard(
-                  appName: state.strictModeViolationApp!,
-                ),
+            builder: (_) => FocusQuizDialog(
+              flashcards: cards,
+              notas: notes,
+              subjectColor: subjectColor,
+            ),
           ).then((_) {
             mascot.resumeEstudio();
-            if (!context.mounted) return;
-            if (context.read<TimerCubit>().state.isPaused) {
-              context.read<TimerCubit>().resume();
+            // solo reanuda si actualmente está pausado
+            if (!mounted) return;
+            if (context.read<FocusProvider>().state.isPaused) {
+              context.read<FocusProvider>().resume();
             }
           });
-          return;
+        } else {
+          context.read<FocusProvider>().acknowledgeQuiz();
         }
-
-        if (state.quizDue && state.isRunning) {
-          final cardLocal = CardLocalDataSource();
-          final noteLocal = NoteLocalDataSource();
-          final cards = cardLocal.getCardsForTask(state.activeTaskId!);
-          final notes = noteLocal.getNotesForTask(state.activeTaskId!);
-
-          if (cards.isNotEmpty || notes.isNotEmpty) {
-            context.read<TimerCubit>().pause(manual: false);
-            mascot.triggerPensando();
-
-            // Obtener el color de la materia activa
-            Color subjectColor = AppColors.primary;
-            try {
-              final tasksProvider = context.read<TaskProvider>();
-              final task = tasksProvider.tasks.firstWhere(
-                (t) => t.id == state.activeTaskId,
-              );
-              // Usar color de la categoría/materia si existe
-              if (task.categoryId != null) {
-                try {
-                  final categories = context.read<CategoryProvider>().categories;
-                  final cat = categories.firstWhere((c) => c.id == task.categoryId);
-                  subjectColor = Color(cat.colorValue);
-                } catch (_) {
-                  subjectColor = Color(task.priorityColorValue);
-                }
-              } else {
-                subjectColor = Color(task.priorityColorValue);
-              }
-            } catch (_) {}
-
-            showDialog(
-              context: context,
-              barrierDismissible: false,
-              builder: (_) => FocusQuizDialog(
-                flashcards: cards,
-                notas: notes,
-                subjectColor: subjectColor,
-              ),
-            ).then((_) {
-              mascot.resumeEstudio();
-              // solo reanuda si actualmente está pausado
-              if (!context.mounted) return;
-              if (context.read<TimerCubit>().state.isPaused) {
-                context.read<TimerCubit>().resume();
-              }
-            });
-          } else {
-            context.read<TimerCubit>().acknowledgeQuiz();
-          }
-        } else if (state.quizDue) {
-          // No sobrescribas el estado de la mascota si hay una pausa de cuestionario activa.
-        } else if (state.isRunning && state.mode == TimerMode.pomodoro) {
-          mascot.triggerEstudiando();
-        } else if (state.isRunning &&
-            (state.mode == TimerMode.shortBreak ||
-                state.mode == TimerMode.longBreak)) {
+      } else if (state.quizDue) {
+        // No sobrescribas el estado de la mascota si hay una pausa de cuestionario activa.
+      } else if (state.isRunning && state.mode == TimerMode.pomodoro) {
+        mascot.triggerEstudiando();
+      } else if (state.isRunning &&
+          (state.mode == TimerMode.shortBreak ||
+              state.mode == TimerMode.longBreak)) {
+        mascot.triggerHueva();
+      } else if (state.isPaused) {
+        if (state.isManualPause) {
           mascot.triggerHueva();
-        } else if (state.isPaused) {
-          if (state.isManualPause) {
-            mascot.triggerHueva();
-          } else {
-            mascot.triggerVolver();
-          }
-        } else if (state.isIdle) {
+        } else {
           mascot.triggerVolver();
         }
-      },
-      child: BlocBuilder<TimerCubit, TimerState>(
-        builder: (context, state) {
+      } else if (state.isIdle) {
+        mascot.triggerVolver();
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Consumer<FocusProvider>(
+      builder: (context, focusProvider, child) {
+        final state = focusProvider.state;
+
+
           final statsProvider = context.watch<StatsProvider>();
           final streak = statsProvider.currentStreak;
           final todaysStats = statsProvider.todaysStats;
@@ -165,8 +195,7 @@ class FocusScreen extends StatelessWidget {
             },
           );
         },
-      ),
-    );
+      );
   }
 }
 
@@ -186,7 +215,7 @@ class _DesktopLayout extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final cubit = context.read<TimerCubit>();
+    final focusProvider = context.read<FocusProvider>();
     final settings = context.watch<SettingsProvider>();
 
     final isCentered = state.isRunning || settings.hideFocusCards;
@@ -275,18 +304,18 @@ class _DesktopLayout extends StatelessWidget {
                                       isRunning: state.isRunning,
                                       isPaused: state.isPaused,
                                       onStart:
-                                          () => _handleStart(context, cubit),
-                                      onPause: cubit.pause,
-                                      onResume: cubit.resume,
-                                      onReset: cubit.reset,
-                                      onStop: cubit.stop,
+                                          () => _handleStart(context, focusProvider),
+                                      onPause: focusProvider.pause,
+                                      onResume: focusProvider.resume,
+                                      onReset: focusProvider.reset,
+                                      onStop: focusProvider.stop,
                                     ),
                                     const SizedBox(height: 24),
                                     if (!state.isRunning && !state.isPaused)
                                       ModeSelector(
                                         currentMode: state.mode,
                                         onStart:
-                                            () => _handleStart(context, cubit),
+                                            () => _handleStart(context, focusProvider),
                                       ),
                                   ],
                                 );
@@ -539,7 +568,7 @@ class _MobileLayout extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final cubit = context.read<TimerCubit>();
+    final focusProvider = context.read<FocusProvider>();
     final settings = context.watch<SettingsProvider>();
 
     // Cuando el temporizador está en marcha, usa un diseño Centrado en lugar de desplazamiento
@@ -592,17 +621,17 @@ class _MobileLayout extends StatelessWidget {
               TimerControls(
                 isRunning: state.isRunning,
                 isPaused: state.isPaused,
-                onStart: () => _handleStart(context, cubit),
-                onPause: cubit.pause,
-                onResume: cubit.resume,
-                onReset: cubit.reset,
-                onStop: cubit.stop,
+                onStart: () => _handleStart(context, focusProvider),
+                onPause: focusProvider.pause,
+                onResume: focusProvider.resume,
+                onReset: focusProvider.reset,
+                onStop: focusProvider.stop,
               ),
               const SizedBox(height: 24),
               if (!state.isRunning && !state.isPaused)
                 ModeSelector(
                   currentMode: state.mode,
-                  onStart: () => _handleStart(context, cubit),
+                  onStart: () => _handleStart(context, focusProvider),
                 ),
             ],
           ),
@@ -655,17 +684,17 @@ class _MobileLayout extends StatelessWidget {
                 TimerControls(
                   isRunning: state.isRunning,
                   isPaused: state.isPaused,
-                  onStart: () => _handleStart(context, cubit),
-                  onPause: cubit.pause,
-                  onResume: cubit.resume,
-                  onReset: cubit.reset,
-                  onStop: cubit.stop,
+                  onStart: () => _handleStart(context, focusProvider),
+                  onPause: focusProvider.pause,
+                  onResume: focusProvider.resume,
+                  onReset: focusProvider.reset,
+                  onStop: focusProvider.stop,
                 ),
                 const SizedBox(height: 24),
                 if (!state.isRunning && !state.isPaused)
                   ModeSelector(
                     currentMode: state.mode,
-                    onStart: () => _handleStart(context, cubit),
+                    onStart: () => _handleStart(context, focusProvider),
                   ),
                 if (!state.isRunning && !settings.hideFocusCards) ...[
                   const SizedBox(height: 40),
@@ -683,7 +712,7 @@ class _MobileLayout extends StatelessWidget {
   }
 }
 
-void _handleStart(BuildContext context, TimerCubit cubit) {
+void _handleStart(BuildContext context, FocusProvider focusProvider) {
   final settings = context.read<SettingsProvider>();
   final isStrictMode = Platform.isAndroid && settings.strictMode;
 
@@ -692,11 +721,11 @@ void _handleStart(BuildContext context, TimerCubit cubit) {
     builder: (ctx) => const TaskSelectionDialog(),
   ).then((result) {
     if (result == 'NO_TASK') {
-      cubit.start(isStrictMode: isStrictMode);
+      focusProvider.start(isStrictMode: isStrictMode);
     } else if (result != null && result is Map) {
       final taskId = result['id'] as String;
       final taskTitle = result['title'] as String;
-      cubit.start(
+      focusProvider.start(
         taskId: taskId,
         taskTitle: taskTitle,
         isStrictMode: isStrictMode,

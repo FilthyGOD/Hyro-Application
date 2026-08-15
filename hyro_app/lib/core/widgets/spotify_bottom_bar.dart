@@ -1,10 +1,10 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 
-import '../../core/theme/app_typography.dart';
-import '../../core/services/spotify/spotify_auth_service.dart';
-import '../../core/services/spotify/spotify_player_service.dart';
-import '../../core/providers/ui_provider.dart';
+import '../theme/app_typography.dart';
+import '../services/spotify/spotify_auth_service.dart';
+import '../services/spotify/spotify_player_service.dart';
+import '../providers/ui_provider.dart';
 import 'package:provider/provider.dart';
 
 class SpotifyBottomBar extends StatefulWidget {

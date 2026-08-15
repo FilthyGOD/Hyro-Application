@@ -1,21 +1,21 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
+
 import 'package:provider/provider.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
-import '../../core/providers/ui_provider.dart';
-import 'bloc/timer_cubit.dart';
-import 'bloc/timer_state.dart';
-import 'widgets/circular_timer.dart';
-import 'widgets/timer_controls.dart';
+import '../../../core/providers/ui_provider.dart';
+import '../providers/focus_provider.dart';
+import '../providers/focus_state.dart';
+import '../widgets/circular_timer.dart';
+import '../widgets/timer_controls.dart';
 
 class MiniFocusScreen extends StatelessWidget {
   const MiniFocusScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final cubit = context.read<TimerCubit>();
-    final state = context.watch<TimerCubit>().state;
+    final focusProvider = context.read<FocusProvider>();
+    final state = context.watch<FocusProvider>().state;
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -79,12 +79,12 @@ class MiniFocusScreen extends StatelessWidget {
                     isRunning: state.isRunning,
                     isPaused: state.isPaused,
                     buttonSizeMultiplier: 0.8,
-                    onStart: cubit.start,
-                    onPause: cubit.pause,
-                    onResume: cubit.resume,
-                    onReset: cubit.reset,
+                    onStart: focusProvider.start,
+                    onPause: focusProvider.pause,
+                    onResume: focusProvider.resume,
+                    onReset: focusProvider.reset,
                     onStop: () {
-                      cubit.stop();
+                      focusProvider.stop();
                       context.read<UiProvider>().setMiniMode(false);
                     },
                   ),

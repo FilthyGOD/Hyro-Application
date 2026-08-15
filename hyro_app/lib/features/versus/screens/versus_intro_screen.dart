@@ -1,16 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../core/theme/app_colors.dart';
-import '../../core/theme/app_typography.dart';
-import 'providers/versus_provider.dart';
-import '../profile/providers/profile_provider.dart';
-import '../auth/providers/auth_provider.dart';
-import '../../features/tasks/tasks_provider.dart';
-import '../../data/models/task_model.dart';
-import '../friends/widgets/static_mascot_widget.dart';
-import 'models/versus_models.dart';
+import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_typography.dart';
+import '../providers/versus_provider.dart';
+import '../../profile/providers/profile_provider.dart';
+import '../../auth/providers/auth_provider.dart';
+import '../../../features/tasks/tasks_provider.dart';
+import '../../../data/models/task_model.dart';
+import '../../friends/widgets/static_mascot_widget.dart';
+import '../models/versus_models.dart';
 import 'versus_combat_screen.dart';
-import 'widgets/task_selector_sheet.dart';
+import '../widgets/task_selector_sheet.dart';
 
 /// Pantalla épica de introducción al combate (Versus Intro / Pantalla VS).
 /// Muestra al jugador local arriba, al oponente abajo, y un emblema animado "VS" al centro.

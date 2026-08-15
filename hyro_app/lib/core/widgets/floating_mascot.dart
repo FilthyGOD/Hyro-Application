@@ -2,8 +2,8 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:rive/rive.dart' hide Animation;
-import '../../core/theme/app_colors.dart';
-import '../../core/utils/responsive.dart';
+import '../theme/app_colors.dart';
+import '../utils/responsive.dart';
 import '../../features/mascot/mascot_controller.dart';
 
 /// Burbuja de mascota flotante y arrastrable que sigue al usuario en todas las pantallas.

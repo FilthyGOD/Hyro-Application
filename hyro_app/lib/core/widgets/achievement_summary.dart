@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import '../../core/theme/app_colors.dart';
-import '../../core/theme/app_typography.dart';
+import '../theme/app_colors.dart';
+import '../theme/app_typography.dart';
 import 'glass_card.dart';
 import 'package:provider/provider.dart';
 import '../../features/profile/providers/profile_provider.dart';

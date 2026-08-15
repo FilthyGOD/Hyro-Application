@@ -1,11 +1,11 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../core/theme/app_colors.dart';
-import '../../core/theme/app_typography.dart';
-import '../auth/providers/auth_provider.dart';
-import 'providers/friends_provider.dart';
-import 'models/friends_models.dart';
+import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_typography.dart';
+import '../../auth/providers/auth_provider.dart';
+import '../providers/friends_provider.dart';
+import '../models/friends_models.dart';
 import 'user_profile_preview_screen.dart';
 
 /// Pantalla dedicada de búsqueda de amigos estilo Duolingo.

@@ -60,7 +60,7 @@ class _PremiumShopScreenState extends State<PremiumShopScreen> {
                 ),
               ),
               const SizedBox(height: 32),
-              _buildSectionTitle('Días de racha'),
+              _buildSectionTitle('Consumibles'),
               _buildStoreCard(
                 child: Consumer<ShopProvider>(
                   builder: (context, shop, child) {
@@ -88,9 +88,7 @@ class _PremiumShopScreenState extends State<PremiumShopScreen> {
                 ),
               ),
               const SizedBox(height: 32),
-              _buildSectionTitle('HyroCoins'),
-              _buildGemsSection(),
-              const SizedBox(height: 32),
+
               _buildConsumiblesSection(),
               const SizedBox(height: 32),
               _buildSectionTitle('Energía'),
@@ -120,6 +118,9 @@ class _PremiumShopScreenState extends State<PremiumShopScreen> {
                   ],
                 ),
               ),
+              const SizedBox(height: 32),
+              _buildSectionTitle('HyroCoins'),
+              _buildGemsSection(),
               const SizedBox(height: 32),
               _buildSectionTitle('Código promocional'),
               _buildStoreCard(
@@ -511,18 +512,29 @@ class _PremiumShopScreenState extends State<PremiumShopScreen> {
   }
 
   Widget _buildGemsSection() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    return Column(
       children: [
-        _buildGemCard(1200, '\$119.00'),
-        const SizedBox(width: 12),
-        _buildGemCard(3000, '\$235.00'),
-        const SizedBox(width: 12),
-        _buildGemCard(6500, '\$469.00'),
-        const SizedBox(width: 12),
-        _buildGemCard(6500, '\$469.00'),
-        const SizedBox(width: 12),
-        _buildGemCard(6500, '\$469.00'),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            _buildGemCard(100, '\$9.00'),
+            const SizedBox(width: 12),
+            _buildGemCard(550, '\$45.00'),
+            const SizedBox(width: 12),
+            _buildGemCard(1200, '\$89.00'),
+          ],
+        ),
+        const SizedBox(height: 12),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            _buildGemCard(2500, '\$179.00'),
+            const SizedBox(width: 12),
+            _buildGemCard(5200, '\$359.00'),
+            const SizedBox(width: 12),
+            _buildGemCard(14500, '\$899.00'),
+          ],
+        ),
       ],
     );
   }

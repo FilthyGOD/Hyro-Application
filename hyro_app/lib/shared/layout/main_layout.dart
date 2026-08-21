@@ -195,7 +195,6 @@ class _MainLayoutState extends State<MainLayout> {
               },
             ),
           ),
-
         ],
       ),
       bottomNavigationBar:
@@ -209,49 +208,61 @@ class _MainLayoutState extends State<MainLayout> {
                 child: BottomNavigationBar(
                   backgroundColor: AppColors.surface,
                   type: BottomNavigationBarType.fixed,
-                  currentIndex: widget.selectedIndex < 6 ? widget.selectedIndex : 5,
+                  currentIndex:
+                      widget.selectedIndex < 6 ? widget.selectedIndex : 5,
                   selectedItemColor: AppColors.primary,
                   unselectedItemColor: AppColors.textSecondary,
-                  selectedFontSize: 11,
-                  unselectedFontSize: 11,
-                  showUnselectedLabels: true,
+                  showSelectedLabels: false,
+                  showUnselectedLabels: false,
                   onTap: (index) {
                     widget.onNavigate(index);
                   },
-                  items: const [
+                  items: [
                     BottomNavigationBarItem(
-                      icon: Icon(Icons.storefront_outlined),
-                      activeIcon: Icon(Icons.storefront),
+                      icon: const Icon(Icons.storefront_outlined),
+                      activeIcon: _buildActiveIcon(Icons.storefront),
                       label: 'Tienda',
                     ),
                     BottomNavigationBarItem(
-                      icon: Icon(Icons.emoji_events_outlined),
-                      activeIcon: Icon(Icons.emoji_events),
+                      icon: const Icon(Icons.emoji_events_outlined),
+                      activeIcon: _buildActiveIcon(Icons.emoji_events),
                       label: 'Desafíos',
                     ),
                     BottomNavigationBarItem(
-                      icon: Icon(Icons.timer_outlined),
-                      activeIcon: Icon(Icons.timer),
+                      icon: const Icon(Icons.timer_outlined),
+                      activeIcon: _buildActiveIcon(Icons.timer),
                       label: 'Enfoque',
                     ),
                     BottomNavigationBarItem(
-                      icon: Icon(Icons.check_circle_outline),
-                      activeIcon: Icon(Icons.check_circle),
+                      icon: const Icon(Icons.check_circle_outline),
+                      activeIcon: _buildActiveIcon(Icons.check_circle),
                       label: 'Tareas',
                     ),
                     BottomNavigationBarItem(
-                      icon: Icon(Icons.people_outline_rounded),
-                      activeIcon: Icon(Icons.people_rounded),
+                      icon: const Icon(Icons.people_outline_rounded),
+                      activeIcon: _buildActiveIcon(Icons.people_rounded),
                       label: 'Amigos',
                     ),
                     BottomNavigationBarItem(
-                      icon: Icon(Icons.person_outline),
-                      activeIcon: Icon(Icons.person),
+                      icon: const Icon(Icons.person_outline),
+                      activeIcon: _buildActiveIcon(Icons.person),
                       label: 'Perfil',
                     ),
                   ],
                 ),
               ),
+    );
+  }
+
+  Widget _buildActiveIcon(IconData icon) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 15),
+      decoration: BoxDecoration(
+        color: AppColors.primary.withValues(alpha: 0.15),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.primary, width: 1.5),
+      ),
+      child: Icon(icon),
     );
   }
 

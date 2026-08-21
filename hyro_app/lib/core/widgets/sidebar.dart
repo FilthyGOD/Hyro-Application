@@ -135,12 +135,20 @@ class Sidebar extends StatelessWidget {
               ),
             ),
             child: Row(
-              mainAxisAlignment: collapsed ? MainAxisAlignment.center : MainAxisAlignment.start,
+              mainAxisAlignment:
+                  collapsed
+                      ? MainAxisAlignment.center
+                      : MainAxisAlignment.start,
               children: [
                 CircleAvatar(
                   radius: collapsed ? 14 : 16,
                   backgroundColor: AppColors.primary,
-                  child: Text(initial, style: AppTypography.labelLarge.copyWith(fontSize: collapsed ? 12 : 14)),
+                  child: Text(
+                    initial,
+                    style: AppTypography.labelLarge.copyWith(
+                      fontSize: collapsed ? 12 : 14,
+                    ),
+                  ),
                 ),
                 if (!collapsed) ...[
                   const SizedBox(width: 10),
@@ -153,7 +161,9 @@ class Sidebar extends StatelessWidget {
                           userName,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: AppTypography.labelLarge.copyWith(fontSize: 13),
+                          style: AppTypography.labelLarge.copyWith(
+                            fontSize: 13,
+                          ),
                         ),
                       ],
                     ),

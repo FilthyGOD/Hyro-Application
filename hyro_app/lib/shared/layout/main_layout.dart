@@ -200,55 +200,70 @@ class _MainLayoutState extends State<MainLayout> {
       bottomNavigationBar:
           isTimerRunning
               ? null
-              : Theme(
-                data: Theme.of(context).copyWith(
-                  splashColor: Colors.transparent,
-                  highlightColor: Colors.transparent,
+              : Container(
+                decoration: BoxDecoration(
+                  border: Border(
+                    top: BorderSide(
+                      color: const Color.fromARGB(
+                        255,
+                        30,
+                        38,
+                        64,
+                      ).withValues(alpha: 1),
+                      width: 4.0,
+                    ),
+                  ),
                 ),
-                child: BottomNavigationBar(
-                  backgroundColor: AppColors.surface,
-                  type: BottomNavigationBarType.fixed,
-                  currentIndex:
-                      widget.selectedIndex < 6 ? widget.selectedIndex : 5,
-                  selectedItemColor: AppColors.primary,
-                  unselectedItemColor: AppColors.textSecondary,
-                  showSelectedLabels: false,
-                  showUnselectedLabels: false,
-                  onTap: (index) {
-                    widget.onNavigate(index);
-                  },
-                  items: [
-                    BottomNavigationBarItem(
-                      icon: const Icon(Icons.storefront_outlined),
-                      activeIcon: _buildActiveIcon(Icons.storefront),
-                      label: 'Tienda',
-                    ),
-                    BottomNavigationBarItem(
-                      icon: const Icon(Icons.emoji_events_outlined),
-                      activeIcon: _buildActiveIcon(Icons.emoji_events),
-                      label: 'Desafíos',
-                    ),
-                    BottomNavigationBarItem(
-                      icon: const Icon(Icons.timer_outlined),
-                      activeIcon: _buildActiveIcon(Icons.timer),
-                      label: 'Enfoque',
-                    ),
-                    BottomNavigationBarItem(
-                      icon: const Icon(Icons.check_circle_outline),
-                      activeIcon: _buildActiveIcon(Icons.check_circle),
-                      label: 'Tareas',
-                    ),
-                    BottomNavigationBarItem(
-                      icon: const Icon(Icons.people_outline_rounded),
-                      activeIcon: _buildActiveIcon(Icons.people_rounded),
-                      label: 'Amigos',
-                    ),
-                    BottomNavigationBarItem(
-                      icon: const Icon(Icons.person_outline),
-                      activeIcon: _buildActiveIcon(Icons.person),
-                      label: 'Perfil',
-                    ),
-                  ],
+                child: Theme(
+                  data: Theme.of(context).copyWith(
+                    splashColor: Colors.transparent,
+                    highlightColor: Colors.transparent,
+                  ),
+                  child: BottomNavigationBar(
+                    backgroundColor: AppColors.surface,
+                    type: BottomNavigationBarType.fixed,
+                    currentIndex:
+                        widget.selectedIndex < 6 ? widget.selectedIndex : 5,
+                    selectedItemColor: AppColors.primary,
+                    unselectedItemColor: AppColors.textSecondary,
+                    showSelectedLabels: false,
+                    showUnselectedLabels: false,
+                    onTap: (index) {
+                      widget.onNavigate(index);
+                    },
+                    items: [
+                      BottomNavigationBarItem(
+                        icon: const Icon(Icons.storefront_outlined),
+                        activeIcon: _buildActiveIcon(Icons.storefront),
+                        label: 'Tienda',
+                      ),
+                      BottomNavigationBarItem(
+                        icon: const Icon(Icons.emoji_events_outlined),
+                        activeIcon: _buildActiveIcon(Icons.emoji_events),
+                        label: 'Desafíos',
+                      ),
+                      BottomNavigationBarItem(
+                        icon: const Icon(Icons.timer_outlined),
+                        activeIcon: _buildActiveIcon(Icons.timer),
+                        label: 'Enfoque',
+                      ),
+                      BottomNavigationBarItem(
+                        icon: const Icon(Icons.check_circle_outline),
+                        activeIcon: _buildActiveIcon(Icons.check_circle),
+                        label: 'Tareas',
+                      ),
+                      BottomNavigationBarItem(
+                        icon: const Icon(Icons.people_outline_rounded),
+                        activeIcon: _buildActiveIcon(Icons.people_rounded),
+                        label: 'Amigos',
+                      ),
+                      BottomNavigationBarItem(
+                        icon: const Icon(Icons.person_outline),
+                        activeIcon: _buildActiveIcon(Icons.person),
+                        label: 'Perfil',
+                      ),
+                    ],
+                  ),
                 ),
               ),
     );
@@ -256,7 +271,7 @@ class _MainLayoutState extends State<MainLayout> {
 
   Widget _buildActiveIcon(IconData icon) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 15),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
       decoration: BoxDecoration(
         color: AppColors.primary.withValues(alpha: 0.15),
         borderRadius: BorderRadius.circular(12),

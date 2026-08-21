@@ -75,12 +75,6 @@ class _FriendsScreenState extends State<FriendsScreen> {
                   // ── Header ──
                   _buildHeader(context),
                   const SizedBox(height: 8),
-                  Text(
-                    'Conecta con tus amigos y estudien juntos',
-                    style: AppTypography.bodySmall.copyWith(
-                      color: AppColors.textSecondary,
-                    ),
-                  ),
                   const SizedBox(height: 16),
 
                   // Buzón de regalos pendientes

@@ -103,12 +103,6 @@ class _StatsScreenState extends State<StatsScreen> {
                             isMobile ? TextAlign.center : TextAlign.start,
                       ),
                       const SizedBox(height: 8),
-                      Text(
-                        'Supera tus metas y desbloquea logros',
-                        style: AppTypography.bodyMedium,
-                        textAlign:
-                            isMobile ? TextAlign.center : TextAlign.start,
-                      ),
                     ],
                   );
                 },
@@ -280,8 +274,6 @@ class _StatsScreenState extends State<StatsScreen> {
       ),
     );
   }
-
-
 
   // ── Daily Missions Section ──
   Widget _buildDailyMissionsSection(BuildContext context) {
@@ -497,5 +489,3 @@ class _AchievementCard extends StatelessWidget {
     );
   }
 }
-
-

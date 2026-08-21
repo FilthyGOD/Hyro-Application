@@ -68,19 +68,20 @@ class _TasksScreenState extends State<TasksScreen> {
 
           final content = SingleChildScrollView(
             child: Padding(
-              padding: isLargeScreen
-                  ? const EdgeInsets.only(
-                      left: 72,
-                      top: 32,
-                      right: 32,
-                      bottom: 32,
-                    )
-                  : EdgeInsets.only(
-                      top: MediaQuery.of(context).padding.top + 72,
-                      bottom: 32,
-                      left: 24,
-                      right: 24,
-                    ),
+              padding:
+                  isLargeScreen
+                      ? const EdgeInsets.only(
+                        left: 72,
+                        top: 32,
+                        right: 32,
+                        bottom: 32,
+                      )
+                      : EdgeInsets.only(
+                        top: MediaQuery.of(context).padding.top + 72,
+                        bottom: 32,
+                        left: 24,
+                        right: 24,
+                      ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -163,15 +164,7 @@ class _TasksScreenState extends State<TasksScreen> {
               FittedBox(
                 fit: BoxFit.scaleDown,
                 alignment: isMobile ? Alignment.center : Alignment.centerLeft,
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      '$formattedDate • Racha de Enfoque: $streak días ',
-                      style: AppTypography.bodySmall,
-                    ),
-                    if (streak > 0)
-                      const Text('🔥', style: TextStyle(fontSize: 14)),
+                child: Row(mainAxisSize: MainAxisSize.min, children: [
                   ],
                 ),
               ),
@@ -220,9 +213,10 @@ class _TasksScreenState extends State<TasksScreen> {
         if (isLargeScreen) {
           final maxVisible = 6;
           final hasMore = categories.length > maxVisible;
-          final visibleCategories = (_showAllCategoriesDesktop || !hasMore)
-              ? categories
-              : categories.take(maxVisible).toList();
+          final visibleCategories =
+              (_showAllCategoriesDesktop || !hasMore)
+                  ? categories
+                  : categories.take(maxVisible).toList();
 
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -230,36 +224,38 @@ class _TasksScreenState extends State<TasksScreen> {
               Wrap(
                 spacing: 16,
                 runSpacing: 16,
-                children: visibleCategories.map((cat) {
-                  final tasks = taskProvider.tasks.where(
-                    (t) => t.category == cat.name || t.categoryId == cat.id,
-                  );
-                  final pending = tasks.where((t) => !t.isCompleted).length;
-                  final total = tasks.length;
+                children:
+                    visibleCategories.map((cat) {
+                      final tasks = taskProvider.tasks.where(
+                        (t) => t.category == cat.name || t.categoryId == cat.id,
+                      );
+                      final pending = tasks.where((t) => !t.isCompleted).length;
+                      final total = tasks.length;
 
-                  final isSelected =
-                      _selectedCategoryName == cat.name ||
-                      (_selectedCategoryName == null && cat == categories.first);
+                      final isSelected =
+                          _selectedCategoryName == cat.name ||
+                          (_selectedCategoryName == null &&
+                              cat == categories.first);
 
-                  return GestureDetector(
-                    onTap: () {
-                      setState(() {
-                        _selectedCategoryName = cat.name;
-                      });
-                    },
-                    child: Opacity(
-                      opacity: isSelected ? 1.0 : 0.5,
-                      child: SizedBox(
-                        width: 160,
-                        child: _CategoryCard(
-                          category: cat,
-                          pending: pending,
-                          total: total,
+                      return GestureDetector(
+                        onTap: () {
+                          setState(() {
+                            _selectedCategoryName = cat.name;
+                          });
+                        },
+                        child: Opacity(
+                          opacity: isSelected ? 1.0 : 0.5,
+                          child: SizedBox(
+                            width: 160,
+                            child: _CategoryCard(
+                              category: cat,
+                              pending: pending,
+                              total: total,
+                            ),
+                          ),
                         ),
-                      ),
-                    ),
-                  );
-                }).toList(),
+                      );
+                    }).toList(),
               ),
               if (hasMore) ...[
                 const SizedBox(height: 16),
@@ -270,15 +266,19 @@ class _TasksScreenState extends State<TasksScreen> {
                     });
                   },
                   icon: Icon(
-                    _showAllCategoriesDesktop ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
+                    _showAllCategoriesDesktop
+                        ? Icons.keyboard_arrow_up
+                        : Icons.keyboard_arrow_down,
                     color: AppColors.primary,
                   ),
                   label: Text(
                     _showAllCategoriesDesktop ? 'Mostrar menos' : 'Mostrar más',
-                    style: AppTypography.bodySmall.copyWith(color: AppColors.primary),
+                    style: AppTypography.bodySmall.copyWith(
+                      color: AppColors.primary,
+                    ),
                   ),
                 ),
-              ]
+              ],
             ],
           );
         }
@@ -706,7 +706,9 @@ class _TasksScreenState extends State<TasksScreen> {
                           ),
                           child: Text(
                             showAllColors ? 'Mostrar menos' : 'Mostrar más',
-                            style: AppTypography.bodySmall.copyWith(color: AppColors.primary),
+                            style: AppTypography.bodySmall.copyWith(
+                              color: AppColors.primary,
+                            ),
                           ),
                         ),
                       const SizedBox(height: 20),
@@ -716,7 +718,9 @@ class _TasksScreenState extends State<TasksScreen> {
                         spacing: 12,
                         runSpacing: 12,
                         children:
-                            (showAllIcons ? icons : icons.take(8)).map((iconCode) {
+                            (showAllIcons ? icons : icons.take(8)).map((
+                              iconCode,
+                            ) {
                               final isSelected = selectedIcon == iconCode;
                               return GestureDetector(
                                 onTap:
@@ -771,7 +775,9 @@ class _TasksScreenState extends State<TasksScreen> {
                           ),
                           child: Text(
                             showAllIcons ? 'Mostrar menos' : 'Mostrar más',
-                            style: AppTypography.bodySmall.copyWith(color: AppColors.primary),
+                            style: AppTypography.bodySmall.copyWith(
+                              color: AppColors.primary,
+                            ),
                           ),
                         ),
                     ],
@@ -799,7 +805,10 @@ class _TasksScreenState extends State<TasksScreen> {
                     Navigator.pop(ctx);
                   },
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 24,
+                      vertical: 12,
+                    ),
                     decoration: BoxDecoration(
                       gradient: const LinearGradient(
                         colors: [
@@ -1016,7 +1025,10 @@ class _TasksScreenState extends State<TasksScreen> {
                     Navigator.pop(ctx);
                   },
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 24,
+                      vertical: 12,
+                    ),
                     decoration: BoxDecoration(
                       gradient: const LinearGradient(
                         colors: [
@@ -1211,7 +1223,10 @@ class _CategoryCard extends StatelessWidget {
                 backgroundColor: const Color(0xFFEF4444),
               ),
               onPressed: () {
-                context.read<TaskProvider>().deleteTasksByCategory(category.id, category.name);
+                context.read<TaskProvider>().deleteTasksByCategory(
+                  category.id,
+                  category.name,
+                );
                 context.read<CategoryProvider>().deleteCategory(category.id);
                 Navigator.pop(ctx);
               },

@@ -245,7 +245,7 @@ class _ShopScreenState extends State<ShopScreen>
             ],
           ),
           const SizedBox(height: 4),
-          Text('Personaliza a tu mascota', style: AppTypography.bodyMedium),
+
           const SizedBox(height: 24),
 
           // ── Mascot Preview ──
@@ -320,8 +320,7 @@ class _ShopScreenState extends State<ShopScreen>
               ),
             ),
           const SizedBox(height: 24),
-          if (!shop.isLoading)
-            _buildConsumiblesSection(shop),
+          if (!shop.isLoading) _buildConsumiblesSection(shop),
           const SizedBox(height: 80),
         ],
       ),
@@ -354,7 +353,8 @@ class _ShopScreenState extends State<ShopScreen>
                         width: 100,
                         height: 135, // Forzar misma altura siempre
                         padding: const EdgeInsets.symmetric(
-                          vertical: 12, // Reduce un poco el padding vertical para acomodar la altura fija
+                          vertical:
+                              12, // Reduce un poco el padding vertical para acomodar la altura fija
                           horizontal: 8,
                         ),
                         decoration: BoxDecoration(
@@ -377,14 +377,14 @@ class _ShopScreenState extends State<ShopScreen>
                           children: [
                             item.imageAsset != null
                                 ? Image.asset(
-                                    item.imageAsset!,
-                                    height: 48,
-                                    fit: BoxFit.contain,
-                                  )
+                                  item.imageAsset!,
+                                  height: 48,
+                                  fit: BoxFit.contain,
+                                )
                                 : Text(
-                                    item.id == nadaId ? '❌' : item.icon,
-                                    style: const TextStyle(fontSize: 36),
-                                  ),
+                                  item.id == nadaId ? '❌' : item.icon,
+                                  style: const TextStyle(fontSize: 36),
+                                ),
                             const SizedBox(height: 8),
                             Expanded(
                               child: Text(
@@ -497,7 +497,13 @@ class _ShopScreenState extends State<ShopScreen>
       child: ElevatedButton.icon(
         onPressed: onPressed,
         icon: Icon(icon, size: 20, color: Colors.white),
-        label: Text(label, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
+        label: Text(
+          label,
+          style: const TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
         style: ElevatedButton.styleFrom(
           backgroundColor: AppColors.primary,
           padding: const EdgeInsets.symmetric(vertical: 14),
@@ -526,10 +532,7 @@ class _ShopScreenState extends State<ShopScreen>
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text(
-                  item.icon,
-                  style: const TextStyle(fontSize: 48),
-                ),
+                Text(item.icon, style: const TextStyle(fontSize: 48)),
                 const SizedBox(height: 12),
                 Text(
                   item.nombre,
@@ -608,9 +611,10 @@ class _ShopScreenState extends State<ShopScreen>
               );
             }
 
-            final friends = snapshot.data!
-                .where((f) => f['usuario_id'] != currentUserId)
-                .toList();
+            final friends =
+                snapshot.data!
+                    .where((f) => f['usuario_id'] != currentUserId)
+                    .toList();
 
             if (friends.isEmpty) {
               return SizedBox(
@@ -635,10 +639,7 @@ class _ShopScreenState extends State<ShopScreen>
                 children: [
                   Padding(
                     padding: const EdgeInsets.fromLTRB(24, 20, 24, 10),
-                    child: Text(
-                      'Regalar a...',
-                      style: AppTypography.h3,
-                    ),
+                    child: Text('Regalar a...', style: AppTypography.h3),
                   ),
                   Flexible(
                     child: ListView.builder(
@@ -647,16 +648,22 @@ class _ShopScreenState extends State<ShopScreen>
                       itemBuilder: (context, index) {
                         final friend = friends[index];
                         final friendId = friend['usuario_id'] as String;
-                        final friendName = friend['nombre_usuario'] as String? ?? 'Usuario';
+                        final friendName =
+                            friend['nombre_usuario'] as String? ?? 'Usuario';
 
                         return ListTile(
                           leading: CircleAvatar(
                             backgroundColor: AppColors.surfaceLight,
-                            child: const Icon(Icons.person, color: AppColors.primary),
+                            child: const Icon(
+                              Icons.person,
+                              color: AppColors.primary,
+                            ),
                           ),
                           title: Text(
                             friendName,
-                            style: const TextStyle(color: AppColors.textPrimary),
+                            style: const TextStyle(
+                              color: AppColors.textPrimary,
+                            ),
                           ),
                           trailing: ElevatedButton(
                             style: ElevatedButton.styleFrom(
@@ -669,7 +676,10 @@ class _ShopScreenState extends State<ShopScreen>
                               Navigator.of(sheetContext).pop();
                               _confirmAndSendGift(friendId, friendName, item);
                             },
-                            child: const Text('Enviar', style: TextStyle(color: Colors.white)),
+                            child: const Text(
+                              'Enviar',
+                              style: TextStyle(color: Colors.white),
+                            ),
                           ),
                         );
                       },
@@ -684,7 +694,11 @@ class _ShopScreenState extends State<ShopScreen>
     );
   }
 
-  void _confirmAndSendGift(String friendId, String friendName, ShopItem item) async {
+  void _confirmAndSendGift(
+    String friendId,
+    String friendName,
+    ShopItem item,
+  ) async {
     final auth = context.read<AuthProvider>();
     final profile = context.read<ProfileProvider>();
     final currentUserId = auth.supabaseUserId;
@@ -703,7 +717,10 @@ class _ShopScreenState extends State<ShopScreen>
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (context) => const Center(child: CircularProgressIndicator(color: AppColors.primary)),
+      builder:
+          (context) => const Center(
+            child: CircularProgressIndicator(color: AppColors.primary),
+          ),
     );
 
     try {
@@ -748,91 +765,86 @@ class _ShopScreenState extends State<ShopScreen>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'Consumibles',
-            style: AppTypography.h2.copyWith(fontSize: 20),
-          ),
+          Text('Consumibles', style: AppTypography.h2.copyWith(fontSize: 20)),
           const SizedBox(height: 16),
           Wrap(
             spacing: 12,
             runSpacing: 12,
             alignment: WrapAlignment.center,
-            children: items.map((item) {
-              final quantityOwned = shop.ownedQuantities[item.id] ?? 0;
+            children:
+                items.map((item) {
+                  final quantityOwned = shop.ownedQuantities[item.id] ?? 0;
 
-              return GestureDetector(
-                onTap: () => _showObjectActionSheet(item.id),
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 200),
-                  width: 105,
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: AppColors.surfaceLight.withValues(alpha: 0.4),
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(
-                      color: AppColors.cardBorder.withValues(alpha: 0.2),
-                      width: 1.5,
-                    ),
-                  ),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        item.icon,
-                        style: const TextStyle(fontSize: 32),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        item.nombre,
-                        style: AppTypography.bodySmall.copyWith(
-                          color: AppColors.textPrimary,
-                          fontSize: 11,
-                          fontWeight: FontWeight.w600,
+                  return GestureDetector(
+                    onTap: () => _showObjectActionSheet(item.id),
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 200),
+                      width: 105,
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: AppColors.surfaceLight.withValues(alpha: 0.4),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(
+                          color: AppColors.cardBorder.withValues(alpha: 0.2),
+                          width: 1.5,
                         ),
-                        textAlign: TextAlign.center,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
                       ),
-                      const SizedBox(height: 4),
-                      
-                      // Mostrar cantidad de cada cosa que ya se posee
-                      if (quantityOwned > 0) ...[
-                        Text(
-                          'Posees: $quantityOwned',
-                          style: AppTypography.bodySmall.copyWith(
-                            color: AppColors.timerColor,
-                            fontSize: 10,
-                            fontWeight: FontWeight.w600,
-                          ),
-                          textAlign: TextAlign.center,
-                        ),
-                        const SizedBox(height: 4),
-                      ],
-
-                      Row(
+                      child: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          const Icon(
-                            Icons.monetization_on,
-                            color: Colors.amber,
-                            size: 12,
-                          ),
-                          const SizedBox(width: 2),
+                          Text(item.icon, style: const TextStyle(fontSize: 32)),
+                          const SizedBox(height: 8),
                           Text(
-                            '${item.precio}',
+                            item.nombre,
                             style: AppTypography.bodySmall.copyWith(
-                              color: Colors.amber,
-                              fontSize: 10,
+                              color: AppColors.textPrimary,
+                              fontSize: 11,
                               fontWeight: FontWeight.w600,
                             ),
+                            textAlign: TextAlign.center,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          const SizedBox(height: 4),
+
+                          // Mostrar cantidad de cada cosa que ya se posee
+                          if (quantityOwned > 0) ...[
+                            Text(
+                              'Posees: $quantityOwned',
+                              style: AppTypography.bodySmall.copyWith(
+                                color: AppColors.timerColor,
+                                fontSize: 10,
+                                fontWeight: FontWeight.w600,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                            const SizedBox(height: 4),
+                          ],
+
+                          Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(
+                                Icons.monetization_on,
+                                color: Colors.amber,
+                                size: 12,
+                              ),
+                              const SizedBox(width: 2),
+                              Text(
+                                '${item.precio}',
+                                style: AppTypography.bodySmall.copyWith(
+                                  color: Colors.amber,
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
                           ),
                         ],
                       ),
-                    ],
-                  ),
-                ),
-              );
-            }).toList(),
+                    ),
+                  );
+                }).toList(),
           ),
         ],
       ),

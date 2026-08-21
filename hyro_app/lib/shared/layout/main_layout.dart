@@ -210,7 +210,7 @@ class _MainLayoutState extends State<MainLayout> {
                         38,
                         64,
                       ).withValues(alpha: 1),
-                      width: 4.0,
+                      width: 3.0,
                     ),
                   ),
                 ),

@@ -29,7 +29,18 @@ class MobileStatsBar extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          // ── Racha ──
+          // ── Protectores (Shield) ──
+          _StatChip(
+            onTap: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const PremiumShopScreen()),
+              );
+            },
+            icon: const Text('🛡️', style: TextStyle(fontSize: 26)),
+            value: '${profile.protectoresRachaActivos}',
+          ),
+          const SizedBox(width: 16),
+          // ── Racha (Fire) ──
           _StatChip(
             onTap: () {
               Navigator.of(context).push(
@@ -38,16 +49,16 @@ class MobileStatsBar extends StatelessWidget {
             },
             icon:
                 profile.rachaActual > 0
-                    ? const Text('🔥', style: TextStyle(fontSize: 18))
+                    ? const Text('🔥', style: TextStyle(fontSize: 26))
                     : Icon(
                       Icons.local_fire_department_outlined,
                       color: AppColors.textSecondary,
-                      size: 20,
+                      size: 28,
                     ),
             value: '${profile.rachaActual}',
           ),
-          const SizedBox(width: 12),
-          // ── Monedas ──
+          const SizedBox(width: 16),
+          // ── Monedas (Coin) ──
           _StatChip(
             onTap: () {
               Navigator.of(context).push(
@@ -57,23 +68,12 @@ class MobileStatsBar extends StatelessWidget {
             icon: const Icon(
               Icons.monetization_on,
               color: Colors.amber,
-              size: 20,
+              size: 28,
             ),
             value: _formatNumber(profile.monedas),
           ),
-          const SizedBox(width: 12),
-          // ── Protectores ──
-          _StatChip(
-            onTap: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(builder: (_) => const PremiumShopScreen()),
-              );
-            },
-            icon: const Text('🛡️', style: TextStyle(fontSize: 18)),
-            value: '${profile.protectoresRachaActivos}',
-          ),
-          const SizedBox(width: 12),
-          // ── XP Doble ──
+          const SizedBox(width: 16),
+          // ── XP Doble (Potion) ──
           Row(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -85,7 +85,7 @@ class MobileStatsBar extends StatelessWidget {
                     ),
                   );
                 },
-                icon: const Text('🧪', style: TextStyle(fontSize: 18)),
+                icon: const Text('🧪', style: TextStyle(fontSize: 26)),
                 value: '${profile.sesionesXPDobleRestantes}',
               ),
               if (trailing != null) ...[const SizedBox(width: 8), trailing!],
@@ -125,7 +125,7 @@ class _StatChip extends StatelessWidget {
             Text(
               value,
               style: AppTypography.labelLarge.copyWith(
-                fontSize: 15,
+                fontSize: 18,
                 fontWeight: FontWeight.w700,
                 color: Colors.white,
               ),

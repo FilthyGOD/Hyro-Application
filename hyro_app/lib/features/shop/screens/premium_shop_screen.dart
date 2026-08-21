@@ -61,20 +61,33 @@ class _PremiumShopScreenState extends State<PremiumShopScreen> {
               const SizedBox(height: 32),
               _buildSectionTitle('Días de racha'),
               _buildStoreCard(
-                child: _buildListItem(
-                  iconColor: const Color(0xFF3CDCF8),
-                  icon: Icons.ac_unit_rounded, // Snowflake for freeze
-                  title: 'Protector de racha',
-                  subtitle:
-                      'Protege tu racha si no practicas por un día. Equipa hasta 2 a la vez.',
-                  isEquipped: true,
-                  equippedText: '1 / 2 EQUIPADO',
-                  price: 10,
-                  onAction: () {},
+                child: Consumer<ShopProvider>(
+                  builder: (context, shop, child) {
+                    final quantity = shop.ownedQuantities[401] ?? 0;
+                    // Try to get item from catalog for real price, fallback to 10
+                    final item =
+                        shop.catalog.where((i) => i.id == 401).firstOrNull;
+                    final price = item?.precio ?? 10;
+
+                    return _buildListItem(
+                      iconColor: const Color(0xFF3CDCF8),
+                      customIcon: const Text(
+                        '🛡️',
+                        style: TextStyle(fontSize: 32),
+                      ),
+                      title: item?.nombre ?? 'Protector de racha',
+                      subtitle:
+                          'Protege tu racha si no practicas por un día. Equipa hasta 2 a la vez.',
+                      isEquipped: quantity > 0,
+                      equippedText: '$quantity / 2 EQUIPADO',
+                      price: price,
+                      onAction: () => _showObjectActionSheet(401),
+                    );
+                  },
                 ),
               ),
               const SizedBox(height: 32),
-              _buildSectionTitle('Gemas'),
+              _buildSectionTitle('Monedas'),
               _buildGemsSection(),
               const SizedBox(height: 32),
               _buildConsumiblesSection(),
@@ -389,7 +402,8 @@ class _PremiumShopScreenState extends State<PremiumShopScreen> {
 
   Widget _buildListItem({
     required Color iconColor,
-    required IconData icon,
+    IconData? icon,
+    Widget? customIcon,
     required String title,
     required String subtitle,
     String? actionText,
@@ -411,7 +425,13 @@ class _PremiumShopScreenState extends State<PremiumShopScreen> {
               color: iconColor.withValues(alpha: 0.2),
               borderRadius: BorderRadius.circular(16),
             ),
-            child: Icon(icon, color: iconColor, size: 36),
+            child: Center(
+              child:
+                  customIcon ??
+                  (icon != null
+                      ? Icon(icon, color: iconColor, size: 36)
+                      : const SizedBox()),
+            ),
           ),
           const SizedBox(width: 16),
           Expanded(
@@ -541,7 +561,9 @@ class _PremiumShopScreenState extends State<PremiumShopScreen> {
 
   Widget _buildConsumiblesSection() {
     final shop = context.watch<ShopProvider>();
-    final items = shop.itemsByCategory('Objeto');
+    // Exclude item 401 (Protector de racha) because it's now at the top
+    final items =
+        shop.itemsByCategory('Objeto').where((item) => item.id != 401).toList();
 
     if (items.isEmpty) {
       return const SizedBox.shrink(); // No items found

@@ -52,7 +52,7 @@ class _PremiumShopScreenState extends State<PremiumShopScreen> {
                       iconColor: const Color(0xFFFFB020),
                       icon: Icons.ondemand_video_rounded,
                       title: 'Cofre gratis',
-                      subtitle: 'Ve un anuncio y gana hasta 15 gemas',
+                      subtitle: 'Ve un anuncio y gana hasta 10 HyroCoins',
                       actionText: '▶ OBTENER',
                       onAction: () {},
                     ),

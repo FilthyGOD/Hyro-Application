@@ -8,6 +8,7 @@ import '../../profile/providers/profile_provider.dart';
 import '../../auth/providers/auth_provider.dart';
 import '../../friends/services/friends_service.dart';
 import '../models/shop_item.dart';
+import '../../../core/widgets/animated_background.dart';
 
 class PremiumShopScreen extends StatefulWidget {
   const PremiumShopScreen({super.key});
@@ -68,7 +69,7 @@ class _PremiumShopScreenState extends State<PremiumShopScreen> {
                       'Protege tu racha si no practicas por un día. Equipa hasta 2 a la vez.',
                   isEquipped: true,
                   equippedText: '1 / 2 EQUIPADO',
-                  price: 200,
+                  price: 10,
                   onAction: () {},
                 ),
               ),
@@ -184,72 +185,168 @@ class _PremiumShopScreenState extends State<PremiumShopScreen> {
     return Container(
       width: double.infinity,
       margin: const EdgeInsets.only(top: 16),
-      padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(24),
-        gradient: const LinearGradient(
-          colors: [Color(0xFF281461), Color(0xFF5A2EBA), Color(0xFF1E5CCB)],
-          begin: Alignment.bottomRight,
-          end: Alignment.topLeft,
-        ),
+        border: Border.all(color: Colors.white.withAlpha(20), width: 1.5),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: const Text(
-              'SUPER',
-              style: TextStyle(
-                color: Color(0xFF5A2EBA),
-                fontWeight: FontWeight.w900,
-                fontStyle: FontStyle.italic,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(22.5),
+        child: Stack(
+          children: [
+            const Positioned.fill(child: AnimatedBackground()),
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 24),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  // ── Gradient Heart with Infinity ──
+                  Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      // White border
+                      const Icon(
+                        Icons.favorite_rounded,
+                        size: 104,
+                        color: Colors.white,
+                      ),
+                      // Gradient fill
+                      ShaderMask(
+                        shaderCallback:
+                            (bounds) => const LinearGradient(
+                              colors: [
+                                Color(0xFF88D3FF),
+                                Color(0xFFFFB2E6),
+                                Color(0xFFFFD18C),
+                              ],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ).createShader(bounds),
+                        child: const Icon(
+                          Icons.favorite_rounded,
+                          size: 96,
+                          color: Colors.white,
+                        ),
+                      ),
+                      // Infinity icon
+                      const Icon(
+                        Icons.all_inclusive_rounded,
+                        size: 48,
+                        color: Colors.white,
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 32),
+
+                  // ── Gradient Title ──
+                  RichText(
+                    textAlign: TextAlign.center,
+                    text: TextSpan(
+                      style: const TextStyle(
+                        fontSize: 26,
+                        fontWeight: FontWeight.w900,
+                        color: Colors.white,
+                        height: 1.3,
+                      ),
+                      children: [
+                        const TextSpan(text: 'Pase '),
+                        WidgetSpan(
+                          alignment: PlaceholderAlignment.middle,
+                          child: ShaderMask(
+                            shaderCallback:
+                                (bounds) => const LinearGradient(
+                                  colors: [
+                                    Color.fromARGB(255, 255, 140, 222),
+                                    Color.fromARGB(255, 22, 103, 135),
+                                  ],
+                                ).createShader(bounds),
+                            child: const Text(
+                              'Fundador',
+                              style: TextStyle(
+                                fontSize: 26,
+                                fontWeight: FontWeight.w900,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
+                        ),
+                        const TextSpan(text: '\ncon Hyro'),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+
+                  // ── Subtitle ──
+                  const Text(
+                    'Únete a los primeros en dominar su tiempo. Desbloquea recompensas exclusivas y congela este precio de por vida.',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      color: Colors.white70,
+                      fontSize: 16,
+                      height: 1.4,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  const SizedBox(height: 40),
+
+                  // ── Subscription Button with Gradient Border ──
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(3), // gradient border width
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(20),
+                      gradient: const LinearGradient(
+                        colors: [
+                          Color(0xFF88D3FF),
+                          Color.fromARGB(255, 220, 178, 255),
+                          Color.fromARGB(255, 255, 140, 222),
+                        ],
+                        begin: Alignment.centerLeft,
+                        end: Alignment.centerRight,
+                      ),
+                    ),
+                    child: InkWell(
+                      onTap: () {},
+                      borderRadius: BorderRadius.circular(17),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 24,
+                          vertical: 20,
+                        ),
+                        decoration: BoxDecoration(
+                          color: const Color(
+                            0xFF101422,
+                          ), // Inner background color
+                          borderRadius: BorderRadius.circular(17),
+                        ),
+                        child: const Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              'Mensual',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            Text(
+                              '\$49.00 / MES',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
-          ),
-          const SizedBox(height: 16),
-          const Text(
-            'Funcionalida-\ndes para\nacelerar tu\naprendizaje',
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 26,
-              fontWeight: FontWeight.bold,
-              height: 1.2,
-            ),
-          ),
-          const SizedBox(height: 12),
-          const Text(
-            'Obtén energía ilimitada y dile\nadiós a los anuncios',
-            style: TextStyle(color: Colors.white70, fontSize: 15, height: 1.4),
-          ),
-          const SizedBox(height: 24),
-          SizedBox(
-            width: double.infinity,
-            height: 52,
-            child: ElevatedButton(
-              onPressed: () {},
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.white,
-                foregroundColor: Colors.black,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
-                ),
-              ),
-              child: const Text(
-                'PRUEBA 1 SEMANA GRATIS',
-                style: TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w900,
-                  letterSpacing: 0.5,
-                ),
-              ),
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

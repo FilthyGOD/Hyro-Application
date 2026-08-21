@@ -75,23 +75,23 @@ class HyroApp extends StatelessWidget {
         ),
       ],
       child: MaterialApp(
-          title: 'Hyro',
-          debugShowCheckedModeBanner: false,
-          theme: AppTheme.darkTheme,
-          home: Consumer<AuthProvider>(
-            builder: (context, auth, _) {
-              if (auth.isLoading) {
-                return const SplashScreen();
-              }
-              if (auth.isGuest) {
-                return const WelcomeScreen();
-              }
-              // Solo los usuarios logueados o que hayan pasado el tutorial entrarán al shell
-              return AppShell(key: appShellKey, authProvider: auth);
-            },
-          ),
+        title: 'Hyro',
+        debugShowCheckedModeBanner: false,
+        theme: AppTheme.darkTheme,
+        home: Consumer<AuthProvider>(
+          builder: (context, auth, _) {
+            if (auth.isLoading) {
+              return const SplashScreen();
+            }
+            if (auth.isGuest) {
+              return const WelcomeScreen();
+            }
+            // Solo los usuarios logueados o que hayan pasado el tutorial entrarán al shell
+            return AppShell(key: appShellKey, authProvider: auth);
+          },
         ),
-      );
+      ),
+    );
   }
 }
 
@@ -378,15 +378,7 @@ class AppShellState extends State<AppShell>
     });
 
     if (index != 6) {
-      if (!Responsive.isMobile(context)) {
-        _pageController.jumpToPage(index);
-      } else {
-        _pageController.animateToPage(
-          index,
-          duration: const Duration(milliseconds: 300),
-          curve: Curves.easeInOut,
-        );
-      }
+      _pageController.jumpToPage(index);
     }
 
     if (previousIndex == index) return;
@@ -433,13 +425,7 @@ class AppShellState extends State<AppShell>
             children: [
               PageView(
                 controller: _pageController,
-                physics:
-                    (Platform.isWindows ||
-                            Platform.isMacOS ||
-                            Platform.isLinux ||
-                            context.watch<FocusProvider>().state.isRunning)
-                        ? const NeverScrollableScrollPhysics() // Bloquea el swipe en PC o si el timer corre
-                        : const BouncingScrollPhysics(),
+                physics: const NeverScrollableScrollPhysics(),
                 onPageChanged: (index) {
                   final previousIndex = _selectedIndex;
                   if (index != _selectedIndex) {
@@ -488,7 +474,9 @@ class AppShellState extends State<AppShell>
 
             final isQuizActive = timerState.quizDue;
             final isVisible =
-                (_selectedIndex == 2 || _selectedIndex == 3 || _selectedIndex == 4) &&
+                (_selectedIndex == 2 ||
+                    _selectedIndex == 3 ||
+                    _selectedIndex == 4) &&
                 !isPomodoroFinished &&
                 !isQuizActive;
             return FloatingMascot(visible: isVisible);

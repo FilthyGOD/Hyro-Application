@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:provider/provider.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
@@ -87,7 +88,7 @@ class _PremiumShopScreenState extends State<PremiumShopScreen> {
                 ),
               ),
               const SizedBox(height: 32),
-              _buildSectionTitle('Monedas'),
+              _buildSectionTitle('HyroCoins'),
               _buildGemsSection(),
               const SizedBox(height: 32),
               _buildConsumiblesSection(),
@@ -164,10 +165,10 @@ class _PremiumShopScreenState extends State<PremiumShopScreen> {
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Icon(
-                    Icons.monetization_on,
-                    color: Colors.amber,
-                    size: 22,
+                  SvgPicture.asset(
+                    'assets/images/HyroCoins.svg',
+                    width: 22,
+                    height: 22,
                   ),
                   const SizedBox(width: 6),
                   Text(
@@ -470,10 +471,10 @@ class _PremiumShopScreenState extends State<PremiumShopScreen> {
                 if (price != null) ...[
                   Row(
                     children: [
-                      const Icon(
-                        Icons.monetization_on,
-                        color: Colors.amber,
-                        size: 18,
+                      SvgPicture.asset(
+                        'assets/images/HyroCoins.svg',
+                        width: 18,
+                        height: 18,
                       ),
                       const SizedBox(width: 4),
                       Text(
@@ -518,6 +519,10 @@ class _PremiumShopScreenState extends State<PremiumShopScreen> {
         _buildGemCard(3000, '\$235.00'),
         const SizedBox(width: 12),
         _buildGemCard(6500, '\$469.00'),
+        const SizedBox(width: 12),
+        _buildGemCard(6500, '\$469.00'),
+        const SizedBox(width: 12),
+        _buildGemCard(6500, '\$469.00'),
       ],
     );
   }
@@ -529,10 +534,10 @@ class _PremiumShopScreenState extends State<PremiumShopScreen> {
           padding: const EdgeInsets.symmetric(vertical: 20.0),
           child: Column(
             children: [
-              const Icon(
-                Icons.monetization_on, // Simulating a chest of gems
-                color: Colors.amber,
-                size: 48,
+              SvgPicture.asset(
+                'assets/images/HyroCoins.svg',
+                width: 48,
+                height: 48,
               ),
               const SizedBox(height: 16),
               Text(
@@ -674,10 +679,10 @@ class _PremiumShopScreenState extends State<PremiumShopScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Icon(
-                  Icons.monetization_on,
-                  color: Colors.amber,
-                  size: 16,
+                SvgPicture.asset(
+                  'assets/images/HyroCoins.svg',
+                  width: 16,
+                  height: 16,
                 ),
                 const SizedBox(width: 4),
                 Text(

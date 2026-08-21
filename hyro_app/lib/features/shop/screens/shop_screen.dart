@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:provider/provider.dart';
 import 'package:rive/rive.dart';
 import '../../../core/theme/app_colors.dart';
@@ -227,10 +228,10 @@ class _ShopScreenState extends State<ShopScreen>
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Icon(
-                      Icons.monetization_on,
-                      color: Colors.amber,
-                      size: 18,
+                    SvgPicture.asset(
+                      'assets/images/HyroCoins.svg',
+                      width: 18,
+                      height: 18,
                     ),
                     const SizedBox(width: 4),
                     Text(
@@ -412,10 +413,10 @@ class _ShopScreenState extends State<ShopScreen>
                               Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  const Icon(
-                                    Icons.monetization_on,
-                                    color: Colors.amber,
-                                    size: 12,
+                                  SvgPicture.asset(
+                                    'assets/images/HyroCoins.svg',
+                                    width: 12,
+                                    height: 12,
                                   ),
                                   const SizedBox(width: 2),
                                   Text(
@@ -823,10 +824,10 @@ class _ShopScreenState extends State<ShopScreen>
                           Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              const Icon(
-                                Icons.monetization_on,
-                                color: Colors.amber,
-                                size: 12,
+                              SvgPicture.asset(
+                                'assets/images/HyroCoins.svg',
+                                width: 12,
+                                height: 12,
                               ),
                               const SizedBox(width: 2),
                               Text(

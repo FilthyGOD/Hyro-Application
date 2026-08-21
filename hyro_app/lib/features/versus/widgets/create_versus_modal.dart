@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:provider/provider.dart';
 import 'package:hive/hive.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -313,10 +314,10 @@ class _CreateVersusModalState extends State<CreateVersusModal> {
                         ),
                         child: Column(
                           children: [
-                            Icon(
-                              Icons.monetization_on_rounded,
-                              color: isSelected ? chipColor : AppColors.textTertiary,
-                              size: 22,
+                            SvgPicture.asset(
+                              'assets/images/HyroCoins.svg',
+                              width: 22,
+                              height: 22,
                             ),
                             const SizedBox(height: 4),
                             Text(

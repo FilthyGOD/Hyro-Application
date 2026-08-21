@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:provider/provider.dart';
 import '../../features/profile/providers/profile_provider.dart';
 import '../theme/app_colors.dart';
@@ -67,10 +68,10 @@ class MobileStatsBar extends StatelessWidget {
                 MaterialPageRoute(builder: (_) => const PremiumShopScreen()),
               );
             },
-            icon: const Icon(
-              Icons.monetization_on,
-              color: Colors.amber,
-              size: 28,
+            icon: SvgPicture.asset(
+              'assets/images/HyroCoins.svg',
+              width: 28,
+              height: 28,
             ),
             value: _formatNumber(profile.monedas),
           ),

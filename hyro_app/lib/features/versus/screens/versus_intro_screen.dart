@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:provider/provider.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
@@ -268,9 +269,10 @@ class _VersusIntroScreenState extends State<VersusIntroScreen>
           backgroundColor: AppColors.surfaceLight,
           content: Row(
             children: [
-              const Icon(
-                Icons.monetization_on_rounded,
-                color: Color(0xFFF59E0B),
+              SvgPicture.asset(
+                'assets/images/HyroCoins.svg',
+                width: 24,
+                height: 24,
               ),
               const SizedBox(width: 10),
               Text(
@@ -458,10 +460,10 @@ class _VersusIntroScreenState extends State<VersusIntroScreen>
                         ),
                         child: Row(
                           children: [
-                            const Icon(
-                              Icons.monetization_on_rounded,
-                              color: Color(0xFFF59E0B),
-                              size: 16,
+                            SvgPicture.asset(
+                              'assets/images/HyroCoins.svg',
+                              width: 16,
+                              height: 16,
                             ),
                             const SizedBox(width: 4),
                             Text(
@@ -955,10 +957,10 @@ class _VersusIntroScreenState extends State<VersusIntroScreen>
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Icon(
-                    Icons.monetization_on_rounded,
-                    color: Color(0xFFF59E0B),
-                    size: 28,
+                  SvgPicture.asset(
+                    'assets/images/HyroCoins.svg',
+                    width: 28,
+                    height: 28,
                   ),
                   const SizedBox(width: 8),
                   Text(

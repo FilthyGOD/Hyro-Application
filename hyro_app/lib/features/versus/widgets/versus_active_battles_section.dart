@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
@@ -340,7 +341,7 @@ class VersusActiveBattlesSection extends StatelessWidget {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          const Icon(Icons.monetization_on_rounded, size: 12, color: Color(0xFFF59E0B)),
+                          SvgPicture.asset('assets/images/HyroCoins.svg', width: 12, height: 12),
                           const SizedBox(width: 3),
                           Text(
                             '${match.betCoins * 2} Monedas',
@@ -394,7 +395,7 @@ class VersusActiveBattlesSection extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Icon(Icons.monetization_on_rounded, color: Color(0xFFF59E0B), size: 32),
+                SvgPicture.asset('assets/images/HyroCoins.svg', width: 32, height: 32),
                 const SizedBox(width: 8),
                 Text(
                   '+$coinsWon Monedas',

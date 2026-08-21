@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:provider/provider.dart';
 import 'package:rive/rive.dart';
 import '../../auth/screens/login_screen.dart';
@@ -180,10 +181,10 @@ class ProfileScreen extends StatelessWidget {
                     ),
                     Row(
                       children: [
-                        const Icon(
-                          Icons.monetization_on,
-                          color: Colors.amber,
-                          size: 20,
+                        SvgPicture.asset(
+                          'assets/images/HyroCoins.svg',
+                          width: 20,
+                          height: 20,
                         ),
                         const SizedBox(width: 4),
                         Text(

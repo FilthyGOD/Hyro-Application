@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:provider/provider.dart';
 import '../../../core/widgets/mobile_stats_bar.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import '../providers/focus_provider.dart';
 import '../providers/focus_state.dart';
 import '../widgets/circular_timer.dart';
@@ -394,10 +395,10 @@ class _DesktopLayout extends StatelessWidget {
                                           child: Row(
                                             mainAxisSize: MainAxisSize.min,
                                             children: [
-                                              const Icon(
-                                                Icons.monetization_on,
-                                                color: Colors.amber,
-                                                size: 18,
+                                              SvgPicture.asset(
+                                                'assets/images/HyroCoins.svg',
+                                                width: 18,
+                                                height: 18,
                                               ),
                                               const SizedBox(width: 6),
                                               Text(

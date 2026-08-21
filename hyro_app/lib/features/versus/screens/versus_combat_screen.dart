@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:provider/provider.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
@@ -745,10 +746,10 @@ class _VersusCombatScreenState extends State<VersusCombatScreen> {
         children: [
           Row(
             children: [
-              const Icon(
-                Icons.monetization_on_rounded,
-                color: Color(0xFFF59E0B),
-                size: 18,
+              SvgPicture.asset(
+                'assets/images/HyroCoins.svg',
+                width: 18,
+                height: 18,
               ),
               const SizedBox(width: 4),
               Text(

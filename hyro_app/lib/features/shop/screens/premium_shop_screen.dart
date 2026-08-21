@@ -61,63 +61,8 @@ class _PremiumShopScreenState extends State<PremiumShopScreen> {
               ),
               const SizedBox(height: 32),
               _buildSectionTitle('Consumibles'),
-              _buildStoreCard(
-                child: Consumer<ShopProvider>(
-                  builder: (context, shop, child) {
-                    final quantity = shop.ownedQuantities[401] ?? 0;
-                    // Try to get item from catalog for real price, fallback to 10
-                    final item =
-                        shop.catalog.where((i) => i.id == 401).firstOrNull;
-                    final price = item?.precio ?? 10;
-
-                    return _buildListItem(
-                      iconColor: const Color(0xFF3CDCF8),
-                      customIcon: const Text(
-                        '🛡️',
-                        style: TextStyle(fontSize: 32),
-                      ),
-                      title: item?.nombre ?? 'Protector de racha',
-                      subtitle:
-                          'Protege tu racha si no practicas por un día. Equipa hasta 2 a la vez.',
-                      isEquipped: quantity > 0,
-                      equippedText: '$quantity / 2 EQUIPADO',
-                      price: price,
-                      onAction: () => _showObjectActionSheet(401),
-                    );
-                  },
-                ),
-              ),
-              const SizedBox(height: 32),
-
               _buildConsumiblesSection(),
-              const SizedBox(height: 32),
-              _buildSectionTitle('Energía'),
-              _buildStoreCard(
-                child: Column(
-                  children: [
-                    _buildListItem(
-                      iconColor: const Color(0xFF3CDCF8),
-                      icon: Icons.all_inclusive_rounded,
-                      title: 'Ilimitada',
-                      subtitle: '¡Con Súper, ya no te quedarás sin energía!',
-                      actionText: 'PRUÉBALO GRATIS',
-                      actionColor: const Color(0xFFCC88FF),
-                      onAction: () {},
-                    ),
-                    _buildDivider(),
-                    _buildListItem(
-                      iconColor: const Color(0xFFFF5280),
-                      icon: Icons.flash_on_rounded,
-                      title: 'Recarga',
-                      subtitle:
-                          'Recarga tu energía al máximo para superar más lecciones',
-                      actionText: 'COMPLETAS',
-                      actionColor: Colors.white38,
-                      onAction: () {},
-                    ),
-                  ],
-                ),
-              ),
+
               const SizedBox(height: 32),
               _buildSectionTitle('HyroCoins'),
               _buildGemsSection(),
@@ -415,98 +360,102 @@ class _PremiumShopScreenState extends State<PremiumShopScreen> {
     int? price,
     required VoidCallback onAction,
   }) {
-    return Padding(
-      padding: const EdgeInsets.all(20.0),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            width: 72,
-            height: 72,
-            decoration: BoxDecoration(
-              color: iconColor.withValues(alpha: 0.2),
-              borderRadius: BorderRadius.circular(16),
+    return GestureDetector(
+      onTap: onAction,
+      behavior: HitTestBehavior.opaque,
+      child: Padding(
+        padding: const EdgeInsets.all(20.0),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              width: 72,
+              height: 72,
+              decoration: BoxDecoration(
+                color: iconColor.withValues(alpha: 0.2),
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Center(
+                child:
+                    customIcon ??
+                    (icon != null
+                        ? Icon(icon, color: iconColor, size: 36)
+                        : const SizedBox()),
+              ),
             ),
-            child: Center(
-              child:
-                  customIcon ??
-                  (icon != null
-                      ? Icon(icon, color: iconColor, size: 36)
-                      : const SizedBox()),
-            ),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  subtitle,
-                  style: const TextStyle(
-                    color: Colors.white60,
-                    fontSize: 14,
-                    height: 1.4,
-                  ),
-                ),
-                const SizedBox(height: 12),
-                if (isEquipped) ...[
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
                   Text(
-                    equippedText ?? '',
+                    title,
                     style: const TextStyle(
-                      color: Color(0xFF22C55E),
-                      fontSize: 14,
+                      color: Colors.white,
+                      fontSize: 18,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-                  const SizedBox(height: 8),
-                ],
-                if (price != null) ...[
-                  Row(
-                    children: [
-                      SvgPicture.asset(
-                        'assets/images/HyroCoins.svg',
-                        width: 18,
-                        height: 18,
-                      ),
-                      const SizedBox(width: 4),
-                      Text(
-                        '$price',
-                        style: const TextStyle(
-                          color: Colors.amber,
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-                if (actionText != null) ...[
-                  GestureDetector(
-                    onTap: onAction,
-                    child: Text(
-                      actionText,
-                      style: TextStyle(
-                        color: actionColor ?? Colors.cyan,
-                        fontSize: 14,
-                        fontWeight: FontWeight.w900,
-                        letterSpacing: 0.5,
-                      ),
+                  const SizedBox(height: 6),
+                  Text(
+                    subtitle,
+                    style: const TextStyle(
+                      color: Colors.white60,
+                      fontSize: 14,
+                      height: 1.4,
                     ),
                   ),
+                  const SizedBox(height: 12),
+                  if (isEquipped) ...[
+                    Text(
+                      equippedText ?? '',
+                      style: const TextStyle(
+                        color: Color(0xFF22C55E),
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                  ],
+                  if (price != null) ...[
+                    Row(
+                      children: [
+                        SvgPicture.asset(
+                          'assets/images/HyroCoins.svg',
+                          width: 18,
+                          height: 18,
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          '$price',
+                          style: const TextStyle(
+                            color: Colors.amber,
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                  if (actionText != null) ...[
+                    GestureDetector(
+                      onTap: onAction,
+                      child: Text(
+                        actionText,
+                        style: TextStyle(
+                          color: actionColor ?? Colors.cyan,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w900,
+                          letterSpacing: 0.5,
+                        ),
+                      ),
+                    ),
+                  ],
                 ],
-              ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -578,67 +527,80 @@ class _PremiumShopScreenState extends State<PremiumShopScreen> {
 
   Widget _buildConsumiblesSection() {
     final shop = context.watch<ShopProvider>();
-    // Exclude item 401 (Protector de racha) because it's now at the top
-    final items =
-        shop.itemsByCategory('Objeto').where((item) => item.id != 401).toList();
+    // Get ALL consumable items including 401
+    final items = shop.itemsByCategory('Objeto').toList();
+    items.sort((a, b) {
+      int getOrder(String name) {
+        if (name.contains('Protector')) return 1;
+        if (name.contains('3 lecciones')) return 2;
+        if (name.contains('6 lecciones')) return 3;
+        return 4;
+      }
+
+      return getOrder(a.nombre).compareTo(getOrder(b.nombre));
+    });
 
     if (items.isEmpty) {
-      return const SizedBox.shrink(); // No items found
+      return const SizedBox.shrink();
     }
 
     return _buildStoreCard(
-      child: Padding(
-        padding: const EdgeInsets.all(20.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Consumibles',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 22,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 20),
-            Wrap(
-              spacing: 12,
-              runSpacing: 12,
-              alignment: WrapAlignment.center,
-              children:
-                  items.map((item) {
-                    final quantityOwned = shop.ownedQuantities[item.id] ?? 0;
+      child: Column(
+        children: [
+          for (int i = 0; i < items.length; i++) ...[
+            Builder(
+              builder: (context) {
+                final item = items[i];
+                final quantityOwned = shop.ownedQuantities[item.id] ?? 0;
 
-                    // Determinamos el color/tamaño de la fuente dependiendo de si es emoji o texto especial
-                    // (Para mantener el estilo de fuente grande de emojis que diseñamos antes)
-                    Widget iconWidget;
-                    if (item.icon.contains('?')) {
-                      iconWidget = Text(
-                        item.icon,
-                        style: const TextStyle(
-                          color: Colors.red,
-                          fontSize: 42,
-                          fontWeight: FontWeight.w900,
-                        ),
-                      );
-                    } else {
-                      iconWidget = Text(
-                        item.icon,
-                        style: const TextStyle(fontSize: 36),
-                      );
-                    }
+                // Build icon widget based on item
+                Widget iconWidget;
+                if (item.id == 401) {
+                  iconWidget = const Text(
+                    '🛡️',
+                    style: TextStyle(fontSize: 32),
+                  );
+                } else if (item.icon.contains('?')) {
+                  iconWidget = Text(
+                    item.icon,
+                    style: const TextStyle(
+                      color: Colors.red,
+                      fontSize: 36,
+                      fontWeight: FontWeight.w900,
+                    ),
+                  );
+                } else {
+                  iconWidget = Text(
+                    item.icon,
+                    style: const TextStyle(fontSize: 32),
+                  );
+                }
 
-                    return _buildConsumibleCard(
-                      iconWidget: iconWidget,
-                      title: item.nombre,
-                      price: item.precio,
-                      quantityOwned: quantityOwned,
-                      onTap: () => _showObjectActionSheet(item.id),
-                    );
-                  }).toList(),
+                // Subtitle for Protector de racha
+                String subtitle;
+                if (item.id == 401) {
+                  subtitle =
+                      'Protege tu racha si no practicas por un día. Equipa hasta 2 a la vez.';
+                } else {
+                  subtitle = item.nombre;
+                }
+
+                return _buildListItem(
+                  iconColor: const Color(0xFF3CDCF8),
+                  customIcon: iconWidget,
+                  title: item.nombre,
+                  subtitle: subtitle,
+                  isEquipped: item.id == 401,
+                  equippedText:
+                      item.id == 401 ? '$quantityOwned / 2 EQUIPADO' : null,
+                  price: item.precio,
+                  onAction: () => _showObjectActionSheet(item.id),
+                );
+              },
             ),
+            if (i < items.length - 1) _buildDivider(),
           ],
-        ),
+        ],
       ),
     );
   }
@@ -718,25 +680,38 @@ class _PremiumShopScreenState extends State<PremiumShopScreen> {
     required IconData icon,
     required VoidCallback onPressed,
   }) {
-    return SizedBox(
+    return Container(
       width: double.infinity,
-      child: ElevatedButton.icon(
-        icon: Icon(icon, color: Colors.white),
-        label: Text(
-          label,
-          style: const TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.w600,
+      height: 54,
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [AppColors.timerColor, Color.fromARGB(255, 17, 63, 163)],
+          begin: Alignment.centerLeft,
+          end: Alignment.centerRight,
+        ),
+        borderRadius: BorderRadius.circular(30),
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(30),
+          onTap: onPressed,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(icon, color: Colors.white, size: 22),
+              const SizedBox(width: 8),
+              Text(
+                label,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
           ),
         ),
-        style: ElevatedButton.styleFrom(
-          backgroundColor: AppColors.primary,
-          padding: const EdgeInsets.symmetric(vertical: 14),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-        ),
-        onPressed: onPressed,
       ),
     );
   }

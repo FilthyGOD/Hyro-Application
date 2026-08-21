@@ -78,6 +78,33 @@ class ShopProvider extends ChangeNotifier {
         catalog = List.from(_defaultCatalog);
       }
 
+      // ─── Sobreescribir precios de consumibles (Local Override) ───
+      for (int i = 0; i < catalog.length; i++) {
+        final item = catalog[i];
+        if (item.id == 401) {
+          catalog[i] = ShopItem(
+            id: item.id,
+            nombre: item.nombre,
+            categoria: item.categoria,
+            precio: 50, // Protector de racha -> 50
+          );
+        } else if (item.nombre.contains('3 lecciones')) {
+          catalog[i] = ShopItem(
+            id: item.id,
+            nombre: item.nombre,
+            categoria: item.categoria,
+            precio: 40, // x2 xp por 3 lecciones -> 40
+          );
+        } else if (item.nombre.contains('6 lecciones')) {
+          catalog[i] = ShopItem(
+            id: item.id,
+            nombre: item.nombre,
+            categoria: item.categoria,
+            precio: 70, // x2 xp por 6 lecciones -> 70
+          );
+        }
+      }
+
       if (userId == null) {
         // Inventario local y monedas
         final activeUser =

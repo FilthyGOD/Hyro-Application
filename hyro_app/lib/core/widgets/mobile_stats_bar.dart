@@ -21,7 +21,7 @@ class MobileStatsBar extends StatelessWidget {
     return Container(
       padding: EdgeInsets.only(
         top: topPadding + 8,
-        bottom: 12,
+        bottom: 20,
         left: 20,
         right: 20,
       ),
@@ -39,7 +39,8 @@ class MobileStatsBar extends StatelessWidget {
             icon: const Text('🛡️', style: TextStyle(fontSize: 26)),
             value: '${profile.protectoresRachaActivos}',
           ),
-          const SizedBox(width: 16),
+          const SizedBox(width: 30),
+
           // ── Racha (Fire) ──
           _StatChip(
             onTap: () {
@@ -57,7 +58,8 @@ class MobileStatsBar extends StatelessWidget {
                     ),
             value: '${profile.rachaActual}',
           ),
-          const SizedBox(width: 16),
+          const SizedBox(width: 30),
+
           // ── Monedas (Coin) ──
           _StatChip(
             onTap: () {
@@ -72,7 +74,8 @@ class MobileStatsBar extends StatelessWidget {
             ),
             value: _formatNumber(profile.monedas),
           ),
-          const SizedBox(width: 16),
+          const SizedBox(width: 30),
+
           // ── XP Doble (Potion) ──
           Row(
             mainAxisSize: MainAxisSize.min,

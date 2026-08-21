@@ -320,7 +320,6 @@ class _ShopScreenState extends State<ShopScreen>
               ),
             ),
           const SizedBox(height: 24),
-          if (!shop.isLoading) _buildConsumiblesSection(shop),
           const SizedBox(height: 80),
         ],
       ),

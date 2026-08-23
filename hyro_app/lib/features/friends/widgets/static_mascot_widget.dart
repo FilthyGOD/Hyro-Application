@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:rive/rive.dart';
 
 // ignore_for_file: deprecated_member_use
@@ -27,7 +28,7 @@ Future<File?> _loadRiveFileOnce() async {
   try {
     _cachedRiveFile = await File.asset(
       'assets/mascot/jairo44.riv',
-      riveFactory: Factory.flutter,
+      riveFactory: kIsWeb ? Factory.rive : Factory.flutter,
     );
   } catch (e) {
     debugPrint('ERROR: No se pudo cargar el archivo Rive para ranking: $e');

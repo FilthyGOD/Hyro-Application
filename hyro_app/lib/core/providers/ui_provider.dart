@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:window_manager/window_manager.dart';
 import 'dart:io';
 
@@ -30,7 +31,7 @@ class UiProvider with ChangeNotifier {
     if (_isMiniMode == mini) return;
     _isMiniMode = mini;
 
-    if (!Platform.isAndroid && !Platform.isIOS) {
+    if (!kIsWeb && !Platform.isAndroid && !Platform.isIOS) {
       if (mini) {
         await windowManager.setAlwaysOnTop(true);
         await windowManager.setResizable(false);

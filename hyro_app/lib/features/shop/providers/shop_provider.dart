@@ -1,14 +1,14 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/shop_item.dart';
 import 'package:hyro/data/models/user_profile.dart';
-import 'package:isar/isar.dart';
 
 /// Administra el catálogo de la tienda, el inventario del usuario y las compras a través de Supabase o Isar.
 class ShopProvider extends ChangeNotifier {
   final _supabase = Supabase.instance.client;
-  final Isar isar;
+  final dynamic isar; // Isar en nativo, null en web
 
   ShopProvider(this.isar);
 
@@ -106,15 +106,17 @@ class ShopProvider extends ChangeNotifier {
       }
 
       if (userId == null) {
-        // Inventario local y monedas
-        final activeUser =
-            await isar.userProfiles
-                .filter()
-                .isActivelyLoggedInEqualTo(true)
-                .findFirst();
-        if (activeUser != null) {
-          ownedItemIds = activeUser.comprasLocales.toSet();
-          ownedQuantities = {for (var id in activeUser.comprasLocales) id: 1};
+        // Inventario local y monedas (solo nativo con Isar)
+        if (!kIsWeb && isar != null) {
+          final activeUser =
+              await isar.userProfiles
+                  .filter()
+                  .isActivelyLoggedInEqualTo(true)
+                  .findFirst();
+          if (activeUser != null) {
+            ownedItemIds = activeUser.comprasLocales.toSet();
+            ownedQuantities = {for (var id in activeUser.comprasLocales) id: 1};
+          }
         }
       } else {
         // Inventario en la nube
@@ -160,7 +162,12 @@ class ShopProvider extends ChangeNotifier {
 
     try {
       if (userId == null) {
-        // Compra local
+        if (kIsWeb || isar == null) {
+          error = 'Inicia sesión para comprar objetos';
+          notifyListeners();
+          return false;
+        }
+        // Compra local (solo nativo)
         final item = catalog.firstWhere((i) => i.id == itemId);
         final activeUser =
             await isar.userProfiles

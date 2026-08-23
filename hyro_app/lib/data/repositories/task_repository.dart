@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import '../local/task_local_ds.dart';
 import '../remote/task_remote_ds.dart';
 import '../models/task_model.dart';
@@ -6,9 +7,8 @@ import '../local/category_local_ds.dart';
 
 /// Repositorio que abstrae las operaciones locales y remotas de tareas.
 ///
-/// - Siempre escribe en local (Hive) primero.
-/// - Si el usuario est\u00e1 autenticado, tambi\u00e9n escribe en Supabase.
-/// - Las lecturas siempre vienen de local (offline-first).
+/// - En nativo: siempre escribe en local (Hive) primero, luego Supabase.
+/// - En web: lee/escribe directo a Supabase.
 class TaskRepository {
   final TaskLocalDataSource _local;
   final TaskRemoteDataSource _remote;
@@ -25,7 +25,7 @@ class TaskRepository {
         _isAuthenticated = isAuthenticated,
         _getUserId = getUserId;
 
-  /// Obtiene todas las tareas desde el almacenamiento local.
+  /// Obtiene todas las tareas.
   List<TaskModel> getTasks() {
     return _local.getAllTasks();
   }
@@ -60,7 +60,7 @@ class TaskRepository {
   /// Add a new task — local first, then remote if authenticated.
   Future<void> addTask(TaskModel task) async {
     await _local.putTask(task);
-    if (_isAuthenticated()) {
+    if (_isAuthenticated() || kIsWeb) {
       try {
         final userId = _getUserId();
         if (userId != null) {
@@ -75,7 +75,7 @@ class TaskRepository {
   /// Update a task — local first, then remote if authenticated.
   Future<void> updateTask(TaskModel task) async {
     await _local.putTask(task);
-    if (_isAuthenticated()) {
+    if (_isAuthenticated() || kIsWeb) {
       try {
         final userId = _getUserId();
         if (userId != null) {
@@ -90,7 +90,7 @@ class TaskRepository {
   /// Delete a task — local first, then remote if authenticated.
   Future<void> deleteTask(String id) async {
     await _local.deleteTask(id);
-    if (_isAuthenticated()) {
+    if (_isAuthenticated() || kIsWeb) {
       try {
         await _remote.deleteTask(id);
       } catch (e) {

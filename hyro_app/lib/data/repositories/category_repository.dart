@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import '../local/category_local_ds.dart';
 import '../remote/category_remote_ds.dart';
 import '../models/category_model.dart';
@@ -20,7 +21,7 @@ class CategoryRepository {
         _isAuthenticated = isAuthenticated,
         _getUserId = getUserId;
 
-  /// Obtiene todas las categor\u00edas desde el almacenamiento local.
+  /// Obtiene todas las categorías desde el almacenamiento local.
   List<CategoryModel> getCategories() {
     return _local.getAllCategories();
   }
@@ -49,7 +50,7 @@ class CategoryRepository {
   /// Add a new category — local first, then remote if authenticated.
   Future<void> addCategory(CategoryModel category) async {
     await _local.putCategory(category);
-    if (_isAuthenticated()) {
+    if (_isAuthenticated() || kIsWeb) {
       try {
         final userId = _getUserId();
         if (userId != null) {
@@ -64,7 +65,7 @@ class CategoryRepository {
   /// Update a category — local first, then remote if authenticated.
   Future<void> updateCategory(CategoryModel category) async {
     await _local.putCategory(category);
-    if (_isAuthenticated()) {
+    if (_isAuthenticated() || kIsWeb) {
       try {
         final userId = _getUserId();
         if (userId != null) {
@@ -79,7 +80,7 @@ class CategoryRepository {
   /// Delete a category — local first, then remote if authenticated.
   Future<void> deleteCategory(String id) async {
     await _local.deleteCategory(id);
-    if (_isAuthenticated()) {
+    if (_isAuthenticated() || kIsWeb) {
       try {
         await _remote.deleteCategory(id);
       } catch (e) {

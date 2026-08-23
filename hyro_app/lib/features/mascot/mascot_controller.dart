@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:math';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:rive/rive.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -92,7 +93,7 @@ class MascotController extends ChangeNotifier {
   Future<void> _loadRiveFile() async {
     final file = await File.asset(
       'assets/mascot/jairo44.riv',
-      riveFactory: Factory.flutter,
+      riveFactory: kIsWeb ? Factory.rive : Factory.flutter,
     );
 
     if (file == null) {

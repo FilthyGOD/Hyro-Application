@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:hive_flutter/hive_flutter.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:rive/rive.dart';
 import 'app.dart';
+
+// Importaciones condicionales — solo se usan en nativo
+import 'package:hive_flutter/hive_flutter.dart';
 import 'data/models/task_model.dart';
 import 'data/models/daily_stats.dart';
 import 'data/models/category_model.dart';
@@ -10,114 +12,17 @@ import 'data/models/subtask_model.dart';
 import 'data/models/tarea_nota_model.dart';
 import 'data/models/tarea_fuente_model.dart';
 import 'data/models/tarea_card_model.dart';
-import 'package:isar/isar.dart';
-import 'package:path_provider/path_provider.dart';
 import 'data/models/user_profile.dart';
-import 'package:window_manager/window_manager.dart';
-import 'dart:io';
-import 'package:windows_single_instance/windows_single_instance.dart'; // <-- Vuelve el salvador
-import 'core/services/notifications_service.dart';
-// ignore: unused_import
+
+// Importación condicional de paquetes nativos
+// En web no se importan dart:io ni paquetes nativos
+import 'main_native.dart' if (dart.library.html) 'main_web.dart' as platform_main;
 
 void main(List<String> args) async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Inicializar notificaciones y solicitar permisos
-  await NotificationsService.instance.init();
-  await NotificationsService.instance.requestPermissions();
-
-  // ─── REGISTRAR PROTOCOLO EN WINDOWS (Para Deep Links) ────────────
-  if (Platform.isWindows) {
-    try {
-      final String executable = Platform.resolvedExecutable;
-      const String scheme = 'io.supabase.hyroapp';
-      Process.runSync('reg', [
-        'add',
-        'HKCU\\Software\\Classes\\$scheme',
-        '/ve',
-        '/d',
-        'URL:$scheme Protocol',
-        '/f',
-      ]);
-      Process.runSync('reg', [
-        'add',
-        'HKCU\\Software\\Classes\\$scheme',
-        '/v',
-        'URL Protocol',
-        '/d',
-        '',
-        '/f',
-      ]);
-      Process.runSync('reg', [
-        'add',
-        'HKCU\\Software\\Classes\\$scheme\\shell\\open\\command',
-        '/ve',
-        '/d',
-        '"$executable" "%1"',
-        '/f',
-      ]);
-      debugPrint('🚨 [Hyro Debug] Protocolo $scheme registrado en Windows.');
-    } catch (e) {
-      debugPrint('🚨 [Hyro Debug] Error registrando protocolo: $e');
-    }
-  }
-
-  // ─── EL CADENERO OFICIAL (PARCHADO PARA NULLS) ───────────────────
-  if (Platform.isWindows) {
-    // Le ponemos "bool?" y "??" para que nunca sea nulo
-    bool? resultadoInstancia = await WindowsSingleInstance.ensureSingleInstance(
-      args,
-      "hyro_app_instancia_unica",
-      onSecondWindow: (List<String> nuevosArgs) async {
-        debugPrint('🚨 [Hyro Debug] onSecondWindow llamado con ${nuevosArgs.length} args');
-        for (var arg in nuevosArgs) {
-          debugPrint('🚨 [Hyro Debug] Arg: $arg');
-        }
-        if (nuevosArgs.isNotEmpty) {
-          final enlace = nuevosArgs.first;
-          debugPrint('🚨 [Hyro Debug] ¡Link robado del clon!: $enlace');
-          try {
-            final response = await Supabase.instance.client.auth.getSessionFromUrl(
-              Uri.parse(enlace),
-            );
-            debugPrint('🚨 [Hyro Debug] getSessionFromUrl exitoso! User: ${response.session?.user.email}');
-          } catch (e) {
-            debugPrint('🚨 [Hyro Debug] Error en Supabase getSessionFromUrl: $e');
-          }
-        } else {
-          debugPrint('🚨 [Hyro Debug] onSecondWindow: sin args');
-        }
-      },
-    );
-
-    // Si es falso (o sea, es el clon), se cierra. Si es nulo, sigue adelante.
-    if (resultadoInstancia == false) {
-      exit(0);
-    }
-  }
-  // ──────────────────────────────────────────────────────────────────
-
-  // Gestión de la ventana en escritorio
-  if (!Platform.isAndroid && !Platform.isIOS) {
-    await windowManager.ensureInitialized();
-    WindowOptions windowOptions = const WindowOptions(
-      size: Size(1280, 800),
-      minimumSize: Size(600, 800),
-      center: true,
-      backgroundColor: Colors.transparent,
-      skipTaskbar: false,
-      titleBarStyle: TitleBarStyle.hidden,
-    );
-    await windowManager.waitUntilReadyToShow(windowOptions, () async {
-      await windowManager.setPreventClose(true);
-      await windowManager.show();
-      await windowManager.focus();
-      await Future.delayed(const Duration(milliseconds: 100));
-      await windowManager.maximize();
-    });
-  }
-
-  await RiveNative.init();
+  // Inicialización específica de plataforma (notificaciones, ventana, single instance, etc.)
+  await platform_main.platformInit(args);
 
   await Supabase.initialize(
     url: 'https://biuytttsqlevvrtbywxt.supabase.co',
@@ -125,24 +30,29 @@ void main(List<String> args) async {
         'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJpdXl0dHRzcWxldnZydGJ5d3h0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI3MzUxODYsImV4cCI6MjA4ODMxMTE4Nn0.HT523GGYw1vUR5Ip0LMcKslNFxQK3nVBoHW8WcOmPw8',
   );
 
-  await Hive.initFlutter();
-  Hive.registerAdapter(TaskModelAdapter());
-  Hive.registerAdapter(SubTaskModelAdapter());
-  Hive.registerAdapter(DailyStatsAdapter());
-  Hive.registerAdapter(CategoryModelAdapter());
-  Hive.registerAdapter(TareaNotaModelAdapter());
-  Hive.registerAdapter(TareaFuenteModelAdapter());
-  Hive.registerAdapter(TareaCardModelAdapter());
+  dynamic isar;
 
-  await Hive.openBox<TaskModel>('tasksBox');
-  await Hive.openBox<DailyStats>('statsBox');
-  await Hive.openBox<CategoryModel>('categoriesBox');
-  await Hive.openBox<TareaNotaModel>('notasBox');
-  await Hive.openBox<TareaFuenteModel>('fuentesBox');
-  await Hive.openBox<TareaCardModel>('cardsBox');
+  if (!kIsWeb) {
+    // ── Hive (solo nativo) ──
+    await Hive.initFlutter();
+    Hive.registerAdapter(TaskModelAdapter());
+    Hive.registerAdapter(SubTaskModelAdapter());
+    Hive.registerAdapter(DailyStatsAdapter());
+    Hive.registerAdapter(CategoryModelAdapter());
+    Hive.registerAdapter(TareaNotaModelAdapter());
+    Hive.registerAdapter(TareaFuenteModelAdapter());
+    Hive.registerAdapter(TareaCardModelAdapter());
 
-  final dir = await getApplicationDocumentsDirectory();
-  final isar = await Isar.open([UserProfileSchema], directory: dir.path);
+    await Hive.openBox<TaskModel>('tasksBox');
+    await Hive.openBox<DailyStats>('statsBox');
+    await Hive.openBox<CategoryModel>('categoriesBox');
+    await Hive.openBox<TareaNotaModel>('notasBox');
+    await Hive.openBox<TareaFuenteModel>('fuentesBox');
+    await Hive.openBox<TareaCardModel>('cardsBox');
+
+    // ── Isar (solo nativo) ──
+    isar = await platform_main.openIsar();
+  }
 
   runApp(HyroApp(isar: isar));
 }

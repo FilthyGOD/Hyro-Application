@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import '../local/note_local_ds.dart';
 import '../remote/note_remote_ds.dart';
 import '../models/tarea_nota_model.dart';

@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:provider/provider.dart';
 import '../../../core/widgets/mobile_stats_bar.dart';
 import 'package:flutter/material.dart';
@@ -62,7 +63,6 @@ class _FocusScreenState extends State<FocusScreen> {
     if (prev.status != curr.status ||
         prev.quizDue != curr.quizDue ||
         prev.strictModeViolationApp != curr.strictModeViolationApp) {
-      
       final mascot = context.read<MascotController>();
       final state = curr;
 
@@ -106,7 +106,9 @@ class _FocusScreenState extends State<FocusScreen> {
             if (task.categoryId != null) {
               try {
                 final categories = context.read<CategoryProvider>().categories;
-                final cat = categories.firstWhere((c) => c.id == task.categoryId);
+                final cat = categories.firstWhere(
+                  (c) => c.id == task.categoryId,
+                );
                 subjectColor = Color(cat.colorValue);
               } catch (_) {
                 subjectColor = Color(task.priorityColorValue);
@@ -119,11 +121,12 @@ class _FocusScreenState extends State<FocusScreen> {
           showDialog(
             context: context,
             barrierDismissible: false,
-            builder: (_) => FocusQuizDialog(
-              flashcards: cards,
-              notas: notes,
-              subjectColor: subjectColor,
-            ),
+            builder:
+                (_) => FocusQuizDialog(
+                  flashcards: cards,
+                  notas: notes,
+                  subjectColor: subjectColor,
+                ),
           ).then((_) {
             mascot.resumeEstudio();
             // solo reanuda si actualmente está pausado
@@ -161,42 +164,41 @@ class _FocusScreenState extends State<FocusScreen> {
       builder: (context, focusProvider, child) {
         final state = focusProvider.state;
 
+        final statsProvider = context.watch<StatsProvider>();
+        final streak = statsProvider.currentStreak;
+        final todaysStats = statsProvider.todaysStats;
+        final sessionsToday = todaysStats?.focusSessions ?? 0;
+        final minutesToday = todaysStats?.focusMinutes ?? 0;
 
-          final statsProvider = context.watch<StatsProvider>();
-          final streak = statsProvider.currentStreak;
-          final todaysStats = statsProvider.todaysStats;
-          final sessionsToday = todaysStats?.focusSessions ?? 0;
-          final minutesToday = todaysStats?.focusMinutes ?? 0;
+        final isPomodoroFinished =
+            state.isFinished &&
+            (state.mode == TimerMode.shortBreak ||
+                state.mode == TimerMode.longBreak);
 
-          final isPomodoroFinished =
-              state.isFinished &&
-              (state.mode == TimerMode.shortBreak ||
-                  state.mode == TimerMode.longBreak);
+        if (isPomodoroFinished) {
+          return CompletedSessionView(streak: streak);
+        }
 
-          if (isPomodoroFinished) {
-            return CompletedSessionView(streak: streak);
-          }
-
-          return LayoutBuilder(
-            builder: (context, constraints) {
-              if (constraints.maxWidth >= 900) {
-                return _DesktopLayout(
-                  state: state,
-                  streak: streak,
-                  sessionsToday: sessionsToday,
-                  minutesToday: minutesToday,
-                );
-              }
-              return _MobileLayout(
+        return LayoutBuilder(
+          builder: (context, constraints) {
+            if (constraints.maxWidth >= 900) {
+              return _DesktopLayout(
                 state: state,
                 streak: streak,
                 sessionsToday: sessionsToday,
                 minutesToday: minutesToday,
               );
-            },
-          );
-        },
-      );
+            }
+            return _MobileLayout(
+              state: state,
+              streak: streak,
+              sessionsToday: sessionsToday,
+              minutesToday: minutesToday,
+            );
+          },
+        );
+      },
+    );
   }
 }
 
@@ -305,7 +307,10 @@ class _DesktopLayout extends StatelessWidget {
                                       isRunning: state.isRunning,
                                       isPaused: state.isPaused,
                                       onStart:
-                                          () => _handleStart(context, focusProvider),
+                                          () => _handleStart(
+                                            context,
+                                            focusProvider,
+                                          ),
                                       onPause: focusProvider.pause,
                                       onResume: focusProvider.resume,
                                       onReset: focusProvider.reset,
@@ -316,7 +321,10 @@ class _DesktopLayout extends StatelessWidget {
                                       ModeSelector(
                                         currentMode: state.mode,
                                         onStart:
-                                            () => _handleStart(context, focusProvider),
+                                            () => _handleStart(
+                                              context,
+                                              focusProvider,
+                                            ),
                                       ),
                                   ],
                                 );
@@ -383,7 +391,11 @@ class _DesktopLayout extends StatelessWidget {
                                       GestureDetector(
                                         onTap: () {
                                           Navigator.of(context).push(
-                                            MaterialPageRoute(builder: (_) => const PremiumShopScreen()),
+                                            MaterialPageRoute(
+                                              builder:
+                                                  (_) =>
+                                                      const PremiumShopScreen(),
+                                            ),
                                           );
                                         },
                                         behavior: HitTestBehavior.opaque,
@@ -406,7 +418,8 @@ class _DesktopLayout extends StatelessWidget {
                                                 style: AppTypography.labelLarge
                                                     .copyWith(
                                                       fontSize: 14,
-                                                      fontWeight: FontWeight.w700,
+                                                      fontWeight:
+                                                          FontWeight.w700,
                                                       color: Colors.white,
                                                     ),
                                               ),
@@ -418,7 +431,11 @@ class _DesktopLayout extends StatelessWidget {
                                       GestureDetector(
                                         onTap: () {
                                           Navigator.of(context).push(
-                                            MaterialPageRoute(builder: (_) => const PremiumShopScreen()),
+                                            MaterialPageRoute(
+                                              builder:
+                                                  (_) =>
+                                                      const PremiumShopScreen(),
+                                            ),
                                           );
                                         },
                                         behavior: HitTestBehavior.opaque,
@@ -440,7 +457,8 @@ class _DesktopLayout extends StatelessWidget {
                                                 style: AppTypography.labelLarge
                                                     .copyWith(
                                                       fontSize: 14,
-                                                      fontWeight: FontWeight.w700,
+                                                      fontWeight:
+                                                          FontWeight.w700,
                                                       color: Colors.white,
                                                     ),
                                               ),
@@ -452,7 +470,11 @@ class _DesktopLayout extends StatelessWidget {
                                       GestureDetector(
                                         onTap: () {
                                           Navigator.of(context).push(
-                                            MaterialPageRoute(builder: (_) => const PremiumShopScreen()),
+                                            MaterialPageRoute(
+                                              builder:
+                                                  (_) =>
+                                                      const PremiumShopScreen(),
+                                            ),
                                           );
                                         },
                                         behavior: HitTestBehavior.opaque,
@@ -474,7 +496,8 @@ class _DesktopLayout extends StatelessWidget {
                                                 style: AppTypography.labelLarge
                                                     .copyWith(
                                                       fontSize: 14,
-                                                      fontWeight: FontWeight.w700,
+                                                      fontWeight:
+                                                          FontWeight.w700,
                                                       color: Colors.white,
                                                     ),
                                               ),
@@ -715,7 +738,7 @@ class _MobileLayout extends StatelessWidget {
 
 void _handleStart(BuildContext context, FocusProvider focusProvider) {
   final settings = context.read<SettingsProvider>();
-  final isStrictMode = Platform.isAndroid && settings.strictMode;
+  final isStrictMode = !kIsWeb && Platform.isAndroid && settings.strictMode;
 
   showDialog<dynamic>(
     context: context,

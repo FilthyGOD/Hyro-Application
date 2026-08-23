@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:window_manager/window_manager.dart';
 import 'dart:io';
 import '../../core/theme/app_colors.dart';
@@ -71,7 +72,7 @@ class _MainLayoutState extends State<MainLayout> {
       key: _scaffoldKey,
       body: Column(
         children: [
-          if (Platform.isWindows || Platform.isMacOS || Platform.isLinux)
+          if (!kIsWeb && (Platform.isWindows || Platform.isMacOS || Platform.isLinux))
             const CustomTitleBar(),
           Expanded(
             child: LayoutBuilder(

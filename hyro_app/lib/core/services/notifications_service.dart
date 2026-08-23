@@ -1,5 +1,6 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/data/latest_all.dart' as tz;
 import 'package:permission_handler/permission_handler.dart';
@@ -149,6 +150,7 @@ class NotificationsService {
   }
 
   Future<void> requestPermissions() async {
+    if (kIsWeb) return;
     if (Platform.isAndroid) {
       await [
         Permission.notification,

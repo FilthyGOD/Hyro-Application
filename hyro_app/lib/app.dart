@@ -32,11 +32,12 @@ import 'core/utils/responsive.dart';
 import 'core/services/notifications_service.dart';
 import 'package:window_manager/window_manager.dart';
 import 'package:tray_manager/tray_manager.dart';
+import 'core/utils/platform_utils_web.dart';
 import 'dart:io';
 
 /// Widget raíz para la aplicación Hyro.
 class HyroApp extends StatelessWidget {
-  final Isar isar;
+  final Isar? isar;
   const HyroApp({super.key, required this.isar});
 
   @override
@@ -121,7 +122,7 @@ class AppShellState extends State<AppShell>
     _lastUserId = widget.authProvider.supabaseUserId;
     _lastIsGuest = widget.authProvider.isGuest;
     WidgetsBinding.instance.addObserver(this);
-    if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
+    if (PlatformUtils.isDesktop) {
       windowManager.addListener(this);
       trayManager.addListener(this);
       _initTray();
@@ -131,7 +132,7 @@ class AppShellState extends State<AppShell>
   Future<void> _initTray() async {
     try {
       await trayManager.setIcon(
-        Platform.isWindows
+        PlatformUtils.isWindows
             ? 'assets/images/app_icon.ico'
             : 'assets/images/app_icon.png',
       );
@@ -226,7 +227,7 @@ class AppShellState extends State<AppShell>
   void dispose() {
     _pageController.dispose();
     WidgetsBinding.instance.removeObserver(this);
-    if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
+    if (PlatformUtils.isDesktop) {
       windowManager.removeListener(this);
       trayManager.removeListener(this);
     }
@@ -235,7 +236,7 @@ class AppShellState extends State<AppShell>
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
+    if (PlatformUtils.isDesktop) {
       // No pausar automáticamente en escritorio, permite minimizar a la bandeja del sistema y mantener el temporizador.
       return;
     }

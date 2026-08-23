@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:hive_flutter/hive_flutter.dart';
 import '../../data/models/daily_stats.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -8,7 +9,7 @@ class StatsProvider extends ChangeNotifier {
   final StatsRepository _repository;
 
   StatsProvider()
-    : _repository = StatsRepository(Hive.box<DailyStats>('statsBox'));
+    : _repository = StatsRepository(kIsWeb ? null : Hive.box<DailyStats>('statsBox'));
 
   int get currentStreak => _repository.getCurrentStreak();
   double get totalFocusHours => _repository.getTotalFocusHours();

@@ -124,10 +124,13 @@ class _TaskDetailsDialogState extends State<TaskDetailsDialog>
         // Prevenir migración duplicada
         if (!_fuentes.any((f) => f.rutaArchivo == url)) {
           final uri = Uri.tryParse(url);
-          final originalName = uri?.pathSegments.last.split('_').skip(1).join('_') ?? 'Documento';
-          final ext = originalName.contains('.')
-              ? originalName.split('.').last.toLowerCase()
-              : null;
+          final originalName =
+              uri?.pathSegments.last.split('_').skip(1).join('_') ??
+              'Documento';
+          final ext =
+              originalName.contains('.')
+                  ? originalName.split('.').last.toLowerCase()
+                  : null;
 
           final fuente = TareaFuenteModel(
             id: const Uuid().v4(),
@@ -180,22 +183,34 @@ class _TaskDetailsDialogState extends State<TaskDetailsDialog>
     try {
       final result = await FilePicker.platform.pickFiles(
         type: FileType.custom,
-        allowedExtensions: ['pdf', 'doc', 'docx', 'txt', 'ppt', 'pptx', 'xls', 'xlsx'],
+        allowedExtensions: [
+          'pdf',
+          'doc',
+          'docx',
+          'txt',
+          'ppt',
+          'pptx',
+          'xls',
+          'xlsx',
+        ],
       );
       if (result != null && result.files.single.path != null) {
         setState(() => _isUploadingDocument = true);
 
         final file = File(result.files.single.path!);
         final originalName = result.files.single.name;
-        final sanitizedName =
-            originalName.replaceAll(RegExp(r'[^a-zA-Z0-9.\-]'), '_');
+        final sanitizedName = originalName.replaceAll(
+          RegExp(r'[^a-zA-Z0-9.\-]'),
+          '_',
+        );
         final fuenteId = const Uuid().v4();
         final storageName = '${fuenteId}_$sanitizedName';
 
         // Determinar extensión de archivo para tipo_archivo
-        final ext = originalName.contains('.')
-            ? originalName.split('.').last.toLowerCase()
-            : null;
+        final ext =
+            originalName.contains('.')
+                ? originalName.split('.').last.toLowerCase()
+                : null;
 
         // Comprobar si el usuario está autenticado — subir al bucket
         final auth = context.read<AuthProvider>();
@@ -236,8 +251,7 @@ class _TaskDetailsDialogState extends State<TaskDetailsDialog>
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(
-                'Error al subir documento: $e'),
+            content: Text('Error al subir documento: $e'),
             backgroundColor: Colors.redAccent,
           ),
         );
@@ -313,7 +327,9 @@ class _TaskDetailsDialogState extends State<TaskDetailsDialog>
             child: TextField(
               controller: controller,
               maxLines: null,
-              style: AppTypography.bodyMedium.copyWith(color: AppColors.textPrimary),
+              style: AppTypography.bodyMedium.copyWith(
+                color: AppColors.textPrimary,
+              ),
               decoration: InputDecoration(
                 filled: true,
                 fillColor: AppColors.surfaceLight,
@@ -327,7 +343,12 @@ class _TaskDetailsDialogState extends State<TaskDetailsDialog>
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: Text('Cancelar', style: AppTypography.bodyMedium.copyWith(color: AppColors.textTertiary)),
+              child: Text(
+                'Cancelar',
+                style: AppTypography.bodyMedium.copyWith(
+                  color: AppColors.textTertiary,
+                ),
+              ),
             ),
             TextButton(
               onPressed: () {
@@ -342,7 +363,12 @@ class _TaskDetailsDialogState extends State<TaskDetailsDialog>
                 }
                 Navigator.pop(context);
               },
-              child: Text('Guardar', style: AppTypography.labelLarge.copyWith(color: AppColors.primary)),
+              child: Text(
+                'Guardar',
+                style: AppTypography.labelLarge.copyWith(
+                  color: AppColors.primary,
+                ),
+              ),
             ),
           ],
         );
@@ -382,27 +408,38 @@ class _TaskDetailsDialogState extends State<TaskDetailsDialog>
   void _confirmRemoveFlashcard(int index) {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: AppColors.surface,
-        title: Text('Eliminar card', style: AppTypography.labelLarge),
-        content: Text(
-          '¿Estás seguro de que deseas eliminar esta card?',
-          style: AppTypography.bodyMedium,
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text('Cancelar', style: AppTypography.bodyMedium.copyWith(color: AppColors.textTertiary)),
+      builder:
+          (context) => AlertDialog(
+            backgroundColor: AppColors.surface,
+            title: Text('Eliminar card', style: AppTypography.labelLarge),
+            content: Text(
+              '¿Estás seguro de que deseas eliminar esta card?',
+              style: AppTypography.bodyMedium,
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: Text(
+                  'Cancelar',
+                  style: AppTypography.bodyMedium.copyWith(
+                    color: AppColors.textTertiary,
+                  ),
+                ),
+              ),
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                  _removeFlashcard(index);
+                },
+                child: Text(
+                  'Eliminar',
+                  style: AppTypography.labelLarge.copyWith(
+                    color: Colors.redAccent,
+                  ),
+                ),
+              ),
+            ],
           ),
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-              _removeFlashcard(index);
-            },
-            child: Text('Eliminar', style: AppTypography.labelLarge.copyWith(color: Colors.redAccent)),
-          ),
-        ],
-      ),
     );
   }
 
@@ -424,10 +461,14 @@ class _TaskDetailsDialogState extends State<TaskDetailsDialog>
                 TextField(
                   controller: frontCtrl,
                   maxLength: 60,
-                  style: AppTypography.bodyMedium.copyWith(color: AppColors.textPrimary),
+                  style: AppTypography.bodyMedium.copyWith(
+                    color: AppColors.textPrimary,
+                  ),
                   decoration: InputDecoration(
                     labelText: 'Frente',
-                    labelStyle: AppTypography.bodySmall.copyWith(color: AppColors.textTertiary),
+                    labelStyle: AppTypography.bodySmall.copyWith(
+                      color: AppColors.textTertiary,
+                    ),
                     filled: true,
                     fillColor: AppColors.surfaceLight,
                     border: OutlineInputBorder(
@@ -441,10 +482,14 @@ class _TaskDetailsDialogState extends State<TaskDetailsDialog>
                   controller: backCtrl,
                   maxLength: 200,
                   maxLines: 3,
-                  style: AppTypography.bodyMedium.copyWith(color: AppColors.textPrimary),
+                  style: AppTypography.bodyMedium.copyWith(
+                    color: AppColors.textPrimary,
+                  ),
                   decoration: InputDecoration(
                     labelText: 'Reverso',
-                    labelStyle: AppTypography.bodySmall.copyWith(color: AppColors.textTertiary),
+                    labelStyle: AppTypography.bodySmall.copyWith(
+                      color: AppColors.textTertiary,
+                    ),
                     filled: true,
                     fillColor: AppColors.surfaceLight,
                     border: OutlineInputBorder(
@@ -459,14 +504,22 @@ class _TaskDetailsDialogState extends State<TaskDetailsDialog>
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: Text('Cancelar', style: AppTypography.bodyMedium.copyWith(color: AppColors.textTertiary)),
+              child: Text(
+                'Cancelar',
+                style: AppTypography.bodyMedium.copyWith(
+                  color: AppColors.textTertiary,
+                ),
+              ),
             ),
             TextButton(
               onPressed: () {
                 final newFront = frontCtrl.text.trim();
                 final newBack = backCtrl.text.trim();
                 if (newFront.isNotEmpty && newBack.isNotEmpty) {
-                  final updated = card.copyWith(frente: newFront, reverso: newBack);
+                  final updated = card.copyWith(
+                    frente: newFront,
+                    reverso: newBack,
+                  );
                   _cardRepo.updateCard(updated);
                   setState(() {
                     _flashcards[index] = updated;
@@ -474,7 +527,12 @@ class _TaskDetailsDialogState extends State<TaskDetailsDialog>
                 }
                 Navigator.pop(context);
               },
-              child: Text('Guardar', style: AppTypography.labelLarge.copyWith(color: AppColors.primary)),
+              child: Text(
+                'Guardar',
+                style: AppTypography.labelLarge.copyWith(
+                  color: AppColors.primary,
+                ),
+              ),
             ),
           ],
         );
@@ -487,18 +545,24 @@ class _TaskDetailsDialogState extends State<TaskDetailsDialog>
   IconData _iconForExtension(String fileName) {
     final lower = fileName.toLowerCase();
     if (lower.endsWith('.pdf')) return Icons.picture_as_pdf;
-    if (lower.endsWith('.doc') || lower.endsWith('.docx')) return Icons.description;
-    if (lower.endsWith('.ppt') || lower.endsWith('.pptx')) return Icons.slideshow;
-    if (lower.endsWith('.xls') || lower.endsWith('.xlsx')) return Icons.table_chart;
+    if (lower.endsWith('.doc') || lower.endsWith('.docx'))
+      return Icons.description;
+    if (lower.endsWith('.ppt') || lower.endsWith('.pptx'))
+      return Icons.slideshow;
+    if (lower.endsWith('.xls') || lower.endsWith('.xlsx'))
+      return Icons.table_chart;
     return Icons.insert_drive_file;
   }
 
   Color _colorForExtension(String fileName) {
     final lower = fileName.toLowerCase();
     if (lower.endsWith('.pdf')) return const Color(0xFFEF4444);
-    if (lower.endsWith('.doc') || lower.endsWith('.docx')) return const Color(0xFF3B82F6);
-    if (lower.endsWith('.ppt') || lower.endsWith('.pptx')) return const Color(0xFFF59E0B);
-    if (lower.endsWith('.xls') || lower.endsWith('.xlsx')) return const Color(0xFF22C55E);
+    if (lower.endsWith('.doc') || lower.endsWith('.docx'))
+      return const Color(0xFF3B82F6);
+    if (lower.endsWith('.ppt') || lower.endsWith('.pptx'))
+      return const Color(0xFFF59E0B);
+    if (lower.endsWith('.xls') || lower.endsWith('.xlsx'))
+      return const Color(0xFF22C55E);
     return AppColors.textSecondary;
   }
 
@@ -559,7 +623,11 @@ class _TaskDetailsDialogState extends State<TaskDetailsDialog>
               ),
               borderRadius: BorderRadius.circular(10),
             ),
-            child: const Icon(Icons.auto_stories_rounded, color: Colors.white, size: 18),
+            child: const Icon(
+              Icons.auto_stories_rounded,
+              color: Colors.white,
+              size: 18,
+            ),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -584,7 +652,11 @@ class _TaskDetailsDialogState extends State<TaskDetailsDialog>
             ),
           ),
           IconButton(
-            icon: const Icon(Icons.close_rounded, color: AppColors.textSecondary, size: 20),
+            icon: const Icon(
+              Icons.close_rounded,
+              color: AppColors.textSecondary,
+              size: 20,
+            ),
             onPressed: () {
               _saveTask();
               Navigator.pop(context);
@@ -626,8 +698,11 @@ class _TaskDetailsDialogState extends State<TaskDetailsDialog>
           // Conteo de archivos
           Row(
             children: [
-              Icon(Icons.folder_open_rounded,
-                  color: AppColors.textTertiary, size: 16),
+              Icon(
+                Icons.folder_open_rounded,
+                color: AppColors.textTertiary,
+                size: 16,
+              ),
               const SizedBox(width: 6),
               Text(
                 '${_fuentes.length} fuente${_fuentes.length != 1 ? 's' : ''}',
@@ -641,31 +716,35 @@ class _TaskDetailsDialogState extends State<TaskDetailsDialog>
 
           // Lista de documentos
           Expanded(
-            child: _fuentes.isEmpty
-                ? Center(
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(Icons.source_rounded,
+            child:
+                _fuentes.isEmpty
+                    ? Center(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.source_rounded,
                             color: AppColors.textTertiary.withAlpha(100),
-                            size: 48),
-                        const SizedBox(height: 12),
-                        Text(
-                          'Sube PDFs, Word u otros archivos\npara usar como fuentes de estudio.',
-                          textAlign: TextAlign.center,
-                          style: AppTypography.bodyMedium.copyWith(
-                            color: AppColors.textTertiary,
+                            size: 48,
                           ),
-                        ),
-                      ],
+                          const SizedBox(height: 12),
+                          Text(
+                            'Sube PDFs, Word u otros archivos\npara usar como fuentes de estudio.',
+                            textAlign: TextAlign.center,
+                            style: AppTypography.bodyMedium.copyWith(
+                              color: AppColors.textTertiary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    )
+                    : ListView.separated(
+                      itemCount: _fuentes.length,
+                      separatorBuilder: (_, __) => const SizedBox(height: 8),
+                      itemBuilder:
+                          (context, index) =>
+                              _buildDocumentCard(_fuentes[index]),
                     ),
-                  )
-                : ListView.separated(
-                    itemCount: _fuentes.length,
-                    separatorBuilder: (_, __) => const SizedBox(height: 8),
-                    itemBuilder: (context, index) =>
-                        _buildDocumentCard(_fuentes[index]),
-                  ),
           ),
         ],
       ),
@@ -682,9 +761,10 @@ class _TaskDetailsDialogState extends State<TaskDetailsDialog>
           color: AppColors.surfaceLight,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: _isUploadingDocument
-                ? AppColors.primary.withAlpha(120)
-                : AppColors.cardBorder,
+            color:
+                _isUploadingDocument
+                    ? AppColors.primary.withAlpha(120)
+                    : AppColors.cardBorder,
             width: 1.5,
           ),
         ),
@@ -703,8 +783,11 @@ class _TaskDetailsDialogState extends State<TaskDetailsDialog>
               const SizedBox(width: 10),
               Text('Subiendo...', style: AppTypography.bodyMedium),
             ] else ...[
-              const Icon(Icons.add_circle_outline_rounded,
-                  color: AppColors.primary, size: 22),
+              const Icon(
+                Icons.add_circle_outline_rounded,
+                color: AppColors.primary,
+                size: 22,
+              ),
               const SizedBox(width: 8),
               Text(
                 'Agregar fuente',
@@ -721,9 +804,8 @@ class _TaskDetailsDialogState extends State<TaskDetailsDialog>
   }
 
   Widget _buildDocumentCard(TareaFuenteModel fuente) {
-    final fileName = fuente.nombreArchivo.isNotEmpty
-        ? fuente.nombreArchivo
-        : 'Documento';
+    final fileName =
+        fuente.nombreArchivo.isNotEmpty ? fuente.nombreArchivo : 'Documento';
     final icon = _iconForExtension(fileName);
     final color = _colorForExtension(fileName);
 
@@ -810,32 +892,40 @@ class _TaskDetailsDialogState extends State<TaskDetailsDialog>
         children: [
           // Área de mensajes
           Expanded(
-            child: _chatNotes.isEmpty
-                ? Center(
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(Icons.chat_bubble_outline_rounded,
+            child:
+                _chatNotes.isEmpty
+                    ? Center(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.chat_bubble_outline_rounded,
                             color: AppColors.textTertiary.withAlpha(100),
-                            size: 48),
-                        const SizedBox(height: 12),
-                        Text(
-                          'Escribe notas, apuntes o detalles\nsobre esta actividad.',
-                          textAlign: TextAlign.center,
-                          style: AppTypography.bodyMedium.copyWith(
-                            color: AppColors.textTertiary,
+                            size: 48,
                           ),
-                        ),
-                      ],
+                          const SizedBox(height: 12),
+                          Text(
+                            'Escribe notas, apuntes o detalles\nsobre esta actividad.',
+                            textAlign: TextAlign.center,
+                            style: AppTypography.bodyMedium.copyWith(
+                              color: AppColors.textTertiary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    )
+                    : ListView.builder(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 12,
+                      ),
+                      itemCount: _chatNotes.length,
+                      itemBuilder:
+                          (context, index) => _buildChatBubble(
+                            _chatNotes[index].contenido,
+                            index,
+                          ),
                     ),
-                  )
-                : ListView.builder(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 16, vertical: 12),
-                    itemCount: _chatNotes.length,
-                    itemBuilder: (context, index) =>
-                        _buildChatBubble(_chatNotes[index].contenido, index),
-                  ),
           ),
 
           // Aviso legal
@@ -863,8 +953,9 @@ class _TaskDetailsDialogState extends State<TaskDetailsDialog>
       child: Align(
         alignment: Alignment.centerLeft,
         child: Container(
-          constraints:
-              BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.7),
+          constraints: BoxConstraints(
+            maxWidth: MediaQuery.of(context).size.width * 0.7,
+          ),
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
           decoration: BoxDecoration(
             color: AppColors.surfaceLight,
@@ -895,41 +986,64 @@ class _TaskDetailsDialogState extends State<TaskDetailsDialog>
                     await Clipboard.setData(ClipboardData(text: text));
                     if (mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Nota copiada'), duration: Duration(seconds: 2)),
+                        const SnackBar(
+                          content: Text('Nota copiada'),
+                          duration: Duration(seconds: 2),
+                        ),
                       );
                     }
                   }),
                   const SizedBox(width: 8),
                   // Botón de editar
-                  _chatActionIcon(Icons.edit_rounded, () => _showEditNoteDialog(index)),
+                  _chatActionIcon(
+                    Icons.edit_rounded,
+                    () => _showEditNoteDialog(index),
+                  ),
                   const SizedBox(width: 8),
                   // Botón de eliminar
                   _chatActionIcon(Icons.delete_outline_rounded, () {
                     showDialog(
                       context: context,
-                      builder: (context) => AlertDialog(
-                        backgroundColor: AppColors.surface,
-                        title: Text('Eliminar nota', style: AppTypography.labelLarge),
-                        content: Text('¿Estás seguro de que deseas eliminar esta nota?', style: AppTypography.bodyMedium),
-                        actions: [
-                          TextButton(
-                            onPressed: () => Navigator.pop(context),
-                            child: Text('Cancelar', style: AppTypography.bodyMedium.copyWith(color: AppColors.textTertiary)),
+                      builder:
+                          (context) => AlertDialog(
+                            backgroundColor: AppColors.surface,
+                            title: Text(
+                              'Eliminar nota',
+                              style: AppTypography.labelLarge,
+                            ),
+                            content: Text(
+                              '¿Estás seguro de que deseas eliminar esta nota?',
+                              style: AppTypography.bodyMedium,
+                            ),
+                            actions: [
+                              TextButton(
+                                onPressed: () => Navigator.pop(context),
+                                child: Text(
+                                  'Cancelar',
+                                  style: AppTypography.bodyMedium.copyWith(
+                                    color: AppColors.textTertiary,
+                                  ),
+                                ),
+                              ),
+                              TextButton(
+                                onPressed: () {
+                                  Navigator.pop(context);
+                                  final nota = _chatNotes[index];
+                                  _noteRepo.deleteNote(nota.id);
+                                  setState(() {
+                                    _chatNotes.removeAt(index);
+                                  });
+                                  _saveTask();
+                                },
+                                child: Text(
+                                  'Eliminar',
+                                  style: AppTypography.labelLarge.copyWith(
+                                    color: Colors.redAccent,
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
-                          TextButton(
-                            onPressed: () {
-                              Navigator.pop(context);
-                              final nota = _chatNotes[index];
-                              _noteRepo.deleteNote(nota.id);
-                              setState(() {
-                                _chatNotes.removeAt(index);
-                              });
-                              _saveTask();
-                            },
-                            child: Text('Eliminar', style: AppTypography.labelLarge.copyWith(color: Colors.redAccent)),
-                          ),
-                        ],
-                      ),
                     );
                   }),
                 ],
@@ -955,9 +1069,7 @@ class _TaskDetailsDialogState extends State<TaskDetailsDialog>
     return Container(
       padding: const EdgeInsets.fromLTRB(12, 8, 8, 8),
       decoration: const BoxDecoration(
-        border: Border(
-          top: BorderSide(color: AppColors.cardBorder, width: 1),
-        ),
+        border: Border(top: BorderSide(color: AppColors.cardBorder, width: 1)),
       ),
       child: Row(
         children: [
@@ -977,7 +1089,9 @@ class _TaskDetailsDialogState extends State<TaskDetailsDialog>
                 filled: true,
                 fillColor: AppColors.surfaceLight,
                 contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 14, vertical: 10),
+                  horizontal: 14,
+                  vertical: 10,
+                ),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(20),
                   borderSide: BorderSide.none,
@@ -998,8 +1112,11 @@ class _TaskDetailsDialogState extends State<TaskDetailsDialog>
                 ),
                 borderRadius: BorderRadius.circular(18),
               ),
-              child:
-                  const Icon(Icons.send_rounded, color: Colors.white, size: 16),
+              child: const Icon(
+                Icons.send_rounded,
+                color: Colors.white,
+                size: 16,
+              ),
             ),
           ),
         ],
@@ -1022,8 +1139,11 @@ class _TaskDetailsDialogState extends State<TaskDetailsDialog>
           // Conteo de tarjetas
           Row(
             children: [
-              Icon(Icons.style_rounded,
-                  color: AppColors.textTertiary, size: 16),
+              Icon(
+                Icons.style_rounded,
+                color: AppColors.textTertiary,
+                size: 16,
+              ),
               const SizedBox(width: 6),
               Text(
                 '${_flashcards.length} card${_flashcards.length != 1 ? 's' : ''}',
@@ -1037,33 +1157,34 @@ class _TaskDetailsDialogState extends State<TaskDetailsDialog>
 
           // Lista de Flashcards
           Expanded(
-            child: _flashcards.isEmpty
-                ? Center(
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(Icons.style_outlined,
-                            color:
-                                AppColors.textTertiary.withAlpha(100),
-                            size: 48),
-                        const SizedBox(height: 12),
-                        Text(
-                          'Crea tarjetas de estudio para\nrepasar el contenido de esta actividad.',
-                          textAlign: TextAlign.center,
-                          style: AppTypography.bodyMedium.copyWith(
-                            color: AppColors.textTertiary,
+            child:
+                _flashcards.isEmpty
+                    ? Center(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.style_outlined,
+                            color: AppColors.textTertiary.withAlpha(100),
+                            size: 48,
                           ),
-                        ),
-                      ],
+                          const SizedBox(height: 12),
+                          Text(
+                            'Crea tarjetas de estudio para\nrepasar el contenido de esta actividad.',
+                            textAlign: TextAlign.center,
+                            style: AppTypography.bodyMedium.copyWith(
+                              color: AppColors.textTertiary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    )
+                    : ListView.separated(
+                      itemCount: _flashcards.length,
+                      separatorBuilder: (_, __) => const SizedBox(height: 8),
+                      itemBuilder:
+                          (context, index) => _buildFlashcardTile(index),
                     ),
-                  )
-                : ListView.separated(
-                    itemCount: _flashcards.length,
-                    separatorBuilder: (_, __) =>
-                        const SizedBox(height: 8),
-                    itemBuilder: (context, index) =>
-                        _buildFlashcardTile(index),
-                  ),
           ),
         ],
       ),
@@ -1089,7 +1210,8 @@ class _TaskDetailsDialogState extends State<TaskDetailsDialog>
           TextField(
             controller: _cardFrontController,
             style: AppTypography.bodyMedium.copyWith(
-                color: AppColors.textPrimary),
+              color: AppColors.textPrimary,
+            ),
             maxLength: 60,
             decoration: InputDecoration(
               hintText: 'Frente — Pregunta o concepto',
@@ -1098,8 +1220,10 @@ class _TaskDetailsDialogState extends State<TaskDetailsDialog>
               ),
               filled: true,
               fillColor: AppColors.surface,
-              contentPadding:
-                  const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 12,
+                vertical: 10,
+              ),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(8),
                 borderSide: BorderSide.none,
@@ -1110,7 +1234,8 @@ class _TaskDetailsDialogState extends State<TaskDetailsDialog>
           TextField(
             controller: _cardBackController,
             style: AppTypography.bodyMedium.copyWith(
-                color: AppColors.textPrimary),
+              color: AppColors.textPrimary,
+            ),
             maxLines: 2,
             maxLength: 200,
             decoration: InputDecoration(
@@ -1120,8 +1245,10 @@ class _TaskDetailsDialogState extends State<TaskDetailsDialog>
               ),
               filled: true,
               fillColor: AppColors.surface,
-              contentPadding:
-                  const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 12,
+                vertical: 10,
+              ),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(8),
                 borderSide: BorderSide.none,
@@ -1135,7 +1262,9 @@ class _TaskDetailsDialogState extends State<TaskDetailsDialog>
               onTap: _addFlashcard,
               child: Container(
                 padding: const EdgeInsets.symmetric(
-                    horizontal: 14, vertical: 8),
+                  horizontal: 14,
+                  vertical: 8,
+                ),
                 decoration: BoxDecoration(
                   gradient: const LinearGradient(
                     colors: [AppColors.primary, AppColors.primaryDark],
@@ -1145,8 +1274,11 @@ class _TaskDetailsDialogState extends State<TaskDetailsDialog>
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Icon(Icons.add_rounded,
-                        color: Colors.white, size: 16),
+                    const Icon(
+                      Icons.add_rounded,
+                      color: Colors.white,
+                      size: 16,
+                    ),
                     const SizedBox(width: 4),
                     Text(
                       'Crear',
@@ -1171,10 +1303,11 @@ class _TaskDetailsDialogState extends State<TaskDetailsDialog>
       onTap: () {
         showDialog(
           context: context,
-          builder: (context) => FlashcardPreviewDialog(
-            cards: _flashcards,
-            initialIndex: index,
-          ),
+          builder:
+              (context) => FlashcardPreviewDialog(
+                cards: _flashcards,
+                initialIndex: index,
+              ),
         );
       },
       child: Container(
@@ -1198,8 +1331,11 @@ class _TaskDetailsDialogState extends State<TaskDetailsDialog>
                 ),
                 borderRadius: BorderRadius.circular(8),
               ),
-              child: const Icon(Icons.style_rounded,
-                  color: AppColors.primary, size: 18),
+              child: const Icon(
+                Icons.style_rounded,
+                color: AppColors.primary,
+                size: 18,
+              ),
             ),
             const SizedBox(width: 12),
             Expanded(
@@ -1249,8 +1385,6 @@ class _TaskDetailsDialogState extends State<TaskDetailsDialog>
     );
   }
 
-
-
   // ── BARRA DE NAVEGACIÓN INFERIOR ────────────────────────────────────────
 
   Widget _buildBottomNav() {
@@ -1258,9 +1392,7 @@ class _TaskDetailsDialogState extends State<TaskDetailsDialog>
       padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
       decoration: const BoxDecoration(
         color: AppColors.surface,
-        border: Border(
-          top: BorderSide(color: AppColors.cardBorder, width: 1),
-        ),
+        border: Border(top: BorderSide(color: AppColors.cardBorder, width: 1)),
         borderRadius: BorderRadius.only(
           bottomLeft: Radius.circular(16),
           bottomRight: Radius.circular(16),
@@ -1269,21 +1401,9 @@ class _TaskDetailsDialogState extends State<TaskDetailsDialog>
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
-          _buildNavItem(
-            icon: Icons.source_rounded,
-            label: 'Fuentes',
-            index: 0,
-          ),
-          _buildNavItem(
-            icon: Icons.chat_rounded,
-            label: 'Notas',
-            index: 1,
-          ),
-          _buildNavItem(
-            icon: Icons.style_rounded,
-            label: 'Cards',
-            index: 2,
-          ),
+          _buildNavItem(icon: Icons.source_rounded, label: 'Fuentes', index: 0),
+          _buildNavItem(icon: Icons.chat_rounded, label: 'Notas', index: 1),
+          _buildNavItem(icon: Icons.style_rounded, label: 'Cards', index: 2),
         ],
       ),
     );
@@ -1303,7 +1423,8 @@ class _TaskDetailsDialogState extends State<TaskDetailsDialog>
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         decoration: BoxDecoration(
-          color: isActive ? AppColors.primary.withAlpha(15) : Colors.transparent,
+          color:
+              isActive ? AppColors.primary.withAlpha(15) : Colors.transparent,
           borderRadius: BorderRadius.circular(10),
         ),
         child: Column(
@@ -1395,25 +1516,31 @@ class _FlashcardPreviewDialogState extends State<FlashcardPreviewDialog> {
                       gradient: LinearGradient(
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
-                        colors: _showBack
-                            ? [
-                                const Color(0xFF0F2744),
-                                const Color(0xFF0A1A33),
-                              ]
-                            : [
-                                const Color(0xFF182040),
-                                const Color(0xFF131829),
-                              ],
+                        colors:
+                            _showBack
+                                ? [
+                                  const Color(0xFF0F2744),
+                                  const Color(0xFF0A1A33),
+                                ]
+                                : [
+                                  const Color(0xFF182040),
+                                  const Color(0xFF131829),
+                                ],
                       ),
                       borderRadius: BorderRadius.circular(16),
                       border: Border.all(
-                        color: _showBack
-                            ? AppColors.primary.withAlpha(80)
-                            : AppColors.cardBorder,
+                        color:
+                            _showBack
+                                ? AppColors.primary.withAlpha(80)
+                                : AppColors.cardBorder,
                       ),
-                      boxShadow: _showBack
-                          ? AppColors.glowShadow(AppColors.primary, blur: 16)
-                          : null,
+                      boxShadow:
+                          _showBack
+                              ? AppColors.glowShadow(
+                                AppColors.primary,
+                                blur: 16,
+                              )
+                              : null,
                     ),
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -1421,9 +1548,10 @@ class _FlashcardPreviewDialogState extends State<FlashcardPreviewDialog> {
                         Text(
                           _showBack ? 'REVERSO' : 'FRENTE',
                           style: AppTypography.labelSmall.copyWith(
-                            color: _showBack
-                                ? AppColors.primary
-                                : AppColors.textTertiary,
+                            color:
+                                _showBack
+                                    ? AppColors.primary
+                                    : AppColors.textTertiary,
                             letterSpacing: 2,
                           ),
                         ),
@@ -1469,16 +1597,20 @@ class _FlashcardPreviewDialogState extends State<FlashcardPreviewDialog> {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       IconButton(
-                        onPressed: _currentIndex > 0
-                            ? () => setState(() {
+                        onPressed:
+                            _currentIndex > 0
+                                ? () => setState(() {
                                   _currentIndex--;
                                   _showBack = false;
                                 })
-                            : null,
-                        icon: Icon(Icons.chevron_left_rounded,
-                            color: _currentIndex > 0
-                                ? AppColors.primary
-                                : AppColors.textTertiary),
+                                : null,
+                        icon: Icon(
+                          Icons.chevron_left_rounded,
+                          color:
+                              _currentIndex > 0
+                                  ? AppColors.primary
+                                  : AppColors.textTertiary,
+                        ),
                       ),
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 12),
@@ -1491,16 +1623,20 @@ class _FlashcardPreviewDialogState extends State<FlashcardPreviewDialog> {
                         ),
                       ),
                       IconButton(
-                        onPressed: _currentIndex < widget.cards.length - 1
-                            ? () => setState(() {
+                        onPressed:
+                            _currentIndex < widget.cards.length - 1
+                                ? () => setState(() {
                                   _currentIndex++;
                                   _showBack = false;
                                 })
-                            : null,
-                        icon: Icon(Icons.chevron_right_rounded,
-                            color: _currentIndex < widget.cards.length - 1
-                                ? AppColors.primary
-                                : AppColors.textTertiary),
+                                : null,
+                        icon: Icon(
+                          Icons.chevron_right_rounded,
+                          color:
+                              _currentIndex < widget.cards.length - 1
+                                  ? AppColors.primary
+                                  : AppColors.textTertiary,
+                        ),
                       ),
                     ],
                   ),

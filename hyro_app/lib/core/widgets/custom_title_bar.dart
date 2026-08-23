@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:window_manager/window_manager.dart';
 import 'dart:io';
 
@@ -30,7 +31,7 @@ class CustomTitleBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (!Platform.isWindows && !Platform.isMacOS && !Platform.isLinux) {
+    if (kIsWeb || (!Platform.isWindows && !Platform.isMacOS && !Platform.isLinux)) {
       return const SizedBox.shrink();
     }
 

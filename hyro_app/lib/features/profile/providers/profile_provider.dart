@@ -1,16 +1,18 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:isar/isar.dart';
 import 'package:hyro/data/models/user_profile.dart';
-import 'package:hive_flutter/hive_flutter.dart';
-import 'package:hyro/data/models/daily_stats.dart';
-import 'package:hyro/data/repositories/stats_repository.dart';
+
+// Importación condicional para Isar y Hive
+import 'package:hyro/features/profile/providers/profile_native.dart'
+    if (dart.library.html) 'package:hyro/features/profile/providers/profile_web.dart'
+    as profile_platform;
 
 /// Estado reactivo para el perfil de gamificación del usuario (nivel, xp, monedas)
 /// respaldado por la tabla `perfiles` en Supabase o localmente vía Isar para invitados.
 class ProfileProvider extends ChangeNotifier {
-  final Isar isar;
+  final dynamic isar; // Isar en nativo, null en web
 
   ProfileProvider(this.isar);
   int nivel = 1;
@@ -62,19 +64,20 @@ class ProfileProvider extends ChangeNotifier {
     });
 
     try {
-      // Siempre leemos de local (Isar) primero para Offline-First
-      final activeUser = await isar.userProfiles.filter().isActivelyLoggedInEqualTo(true).findFirst();
-      if (activeUser != null) {
-        nivel = activeUser.nivel;
-        experiencia = activeUser.experiencia;
-        monedas = activeUser.monedas;
-        rachaActual = activeUser.rachaActual;
-        rachaMaxima = activeUser.rachaMaxima;
-        minutosEnfoqueTotal = activeUser.minutosEnfoqueTotal;
-        tareasCompletadas = activeUser.tareasCompletadasTotal;
-        sesionesMes = activeUser.sesionesMes;
-        // Notificamos para que la UI se renderice inmediatamente con datos locales
-        notifyListeners();
+      // Siempre leemos de local (Isar) primero para Offline-First (solo nativo)
+      if (!kIsWeb && isar != null) {
+        final localData = await profile_platform.loadLocalProfile(isar);
+        if (localData != null) {
+          nivel = localData['nivel'] as int;
+          experiencia = localData['experiencia'] as int;
+          monedas = localData['monedas'] as int;
+          rachaActual = localData['rachaActual'] as int;
+          rachaMaxima = localData['rachaMaxima'] as int;
+          minutosEnfoqueTotal = localData['minutosEnfoqueTotal'] as int;
+          tareasCompletadas = localData['tareasCompletadas'] as int;
+          sesionesMes = localData['sesionesMes'] as int;
+          notifyListeners();
+        }
       }
 
       // Si hay sesión online, intentamos sincronizar desde Supabase
@@ -99,32 +102,23 @@ class ProfileProvider extends ChangeNotifier {
 
           final countVal = sessionsCount.count;
 
-          if (response != null && activeUser != null) {
-            await isar.writeTxn(() async {
-              activeUser.nivel = (response['nivel'] as num?)?.toInt() ?? 1;
-              activeUser.experiencia = (response['experiencia'] as num?)?.toInt() ?? 0;
-              activeUser.monedas = (response['monedas'] as num?)?.toInt() ?? 0;
-              activeUser.rachaActual = (response['racha_actual'] as num?)?.toInt() ?? 0;
-              activeUser.rachaMaxima = (response['racha_maxima'] as num?)?.toInt() ?? 0;
-              activeUser.minutosEnfoqueTotal = (response['minutos_enfoque_total'] as num?)?.toInt() ?? 0;
-              activeUser.tareasCompletadasTotal = (response['tareas_completadas_total'] as num?)?.toInt() ?? 0;
-              activeUser.sesionesMes = countVal;
-              await isar.userProfiles.put(activeUser);
-            });
+          if (response != null) {
+            // Actualizar Isar localmente (solo nativo)
+            if (!kIsWeb && isar != null) {
+              await profile_platform.updateLocalProfile(isar, response, countVal);
+            }
             
             // Actualizamos en memoria
-            nivel = activeUser.nivel;
-            experiencia = activeUser.experiencia;
-            monedas = activeUser.monedas;
-            rachaActual = activeUser.rachaActual;
-            rachaMaxima = activeUser.rachaMaxima;
-            minutosEnfoqueTotal = activeUser.minutosEnfoqueTotal;
-            tareasCompletadas = activeUser.tareasCompletadasTotal;
-            sesionesMes = activeUser.sesionesMes;
-          }
+            nivel = (response['nivel'] as num?)?.toInt() ?? 1;
+            experiencia = (response['experiencia'] as num?)?.toInt() ?? 0;
+            monedas = (response['monedas'] as num?)?.toInt() ?? 0;
+            rachaActual = (response['racha_actual'] as num?)?.toInt() ?? 0;
+            rachaMaxima = (response['racha_maxima'] as num?)?.toInt() ?? 0;
+            minutosEnfoqueTotal = (response['minutos_enfoque_total'] as num?)?.toInt() ?? 0;
+            tareasCompletadas = (response['tareas_completadas_total'] as num?)?.toInt() ?? 0;
+            sesionesMes = countVal;
 
-          // Cargar nombre_usuario y codigo_amigo para el identificador único
-          if (response != null) {
+            // Cargar nombre_usuario y codigo_amigo para el identificador único
             nombreUsuario = response['nombre_usuario'] as String?;
             codigoAmigo = (response['codigo_amigo'] as num?)?.toInt();
             protectoresRachaActivos = (response['protectores_racha_activos'] as num?)?.toInt() ?? 0;
@@ -146,43 +140,23 @@ class ProfileProvider extends ChangeNotifier {
             final dbMonedas = (row['monedas'] as num?)?.toInt() ?? 0;
             if (dbMonedas != monedas) {
               monedas = dbMonedas;
-              // También actualizamos en la DB local (Isar)
-              isar.writeTxnSync(() {
-                final activeUser = isar.userProfiles.filter().isActivelyLoggedInEqualTo(true).findFirstSync();
-                if (activeUser != null) {
-                  activeUser.monedas = dbMonedas;
-                  isar.userProfiles.putSync(activeUser);
-                }
-              });
+              // También actualizamos en la DB local (Isar) — solo nativo
+              if (!kIsWeb && isar != null) {
+                profile_platform.updateLocalCoins(isar, dbMonedas);
+              }
               notifyListeners();
             }
           }
         });
       }
 
-      // 🚀 Juez de Rachas (verificación de racha estilo Duolingo)
-      if (Hive.isBoxOpen('statsBox')) {
-        final statsRepo = StatsRepository(Hive.box<DailyStats>('statsBox'));
-        final trueStreak = statsRepo.getCurrentStreak();
-        
-        // Si el repositorio confirma que pasamos la medianoche de ayer sin actividad y perdimos la racha
-        if (trueStreak == 0 && rachaActual > 0) {
-          debugPrint('🚨 Juez de Rachas: ¡Racha perdida! (Tenías $rachaActual, bajado a 0)');
+      // 🚀 Juez de Rachas (verificación de racha estilo Duolingo) — solo nativo con Hive
+      if (!kIsWeb) {
+        final streakResult = await profile_platform.checkStreakJudge(isar, rachaActual, userId);
+        if (streakResult != null) {
+          rachaActual = streakResult;
           
-          // Actualizamos memoria
-          rachaActual = 0;
-          
-          // Actualizamos local (Isar)
-          final usr = activeUser ?? await isar.userProfiles.filter().isActivelyLoggedInEqualTo(true).findFirst();
-          if (usr != null) {
-            await isar.writeTxn(() async {
-              usr.rachaActual = 0;
-              await isar.userProfiles.put(usr);
-            });
-          }
-          
-          // Castigamos también en Supabase
-          if (userId != null) {
+          if (userId != null && rachaActual == 0) {
             try {
               await _supabase.from('perfiles').update({'racha_actual': 0}).eq('id', userId);
               debugPrint('🚨 Castigo reflejado en Supabase');
@@ -190,8 +164,6 @@ class ProfileProvider extends ChangeNotifier {
               debugPrint('⚠️ No se pudo enviar el castigo de racha a Supabase: $e');
             }
           }
-          
-          // Ya que modificamos memoria, avisamos a la UI
           notifyListeners();
         }
       }
@@ -211,24 +183,13 @@ class ProfileProvider extends ChangeNotifier {
   Future<void> grantXP(String? userId, int xp) async {
     try {
       if (userId == null) {
-        final activeUser = await isar.userProfiles.filter().isActivelyLoggedInEqualTo(true).findFirst();
-        if (activeUser != null) {
-          await isar.writeTxn(() async {
-            activeUser.experiencia += xp;
-            while (true) {
-              final nextLvlXp = activeUser.nivel * 100;
-              if (activeUser.experiencia >= nextLvlXp) {
-                 activeUser.experiencia -= nextLvlXp;
-                 activeUser.nivel += 1;
-              } else {
-                 break;
-              }
-            }
-            await isar.userProfiles.put(activeUser);
-          });
-          nivel = activeUser.nivel;
-          experiencia = activeUser.experiencia;
-          notifyListeners();
+        if (!kIsWeb && isar != null) {
+          final result = await profile_platform.grantXPLocally(isar, xp);
+          if (result != null) {
+            nivel = result['nivel'] as int;
+            experiencia = result['experiencia'] as int;
+            notifyListeners();
+          }
         }
       } else {
         await _supabase.rpc(
@@ -248,34 +209,33 @@ class ProfileProvider extends ChangeNotifier {
 
   /// Sincroniza las métricas de gamificación offline-first recién calculadas localmente y en Supabase
   Future<void> syncDynamicStats(String? userId, int dynamicStreak, int newlyAddedMinutes) async {
-    final activeUser = await isar.userProfiles.filter().isActivelyLoggedInEqualTo(true).findFirst();
-    if (activeUser != null) {
-      await isar.writeTxn(() async {
-        activeUser.rachaActual = dynamicStreak;
-        if (dynamicStreak > activeUser.rachaMaxima) {
-          activeUser.rachaMaxima = dynamicStreak;
-        }
-        activeUser.minutosEnfoqueTotal += newlyAddedMinutes;
-        activeUser.sesionesMes += 1;
-        await isar.userProfiles.put(activeUser);
-      });
-
-      rachaActual = activeUser.rachaActual;
-      rachaMaxima = activeUser.rachaMaxima;
-      minutosEnfoqueTotal = activeUser.minutosEnfoqueTotal;
-      sesionesMes = activeUser.sesionesMes;
+    if (!kIsWeb && isar != null) {
+      final result = await profile_platform.syncDynamicStatsLocally(isar, dynamicStreak, newlyAddedMinutes);
+      if (result != null) {
+        rachaActual = result['rachaActual'] as int;
+        rachaMaxima = result['rachaMaxima'] as int;
+        minutosEnfoqueTotal = result['minutosEnfoqueTotal'] as int;
+        sesionesMes = result['sesionesMes'] as int;
+        notifyListeners();
+      }
+    } else {
+      // En web, solo actualizar en memoria
+      rachaActual = dynamicStreak;
+      if (dynamicStreak > rachaMaxima) rachaMaxima = dynamicStreak;
+      minutosEnfoqueTotal += newlyAddedMinutes;
+      sesionesMes += 1;
       notifyListeners();
+    }
 
-      if (userId != null) {
-        try {
-          await _supabase.from('perfiles').update({
-            'racha_actual': rachaActual,
-            'racha_maxima': rachaMaxima,
-            'minutos_enfoque_total': minutosEnfoqueTotal,
-          }).eq('id', userId);
-        } catch (e) {
-          debugPrint('⚠️ Sin conexión para sincronizar gamificación del perfil: $e');
-        }
+    if (userId != null) {
+      try {
+        await _supabase.from('perfiles').update({
+          'racha_actual': rachaActual,
+          'racha_maxima': rachaMaxima,
+          'minutos_enfoque_total': minutosEnfoqueTotal,
+        }).eq('id', userId);
+      } catch (e) {
+        debugPrint('⚠️ Sin conexión para sincronizar gamificación del perfil: $e');
       }
     }
   }
@@ -283,14 +243,16 @@ class ProfileProvider extends ChangeNotifier {
   /// Modifica las monedas del usuario (tanto Isar local como Supabase).
   Future<void> modificarMonedas(String? userId, int cantidad) async {
     try {
-      final activeUser = await isar.userProfiles.filter().isActivelyLoggedInEqualTo(true).findFirst();
-      if (activeUser != null) {
-        await isar.writeTxn(() async {
-          activeUser.monedas += cantidad;
-          if (activeUser.monedas < 0) activeUser.monedas = 0;
-          await isar.userProfiles.put(activeUser);
-        });
-        monedas = activeUser.monedas;
+      if (!kIsWeb && isar != null) {
+        final newCoins = await profile_platform.modifyCoinsLocally(isar, cantidad);
+        if (newCoins != null) {
+          monedas = newCoins;
+          notifyListeners();
+        }
+      } else {
+        // En web, solo actualizar en memoria
+        monedas += cantidad;
+        if (monedas < 0) monedas = 0;
         notifyListeners();
       }
 

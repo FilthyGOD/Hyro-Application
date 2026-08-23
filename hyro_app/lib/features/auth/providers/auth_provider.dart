@@ -1,42 +1,26 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:isar/isar.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:google_sign_in/google_sign_in.dart';
-import 'package:hyro/data/models/user_profile.dart';
-import 'dart:io' show Platform, InternetAddress;
 import 'package:flutter/foundation.dart' show kIsWeb;
-import 'package:app_links/app_links.dart';
-import 'package:hyro/data/sync/sync_service.dart';
-import 'package:hyro/data/local/task_local_ds.dart';
-import 'package:hyro/data/local/category_local_ds.dart';
-import 'package:hyro/data/local/note_local_ds.dart';
-import 'package:hyro/data/local/source_local_ds.dart';
-import 'package:hyro/data/local/card_local_ds.dart';
-import 'package:hyro/data/remote/task_remote_ds.dart';
-import 'package:hyro/data/remote/category_remote_ds.dart';
-import 'package:hyro/data/remote/note_remote_ds.dart';
-import 'package:hyro/data/remote/source_remote_ds.dart';
-import 'package:hyro/data/remote/card_remote_ds.dart';
-import 'package:hyro/data/remote/file_storage_service.dart';
-import 'package:hive_flutter/hive_flutter.dart';
-import 'package:hyro/data/models/task_model.dart';
-import 'package:hyro/data/models/daily_stats.dart';
-import 'package:hyro/data/models/category_model.dart';
-import 'package:hyro/data/models/tarea_nota_model.dart';
-import 'package:hyro/data/models/tarea_fuente_model.dart';
-import 'package:hyro/data/models/tarea_card_model.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:hyro/data/models/user_profile.dart';
+
+// Importación condicional para código que usa dart:io
+import 'package:hyro/features/auth/providers/auth_native.dart'
+    if (dart.library.html) 'package:hyro/features/auth/providers/auth_web.dart'
+    as auth_platform;
 
 class AuthProvider extends ChangeNotifier {
-  final Isar isar;
+  final dynamic isar; // Isar en nativo, null en web
   UserProfile? _currentUser;
   bool _isLoading = true;
   StreamSubscription<AuthState>? _authSubscription;
-  StreamSubscription<Uri>? _linkSubscription;
+  StreamSubscription<dynamic>? _linkSubscription;
 
   AuthProvider(this.isar) {
     _listenAuthChanges();
-    _listenForDeepLinksPC();
+    if (!kIsWeb) {
+      _linkSubscription = auth_platform.listenForDeepLinksPC();
+    }
     _loadUserSession();
   }
 
@@ -44,7 +28,7 @@ class AuthProvider extends ChangeNotifier {
   bool get isLoading => _isLoading;
   bool get isAuthenticated =>
       _currentUser != null && _currentUser!.isActivelyLoggedIn;
-      
+
   bool get isGuest => _currentUser?.usernameOrEmail == 'guest_local';
 
   /// Devuelve el UUID del usuario en Supabase, o null si no tiene sesión iniciada vía Supabase.
@@ -58,12 +42,18 @@ class AuthProvider extends ChangeNotifier {
     ) async {
       final event = data.event;
       final session = data.session;
-      debugPrint('🚨 [Hyro Auth] Estado de auth cambió: $event, session: ${session != null ? "SÍ" : "NO"}');
+      debugPrint(
+        '🚨 [Hyro Auth] Estado de auth cambió: $event, session: ${session != null ? "SÍ" : "NO"}',
+      );
 
       if (event == AuthChangeEvent.signedIn && session != null) {
-        debugPrint('🚨 [Hyro Auth] signedIn detectado, sincronizando usuario: ${session.user.email}');
+        debugPrint(
+          '🚨 [Hyro Auth] signedIn detectado, sincronizando usuario: ${session.user.email}',
+        );
         await _syncSupabaseUserToIsar(session.user);
-        debugPrint('🚨 [Hyro Auth] Sync completado. isGuest=$isGuest, isAuthenticated=$isAuthenticated, isLoading=$isLoading');
+        debugPrint(
+          '🚨 [Hyro Auth] Sync completado. isGuest=$isGuest, isAuthenticated=$isAuthenticated, isLoading=$isLoading',
+        );
       }
     });
   }
@@ -83,114 +73,56 @@ class AuthProvider extends ChangeNotifier {
           supabaseUser.userMetadata?['name'] as String? ??
           email.split('@').first;
 
-      // 1. Capturar datos del guest local ANTES de cambiar usuarios
-      final guestUser =
-          await isar.userProfiles
-              .filter()
-              .usernameOrEmailEqualTo('guest_local')
-              .findFirst();
+      if (kIsWeb) {
+        // En web no hay Isar — solo creamos el usuario en memoria
+        _currentUser = UserProfile()
+          ..usernameOrEmail = email
+          ..name = name
+          ..type = UserType.personal
+          ..isActivelyLoggedIn = true;
 
-      final localNivel = guestUser?.nivel ?? 1;
-      final localExp = guestUser?.experiencia ?? 0;
-      final localMonedas = guestUser?.monedas ?? 0;
-      final localCompras = guestUser?.comprasLocales ?? [];
-
-      // 2. Crear/actualizar el usuario Supabase en Isar
-      final existingUser =
-          await isar.userProfiles
-              .filter()
-              .usernameOrEmailEqualTo(email)
-              .findFirst();
-
-      final user =
-          existingUser ?? UserProfile()
-            ..usernameOrEmail = email
-            ..name = name
-            ..type = UserType.personal
-            ..isActivelyLoggedIn = true;
-
-      if (existingUser != null) {
-        user.isActivelyLoggedIn = true;
-        user.name = name;
-      }
-
-      await isar.writeTxn(() async {
-        // Cierra la sesión de cualquier otro usuario activo
-        final activeUsers =
-            await isar.userProfiles
-                .filter()
-                .isActivelyLoggedInEqualTo(true)
-                .findAll();
-
-        for (var u in activeUsers) {
-          u.isActivelyLoggedIn = false;
-          await isar.userProfiles.put(u);
+        // Sincronizar gamificación con Supabase
+        final isConnected = await _hasInternet();
+        if (isConnected) {
+          try {
+            await Supabase.instance.client.rpc(
+              'sincronizar_perfil_local',
+              params: {
+                'p_nivel': 1,
+                'p_experiencia': 0,
+                'p_monedas': 0,
+                'p_compras_ids': <int>[],
+              },
+            );
+          } catch (e) {
+            debugPrint('⚠️ Error sincronizando gamificación en web: $e');
+          }
         }
 
-        await isar.userProfiles.put(user);
-      });
-
-      final isConnected = await _hasInternet();
-      if (!isConnected) {
-        debugPrint('⚠️ No internet connection detected. Skipping sync.');
-        _currentUser = user;
+        _currentUser = _currentUser;
         _isLoading = false;
         _isSyncingUser = false;
         notifyListeners();
         return;
       }
 
-      /// Obtiene los datos de gamificación actuales del usuario desde Isarbase (solo tiene efecto la primera vez)
-      try {
-        await Supabase.instance.client.rpc('sincronizar_perfil_local', params: {
-          'p_nivel': localNivel,
-          'p_experiencia': localExp,
-          'p_monedas': localMonedas,
-          'p_compras_ids': localCompras,
-        });
-        debugPrint('✅ Gamificación sincronizada (nivel: $localNivel)');
-      } catch (e) {
-        debugPrint('⚠️ Error sincronizando gamificación: $e');
-      }
-
-      // 4. Sincronizar tareas, categorías, notas, PDFs y flashcards
-      try {
-        final supabaseClient = Supabase.instance.client;
-        final syncService = SyncService(
-          categoryLocal: CategoryLocalDataSource(),
-          taskLocal: TaskLocalDataSource(),
-          noteLocal: NoteLocalDataSource(),
-          sourceLocal: SourceLocalDataSource(),
-          cardLocal: CardLocalDataSource(),
-          categoryRemote: CategoryRemoteDataSource(supabaseClient),
-          taskRemote: TaskRemoteDataSource(supabaseClient),
-          noteRemote: NoteRemoteDataSource(supabaseClient),
-          sourceRemote: SourceRemoteDataSource(supabaseClient),
-          cardRemote: CardRemoteDataSource(supabaseClient),
-          fileStorage: FileStorageService(supabaseClient),
-        );
-
-        final syncResult = await syncService.syncAllToRemote(supabaseUser.id);
-        if (syncResult.success) {
-          debugPrint('✅ Datos de tareas sincronizados: $syncResult');
-        } else {
-          debugPrint('⚠️ Sync parcial: ${syncResult.errors}');
-        }
-
-        final pullResult = await syncService.pullFromRemote(supabaseUser.id);
-        if (pullResult.success) {
-          debugPrint('✅ Datos remotos descargados: $pullResult');
-        } else {
-          debugPrint('⚠️ Pull parcial: ${pullResult.errors}');
-        }
-      } catch (e) {
-        debugPrint('⚠️ Error sincronizando datos de tareas: $e');
-      }
-
-      _currentUser = user;
+      // ── Ruta nativa con Isar ──
+      await auth_platform.syncSupabaseUserToIsar(
+        isar: isar,
+        supabaseUser: supabaseUser,
+        email: email,
+        name: name,
+        onUserReady: (user) {
+          _currentUser = user;
+        },
+        onLoadingDone: () {
+          _isLoading = false;
+          _isSyncingUser = false;
+          notifyListeners();
+        },
+      );
     } catch (e) {
       debugPrint('⚠️ Error crítico en _syncSupabaseUserToIsar: $e');
-    } finally {
       _isLoading = false;
       _isSyncingUser = false;
       notifyListeners();
@@ -199,12 +131,7 @@ class AuthProvider extends ChangeNotifier {
 
   Future<bool> _hasInternet() async {
     if (kIsWeb) return true;
-    try {
-      final result = await InternetAddress.lookup('google.com').timeout(const Duration(seconds: 2));
-      return result.isNotEmpty && result[0].rawAddress.isNotEmpty;
-    } catch (_) {
-      return false;
-    }
+    return auth_platform.hasInternet();
   }
 
   // ─── Cargar Sesión ──────────────────────────────────────────────────────────
@@ -217,20 +144,18 @@ class AuthProvider extends ChangeNotifier {
     final supabaseSession = Supabase.instance.client.auth.currentSession;
     if (supabaseSession != null) {
       await _syncSupabaseUserToIsar(Supabase.instance.client.auth.currentUser!);
-      return; 
+      return;
     }
 
-    /// Desconecta de la sesión actual (Supabase o Invitado local)
-    /// Si era un usuario de Supabase, mantiene la cuenta local pero marca `isActive = false`.
+    if (kIsWeb) {
+      // En web sin sesión de Supabase → invitado (pero obligamos login)
+      await _loginAsGuest();
+      return;
+    }
 
-    /// Actualiza los atributos de gamificación del usuario localmente en Isar
-    final activeUser =
-        await isar.userProfiles
-            .filter()
-            .isActivelyLoggedInEqualTo(true)
-            .findFirst();
+    // ── Ruta nativa ──
+    final activeUser = await auth_platform.findActiveUser(isar);
 
-    /// Intenta reiniciar la racha a cero localmente (para cuando perdemos el día)
     await Future.delayed(const Duration(milliseconds: 500));
 
     if (activeUser != null) {
@@ -243,69 +168,23 @@ class AuthProvider extends ChangeNotifier {
   }
 
   Future<void> _loginAsGuest() async {
-    final existingGuest = await isar.userProfiles
-        .filter()
-        .usernameOrEmailEqualTo('guest_local')
-        .findFirst();
-
-    final guest = existingGuest ?? UserProfile()
-      ..usernameOrEmail = 'guest_local'
-      ..name = 'Invitado'
-      ..type = UserType.personal
-      ..isActivelyLoggedIn = true;
-
-    if (existingGuest != null) {
-      guest.isActivelyLoggedIn = true;
+    if (kIsWeb) {
+      // En web, creamos un guest solo en memoria
+      _currentUser = UserProfile()
+        ..usernameOrEmail = 'guest_local'
+        ..name = 'Invitado'
+        ..type = UserType.personal
+        ..isActivelyLoggedIn = true;
+      _isLoading = false;
+      notifyListeners();
+      return;
     }
 
-    await isar.writeTxn(() async {
-      final activeUsers =
-          await isar.userProfiles
-              .filter()
-              .isActivelyLoggedInEqualTo(true)
-              .findAll();
-
-      for (var u in activeUsers) {
-        u.isActivelyLoggedIn = false;
-        await isar.userProfiles.put(u);
-      }
-      await isar.userProfiles.put(guest);
-    });
-
+    // ── Ruta nativa con Isar ──
+    final guest = await auth_platform.loginAsGuest(isar);
     _currentUser = guest;
     _isLoading = false;
     notifyListeners();
-  }
-
-  void _listenForDeepLinksPC() async {
-    if (kIsWeb || Platform.isAndroid || Platform.isIOS) return;
-
-    final appLinks = AppLinks();
-
-    try {
-      final initialUri = await appLinks.getInitialLink();
-      if (initialUri != null && initialUri.scheme == 'io.supabase.hyroapp') {
-        debugPrint('🚨 [Hyro Debug] Link inicial atrapado: $initialUri');
-        await Supabase.instance.client.auth.getSessionFromUrl(initialUri);
-      }
-    } catch (e) {
-      debugPrint('🚨 [Hyro Debug] Error leyendo link inicial: $e');
-    }
-
-    _linkSubscription = appLinks.uriLinkStream.listen(
-      (uri) async {
-        if (uri.scheme != 'io.supabase.hyroapp') return;
-        debugPrint('🚨 [Hyro Debug] Link atrapado en stream: $uri');
-        try {
-          await Supabase.instance.client.auth.getSessionFromUrl(uri);
-        } catch (e) {
-          debugPrint('🚨 [Hyro Debug] Error en Supabase con el link: $e');
-        }
-      },
-      onError: (err) {
-        debugPrint('🚨 [Hyro Debug] Error en el stream: $err');
-      },
-    );
   }
 
   // ─── Métodos de Inicio de Sesión ──────────────────────────────────────────
@@ -314,12 +193,8 @@ class AuthProvider extends ChangeNotifier {
     try {
       await Supabase.instance.client.auth.signInWithOAuth(
         OAuthProvider.google,
-        redirectTo: 'io.supabase.hyroapp://login-callback/',
+        redirectTo: kIsWeb ? Uri.base.toString() : 'io.supabase.hyroapp://login-callback/',
       );
-      // ─── Acciones de Autenticación ──────────────────────────────────────
-      // La redirección será atrapada por Supabase y _listenAuthChanges hará el resto.
-      // NO ponemos _isLoading = true aquí porque el OAuth abre el navegador
-      // y la app no debe cambiar de pantalla hasta que el deep link regrese.
     } catch (e) {
       debugPrint('Google Sign-In error: $e');
       rethrow;
@@ -347,7 +222,11 @@ class AuthProvider extends ChangeNotifier {
   }
 
   /// Registro real con email/contraseña usando Supabase
-  Future<void> signUpWithEmail(String email, String password, String name) async {
+  Future<void> signUpWithEmail(
+    String email,
+    String password,
+    String name,
+  ) async {
     _isLoading = true;
     notifyListeners();
 
@@ -375,38 +254,18 @@ class AuthProvider extends ChangeNotifier {
     _isLoading = true;
     notifyListeners();
 
-    final existingUser =
-        await isar.userProfiles
-            .filter()
-            .usernameOrEmailEqualTo(email)
-            .findFirst();
-
-    final user =
-        existingUser ?? UserProfile()
-          ..usernameOrEmail = email
-          ..name = name
-          ..type = UserType.personal
-          ..isActivelyLoggedIn = true;
-
-    if (existingUser != null) {
-      user.isActivelyLoggedIn = true;
+    if (kIsWeb) {
+      _currentUser = UserProfile()
+        ..usernameOrEmail = email
+        ..name = name
+        ..type = UserType.personal
+        ..isActivelyLoggedIn = true;
+      _isLoading = false;
+      notifyListeners();
+      return;
     }
 
-    await isar.writeTxn(() async {
-      final activeUsers =
-          await isar.userProfiles
-              .filter()
-              .isActivelyLoggedInEqualTo(true)
-              .findAll();
-
-      for (var u in activeUsers) {
-        u.isActivelyLoggedIn = false;
-        await isar.userProfiles.put(u);
-      }
-
-      await isar.userProfiles.put(user);
-    });
-
+    final user = await auth_platform.loginPersonal(isar, email, name);
     _currentUser = user;
     _isLoading = false;
     notifyListeners();
@@ -418,37 +277,20 @@ class AuthProvider extends ChangeNotifier {
     try {
       await Supabase.instance.client.auth.signOut();
 
-      // Limpiamos también la sesión nativa de Google solo en móvil (evita crash en Windows)
-      if (!kIsWeb && (Platform.isAndroid || Platform.isIOS)) {
-        final googleSignIn = GoogleSignIn();
-        if (await googleSignIn.isSignedIn()) {
-          await googleSignIn.signOut();
-        }
+      if (!kIsWeb) {
+        await auth_platform.cleanupNativeLogout(isar);
       }
     } catch (e) {
       debugPrint('Error durante el logout: $e');
     }
 
     if (_currentUser != null) {
-      await isar.writeTxn(() async {
-        // En vez de solo desloguear, limpiamos la base local de perfiles para evitar residuos
-        await isar.userProfiles.clear();
-      });
+      if (!kIsWeb && isar != null) {
+        await auth_platform.clearIsarProfiles(isar);
+      }
       _currentUser = null;
     }
 
-    // Limpiamos las cajas de Hive
-    try {
-      if (Hive.isBoxOpen('tasksBox')) await Hive.box<TaskModel>('tasksBox').clear();
-      if (Hive.isBoxOpen('statsBox')) await Hive.box<DailyStats>('statsBox').clear();
-      if (Hive.isBoxOpen('categoriesBox')) await Hive.box<CategoryModel>('categoriesBox').clear();
-      if (Hive.isBoxOpen('notasBox')) await Hive.box<TareaNotaModel>('notasBox').clear();
-      if (Hive.isBoxOpen('fuentesBox')) await Hive.box<TareaFuenteModel>('fuentesBox').clear();
-      if (Hive.isBoxOpen('cardsBox')) await Hive.box<TareaCardModel>('cardsBox').clear();
-    } catch (e) {
-      debugPrint('Error limpiando Hive en logout: $e');
-    }
-    
     // Volver al modo invitado
     await _loginAsGuest();
   }

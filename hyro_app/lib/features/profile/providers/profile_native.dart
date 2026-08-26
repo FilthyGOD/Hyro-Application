@@ -1,4 +1,5 @@
 import 'package:isar/isar.dart';
+import 'dart:math' as math;
 import 'package:hyro/data/models/user_profile.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:hyro/data/models/daily_stats.dart';
@@ -86,7 +87,7 @@ Future<Map<String, int>?> grantXPLocally(dynamic isarDynamic, int xp) async {
   await isar.writeTxn(() async {
     activeUser.experiencia += xp;
     while (true) {
-      final nextLvlXp = activeUser.nivel * 100;
+      final nextLvlXp = (100 * math.pow(activeUser.nivel - 1, 1.5) + 100).toInt();
       if (activeUser.experiencia >= nextLvlXp) {
         activeUser.experiencia -= nextLvlXp;
         activeUser.nivel += 1;

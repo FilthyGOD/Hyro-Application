@@ -1,8 +1,8 @@
 import 'dart:async';
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:hyro/data/models/user_profile.dart';
 
 // Importación condicional para Isar y Hive
 import 'package:hyro/features/profile/providers/profile_native.dart'
@@ -278,8 +278,8 @@ class ProfileProvider extends ChangeNotifier {
     }
   }
 
-  /// XP requerida para alcanzar el siguiente nivel: nivel × 100.
-  int get xpForNextLevel => nivel * 100;
+  /// XP requerida para alcanzar el siguiente nivel.
+  int get xpForNextLevel => (100 * math.pow(nivel - 1, 1.5) + 100).toInt();
 
   /// Fracción de progreso (0.0 – 1.0) hacia el siguiente nivel.
   double get levelProgress {

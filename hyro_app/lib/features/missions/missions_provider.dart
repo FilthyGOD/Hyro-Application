@@ -19,78 +19,59 @@ class MissionsProvider extends ChangeNotifier {
 
   MissionsProvider({required this.profileProvider});
 
-  // ─── Pool of Possible Missions ─────────────────────────────────────
+  // ─── Pools of Possible Missions by Difficulty ──────────────────────
 
-  static final List<DailyMission> _missionPool = [
+  static final List<DailyMission> _easyMissions = [
     DailyMission(
-      id: 'complete_2_pomodoros',
+      id: 'easy_complete_2_pomodoros',
       title: 'Completar 2 Pomodoros',
       description: 'Termina 2 sesiones de enfoque hoy',
       type: 'pomodoro_completed',
       targetValue: 2,
+      xpReward: 25,
+      coinReward: 10,
     ),
+  ];
+
+  static final List<DailyMission> _mediumMissions = [
     DailyMission(
-      id: 'complete_4_pomodoros',
-      title: 'Completar 4 Pomodoros',
-      description: 'Termina 4 sesiones de enfoque hoy',
-      type: 'pomodoro_completed',
-      targetValue: 4,
-    ),
-    DailyMission(
-      id: 'study_30_min',
-      title: 'Estudiar 30 minutos',
-      description: 'Acumula 30 minutos de enfoque',
-      type: 'minutes_studied',
-      targetValue: 30,
-    ),
-    DailyMission(
-      id: 'study_60_min',
-      title: 'Estudiar 60 minutos',
-      description: 'Acumula 1 hora de enfoque',
-      type: 'minutes_studied',
-      targetValue: 60,
-    ),
-    DailyMission(
-      id: 'complete_1_task',
-      title: 'Completar 1 tarea',
-      description: 'Marca una tarea como completada',
+      id: 'medium_complete_2_tasks',
+      title: 'Completar 2 tareas',
+      description: 'Termina 2 tareas de tu lista de pendientes',
       type: 'task_completed',
-      targetValue: 1,
+      targetValue: 2,
+      xpReward: 50,
+      coinReward: 20,
     ),
     DailyMission(
-      id: 'complete_3_tasks',
+      id: 'medium_complete_3_tasks',
       title: 'Completar 3 tareas',
-      description: 'Marca 3 tareas como completadas',
+      description: 'Termina 3 tareas de tu lista de pendientes',
       type: 'task_completed',
       targetValue: 3,
+      xpReward: 50,
+      coinReward: 20,
     ),
+  ];
+
+  static final List<DailyMission> _hardMissions = [
     DailyMission(
-      id: 'complete_1_pomodoro',
-      title: 'Completar 1 Pomodoro',
-      description: 'Termina al menos 1 sesión de enfoque',
+      id: 'hard_complete_1_cycle',
+      title: 'Completar 1 ciclo',
+      description: 'Completa un ciclo completo (4 pomodoros)',
       type: 'pomodoro_completed',
-      targetValue: 1,
+      targetValue: 4,
+      xpReward: 100,
+      coinReward: 40,
     ),
     DailyMission(
-      id: 'study_15_min',
-      title: 'Estudiar 15 minutos',
-      description: 'Acumula 15 minutos de enfoque',
+      id: 'hard_study_120_min',
+      title: 'Estudiar 120 minutos',
+      description: 'Acumula 120 minutos de enfoque hoy',
       type: 'minutes_studied',
-      targetValue: 15,
-    ),
-    DailyMission(
-      id: 'complete_6_pomodoros',
-      title: 'Maratón: 6 Pomodoros',
-      description: 'Completa 6 sesiones de enfoque en un día',
-      type: 'pomodoro_completed',
-      targetValue: 6,
-    ),
-    DailyMission(
-      id: 'study_90_min',
-      title: 'Estudiar 90 minutos',
-      description: 'Acumula 1.5 horas de enfoque',
-      type: 'minutes_studied',
-      targetValue: 90,
+      targetValue: 120,
+      xpReward: 100,
+      coinReward: 40,
     ),
   ];
 
@@ -127,17 +108,54 @@ class MissionsProvider extends ChangeNotifier {
 
   void _generateNewMissions(Box box, String today) {
     final random = Random();
-    final shuffled = List<DailyMission>.from(_missionPool)..shuffle(random);
-    missions = shuffled.take(3).map((m) => DailyMission(
-          id: m.id,
-          title: m.title,
-          description: m.description,
-          type: m.type,
-          targetValue: m.targetValue,
-          currentProgress: 0,
-          isClaimed: false,
-          xpReward: m.xpReward,
-        )).toList();
+
+    // Select 1 easy mission
+    final easyShuffled = List<DailyMission>.from(_easyMissions)..shuffle(random);
+    final easy = easyShuffled.first;
+
+    // Select 1 medium mission
+    final mediumShuffled = List<DailyMission>.from(_mediumMissions)..shuffle(random);
+    final medium = mediumShuffled.first;
+
+    // Select 1 hard mission
+    final hardShuffled = List<DailyMission>.from(_hardMissions)..shuffle(random);
+    final hard = hardShuffled.first;
+
+    missions = [
+      DailyMission(
+        id: easy.id,
+        title: easy.title,
+        description: easy.description,
+        type: easy.type,
+        targetValue: easy.targetValue,
+        currentProgress: 0,
+        isClaimed: false,
+        xpReward: easy.xpReward,
+        coinReward: easy.coinReward,
+      ),
+      DailyMission(
+        id: medium.id,
+        title: medium.title,
+        description: medium.description,
+        type: medium.type,
+        targetValue: medium.targetValue,
+        currentProgress: 0,
+        isClaimed: false,
+        xpReward: medium.xpReward,
+        coinReward: medium.coinReward,
+      ),
+      DailyMission(
+        id: hard.id,
+        title: hard.title,
+        description: hard.description,
+        type: hard.type,
+        targetValue: hard.targetValue,
+        currentProgress: 0,
+        isClaimed: false,
+        xpReward: hard.xpReward,
+        coinReward: hard.coinReward,
+      ),
+    ];
 
     _saveMissions(box, today);
   }
@@ -165,6 +183,9 @@ class MissionsProvider extends ChangeNotifier {
     for (final mission in missions) {
       if (mission.type == type && !mission.isClaimed) {
         mission.currentProgress += value;
+        if (mission.currentProgress < 0) {
+          mission.currentProgress = 0;
+        }
         changed = true;
       }
     }
@@ -194,6 +215,10 @@ class MissionsProvider extends ChangeNotifier {
 
     // Grant the XP reward
     await profileProvider.grantXP(userId, mission.xpReward);
+    // Grant the coin reward
+    if (mission.coinReward > 0) {
+      await profileProvider.modificarMonedas(userId, mission.coinReward);
+    }
     return true;
   }
 

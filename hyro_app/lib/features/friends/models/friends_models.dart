@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 // Modelos de datos para el sistema de amigos.
 
 /// Entrada del ranking semanal — incluye datos de cosméticos para renderizar la mascota.
@@ -152,7 +154,7 @@ class UserProfilePreview {
   double get horasTotales => minutosEnfoqueTotal / 60.0;
 
   /// XP requerida para el siguiente nivel.
-  int get xpForNextLevel => nivel * 100;
+  int get xpForNextLevel => (100 * math.pow(nivel - 1, 1.5) + 100).toInt();
 
   /// Progreso de nivel (0.0 – 1.0).
   double get levelProgress {

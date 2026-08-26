@@ -73,31 +73,43 @@ class VersusRepository {
       }
 
       // ── RPC: Crear batalla (cobra monedas + crea registro atómicamente) ──
-      final response = await _supabase.rpc('crear_batalla_versus', params: {
-        'p_oponente_id': oponenteId,
-        'p_modo_batalla': modoBatalla,
-        'p_categoria_retador_id': categoriaRetadorId,
-        'p_apuesta': apuestaMonedas,
-        'p_tarea_retador_id': tareaRetadorId,
-      });
+      final response = await _supabase.rpc(
+        'crear_batalla_versus',
+        params: {
+          'p_oponente_id': oponenteId,
+          'p_modo_batalla': modoBatalla,
+          'p_categoria_retador_id': categoriaRetadorId,
+          'p_apuesta': apuestaMonedas,
+          'p_tarea_retador_id': tareaRetadorId,
+        },
+      );
 
       // La RPC retorna el ID de la batalla creada o el registro completo
-      final batallaId = response is Map
-          ? response['id']?.toString() ?? response.toString()
-          : response.toString();
+      final batallaId =
+          response is Map
+              ? response['id']?.toString() ?? response.toString()
+              : response.toString();
 
       await _generarPreguntasParaBatalla(
         batallaId: batallaId,
         tareaId: tareaRetadorId,
-        indicesPorRonda: modoBatalla == 'cruzado' 
-            ? {1: [0, 1, 2, 3, 4], 3: [0, 1, 2]} 
-            : {1: [0, 1, 2, 3, 4], 2: [0, 1, 2, 3, 4], 3: [0, 1, 2, 3, 4, 5]},
+        indicesPorRonda:
+            modoBatalla == 'cruzado'
+                ? {
+                  1: [0, 1, 2, 3, 4],
+                  3: [0, 1, 2],
+                }
+                : {
+                  1: [0, 1, 2, 3, 4],
+                  2: [0, 1, 2, 3, 4],
+                  3: [0, 1, 2, 3, 4, 5],
+                },
       );
 
-      debugPrint('⚔️ [VersusRepo] Batalla creada via RPC con preguntas: $batallaId');
-      return response is Map<String, dynamic>
-          ? response
-          : {'id': batallaId};
+      debugPrint(
+        '⚔️ [VersusRepo] Batalla creada via RPC con preguntas: $batallaId',
+      );
+      return response is Map<String, dynamic> ? response : {'id': batallaId};
     } on PostgrestException catch (e) {
       debugPrint('❌ [VersusRepo] Error RPC al crear batalla: ${e.message}');
       throw VersusException(
@@ -118,18 +130,19 @@ class VersusRepository {
     required Map<int, List<int>> indicesPorRonda,
   }) async {
     try {
-      final cardsResponse = await _supabase
-          .from('tarea_cards')
-          .select()
-          .eq('tarea_id', tareaId) as List<dynamic>;
+      final cardsResponse =
+          await _supabase.from('tarea_cards').select().eq('tarea_id', tareaId)
+              as List<dynamic>;
 
-      final notasResponse = await _supabase
-          .from('tarea_notas')
-          .select()
-          .eq('tarea_id', tareaId) as List<dynamic>;
+      final notasResponse =
+          await _supabase.from('tarea_notas').select().eq('tarea_id', tareaId)
+              as List<dynamic>;
 
       final questionsToInsert = <Map<String, dynamic>>[];
-      int totalQuestions = indicesPorRonda.values.fold(0, (sum, list) => sum + list.length);
+      int totalQuestions = indicesPorRonda.values.fold(
+        0,
+        (sum, list) => sum + list.length,
+      );
 
       if (cardsResponse.isEmpty && notasResponse.isEmpty) {
         // Fallback: Si no hay flashcards ni notas, generar preguntas genéricas de estudio
@@ -145,9 +158,7 @@ class VersusRepository {
               'tipo_pregunta': 'multiple_choice',
               'pregunta_texto': 'Pregunta de estudio #${i + 1} sobre tu tarea',
               'respuesta_correcta': 'Opción A',
-              'datos_extra': {
-                'options': options..shuffle(),
-              },
+              'datos_extra': {'options': options..shuffle()},
             });
             i++;
           }
@@ -158,111 +169,165 @@ class VersusRepository {
         for (final entry in indicesPorRonda.entries) {
           final ronda = entry.key;
           for (final indice in entry.value) {
-          
-          final availableTypes = <String>[];
-          if (cardsResponse.isNotEmpty) {
-            availableTypes.add('multiple_choice');
-            availableTypes.add('true_false');
-          }
-          if (notasResponse.isNotEmpty) {
-            availableTypes.add('drag_drop');
-          }
-          
-          availableTypes.shuffle();
-          final type = availableTypes.first;
-          
-          if (type == 'multiple_choice' || type == 'true_false') {
-            final card = cardsResponse[(i) % cardsResponse.length] as Map<String, dynamic>;
-            final askFront = (i % 2 == 0);
-            final questionText = askFront ? (card['frente'] as String) : (card['reverso'] as String);
-            final correctAnswer = askFront ? (card['reverso'] as String) : (card['frente'] as String);
-            
-            if (type == 'multiple_choice') {
-              final distractors = <String>[];
-              for (final otherCard in cardsResponse) {
-                final val = askFront ? (otherCard['reverso'] as String) : (otherCard['frente'] as String);
-                if (val != correctAnswer && !distractors.contains(val)) distractors.add(val);
-                if (distractors.length >= 3) break;
-              }
-              final padList = ['No aplica', 'Ninguna de las anteriores', 'Opción incorrecta', 'No es correcto'];
-              int padIndex = 0;
-              while (distractors.length < 3) {
-                final padVal = padList[padIndex % padList.length];
-                if (!distractors.contains(padVal) && padVal != correctAnswer) distractors.add(padVal);
-                padIndex++;
-              }
-              final options = [correctAnswer, ...distractors]..shuffle();
-              questionsToInsert.add({
-                'batalla_id': batallaId, 'ronda': ronda, 'indice': indice,
-                'tipo_pregunta': 'multiple_choice', 'pregunta_texto': questionText,
-                'respuesta_correcta': correctAnswer, 'datos_extra': {'options': options},
-              });
-            } else { // true_false
-              final isTrue = (i % 3 != 0); // 2/3 chance of being true
-              String statement = correctAnswer;
-              if (!isTrue && cardsResponse.length > 1) {
-                final otherCard = cardsResponse[(i + 1) % cardsResponse.length] as Map<String, dynamic>;
-                statement = askFront ? (otherCard['reverso'] as String) : (otherCard['frente'] as String);
-              }
-              final options = ['Verdadero', 'Falso'];
-              final answer = isTrue ? 'Verdadero' : 'Falso';
-              questionsToInsert.add({
-                'batalla_id': batallaId, 'ronda': ronda, 'indice': indice,
-                'tipo_pregunta': 'true_false', 'pregunta_texto': '¿$questionText es "$statement"?',
-                'respuesta_correcta': answer, 'datos_extra': {'options': options},
-              });
+            final availableTypes = <String>[];
+            if (cardsResponse.isNotEmpty) {
+              availableTypes.add('multiple_choice');
+              availableTypes.add('true_false');
             }
-          } else { // drag_drop
-            final nota = notasResponse[(i) % notasResponse.length] as Map<String, dynamic>;
-            final originalText = nota['contenido'] as String;
-            final words = originalText.split(RegExp(r'\s+'));
-            var candidates = words.where((w) => w.length > 3 && w.contains(RegExp(r'[a-zA-ZáéíóúÁÉÍÓÚñÑ]'))).toSet().toList();
-            if (candidates.isEmpty) {
-              candidates = words.where((w) => w.length > 1).toSet().toList();
+            if (notasResponse.isNotEmpty) {
+              availableTypes.add('drag_drop');
             }
-            if (candidates.isEmpty) {
-              candidates = words.toSet().toList();
-            }
-            candidates.shuffle();
-            
-            final count = candidates.length > 3 ? 3 : candidates.length;
-            final selectedForBlank = candidates.take(count).toList();
-            
-            final toReplace = List<String>.from(selectedForBlank);
-            final orderedBlanks = <String>[];
-            final newWords = <String>[];
-            
-            for (var w in words) {
-              if (toReplace.contains(w)) {
-                orderedBlanks.add(w);
-                newWords.add('{{BLANK}}');
-                toReplace.remove(w);
+
+            availableTypes.shuffle();
+            final type = availableTypes.first;
+
+            if (type == 'multiple_choice' || type == 'true_false') {
+              final card =
+                  cardsResponse[(i) % cardsResponse.length]
+                      as Map<String, dynamic>;
+              final askFront = (i % 2 == 0);
+              final questionText =
+                  askFront
+                      ? (card['frente'] as String)
+                      : (card['reverso'] as String);
+              final correctAnswer =
+                  askFront
+                      ? (card['reverso'] as String)
+                      : (card['frente'] as String);
+
+              if (type == 'multiple_choice') {
+                final distractors = <String>[];
+                for (final otherCard in cardsResponse) {
+                  final val =
+                      askFront
+                          ? (otherCard['reverso'] as String)
+                          : (otherCard['frente'] as String);
+                  if (val != correctAnswer && !distractors.contains(val))
+                    distractors.add(val);
+                  if (distractors.length >= 3) break;
+                }
+                final padList = [
+                  'No aplica',
+                  'Ninguna de las anteriores',
+                  'Opción incorrecta',
+                  'No es correcto',
+                ];
+                int padIndex = 0;
+                while (distractors.length < 3) {
+                  final padVal = padList[padIndex % padList.length];
+                  if (!distractors.contains(padVal) && padVal != correctAnswer)
+                    distractors.add(padVal);
+                  padIndex++;
+                }
+                final options = [correctAnswer, ...distractors]..shuffle();
+                questionsToInsert.add({
+                  'batalla_id': batallaId,
+                  'ronda': ronda,
+                  'indice': indice,
+                  'tipo_pregunta': 'multiple_choice',
+                  'pregunta_texto': questionText,
+                  'respuesta_correcta': correctAnswer,
+                  'datos_extra': {'options': options},
+                });
               } else {
-                newWords.add(w);
+                // true_false
+                final isTrue = (i % 3 != 0); // 2/3 chance of being true
+                String statement = correctAnswer;
+                if (!isTrue && cardsResponse.length > 1) {
+                  final otherCard =
+                      cardsResponse[(i + 1) % cardsResponse.length]
+                          as Map<String, dynamic>;
+                  statement =
+                      askFront
+                          ? (otherCard['reverso'] as String)
+                          : (otherCard['frente'] as String);
+                }
+                final options = ['Verdadero', 'Falso'];
+                final answer = isTrue ? 'Verdadero' : 'Falso';
+                questionsToInsert.add({
+                  'batalla_id': batallaId,
+                  'ronda': ronda,
+                  'indice': indice,
+                  'tipo_pregunta': 'true_false',
+                  'pregunta_texto': '¿$questionText es "$statement"?',
+                  'respuesta_correcta': answer,
+                  'datos_extra': {'options': options},
+                });
               }
+            } else {
+              // drag_drop
+              final nota =
+                  notasResponse[(i) % notasResponse.length]
+                      as Map<String, dynamic>;
+              final originalText = nota['contenido'] as String;
+              final words = originalText.split(RegExp(r'\s+'));
+              var candidates =
+                  words
+                      .where(
+                        (w) =>
+                            w.length > 3 &&
+                            w.contains(RegExp(r'[a-zA-ZáéíóúÁÉÍÓÚñÑ]')),
+                      )
+                      .toSet()
+                      .toList();
+              if (candidates.isEmpty) {
+                candidates = words.where((w) => w.length > 1).toSet().toList();
+              }
+              if (candidates.isEmpty) {
+                candidates = words.toSet().toList();
+              }
+              candidates.shuffle();
+
+              final count = candidates.length > 3 ? 3 : candidates.length;
+              final selectedForBlank = candidates.take(count).toList();
+
+              final toReplace = List<String>.from(selectedForBlank);
+              final orderedBlanks = <String>[];
+              final newWords = <String>[];
+
+              for (var w in words) {
+                if (toReplace.contains(w)) {
+                  orderedBlanks.add(w);
+                  newWords.add('{{BLANK}}');
+                  toReplace.remove(w);
+                } else {
+                  newWords.add(w);
+                }
+              }
+
+              final text = newWords.join(' ');
+
+              final distractorPool =
+                  candidates
+                      .where((w) => !selectedForBlank.contains(w))
+                      .toList()
+                    ..shuffle();
+              final availableWords = List<String>.from(orderedBlanks);
+              availableWords.addAll(distractorPool.take(2));
+              availableWords.shuffle();
+
+              questionsToInsert.add({
+                'batalla_id': batallaId,
+                'ronda': ronda,
+                'indice': indice,
+                'tipo_pregunta': 'drag_drop',
+                'pregunta_texto': text,
+                'respuesta_correcta': orderedBlanks.join(', '),
+                'datos_extra': {
+                  'blanks': orderedBlanks,
+                  'available_words': availableWords,
+                },
+              });
             }
-            
-            final text = newWords.join(' ');
-            
-            final distractorPool = candidates.where((w) => !selectedForBlank.contains(w)).toList()..shuffle();
-            final availableWords = List<String>.from(orderedBlanks);
-            availableWords.addAll(distractorPool.take(2));
-            availableWords.shuffle();
-            
-            questionsToInsert.add({
-              'batalla_id': batallaId, 'ronda': ronda, 'indice': indice,
-              'tipo_pregunta': 'drag_drop', 'pregunta_texto': text,
-              'respuesta_correcta': orderedBlanks.join(', '), 
-              'datos_extra': {'blanks': orderedBlanks, 'available_words': availableWords},
-            });
+            i++;
           }
-          i++;
         }
-      }
       }
 
       await _supabase.from('batalla_preguntas').insert(questionsToInsert);
-      debugPrint('⚡ [VersusRepo] $totalQuestions preguntas generadas y guardadas para la batalla: $batallaId');
+      debugPrint(
+        '⚡ [VersusRepo] $totalQuestions preguntas generadas y guardadas para la batalla: $batallaId',
+      );
     } catch (e) {
       debugPrint('❌ [VersusRepo] Error generando preguntas para batalla: $e');
       rethrow;
@@ -285,47 +350,61 @@ class VersusRepository {
     // Usamos .stream() de Supabase Realtime para escuchar cambios en tiempo real.
     // El filtro se aplica en el cliente porque Supabase Realtime no soporta
     // filtros OR complejos nativamente en el stream. Filtramos en el .map().
-    return _supabase
-        .from('batallas_versus')
-        .stream(primaryKey: ['id'])
-        .map((rows) {
-          return rows.where((row) {
-            final esRetador = row['retador_id'] == userId;
-            final esOponente = row['oponente_id'] == userId;
-            final mostrar = esRetador ? (row['mostrar_retador'] ?? true) == true : (row['mostrar_oponente'] ?? true) == true;
-            
-            final estadoValido =
-                row['estado'] == 'pendiente' || 
-                row['estado'] == 'activa' || 
-                row['estado'] == 'completada' ||
-                row['estado'] == 'reclamada';
-                
-            return (esRetador || esOponente) && estadoValido && mostrar;
-          }).toList();
-        });
+    return _supabase.from('batallas_versus').stream(primaryKey: ['id']).map((
+      rows,
+    ) {
+      return rows.where((row) {
+        final esRetador = row['retador_id'] == userId;
+        final esOponente = row['oponente_id'] == userId;
+        final mostrar =
+            esRetador
+                ? (row['mostrar_retador'] ?? true) == true
+                : (row['mostrar_oponente'] ?? true) == true;
+
+        final estadoValido =
+            row['estado'] == 'pendiente' ||
+            row['estado'] == 'activa' ||
+            row['estado'] == 'completada' ||
+            row['estado'] == 'reclamada';
+
+        return (esRetador || esOponente) && estadoValido && mostrar;
+      }).toList();
+    });
   }
 
   /// Alternativa con query puntual (no reactiva) para cargar las batallas
   /// activas una vez, útil para RefreshIndicator o pull-to-refresh.
   Future<List<Map<String, dynamic>>> getBatallasActivas(String userId) async {
     try {
-      final response = await _supabase
-              .from('batallas_versus')
-              .select()
-              .or('retador_id.eq.$userId,oponente_id.eq.$userId')
-              .inFilter('estado', ['pendiente', 'activa', 'completada', 'reclamada'])
-              .order('created_at', ascending: false)
-          as List<dynamic>;
+      final response =
+          await _supabase
+                  .from('batallas_versus')
+                  .select()
+                  .or('retador_id.eq.$userId,oponente_id.eq.$userId')
+                  .inFilter('estado', [
+                    'pendiente',
+                    'activa',
+                    'completada',
+                    'reclamada',
+                  ])
+                  .order('created_at', ascending: false)
+              as List<dynamic>;
 
-      final filtered = response.cast<Map<String, dynamic>>().where((row) {
-        final esRetador = row['retador_id'] == userId;
-        final mostrar = esRetador ? (row['mostrar_retador'] ?? true) == true : (row['mostrar_oponente'] ?? true) == true;
-        return mostrar;
-      }).toList();
+      final filtered =
+          response.cast<Map<String, dynamic>>().where((row) {
+            final esRetador = row['retador_id'] == userId;
+            final mostrar =
+                esRetador
+                    ? (row['mostrar_retador'] ?? true) == true
+                    : (row['mostrar_oponente'] ?? true) == true;
+            return mostrar;
+          }).toList();
 
       return filtered;
     } on PostgrestException catch (e) {
-      debugPrint('❌ [VersusRepo] Error al obtener batallas activas: ${e.message}');
+      debugPrint(
+        '❌ [VersusRepo] Error al obtener batallas activas: ${e.message}',
+      );
       throw VersusException(
         'No se pudieron cargar las batallas activas: ${e.message}',
         code: e.code,
@@ -365,29 +444,30 @@ class VersusRepository {
   }) async {
     try {
       // ── RPC: Aceptar reto (cobra monedas, activa batalla, asigna turno) ──
-      final response = await _supabase.rpc('aceptar_reto_versus', params: {
-        'p_batalla_id': batallaId,
-        'p_categoria_oponente_id': categoriaOponenteId,
-        'p_tarea_oponente_id': tareaOponenteId,
-      });
+      final response = await _supabase.rpc(
+        'aceptar_reto_versus',
+        params: {
+          'p_batalla_id': batallaId,
+          'p_categoria_oponente_id': categoriaOponenteId,
+          'p_tarea_oponente_id': tareaOponenteId,
+        },
+      );
 
-      // Si es choque de materias, el oponente eligió su propia tarea. 
+      // Si es choque de materias, el oponente eligió su propia tarea.
       // Generamos las preguntas de la ronda 2 y la otra mitad de la ronda 3.
       if (tareaOponenteId != null) {
         await _generarPreguntasParaBatalla(
           batallaId: batallaId,
           tareaId: tareaOponenteId,
           indicesPorRonda: {
-            2: [0, 1, 2, 3, 4], 
+            2: [0, 1, 2, 3, 4],
             3: [3, 4, 5],
           },
         );
       }
 
       debugPrint('✅ [VersusRepo] Batalla aceptada via RPC: $batallaId');
-      return response is Map<String, dynamic>
-          ? response
-          : {'id': batallaId};
+      return response is Map<String, dynamic> ? response : {'id': batallaId};
     } on PostgrestException catch (e) {
       debugPrint('❌ [VersusRepo] Error RPC al aceptar batalla: ${e.message}');
       throw VersusException(
@@ -400,20 +480,26 @@ class VersusRepository {
   /// Reclama el premio llamando a la RPC
   Future<void> reclamarPremio(String batallaId) async {
     try {
-      await _supabase.rpc('reclamar_premio_versus', params: {
-        'p_batalla_id': batallaId,
-      });
-      debugPrint('💰 [VersusRepo] Premio reclamado para la batalla: $batallaId');
+      await _supabase.rpc(
+        'reclamar_premio_versus',
+        params: {'p_batalla_id': batallaId},
+      );
+      debugPrint(
+        '💰 [VersusRepo] Premio reclamado para la batalla: $batallaId',
+      );
     } on PostgrestException catch (e) {
       debugPrint('❌ [VersusRepo] Error al reclamar premio: ${e.message}');
-      throw VersusException('No se pudo reclamar el premio: ${e.message}', code: e.code);
+      throw VersusException(
+        'No se pudo reclamar el premio: ${e.message}',
+        code: e.code,
+      );
     }
   }
 
   Future<void> archivarBatalla(String batallaId, bool isChallenger) async {
     try {
       final updates = <String, dynamic>{};
-      
+
       if (isChallenger) {
         updates['mostrar_retador'] = false;
       } else {
@@ -429,8 +515,6 @@ class VersusRepository {
       debugPrint('❌ [VersusRepo] Error al archivar batalla: $e');
     }
   }
-
-
 
   // ═════════════════════════════════════════════════════════════════════
   // FINALIZAR TURNO (Cambio de turno entre jugadores)
@@ -464,7 +548,8 @@ class VersusRepository {
 
       if (!isChallenger) {
         // Oponente terminó su turno (primer turno de la ronda) → pasar al Retador
-        updates['turno_actual_id'] = oponenteId; // oponenteId apunta al otro jugador (el Retador)
+        updates['turno_actual_id'] =
+            oponenteId; // oponenteId apunta al otro jugador (el Retador)
         debugPrint(
           '🔄 [VersusRepo] Turno pasado al retador $oponenteId '
           '(Ronda $rondaActual, Batalla $batallaId)',
@@ -488,13 +573,15 @@ class VersusRepository {
       // ────────────────────────────────────────────────────────────────────────
       if (isChallenger) {
         // Ahora el Retador es quien tira al final y gatilla la evaluación
-        await _supabase.rpc('evaluar_ronda_versus', params: {
-          'p_batalla_id': batallaId,
-        });
-        debugPrint('✅ [VersusRepo] Ronda evaluada via RPC para batalla: $batallaId');
+        await _supabase.rpc(
+          'evaluar_ronda_versus',
+          params: {'p_batalla_id': batallaId},
+        );
+        debugPrint(
+          '✅ [VersusRepo] Ronda evaluada via RPC para batalla: $batallaId',
+        );
       }
       // ────────────────────────────────────────────────────────────────────────
-
     } on PostgrestException catch (e) {
       debugPrint('❌ [VersusRepo] Error al finalizar turno: ${e.message}');
       throw VersusException(
@@ -524,13 +611,14 @@ class VersusRepository {
     required int ronda,
   }) async {
     try {
-      final response = await _supabase
-              .from('batalla_preguntas')
-              .select()
-              .eq('batalla_id', batallaId)
-              .eq('ronda', ronda)
-              .order('indice', ascending: true)
-          as List<dynamic>;
+      final response =
+          await _supabase
+                  .from('batalla_preguntas')
+                  .select()
+                  .eq('batalla_id', batallaId)
+                  .eq('ronda', ronda)
+                  .order('indice', ascending: true)
+              as List<dynamic>;
 
       return response.map((row) {
         final datosExtra = row['datos_extra'] as Map<String, dynamic>? ?? {};
@@ -540,7 +628,8 @@ class VersusRepository {
         // - 'true_false': {} (sin datos extra, la respuesta es "true"/"false")
         // - 'fill_in_blank': { "segmented_text": [...], "correct_blanks": [...] }
         // - 'drag_drop': { "pairs": [{ "item": "...", "group": "..." }] }
-        final options = (datosExtra['options'] as List<dynamic>?)
+        final options =
+            (datosExtra['options'] as List<dynamic>?)
                 ?.map((e) => e.toString())
                 .toList() ??
             [];
@@ -550,7 +639,8 @@ class VersusRepository {
         int correctIndex = options.indexOf(correctAnswer);
         if (correctIndex == -1 && options.isNotEmpty) correctIndex = 0;
 
-        final tipoPregunta = row['tipo_pregunta'] as String? ?? 'multiple_choice';
+        final tipoPregunta =
+            row['tipo_pregunta'] as String? ?? 'multiple_choice';
 
         return VersusQuestion(
           id: row['id'].toString(),
@@ -650,7 +740,9 @@ class VersusRepository {
           .update(updates)
           .eq('id', batallaId);
 
-      debugPrint('🏆 [VersusRepo] Marcador actualizado: $rondasRetador - $rondasOponente');
+      debugPrint(
+        '🏆 [VersusRepo] Marcador actualizado: $rondasRetador - $rondasOponente',
+      );
     } on PostgrestException catch (e) {
       debugPrint('❌ [VersusRepo] Error al actualizar marcador: ${e.message}');
       throw VersusException(
@@ -664,11 +756,12 @@ class VersusRepository {
   Future<void> rechazarBatalla(String batallaId) async {
     try {
       // 1. Obtener la batalla para saber quién es el retador y la apuesta
-      final battleRes = await _supabase
-          .from('batallas_versus')
-          .select('retador_id, apuesta_monedas, estado')
-          .eq('id', batallaId)
-          .maybeSingle();
+      final battleRes =
+          await _supabase
+              .from('batallas_versus')
+              .select('retador_id, apuesta_monedas, estado')
+              .eq('id', batallaId)
+              .maybeSingle();
 
       if (battleRes != null && battleRes['estado'] == 'pendiente') {
         final retadorId = battleRes['retador_id'] as String;
@@ -681,18 +774,21 @@ class VersusRepository {
             .eq('id', batallaId);
 
         // 3. Regresar las monedas al retador
-        final retRes = await _supabase
-            .from('perfiles')
-            .select('monedas')
-            .eq('id', retadorId)
-            .maybeSingle();
+        final retRes =
+            await _supabase
+                .from('perfiles')
+                .select('monedas')
+                .eq('id', retadorId)
+                .maybeSingle();
         if (retRes != null) {
           final coins = (retRes['monedas'] as num?)?.toInt() ?? 0;
           await _supabase
               .from('perfiles')
               .update({'monedas': coins + bet})
               .eq('id', retadorId);
-          debugPrint('💸 [VersusRepo] Monedas devueltas al retador ($bet) tras rechazo.');
+          debugPrint(
+            '💸 [VersusRepo] Monedas devueltas al retador ($bet) tras rechazo.',
+          );
         }
       }
 
@@ -706,8 +802,6 @@ class VersusRepository {
     }
   }
 
-
-
   /// Realiza un update dummy para gatillar el stream de Realtime de Supabase
   Future<void> touchBatalla(String batallaId) async {
     try {
@@ -715,7 +809,9 @@ class VersusRepository {
           .from('batallas_versus')
           .update({'estado': 'activa'})
           .eq('id', batallaId);
-      debugPrint('⚡ [VersusRepo] Batalla tocada para refresco Realtime: $batallaId');
+      debugPrint(
+        '⚡ [VersusRepo] Batalla tocada para refresco Realtime: $batallaId',
+      );
     } on PostgrestException catch (e) {
       debugPrint('❌ [VersusRepo] Error al tocar batalla: ${e.message}');
     }

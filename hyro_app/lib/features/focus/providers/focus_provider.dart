@@ -279,8 +279,10 @@ class FocusProvider extends ChangeNotifier {
       });
 
       // ── Acciones de gamificación ──
-      // 10 XP por cada pomodoro completado (grantXP soporta nativamente cuentas locales)
-      profileProvider?.grantXP(userId, 10);
+      // Experiencia por pomodoro: 1 min = 1 XP (evita farmear)
+      profileProvider?.grantXP(userId, focusMinutes);
+      // Monedas por pomodoro: 10 monedas por completar sesión
+      profileProvider?.modificarMonedas(userId, 10);
       // Actualiza progreso de la misión
       missionsProvider?.updateProgress('pomodoro_completed', 1);
       missionsProvider?.updateProgress('minutes_studied', focusMinutes);

@@ -81,13 +81,14 @@ class _CompletedSessionViewState extends State<CompletedSessionView> {
                     runSpacing: 12,
                     children: [
                       _buildStatCard('TIEMPO', '${pomodoroMins}m Enfoque', context),
-                      _buildStatCard('PROGRESO', '+10 XP', context),
+                      _buildStatCard('PROGRESO', '+$pomodoroMins XP', context),
+                      _buildStatCard('RECOMPENSA', '+10 Monedas', context),
                       _buildStatCard('RACHA', '$streak Días de Racha', context),
                       if (context.read<FocusProvider>().state.quizTotalCount > 0)
                         _buildStatCard(
-                           'QUIZ',
-                           '${context.read<FocusProvider>().state.quizCorrectCount}/${context.read<FocusProvider>().state.quizTotalCount} ✅',
-                           context,
+                          'QUIZ',
+                          '${context.read<FocusProvider>().state.quizCorrectCount}/${context.read<FocusProvider>().state.quizTotalCount} ✅',
+                          context,
                         ),
                     ],
                   ),

@@ -8,6 +8,7 @@ class DailyMission {
   int currentProgress;
   bool isClaimed;
   final int xpReward;
+  final int coinReward;
 
   DailyMission({
     required this.id,
@@ -18,6 +19,7 @@ class DailyMission {
     this.currentProgress = 0,
     this.isClaimed = false,
     this.xpReward = 50,
+    this.coinReward = 0,
   });
 
   bool get isCompleted => currentProgress >= targetValue;
@@ -36,6 +38,7 @@ class DailyMission {
         'currentProgress': currentProgress,
         'isClaimed': isClaimed,
         'xpReward': xpReward,
+        'coinReward': coinReward,
       };
 
   /// Deserialize from a Map.
@@ -48,5 +51,6 @@ class DailyMission {
         currentProgress: json['currentProgress'] as int? ?? 0,
         isClaimed: json['isClaimed'] as bool? ?? false,
         xpReward: json['xpReward'] as int? ?? 50,
+        coinReward: json['coinReward'] as int? ?? 0,
       );
 }

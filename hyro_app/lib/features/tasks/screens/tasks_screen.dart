@@ -11,6 +11,7 @@ import '../../stats/stats_provider.dart';
 import '../../../core/providers/ui_provider.dart';
 import '../../categories/category_provider.dart';
 import '../widgets/task_details_sheet.dart';
+import '../../missions/missions_provider.dart';
 import '../../../data/models/category_model.dart';
 import '../../../core/widgets/mobile_stats_bar.dart';
 
@@ -1412,7 +1413,16 @@ class _TaskTile extends StatelessWidget {
             // Checkbox circle
             GestureDetector(
               onTap: () {
-                context.read<TaskProvider>().toggleTaskCompletion(task.id);
+                final taskProvider = context.read<TaskProvider>();
+                final wasCompleted = task.isCompleted;
+                taskProvider.toggleTaskCompletion(task.id);
+                
+                final missionsProvider = context.read<MissionsProvider>();
+                if (!wasCompleted) {
+                  missionsProvider.updateProgress('task_completed', 1);
+                } else {
+                  missionsProvider.updateProgress('task_completed', -1);
+                }
               },
               child: Container(
                 width: 26,

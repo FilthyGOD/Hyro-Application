@@ -72,7 +72,8 @@ class _MainLayoutState extends State<MainLayout> {
       key: _scaffoldKey,
       body: Column(
         children: [
-          if (!kIsWeb && (Platform.isWindows || Platform.isMacOS || Platform.isLinux))
+          if (!kIsWeb &&
+              (Platform.isWindows || Platform.isMacOS || Platform.isLinux))
             const CustomTitleBar(),
           Expanded(
             child: LayoutBuilder(
@@ -239,9 +240,9 @@ class _MainLayoutState extends State<MainLayout> {
                         label: 'Tienda',
                       ),
                       BottomNavigationBarItem(
-                        icon: const Icon(Icons.emoji_events_outlined),
-                        activeIcon: _buildActiveIcon(Icons.emoji_events),
-                        label: 'Desafíos',
+                        icon: const Icon(Icons.book_outlined),
+                        activeIcon: _buildActiveIcon(Icons.book_rounded),
+                        label: 'Tareas',
                       ),
                       BottomNavigationBarItem(
                         icon: const Icon(Icons.timer_outlined),
@@ -249,9 +250,9 @@ class _MainLayoutState extends State<MainLayout> {
                         label: 'Enfoque',
                       ),
                       BottomNavigationBarItem(
-                        icon: const Icon(Icons.check_circle_outline),
-                        activeIcon: _buildActiveIcon(Icons.check_circle),
-                        label: 'Tareas',
+                        icon: const Icon(Icons.emoji_events_outlined),
+                        activeIcon: _buildActiveIcon(Icons.emoji_events),
+                        label: 'Desafíos',
                       ),
                       BottomNavigationBarItem(
                         icon: const Icon(Icons.people_outline_rounded),

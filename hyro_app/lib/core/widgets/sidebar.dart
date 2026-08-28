@@ -25,16 +25,16 @@ class Sidebar extends StatelessWidget {
       targetIndex: 2,
     ),
     _SidebarItemData(
-      icon: Icons.check_circle_outline,
-      activeIcon: Icons.check_circle,
+      icon: Icons.book_outlined,
+      activeIcon: Icons.book_rounded,
       label: 'Tareas',
-      targetIndex: 3,
+      targetIndex: 1,
     ),
     _SidebarItemData(
       icon: Icons.emoji_events_outlined,
       activeIcon: Icons.emoji_events,
       label: 'Desafíos',
-      targetIndex: 1,
+      targetIndex: 3,
     ),
     _SidebarItemData(
       icon: Icons.storefront_outlined,

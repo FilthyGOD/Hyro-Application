@@ -254,9 +254,9 @@ class AppShellState extends State<AppShell>
 
   static const _screens = <Widget>[
     ShopScreen(), // 0
-    StatsScreen(), // 1
+    TasksScreen(), // 1
     FocusScreen(), // 2
-    TasksScreen(), // 3
+    StatsScreen(), // 3
     FriendsScreen(), // 4
     ProfileScreen(), // 5
   ];
@@ -387,7 +387,7 @@ class AppShellState extends State<AppShell>
     final mascot = context.read<MascotController>();
 
     // Saliendo de Focus, Shop, o Stats → reinicia la mascota a inactivo
-    if (previousIndex == 2 || previousIndex == 0 || previousIndex == 1) {
+    if (previousIndex == 2 || previousIndex == 0 || previousIndex == 3) {
       mascot.triggerVolver();
     }
 
@@ -405,7 +405,7 @@ class AppShellState extends State<AppShell>
     }
 
     // Llegando a Stats → dispara la animación de racha
-    if (index == 1) {
+    if (index == 3) {
       final streak = context.read<StatsProvider>().currentStreak;
       mascot.triggerRacha(streak);
     }
@@ -438,7 +438,7 @@ class AppShellState extends State<AppShell>
                     final mascot = context.read<MascotController>();
                     if (previousIndex == 2 ||
                         previousIndex == 0 ||
-                        previousIndex == 1) {
+                        previousIndex == 3) {
                       mascot.triggerVolver();
                     }
                     if (index == 2) {
@@ -452,7 +452,7 @@ class AppShellState extends State<AppShell>
                         }
                       }
                     }
-                    if (index == 1) {
+                    if (index == 3) {
                       final streak =
                           context.read<StatsProvider>().currentStreak;
                       mascot.triggerRacha(streak);
@@ -476,7 +476,7 @@ class AppShellState extends State<AppShell>
             final isQuizActive = timerState.quizDue;
             final isVisible =
                 (_selectedIndex == 2 ||
-                    _selectedIndex == 3 ||
+                    _selectedIndex == 1 ||
                     _selectedIndex == 4) &&
                 !isPomodoroFinished &&
                 !isQuizActive;

@@ -6,7 +6,7 @@ import '../../../../core/theme/app_typography.dart';
 import '../providers/versus_provider.dart';
 import '../../friends/widgets/static_mascot_widget.dart';
 import '../models/versus_models.dart';
-import 'select_opponent_bottom_sheet.dart';
+import 'create_versus_modal.dart';
 
 /// Sección horizontal de "Combates en Proceso" y botón "Iniciar Duelo".
 /// Diseñado para colocarse justo debajo del Ranking Semanal en FriendsScreen.
@@ -111,10 +111,10 @@ class VersusActiveBattlesSection extends StatelessWidget {
         color: Colors.transparent,
         child: InkWell(
           onTap: () {
-            SelectOpponentBottomSheet.show(
+            CreateVersusModal.show(
               context: context,
-              onChallengeSent: (opponent) {
-                onStartDuel(opponent);
+              onChallengeSent: (payload) {
+                // Refresh battles after challenge sent
               },
             );
           },

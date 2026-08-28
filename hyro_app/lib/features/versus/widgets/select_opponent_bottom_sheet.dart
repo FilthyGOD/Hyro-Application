@@ -332,9 +332,11 @@ class _SelectOpponentBottomSheetState extends State<SelectOpponentBottomSheet> {
               // Abrir CreateVersusModal
               CreateVersusModal.show(
                 context: context,
-                opponent: player,
                 onChallengeSent: (payload) {
-                  widget.onChallengeSent(player);
+                  widget.onChallengeSent(VersusPlayer(
+                    id: payload['oponente_id'] ?? '',
+                    username: '',
+                  ));
                 },
               );
             },

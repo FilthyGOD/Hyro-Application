@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:provider/provider.dart';
 import 'package:hive/hive.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../auth/providers/auth_provider.dart';
@@ -10,31 +11,29 @@ import '../../profile/providers/profile_provider.dart';
 import '../../../../features/tasks/tasks_provider.dart';
 import '../../../../data/models/tarea_card_model.dart';
 import '../../../../data/models/category_model.dart';
+import '../../friends/providers/friends_provider.dart';
+import '../../friends/widgets/static_mascot_widget.dart';
 import '../models/versus_models.dart';
 
-/// Modal para configurar y enviar un reto de Versus a un amigo.
+/// Modal flotante para configurar y enviar un reto de Versus.
+/// Muestra 4 botones de colores que abren sub-diálogos para cada selección.
 class CreateVersusModal extends StatefulWidget {
-  final VersusPlayer opponent;
   final Function(Map<String, dynamic> payload)? onChallengeSent;
 
   const CreateVersusModal({
     super.key,
-    required this.opponent,
     this.onChallengeSent,
   });
 
-  /// Método estático conveniente para desplegar este BottomSheet
+  /// Método estático para desplegar el diálogo flotante
   static Future<void> show({
     required BuildContext context,
-    required VersusPlayer opponent,
     Function(Map<String, dynamic> payload)? onChallengeSent,
   }) {
-    return showModalBottomSheet(
+    return showDialog(
       context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
+      barrierColor: Colors.black.withValues(alpha: 0.7),
       builder: (_) => CreateVersusModal(
-        opponent: opponent,
         onChallengeSent: onChallengeSent,
       ),
     );
@@ -44,25 +43,48 @@ class CreateVersusModal extends StatefulWidget {
   State<CreateVersusModal> createState() => _CreateVersusModalState();
 }
 
-class _CreateVersusModalState extends State<CreateVersusModal> {
-  // ── Variables de Estado ──
+class _CreateVersusModalState extends State<CreateVersusModal>
+    with SingleTickerProviderStateMixin {
+  // ── Estado de selección ──
+  VersusPlayer? _selectedOpponent;
   BattleMode _modoSeleccionado = BattleMode.sameSubject;
-  String? _tareaSeleccionadaId; // ID de TaskModel
-  String? _categoriaSeleccionadaId; // ID de CategoryModel de la tarea
+  String? _tareaSeleccionadaId;
+  String? _categoriaSeleccionadaId;
+  String? _materiaNombre;
+  String? _tareaNombre;
   int _costoMonedas = 50;
   bool _isLanzando = false;
 
-  // Opciones de apuesta disponibles
-  static const List<int> _opcionesApuesta = [20, 50, 100];
+  late AnimationController _animController;
+  late Animation<double> _scaleAnimation;
 
-  CategoryModel? _selectedCategory;
+  static const List<int> _opcionesApuesta = [20, 50, 100];
 
   @override
   void initState() {
     super.initState();
-    // No pre-seleccionamos tarea, el usuario debe seleccionar materia y luego tarea.
+    _animController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 300),
+    );
+    _scaleAnimation = CurvedAnimation(
+      parent: _animController,
+      curve: Curves.easeOutBack,
+    );
+    _animController.forward();
   }
-  /// Lanza el reto llamando a VersusProvider.crearBatalla (conexión real con Supabase).
+
+  @override
+  void dispose() {
+    _animController.dispose();
+    super.dispose();
+  }
+
+  bool get _isReadyToLaunch =>
+      _selectedOpponent != null &&
+      _tareaSeleccionadaId != null;
+
+  /// Lanza el reto llamando a VersusProvider.crearBatalla
   Future<void> _lanzarReto() async {
     final auth = context.read<AuthProvider>();
     final versus = context.read<VersusProvider>();
@@ -70,6 +92,11 @@ class _CreateVersusModalState extends State<CreateVersusModal> {
 
     if (userId == null) {
       _mostrarError('Debes iniciar sesión para lanzar un reto.');
+      return;
+    }
+
+    if (_selectedOpponent == null) {
+      _mostrarError('Selecciona un amigo para retar.');
       return;
     }
 
@@ -83,7 +110,7 @@ class _CreateVersusModalState extends State<CreateVersusModal> {
     final modoBatallaDb = _modoSeleccionado.toDb;
 
     final exito = await versus.crearBatalla(
-      oponenteId: widget.opponent.id,
+      oponenteId: _selectedOpponent!.id,
       modoBatalla: modoBatallaDb,
       tareaRetadorId: _tareaSeleccionadaId!,
       categoriaRetadorId: _categoriaSeleccionadaId,
@@ -94,12 +121,10 @@ class _CreateVersusModalState extends State<CreateVersusModal> {
     setState(() => _isLanzando = false);
 
     if (exito) {
-      // Recargar perfil local para reflejar la deducción de monedas del retador
       context.read<ProfileProvider>().loadProfile(userId);
 
-      // Notificar al callback si existe
       widget.onChallengeSent?.call({
-        'oponente_id': widget.opponent.id,
+        'oponente_id': _selectedOpponent!.id,
         'modo_batalla': modoBatallaDb,
         'tarea_retador_id': _tareaSeleccionadaId,
         'categoria_retador_id': _categoriaSeleccionadaId,
@@ -117,7 +142,7 @@ class _CreateVersusModalState extends State<CreateVersusModal> {
               const SizedBox(width: 10),
               Expanded(
                 child: Text(
-                  '¡Reto enviado a ${widget.opponent.username}!',
+                  '¡Reto enviado a ${_selectedOpponent!.username}!',
                   style: AppTypography.bodyMedium.copyWith(color: AppColors.textPrimary),
                 ),
               ),
@@ -153,468 +178,1347 @@ class _CreateVersusModalState extends State<CreateVersusModal> {
 
   @override
   Widget build(BuildContext context) {
-    // Obtener las tareas del usuario desde TaskProvider
-    final tasks = context.watch<TaskProvider>().tasks;
+    return ScaleTransition(
+      scale: _scaleAnimation,
+      child: Dialog(
+        backgroundColor: Colors.transparent,
+        insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 40),
+        child: Container(
+          constraints: const BoxConstraints(maxWidth: 400),
+          decoration: BoxDecoration(
+            color: AppColors.surface,
+            borderRadius: BorderRadius.circular(28),
+            border: Border.all(
+              color: AppColors.cardBorder,
+              width: 1.5,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.5),
+                blurRadius: 30,
+                spreadRadius: 5,
+              ),
+            ],
+          ),
+          child: SingleChildScrollView(
+            child: Padding(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // ── Título ──
+                  Text(
+                    'Configurar Duelo',
+                    style: AppTypography.h2.copyWith(
+                      color: AppColors.textPrimary,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                  const SizedBox(height: 20),
 
-    return Container(
-      padding: EdgeInsets.only(
-        top: 24,
-        left: 20,
-        right: 20,
-        bottom: MediaQuery.of(context).viewInsets.bottom + 24,
-      ),
-      decoration: const BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
-        border: Border(
-          top: BorderSide(color: AppColors.cardBorder, width: 1.5),
-        ),
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Drag handle
-          Center(
-            child: Container(
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: AppColors.textTertiary.withValues(alpha: 0.4),
-                borderRadius: BorderRadius.circular(2),
+                  // ── 1. Botón: Selecciona un amigo ──
+                  _buildSelectorButton(
+                    gradient: const LinearGradient(
+                      colors: [Color(0xFF4A6CF7), Color(0xFF8B5CF6)],
+                      begin: Alignment.centerLeft,
+                      end: Alignment.centerRight,
+                    ),
+                    icon: Icons.person_add_rounded,
+                    iconBgColor: const Color(0xFF3B54D9),
+                    title: _selectedOpponent != null
+                        ? _selectedOpponent!.username
+                        : 'Selecciona un amigo',
+                    subtitle: _selectedOpponent != null
+                        ? 'Nivel ${_selectedOpponent!.level}'
+                        : 'Nombre del amigo',
+                    trailing: const Icon(
+                      Icons.chevron_right_rounded,
+                      color: Colors.white70,
+                      size: 28,
+                    ),
+                    onTap: _showFriendSelector,
+                  ),
+                  const SizedBox(height: 12),
+
+                  // ── 2. Fila: Material + Modo de Batalla ──
+                  Row(
+                    children: [
+                      // Material de estudio
+                      Expanded(
+                        child: _buildSelectorButton(
+                          gradient: const LinearGradient(
+                            colors: [Color(0xFFD97706), Color(0xFF92400E)],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
+                          icon: Icons.menu_book_rounded,
+                          iconBgColor: const Color(0xFFB45309),
+                          title: 'Material de estudio',
+                          subtitle: _materiaNombre != null
+                              ? '$_materiaNombre\n$_tareaNombre'
+                              : 'Materia\nActividad, Tarea',
+                          trailing: const Icon(
+                            Icons.chevron_right_rounded,
+                            color: Colors.white70,
+                            size: 24,
+                          ),
+                          onTap: _showMaterialSelector,
+                          compact: true,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      // Modo de batalla
+                      Expanded(
+                        child: _buildSelectorButton(
+                          gradient: const LinearGradient(
+                            colors: [Color(0xFFEA580C), Color(0xFFDC2626)],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
+                          icon: Icons.whatshot_rounded,
+                          iconBgColor: const Color(0xFFD03A00),
+                          title: 'Modo de batalla',
+                          subtitle: _modoSeleccionado.title,
+                          trailing: const Icon(
+                            Icons.chevron_right_rounded,
+                            color: Colors.white70,
+                            size: 24,
+                          ),
+                          onTap: _showBattleModeSelector,
+                          compact: true,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+
+                  // ── 3. Botón: Selecciona una Apuesta ──
+                  _buildSelectorButton(
+                    gradient: const LinearGradient(
+                      colors: [Color(0xFF16A34A), Color(0xFFCA8A04)],
+                      begin: Alignment.centerLeft,
+                      end: Alignment.centerRight,
+                    ),
+                    icon: Icons.monetization_on_rounded,
+                    iconBgColor: const Color(0xFF15803D),
+                    title: 'Selecciona una Apuesta',
+                    subtitle: 'Cantidad: $_costoMonedas monedas',
+                    trailing: const Icon(
+                      Icons.chevron_right_rounded,
+                      color: Colors.white70,
+                      size: 28,
+                    ),
+                    onTap: _showBetSelector,
+                  ),
+                  const SizedBox(height: 24),
+
+                  // ── 4. Botón: Iniciar Reto ──
+                  SizedBox(
+                    width: double.infinity,
+                    height: 52,
+                    child: ElevatedButton(
+                      onPressed: (_isLanzando || !_isReadyToLaunch) ? null : _lanzarReto,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.primary,
+                        foregroundColor: Colors.black,
+                        elevation: 6,
+                        shadowColor: AppColors.primary.withValues(alpha: 0.5),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        disabledBackgroundColor: AppColors.primary.withValues(alpha: 0.3),
+                      ),
+                      child: _isLanzando
+                          ? const SizedBox(
+                              width: 24,
+                              height: 24,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2.5,
+                                color: Colors.black,
+                              ),
+                            )
+                          : Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                const Icon(Icons.flash_on_rounded, size: 22, color: Colors.black),
+                                const SizedBox(width: 8),
+                                Text(
+                                  'Iniciar Reto',
+                                  style: AppTypography.labelLarge.copyWith(
+                                    color: Colors.black,
+                                    fontWeight: FontWeight.w800,
+                                    fontSize: 16,
+                                  ),
+                                ),
+                              ],
+                            ),
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+
+                  // ── 5. Botón: Cancelar ──
+                  SizedBox(
+                    width: double.infinity,
+                    height: 48,
+                    child: ElevatedButton(
+                      onPressed: () => Navigator.pop(context),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFFEC4899),
+                        foregroundColor: Colors.white,
+                        elevation: 4,
+                        shadowColor: const Color(0xFFEC4899).withValues(alpha: 0.4),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                      ),
+                      child: Text(
+                        'Cancelar',
+                        style: AppTypography.labelLarge.copyWith(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w800,
+                          fontSize: 16,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
-          const SizedBox(height: 16),
+        ),
+      ),
+    );
+  }
 
-          // Título del Modal
-          Row(
+  // ═══════════════════════════════════════════════════════════════════════════
+  // BOTÓN SELECTOR GENÉRICO
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  Widget _buildSelectorButton({
+    required Gradient gradient,
+    required IconData icon,
+    required Color iconBgColor,
+    required String title,
+    required String subtitle,
+    Widget? trailing,
+    required VoidCallback onTap,
+    bool compact = false,
+  }) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(18),
+        child: Container(
+          width: double.infinity,
+          padding: EdgeInsets.all(compact ? 12 : 14),
+          decoration: BoxDecoration(
+            gradient: gradient,
+            borderRadius: BorderRadius.circular(18),
+            boxShadow: [
+              BoxShadow(
+                color: (gradient as LinearGradient).colors.first.withValues(alpha: 0.3),
+                blurRadius: 8,
+                offset: const Offset(0, 3),
+              ),
+            ],
+          ),
+          child: Row(
             children: [
               Container(
-                padding: const EdgeInsets.all(10),
+                width: compact ? 36 : 44,
+                height: compact ? 36 : 44,
                 decoration: BoxDecoration(
-                  color: AppColors.primary.withValues(alpha: 0.15),
-                  shape: BoxShape.circle,
+                  color: iconBgColor.withValues(alpha: 0.5),
+                  borderRadius: BorderRadius.circular(12),
                 ),
-                child: const Icon(Icons.sports_esports_rounded, color: AppColors.primary, size: 24),
+                child: Icon(
+                  icon,
+                  color: Colors.white,
+                  size: compact ? 20 : 24,
+                ),
               ),
-              const SizedBox(width: 12),
+              SizedBox(width: compact ? 8 : 12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Configurar Duelo',
-                      style: AppTypography.h3.copyWith(color: AppColors.textPrimary),
+                      title,
+                      style: AppTypography.labelLarge.copyWith(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w800,
+                        fontSize: compact ? 12 : 14,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
+                    const SizedBox(height: 2),
                     Text(
-                      'Desafiando a ${widget.opponent.username}',
-                      style: AppTypography.bodySmall.copyWith(color: AppColors.textSecondary),
+                      subtitle,
+                      style: AppTypography.bodySmall.copyWith(
+                        color: Colors.white.withValues(alpha: 0.8),
+                        fontSize: compact ? 10 : 12,
+                        height: 1.3,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ],
                 ),
               ),
+              if (trailing != null) trailing,
             ],
           ),
-          const SizedBox(height: 24),
+        ),
+      ),
+    );
+  }
 
-          // 1. Selector de Modo de Batalla
-          Text(
-            'Modo de Batalla',
-            style: AppTypography.labelLarge.copyWith(color: AppColors.textSecondary, fontWeight: FontWeight.w600),
-          ),
-          const SizedBox(height: 10),
-          ...BattleMode.values.map((mode) => _buildModeOption(mode)),
+  // ═══════════════════════════════════════════════════════════════════════════
+  // SUB-DIÁLOGO 1: SELECCIÓN DE AMIGO
+  // ═══════════════════════════════════════════════════════════════════════════
 
-          const SizedBox(height: 20),
+  void _showFriendSelector() {
+    showDialog(
+      context: context,
+      barrierColor: Colors.black.withValues(alpha: 0.6),
+      builder: (dialogContext) => _FriendSelectorDialog(
+        onFriendSelected: (player) {
+          setState(() {
+            _selectedOpponent = player;
+          });
+        },
+      ),
+    );
+  }
 
-          // 2. Selector de Tarea (datos reales del usuario)
-          Text(
-            'Tu Tarea de Estudio',
-            style: AppTypography.labelLarge.copyWith(color: AppColors.textSecondary, fontWeight: FontWeight.w600),
-          ),
-          const SizedBox(height: 10),
-          if (tasks.isEmpty)
+  // ═══════════════════════════════════════════════════════════════════════════
+  // SUB-DIÁLOGO 2: SELECCIÓN DE MATERIAL DE ESTUDIO
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  void _showMaterialSelector() {
+    final tasks = context.read<TaskProvider>().tasks;
+
+    showDialog(
+      context: context,
+      barrierColor: Colors.black.withValues(alpha: 0.6),
+      builder: (dialogContext) => _MaterialSelectorDialog(
+        tasks: tasks,
+        onTaskSelected: (taskId, taskTitle, categoryId, categoryName) {
+          setState(() {
+            _tareaSeleccionadaId = taskId;
+            _tareaNombre = taskTitle;
+            _categoriaSeleccionadaId = categoryId;
+            _materiaNombre = categoryName;
+          });
+        },
+      ),
+    );
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // SUB-DIÁLOGO 3: SELECCIÓN DE MODO DE BATALLA
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  void _showBattleModeSelector() {
+    showDialog(
+      context: context,
+      barrierColor: Colors.black.withValues(alpha: 0.6),
+      builder: (dialogContext) => _BattleModeSelectorDialog(
+        currentMode: _modoSeleccionado,
+        onModeSelected: (mode) {
+          setState(() {
+            _modoSeleccionado = mode;
+          });
+        },
+      ),
+    );
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // SUB-DIÁLOGO 4: SELECCIÓN DE APUESTA
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  void _showBetSelector() {
+    showDialog(
+      context: context,
+      barrierColor: Colors.black.withValues(alpha: 0.6),
+      builder: (dialogContext) => _BetSelectorDialog(
+        currentBet: _costoMonedas,
+        options: _opcionesApuesta,
+        onBetSelected: (bet) {
+          setState(() {
+            _costoMonedas = bet;
+          });
+        },
+      ),
+    );
+  }
+}
+
+// ═════════════════════════════════════════════════════════════════════════════
+// DIÁLOGO: SELECCIÓN DE AMIGO
+// ═════════════════════════════════════════════════════════════════════════════
+
+class _FriendSelectorDialog extends StatefulWidget {
+  final Function(VersusPlayer) onFriendSelected;
+
+  const _FriendSelectorDialog({required this.onFriendSelected});
+
+  @override
+  State<_FriendSelectorDialog> createState() => _FriendSelectorDialogState();
+}
+
+class _FriendSelectorDialogState extends State<_FriendSelectorDialog> {
+  final TextEditingController _searchController = TextEditingController();
+  String _query = '';
+  bool _isSearchingGlobal = false;
+  List<VersusPlayer> _globalSearchResults = [];
+  String? _searchError;
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _buscarGlobalmente(String query) async {
+    if (query.trim().isEmpty) return;
+
+    setState(() {
+      _isSearchingGlobal = true;
+      _searchError = null;
+    });
+
+    try {
+      final auth = context.read<AuthProvider>();
+      final currentUserId = auth.supabaseUserId;
+
+      if (currentUserId == null) return;
+
+      final response = await Supabase.instance.client
+          .from('perfiles')
+          .select('id, nombre_usuario, nivel, mascota_cosmeticos(sombrero, cara, traje)')
+          .ilike('nombre_usuario', '%$query%')
+          .neq('id', currentUserId)
+          .limit(10)
+          as List<dynamic>;
+
+      final results = response.map((row) {
+        return VersusPlayer.fromProfileData(row as Map<String, dynamic>);
+      }).toList();
+
+      setState(() {
+        _globalSearchResults = results;
+        if (results.isEmpty) {
+          _searchError = 'No se encontraron usuarios con ese nombre.';
+        }
+      });
+    } catch (e) {
+      setState(() {
+        _searchError = 'Error al realizar la búsqueda global.';
+      });
+      debugPrint('❌ [FriendSelector] Error en búsqueda global: $e');
+    } finally {
+      setState(() {
+        _isSearchingGlobal = false;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final friendsProvider = context.watch<FriendsProvider>();
+
+    final List<VersusPlayer> friends = friendsProvider.ranking
+        .where((entry) => !entry.isCurrentUser)
+        .map((entry) => VersusPlayer(
+              id: entry.usuarioId,
+              username: entry.nombreUsuario,
+              sombreroId: entry.sombrero,
+              cosmeticoId: entry.cosmetico,
+              trajeId: entry.traje,
+              level: 1,
+            ))
+        .toList();
+
+    final List<VersusPlayer> filteredFriends = friends.where((friend) {
+      return friend.username.toLowerCase().contains(_query.toLowerCase());
+    }).toList();
+
+    return Dialog(
+      backgroundColor: Colors.transparent,
+      insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 50),
+      child: Container(
+        constraints: const BoxConstraints(maxWidth: 400, maxHeight: 500),
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(color: AppColors.cardBorder, width: 1.5),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // ── Header azul ──
             Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: AppColors.surfaceLight,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: AppColors.cardBorder),
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(vertical: 14),
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [Color(0xFF4A6CF7), Color(0xFF8B5CF6)],
+                ),
+                borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
               ),
-              child: Row(
-                children: [
-                  const Icon(Icons.info_outline, color: AppColors.textSecondary, size: 18),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      'No tienes tareas creadas. Crea una en la sección de Tareas.',
-                      style: AppTypography.bodySmall.copyWith(color: AppColors.textSecondary),
+              child: Text(
+                'Amigos',
+                textAlign: TextAlign.center,
+                style: AppTypography.h3.copyWith(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+            ),
+            // ── Body ──
+            Flexible(
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Selecciona un amigo para retar',
+                      style: AppTypography.bodyMedium.copyWith(
+                        color: AppColors.textPrimary,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
-                  ),
-                ],
+                    const SizedBox(height: 12),
+                    // Search bar
+                    Container(
+                      decoration: BoxDecoration(
+                        color: AppColors.surfaceLight,
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(color: AppColors.cardBorder),
+                      ),
+                      child: TextField(
+                        controller: _searchController,
+                        style: const TextStyle(color: AppColors.textPrimary, fontSize: 14),
+                        onChanged: (val) {
+                          setState(() {
+                            _query = val;
+                            if (val.trim().isEmpty) {
+                              _globalSearchResults.clear();
+                              _searchError = null;
+                            }
+                          });
+                        },
+                        decoration: InputDecoration(
+                          hintText: 'Buscar por nombre...',
+                          hintStyle: TextStyle(
+                            color: AppColors.textSecondary.withValues(alpha: 0.5),
+                            fontSize: 13,
+                          ),
+                          border: InputBorder.none,
+                          prefixIcon: const Icon(Icons.search_rounded, color: AppColors.textSecondary),
+                          contentPadding: const EdgeInsets.symmetric(vertical: 14),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    // Global search button
+                    if (_query.trim().isNotEmpty)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 8),
+                        child: SizedBox(
+                          width: double.infinity,
+                          child: OutlinedButton.icon(
+                            onPressed: _isSearchingGlobal ? null : () => _buscarGlobalmente(_query),
+                            icon: _isSearchingGlobal
+                                ? const SizedBox(
+                                    width: 16,
+                                    height: 16,
+                                    child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.primary),
+                                  )
+                                : const Icon(Icons.language_rounded, size: 16),
+                            label: Text(
+                              _isSearchingGlobal ? 'Buscando...' : 'Buscar globalmente',
+                              style: AppTypography.bodySmall.copyWith(fontWeight: FontWeight.bold),
+                            ),
+                            style: OutlinedButton.styleFrom(
+                              foregroundColor: AppColors.primary,
+                              side: const BorderSide(color: AppColors.primary),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                            ),
+                          ),
+                        ),
+                      ),
+                    // Friend list
+                    Expanded(
+                      child: _isSearchingGlobal
+                          ? const Center(child: CircularProgressIndicator(color: AppColors.primary))
+                          : _searchError != null
+                              ? Center(
+                                  child: Text(
+                                    _searchError!,
+                                    style: AppTypography.bodySmall.copyWith(color: AppColors.textSecondary),
+                                    textAlign: TextAlign.center,
+                                  ),
+                                )
+                              : _query.trim().isNotEmpty && _globalSearchResults.isNotEmpty
+                                  ? _buildFriendList(_globalSearchResults)
+                                  : filteredFriends.isEmpty
+                                      ? Center(
+                                          child: Text(
+                                            _query.isEmpty
+                                                ? 'No tienes amigos agregados todavía.'
+                                                : 'No se encontraron amigos.',
+                                            style: AppTypography.bodySmall.copyWith(color: AppColors.textSecondary),
+                                            textAlign: TextAlign.center,
+                                          ),
+                                        )
+                                      : _buildFriendList(filteredFriends),
+                    ),
+                  ],
+                ),
               ),
-            )
-          else
-            SizedBox(
-              height: 52,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFriendList(List<VersusPlayer> players) {
+    return ListView.separated(
+      itemCount: players.length,
+      separatorBuilder: (_, __) => const SizedBox(height: 8),
+      itemBuilder: (context, index) {
+        final player = players[index];
+
+        return ListTile(
+          tileColor: AppColors.surfaceLight,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(14),
+            side: const BorderSide(color: AppColors.cardBorder),
+          ),
+          leading: SizedBox(
+            width: 40,
+            height: 40,
+            child: Container(
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(color: AppColors.primary.withValues(alpha: 0.5), width: 1.5),
+              ),
+              child: ClipOval(
+                child: StaticMascotWidget(
+                  sombrero: player.sombreroId,
+                  cosmetico: player.cosmeticoId,
+                  traje: player.trajeId,
+                ),
+              ),
+            ),
+          ),
+          title: Text(
+            player.username,
+            style: AppTypography.bodyMedium.copyWith(
+              color: AppColors.textPrimary,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          subtitle: Text(
+            'Nivel ${player.level}',
+            style: AppTypography.bodySmall.copyWith(color: AppColors.textSecondary, fontSize: 11),
+          ),
+          trailing: ElevatedButton(
+            onPressed: () {
+              widget.onFriendSelected(player);
+              Navigator.pop(context);
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primary,
+              foregroundColor: Colors.black,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+              minimumSize: Size.zero,
+            ),
+            child: Text(
+              'RETAR',
+              style: AppTypography.bodySmall.copyWith(
+                color: Colors.black,
+                fontWeight: FontWeight.w900,
+                fontSize: 11,
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+// ═════════════════════════════════════════════════════════════════════════════
+// DIÁLOGO: SELECCIÓN DE MATERIAL DE ESTUDIO
+// ═════════════════════════════════════════════════════════════════════════════
+
+class _MaterialSelectorDialog extends StatefulWidget {
+  final List<dynamic> tasks;
+  final Function(String taskId, String taskTitle, String? categoryId, String categoryName) onTaskSelected;
+
+  const _MaterialSelectorDialog({
+    required this.tasks,
+    required this.onTaskSelected,
+  });
+
+  @override
+  State<_MaterialSelectorDialog> createState() => _MaterialSelectorDialogState();
+}
+
+class _MaterialSelectorDialogState extends State<_MaterialSelectorDialog> {
+  CategoryModel? _selectedCategory;
+
+  @override
+  Widget build(BuildContext context) {
+    return Dialog(
+      backgroundColor: Colors.transparent,
+      insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 50),
+      child: Container(
+        constraints: const BoxConstraints(maxWidth: 400, maxHeight: 500),
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(color: AppColors.cardBorder, width: 1.5),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // ── Header naranja ──
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(vertical: 14),
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [Color(0xFFD97706), Color(0xFF92400E)],
+                ),
+                borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+              ),
+              child: Text(
+                'Material de estudio',
+                textAlign: TextAlign.center,
+                style: AppTypography.h3.copyWith(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+            ),
+            // ── Body ──
+            Flexible(
               child: AnimatedSwitcher(
                 duration: const Duration(milliseconds: 300),
                 child: _selectedCategory == null
-                    ? _buildCategoriesList(tasks)
-                    : _buildTasksList(tasks),
+                    ? _buildCategoryList()
+                    : _buildTaskList(),
               ),
             ),
+          ],
+        ),
+      ),
+    );
+  }
 
-          const SizedBox(height: 24),
+  Widget _buildCategoryList() {
+    final categoriesBox = Hive.box<CategoryModel>('categoriesBox');
+    final catIds = widget.tasks.map((t) => t.categoryId).where((id) => id != null).toSet();
+    final categories = categoriesBox.values.where((c) => catIds.contains(c.id)).toList();
 
-          // 3. Selector de Apuesta (20, 50, 100 monedas)
-          Text(
-            'Apuesta de Monedas',
-            style: AppTypography.labelLarge.copyWith(color: AppColors.textSecondary, fontWeight: FontWeight.w600),
+    return Padding(
+      key: const ValueKey('mat_categories'),
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          // Icono de materia
+          Container(
+            width: 56,
+            height: 56,
+            decoration: BoxDecoration(
+              color: const Color(0xFF92400E).withValues(alpha: 0.3),
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: const Icon(Icons.school_rounded, color: Color(0xFFD97706), size: 28),
           ),
           const SizedBox(height: 10),
-          Row(
-            children: _opcionesApuesta.map((monto) {
-              final isSelected = _costoMonedas == monto;
-              final Color chipColor = monto == 20
-                  ? const Color(0xFF22C55E)
-                  : monto == 50
-                      ? const Color(0xFFF59E0B)
-                      : const Color(0xFFEF4444);
+          Text(
+            'Selecciona una materia',
+            style: AppTypography.bodyMedium.copyWith(
+              color: AppColors.textPrimary,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          const SizedBox(height: 16),
+          if (categories.isEmpty)
+            Text(
+              'No tienes materias disponibles.',
+              style: AppTypography.bodySmall.copyWith(color: AppColors.textSecondary),
+            )
+          else
+            Expanded(
+              child: ListView.separated(
+                itemCount: categories.length,
+                separatorBuilder: (_, __) => const SizedBox(height: 8),
+                itemBuilder: (context, index) {
+                  final category = categories[index];
+                  final color = Color(category.colorValue);
+                  final taskCount = widget.tasks.where((t) => t.categoryId == category.id).length;
 
-              return Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 4),
-                  child: Material(
+                  return ListTile(
+                    tileColor: AppColors.surfaceLight,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                      side: const BorderSide(color: AppColors.cardBorder),
+                    ),
+                    leading: CircleAvatar(
+                      backgroundColor: color.withValues(alpha: 0.15),
+                      radius: 20,
+                      child: Icon(
+                        category.iconCodePoint != null
+                            ? IconData(category.iconCodePoint!, fontFamily: 'MaterialIcons')
+                            : Icons.folder,
+                        color: color,
+                        size: 20,
+                      ),
+                    ),
+                    title: Text(
+                      category.name,
+                      style: AppTypography.bodyMedium.copyWith(
+                        color: AppColors.textPrimary,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    subtitle: Text(
+                      '$taskCount tareas',
+                      style: AppTypography.bodySmall.copyWith(color: AppColors.textSecondary),
+                    ),
+                    trailing: const Icon(Icons.chevron_right, color: AppColors.textTertiary),
+                    onTap: () {
+                      setState(() {
+                        _selectedCategory = category;
+                      });
+                    },
+                  );
+                },
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTaskList() {
+    final category = _selectedCategory!;
+    final tasks = widget.tasks.where((t) => t.categoryId == category.id).toList();
+    final cardsBox = Hive.box<TareaCardModel>('cardsBox');
+
+    return Padding(
+      key: ValueKey('mat_tasks_${category.id}'),
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          // Category icon
+          Container(
+            width: 56,
+            height: 56,
+            decoration: BoxDecoration(
+              color: const Color(0xFF92400E).withValues(alpha: 0.3),
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: const Icon(Icons.school_rounded, color: Color(0xFFD97706), size: 28),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            category.name,
+            style: AppTypography.bodyMedium.copyWith(
+              color: AppColors.textPrimary,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          const SizedBox(height: 4),
+          // Back button
+          GestureDetector(
+            onTap: () {
+              setState(() {
+                _selectedCategory = null;
+              });
+            },
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(Icons.arrow_back_rounded, color: AppColors.textSecondary, size: 16),
+                const SizedBox(width: 4),
+                Text(
+                  'Cambiar materia',
+                  style: AppTypography.bodySmall.copyWith(
+                    color: AppColors.textSecondary,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 12),
+          Text(
+            'Tareas',
+            style: AppTypography.labelLarge.copyWith(
+              color: AppColors.textPrimary,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+          const SizedBox(height: 8),
+          if (tasks.isEmpty)
+            Text(
+              'No tienes tareas en esta materia.',
+              style: AppTypography.bodySmall.copyWith(color: AppColors.textSecondary),
+            )
+          else
+            Expanded(
+              child: ListView.separated(
+                itemCount: tasks.length,
+                separatorBuilder: (_, __) => const SizedBox(height: 6),
+                itemBuilder: (context, index) {
+                  final task = tasks[index];
+                  final numCards = cardsBox.values.where((c) => c.tareaId == task.id).length;
+                  final color = Color(task.priorityColorValue);
+
+                  return Material(
                     color: Colors.transparent,
                     child: InkWell(
-                      onTap: () => setState(() => _costoMonedas = monto),
+                      onTap: () {
+                        widget.onTaskSelected(
+                          task.id,
+                          task.title,
+                          task.categoryId,
+                          category.name,
+                        );
+                        Navigator.pop(context);
+                      },
                       borderRadius: BorderRadius.circular(14),
-                      child: AnimatedContainer(
-                        duration: const Duration(milliseconds: 200),
-                        padding: const EdgeInsets.symmetric(vertical: 12),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                         decoration: BoxDecoration(
-                          color: isSelected
-                              ? chipColor.withValues(alpha: 0.2)
-                              : AppColors.surfaceLight,
+                          color: AppColors.surfaceLight,
                           borderRadius: BorderRadius.circular(14),
-                          border: Border.all(
-                            color: isSelected ? chipColor : AppColors.cardBorder,
-                            width: isSelected ? 2.0 : 1.0,
-                          ),
-                          boxShadow: isSelected
-                              ? [
-                                  BoxShadow(
-                                    color: chipColor.withValues(alpha: 0.25),
-                                    blurRadius: 8,
-                                  ),
-                                ]
-                              : null,
+                          border: Border.all(color: AppColors.cardBorder),
                         ),
-                        child: Column(
+                        child: Row(
                           children: [
-                            SvgPicture.asset(
-                              'assets/images/HyroCoins.svg',
-                              width: 22,
-                              height: 22,
+                            Icon(
+                              Icons.radio_button_unchecked,
+                              color: AppColors.textTertiary,
+                              size: 22,
                             ),
-                            const SizedBox(height: 4),
-                            Text(
-                              '$monto',
-                              style: AppTypography.labelLarge.copyWith(
-                                color: isSelected ? chipColor : AppColors.textSecondary,
-                                fontWeight: FontWeight.w800,
-                                fontSize: 16,
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                task.title,
+                                style: AppTypography.bodyMedium.copyWith(
+                                  color: AppColors.textPrimary,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                              decoration: BoxDecoration(
+                                color: color.withValues(alpha: 0.15),
+                                borderRadius: BorderRadius.circular(8),
+                                border: Border.all(color: color.withValues(alpha: 0.4)),
+                              ),
+                              child: Text(
+                                '$numCards cards',
+                                style: AppTypography.bodySmall.copyWith(
+                                  color: color,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 10,
+                                ),
                               ),
                             ),
                           ],
                         ),
                       ),
                     ),
-                  ),
-                ),
-              );
-            }).toList(),
-          ),
-          const SizedBox(height: 16),
-
-          // Resumen dinámico del Pozo Total
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-            decoration: BoxDecoration(
-              color: AppColors.surfaceLight,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: const Color(0xFFF59E0B).withValues(alpha: 0.3)),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Icon(Icons.emoji_events_rounded, color: Color(0xFFF59E0B), size: 18),
-                const SizedBox(width: 8),
-                Text(
-                  'Pozo total: ${_costoMonedas * 2} Monedas',
-                  style: AppTypography.bodyMedium.copyWith(
-                    color: AppColors.textPrimary,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          const SizedBox(height: 24),
-
-          // 4. Botón Lanzar Reto
-          SizedBox(
-            width: double.infinity,
-            height: 52,
-            child: ElevatedButton(
-              onPressed: (_isLanzando || tasks.isEmpty) ? null : _lanzarReto,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primary,
-                foregroundColor: Colors.black,
-                elevation: 4,
-                shadowColor: AppColors.primary.withValues(alpha: 0.5),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                disabledBackgroundColor: AppColors.primary.withValues(alpha: 0.3),
+                  );
+                },
               ),
-              child: _isLanzando
-                  ? const SizedBox(
-                      width: 24,
-                      height: 24,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2.5,
-                        color: Colors.black,
-                      ),
-                    )
-                  : Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Icon(Icons.flash_on_rounded, size: 22, color: Colors.black),
-                        const SizedBox(width: 8),
-                        Text(
-                          'LANZAR RETO',
-                          style: AppTypography.labelLarge.copyWith(
-                            color: Colors.black,
-                            fontWeight: FontWeight.w800,
-                            letterSpacing: 1.1,
-                          ),
-                        ),
-                      ],
-                    ),
             ),
-          ),
         ],
       ),
     );
   }
+}
 
-  Widget _buildModeOption(BattleMode mode) {
-    final isSelected = _modoSeleccionado == mode;
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8.0),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: () => setState(() => _modoSeleccionado = mode),
-          borderRadius: BorderRadius.circular(16),
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 200),
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: isSelected
-                  ? AppColors.primary.withValues(alpha: 0.1)
-                  : AppColors.surfaceLight,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(
-                color: isSelected ? AppColors.primary : AppColors.cardBorder,
-                width: isSelected ? 1.5 : 1.0,
-              ),
-            ),
-            child: Row(
-              children: [
-                Icon(
-                  isSelected ? Icons.radio_button_checked : Icons.radio_button_unchecked,
-                  color: isSelected ? AppColors.primary : AppColors.textTertiary,
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        mode.title,
-                        style: AppTypography.bodyMedium.copyWith(
-                          color: isSelected ? AppColors.primary : AppColors.textPrimary,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        mode.description,
-                        style: AppTypography.bodySmall.copyWith(
-                          color: AppColors.textSecondary,
-                          fontSize: 11,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
+// ═════════════════════════════════════════════════════════════════════════════
+// DIÁLOGO: SELECCIÓN DE MODO DE BATALLA
+// ═════════════════════════════════════════════════════════════════════════════
+
+class _BattleModeSelectorDialog extends StatefulWidget {
+  final BattleMode currentMode;
+  final Function(BattleMode) onModeSelected;
+
+  const _BattleModeSelectorDialog({
+    required this.currentMode,
+    required this.onModeSelected,
+  });
+
+  @override
+  State<_BattleModeSelectorDialog> createState() => _BattleModeSelectorDialogState();
+}
+
+class _BattleModeSelectorDialogState extends State<_BattleModeSelectorDialog> {
+  late BattleMode _selected;
+
+  @override
+  void initState() {
+    super.initState();
+    _selected = widget.currentMode;
   }
 
-  Widget _buildCategoriesList(List<dynamic> tasks) {
-    final categoriesBox = Hive.box<CategoryModel>('categoriesBox');
-    final catIds = tasks.map((t) => t.categoryId).where((id) => id != null).toSet();
-    final categories = categoriesBox.values.where((c) => catIds.contains(c.id)).toList();
-
-    return ListView.separated(
-      key: const ValueKey('categories'),
-      scrollDirection: Axis.horizontal,
-      itemCount: categories.length,
-      separatorBuilder: (_, __) => const SizedBox(width: 8),
-      itemBuilder: (context, index) {
-        final category = categories[index];
-        final color = Color(category.colorValue);
-        final taskCount = tasks.where((t) => t.categoryId == category.id).length;
-
-        return ChoiceChip(
-          label: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                category.iconCodePoint != null ? IconData(category.iconCodePoint!, fontFamily: 'MaterialIcons') : Icons.folder,
-                color: color,
-                size: 18,
+  @override
+  Widget build(BuildContext context) {
+    return Dialog(
+      backgroundColor: Colors.transparent,
+      insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 80),
+      child: Container(
+        constraints: const BoxConstraints(maxWidth: 400),
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(color: AppColors.cardBorder, width: 1.5),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // ── Header rojo/naranja ──
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(vertical: 14),
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [Color(0xFFEA580C), Color(0xFFDC2626)],
+                ),
+                borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
               ),
-              const SizedBox(width: 6),
-              Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.start,
+              child: Text(
+                'Modo de Batalla',
+                textAlign: TextAlign.center,
+                style: AppTypography.h3.copyWith(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
                 children: [
-                  Text(
-                    category.name,
-                    style: AppTypography.bodySmall.copyWith(
-                      color: AppColors.textPrimary,
-                    ),
-                  ),
-                  Text(
-                    '$taskCount tareas',
-                    style: const TextStyle(
-                      fontSize: 9,
-                      color: AppColors.textSecondary,
+                  ...BattleMode.values.map((mode) {
+                    final isSelected = _selected == mode;
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 10),
+                      child: Material(
+                        color: Colors.transparent,
+                        child: InkWell(
+                          onTap: () {
+                            setState(() => _selected = mode);
+                          },
+                          borderRadius: BorderRadius.circular(16),
+                          child: AnimatedContainer(
+                            duration: const Duration(milliseconds: 200),
+                            padding: const EdgeInsets.all(14),
+                            decoration: BoxDecoration(
+                              color: isSelected
+                                  ? const Color(0xFFEA580C).withValues(alpha: 0.12)
+                                  : AppColors.surfaceLight,
+                              borderRadius: BorderRadius.circular(16),
+                              border: Border.all(
+                                color: isSelected ? const Color(0xFFEA580C) : AppColors.cardBorder,
+                                width: isSelected ? 1.5 : 1.0,
+                              ),
+                            ),
+                            child: Row(
+                              children: [
+                                Icon(
+                                  isSelected
+                                      ? Icons.radio_button_checked
+                                      : Icons.radio_button_unchecked,
+                                  color: isSelected
+                                      ? const Color(0xFFEA580C)
+                                      : AppColors.textTertiary,
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        mode.title,
+                                        style: AppTypography.bodyMedium.copyWith(
+                                          color: isSelected
+                                              ? const Color(0xFFEA580C)
+                                              : AppColors.textPrimary,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 2),
+                                      Text(
+                                        mode.description,
+                                        style: AppTypography.bodySmall.copyWith(
+                                          color: AppColors.textSecondary,
+                                          fontSize: 11,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    );
+                  }),
+                  const SizedBox(height: 8),
+                  SizedBox(
+                    width: double.infinity,
+                    height: 46,
+                    child: ElevatedButton(
+                      onPressed: () {
+                        widget.onModeSelected(_selected);
+                        Navigator.pop(context);
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFFEA580C),
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                      ),
+                      child: Text(
+                        'Confirmar',
+                        style: AppTypography.labelLarge.copyWith(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
                     ),
                   ),
                 ],
               ),
-            ],
-          ),
-          selected: false,
-          backgroundColor: AppColors.surfaceLight,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-            side: const BorderSide(color: AppColors.cardBorder),
-          ),
-          onSelected: (_) {
-            setState(() {
-              _selectedCategory = category;
-            });
-          },
-        );
-      },
+            ),
+          ],
+        ),
+      ),
     );
   }
+}
 
-  Widget _buildTasksList(List<dynamic> allTasks) {
-    final tasks = allTasks.where((t) => t.categoryId == _selectedCategory!.id).toList();
+// ═════════════════════════════════════════════════════════════════════════════
+// DIÁLOGO: SELECCIÓN DE APUESTA
+// ═════════════════════════════════════════════════════════════════════════════
 
-    return Row(
-      key: ValueKey('tasks_${_selectedCategory!.id}'),
-      children: [
-        // Back Button
-        InkWell(
-          onTap: () {
-            setState(() {
-              _selectedCategory = null;
-              _tareaSeleccionadaId = null;
-              _categoriaSeleccionadaId = null;
-            });
-          },
-          borderRadius: BorderRadius.circular(12),
-          child: Container(
-            width: 52,
-            height: 52,
-            decoration: BoxDecoration(
-              color: AppColors.surfaceLight,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: AppColors.cardBorder),
+class _BetSelectorDialog extends StatefulWidget {
+  final int currentBet;
+  final List<int> options;
+  final Function(int) onBetSelected;
+
+  const _BetSelectorDialog({
+    required this.currentBet,
+    required this.options,
+    required this.onBetSelected,
+  });
+
+  @override
+  State<_BetSelectorDialog> createState() => _BetSelectorDialogState();
+}
+
+class _BetSelectorDialogState extends State<_BetSelectorDialog> {
+  late int _selected;
+
+  @override
+  void initState() {
+    super.initState();
+    _selected = widget.currentBet;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Dialog(
+      backgroundColor: Colors.transparent,
+      insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 100),
+      child: Container(
+        constraints: const BoxConstraints(maxWidth: 400),
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(color: AppColors.cardBorder, width: 1.5),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // ── Header verde/dorado ──
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(vertical: 14),
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [Color(0xFF7C3AED), Color(0xFF6D28D9)],
+                ),
+                borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+              ),
+              child: Text(
+                'Selecciona una Apuesta',
+                textAlign: TextAlign.center,
+                style: AppTypography.h3.copyWith(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
             ),
-            child: const Icon(Icons.arrow_back_rounded, color: AppColors.textPrimary),
-          ),
-        ),
-        const SizedBox(width: 8),
-        Expanded(
-          child: ListView.separated(
-            scrollDirection: Axis.horizontal,
-            itemCount: tasks.length,
-            separatorBuilder: (_, __) => const SizedBox(width: 8),
-            itemBuilder: (context, index) {
-              final task = tasks[index];
-              final isSelected = _tareaSeleccionadaId == task.id;
-              final numCards = Hive.box<TareaCardModel>('cardsBox').values.where((c) => c.tareaId == task.id).length;
-              final color = Color(task.priorityColorValue);
-
-              return ChoiceChip(
-                label: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      task.title,
-                      style: AppTypography.bodySmall.copyWith(
-                        color: isSelected ? Colors.black : AppColors.textPrimary,
-                        fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                      ),
+            Padding(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                children: [
+                  Text(
+                    'Apuesta de monedas',
+                    style: AppTypography.bodyMedium.copyWith(
+                      color: AppColors.textPrimary,
+                      fontWeight: FontWeight.w700,
                     ),
-                    Text(
-                      '$numCards cards',
-                      style: TextStyle(
-                        fontSize: 9,
-                        color: isSelected ? Colors.black87 : AppColors.textSecondary,
-                      ),
-                    ),
-                  ],
-                ),
-                selected: isSelected,
-                selectedColor: color,
-                backgroundColor: AppColors.surfaceLight,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  side: BorderSide(
-                    color: isSelected ? color : AppColors.cardBorder,
                   ),
-                ),
-                onSelected: (selected) {
-                  if (selected) {
-                    setState(() {
-                      _tareaSeleccionadaId = task.id;
-                      _categoriaSeleccionadaId = task.categoryId;
-                    });
-                  }
-                },
-              );
-            },
-          ),
+                  const SizedBox(height: 16),
+                  Row(
+                    children: widget.options.map((monto) {
+                      final isSelected = _selected == monto;
+
+                      return Expanded(
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 4),
+                          child: Material(
+                            color: Colors.transparent,
+                            child: InkWell(
+                              onTap: () => setState(() => _selected = monto),
+                              borderRadius: BorderRadius.circular(14),
+                              child: AnimatedContainer(
+                                duration: const Duration(milliseconds: 200),
+                                padding: const EdgeInsets.symmetric(vertical: 14),
+                                decoration: BoxDecoration(
+                                  color: isSelected
+                                      ? const Color(0xFFF59E0B).withValues(alpha: 0.2)
+                                      : AppColors.surfaceLight,
+                                  borderRadius: BorderRadius.circular(14),
+                                  border: Border.all(
+                                    color: isSelected
+                                        ? const Color(0xFFF59E0B)
+                                        : AppColors.cardBorder,
+                                    width: isSelected ? 2.0 : 1.0,
+                                  ),
+                                  boxShadow: isSelected
+                                      ? [
+                                          BoxShadow(
+                                            color: const Color(0xFFF59E0B).withValues(alpha: 0.25),
+                                            blurRadius: 8,
+                                          ),
+                                        ]
+                                      : null,
+                                ),
+                                child: Column(
+                                  children: [
+                                    SvgPicture.asset(
+                                      'assets/images/HyroCoins.svg',
+                                      width: 24,
+                                      height: 24,
+                                    ),
+                                    const SizedBox(height: 6),
+                                    Text(
+                                      '$monto',
+                                      style: AppTypography.labelLarge.copyWith(
+                                        color: isSelected
+                                            ? const Color(0xFFF59E0B)
+                                            : AppColors.textSecondary,
+                                        fontWeight: FontWeight.w800,
+                                        fontSize: 18,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                  const SizedBox(height: 16),
+                  // Pozo total
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                    decoration: BoxDecoration(
+                      color: AppColors.surfaceLight,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: const Color(0xFFF59E0B).withValues(alpha: 0.3),
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(Icons.emoji_events_rounded, color: Color(0xFFF59E0B), size: 18),
+                        const SizedBox(width: 8),
+                        Text(
+                          'Pozo total: ${_selected * 2} Monedas',
+                          style: AppTypography.bodyMedium.copyWith(
+                            color: AppColors.textPrimary,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  SizedBox(
+                    width: double.infinity,
+                    height: 46,
+                    child: ElevatedButton(
+                      onPressed: () {
+                        widget.onBetSelected(_selected);
+                        Navigator.pop(context);
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF7C3AED),
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                      ),
+                      child: Text(
+                        'Confirmar',
+                        style: AppTypography.labelLarge.copyWith(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
         ),
-      ],
+      ),
     );
   }
 }

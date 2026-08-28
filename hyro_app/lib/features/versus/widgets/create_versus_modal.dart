@@ -323,111 +323,130 @@ class _CreateVersusModalState extends State<CreateVersusModal>
                   ),
                   const SizedBox(height: 50),
 
-                  // ── 4. Botón: Iniciar Reto ──
-                  Material(
-                    color: Colors.transparent,
-                    child: InkWell(
-                      onTap:
-                          (_isLanzando || !_isReadyToLaunch)
-                              ? null
-                              : _lanzarReto,
-                      borderRadius: BorderRadius.circular(16),
-                      child: Container(
-                        width: double.infinity,
-                        height: 52,
-                        decoration: BoxDecoration(
-                          color: AppColors.surface,
-                          borderRadius: BorderRadius.circular(16),
-                          border: Border.all(
-                            color:
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 32),
+                    child: Column(
+                      children: [
+                        // ── 4. Botón: Iniciar Reto ──
+                        Material(
+                          color: Colors.transparent,
+                          child: InkWell(
+                            onTap:
                                 (_isLanzando || !_isReadyToLaunch)
-                                    ? const Color.fromARGB(255, 10, 193, 47)
-                                    : const Color.fromARGB(255, 10, 193, 47),
-                            width: 1.5,
-                          ),
-                        ),
-                        child: Center(
-                          child:
-                              _isLanzando
-                                  ? const SizedBox(
-                                    width: 24,
-                                    height: 24,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2.5,
-                                      color: Colors.white,
-                                    ),
-                                  )
-                                  : Row(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      Icon(
-                                        Icons.flash_on_rounded,
-                                        size: 22,
-                                        color:
-                                            (_isLanzando || !_isReadyToLaunch)
-                                                ? const Color.fromARGB(
-                                                  95,
-                                                  255,
-                                                  255,
-                                                  255,
-                                                )
-                                                : Colors.white,
-                                      ),
-                                      const SizedBox(width: 8),
-                                      Text(
-                                        'Iniciar Reto',
-                                        style: AppTypography.labelLarge
-                                            .copyWith(
+                                    ? null
+                                    : _lanzarReto,
+                            borderRadius: BorderRadius.circular(16),
+                            child: Container(
+                              width: double.infinity,
+                              height: 46,
+                              decoration: BoxDecoration(
+                                color: AppColors.surface,
+                                borderRadius: BorderRadius.circular(16),
+                                border: Border.all(
+                                  color:
+                                      (_isLanzando || !_isReadyToLaunch)
+                                          ? const Color.fromARGB(
+                                            255,
+                                            10,
+                                            193,
+                                            47,
+                                          )
+                                          : const Color.fromARGB(
+                                            255,
+                                            10,
+                                            193,
+                                            47,
+                                          ),
+                                  width: 1.5,
+                                ),
+                              ),
+                              child: Center(
+                                child:
+                                    _isLanzando
+                                        ? const SizedBox(
+                                          width: 20,
+                                          height: 20,
+                                          child: CircularProgressIndicator(
+                                            strokeWidth: 2.5,
+                                            color: Colors.white,
+                                          ),
+                                        )
+                                        : Row(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.center,
+                                          children: [
+                                            Icon(
+                                              Icons.flash_on_rounded,
+                                              size: 20,
                                               color:
                                                   (_isLanzando ||
                                                           !_isReadyToLaunch)
                                                       ? const Color.fromARGB(
-                                                        97,
+                                                        95,
                                                         255,
                                                         255,
                                                         255,
                                                       )
                                                       : Colors.white,
-                                              fontWeight: FontWeight.w800,
-                                              fontSize: 16,
                                             ),
-                                      ),
-                                    ],
-                                  ),
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-
-                  // ── 5. Botón: Cancelar ──
-                  Material(
-                    color: Colors.transparent,
-                    child: InkWell(
-                      onTap: () => Navigator.pop(context),
-                      borderRadius: BorderRadius.circular(16),
-                      child: Container(
-                        width: double.infinity,
-                        height: 52,
-                        decoration: BoxDecoration(
-                          color: AppColors.surface,
-                          borderRadius: BorderRadius.circular(16),
-                          border: Border.all(
-                            color: const Color.fromARGB(255, 200, 30, 30),
-                            width: 1.5,
-                          ),
-                        ),
-                        child: Center(
-                          child: Text(
-                            'Cancelar',
-                            style: AppTypography.labelLarge.copyWith(
-                              color: Colors.white,
-                              fontWeight: FontWeight.w800,
-                              fontSize: 16,
+                                            const SizedBox(width: 8),
+                                            Text(
+                                              'Iniciar Reto',
+                                              style: AppTypography.labelLarge
+                                                  .copyWith(
+                                                    color:
+                                                        (_isLanzando ||
+                                                                !_isReadyToLaunch)
+                                                            ? const Color.fromARGB(
+                                                              97,
+                                                              255,
+                                                              255,
+                                                              255,
+                                                            )
+                                                            : Colors.white,
+                                                    fontWeight: FontWeight.w800,
+                                                    fontSize: 15,
+                                                  ),
+                                            ),
+                                          ],
+                                        ),
+                              ),
                             ),
                           ),
                         ),
-                      ),
+                        const SizedBox(height: 12),
+
+                        // ── 5. Botón: Cancelar ──
+                        Material(
+                          color: Colors.transparent,
+                          child: InkWell(
+                            onTap: () => Navigator.pop(context),
+                            borderRadius: BorderRadius.circular(16),
+                            child: Container(
+                              width: double.infinity,
+                              height: 46,
+                              decoration: BoxDecoration(
+                                color: AppColors.surface,
+                                borderRadius: BorderRadius.circular(16),
+                                border: Border.all(
+                                  color: const Color.fromARGB(255, 200, 30, 30),
+                                  width: 1.5,
+                                ),
+                              ),
+                              child: Center(
+                                child: Text(
+                                  'Cancelar',
+                                  style: AppTypography.labelLarge.copyWith(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.w800,
+                                    fontSize: 15,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ],

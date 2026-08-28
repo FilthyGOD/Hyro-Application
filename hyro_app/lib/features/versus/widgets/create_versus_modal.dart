@@ -20,10 +20,7 @@ import '../models/versus_models.dart';
 class CreateVersusModal extends StatefulWidget {
   final Function(Map<String, dynamic> payload)? onChallengeSent;
 
-  const CreateVersusModal({
-    super.key,
-    this.onChallengeSent,
-  });
+  const CreateVersusModal({super.key, this.onChallengeSent});
 
   /// Método estático para desplegar el diálogo flotante
   static Future<void> show({
@@ -33,9 +30,7 @@ class CreateVersusModal extends StatefulWidget {
     return showDialog(
       context: context,
       barrierColor: Colors.black.withValues(alpha: 0.7),
-      builder: (_) => CreateVersusModal(
-        onChallengeSent: onChallengeSent,
-      ),
+      builder: (_) => CreateVersusModal(onChallengeSent: onChallengeSent),
     );
   }
 
@@ -81,8 +76,7 @@ class _CreateVersusModalState extends State<CreateVersusModal>
   }
 
   bool get _isReadyToLaunch =>
-      _selectedOpponent != null &&
-      _tareaSeleccionadaId != null;
+      _selectedOpponent != null && _tareaSeleccionadaId != null;
 
   /// Lanza el reto llamando a VersusProvider.crearBatalla
   Future<void> _lanzarReto() async {
@@ -143,7 +137,9 @@ class _CreateVersusModalState extends State<CreateVersusModal>
               Expanded(
                 child: Text(
                   '¡Reto enviado a ${_selectedOpponent!.username}!',
-                  style: AppTypography.bodyMedium.copyWith(color: AppColors.textPrimary),
+                  style: AppTypography.bodyMedium.copyWith(
+                    color: AppColors.textPrimary,
+                  ),
                 ),
               ),
             ],
@@ -188,10 +184,7 @@ class _CreateVersusModalState extends State<CreateVersusModal>
           decoration: BoxDecoration(
             color: AppColors.surface,
             borderRadius: BorderRadius.circular(28),
-            border: Border.all(
-              color: AppColors.cardBorder,
-              width: 1.5,
-            ),
+            border: Border.all(color: AppColors.cardBorder, width: 1.5),
             boxShadow: [
               BoxShadow(
                 color: Colors.black.withValues(alpha: 0.5),
@@ -202,7 +195,7 @@ class _CreateVersusModalState extends State<CreateVersusModal>
           ),
           child: SingleChildScrollView(
             child: Padding(
-              padding: const EdgeInsets.all(20),
+              padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 26),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -214,23 +207,28 @@ class _CreateVersusModalState extends State<CreateVersusModal>
                       fontWeight: FontWeight.w800,
                     ),
                   ),
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 50),
 
                   // ── 1. Botón: Selecciona un amigo ──
                   _buildSelectorButton(
                     gradient: const LinearGradient(
-                      colors: [Color(0xFF4A6CF7), Color(0xFF8B5CF6)],
+                      colors: [
+                        Color(0xFF4A6CF7),
+                        Color.fromARGB(255, 21, 34, 173),
+                      ],
                       begin: Alignment.centerLeft,
                       end: Alignment.centerRight,
                     ),
                     icon: Icons.person_add_rounded,
-                    iconBgColor: const Color(0xFF3B54D9),
-                    title: _selectedOpponent != null
-                        ? _selectedOpponent!.username
-                        : 'Selecciona un amigo',
-                    subtitle: _selectedOpponent != null
-                        ? 'Nivel ${_selectedOpponent!.level}'
-                        : 'Nombre del amigo',
+                    iconColor: const Color(0xFF4A6CF7),
+                    title:
+                        _selectedOpponent != null
+                            ? _selectedOpponent!.username
+                            : 'Selecciona un amigo',
+                    subtitle:
+                        _selectedOpponent != null
+                            ? 'Nivel ${_selectedOpponent!.level}'
+                            : 'Nombre del amigo',
                     trailing: const Icon(
                       Icons.chevron_right_rounded,
                       color: Colors.white70,
@@ -238,69 +236,82 @@ class _CreateVersusModalState extends State<CreateVersusModal>
                     ),
                     onTap: _showFriendSelector,
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 25),
 
                   // ── 2. Fila: Material + Modo de Batalla ──
-                  Row(
-                    children: [
-                      // Material de estudio
-                      Expanded(
-                        child: _buildSelectorButton(
-                          gradient: const LinearGradient(
-                            colors: [Color(0xFFD97706), Color(0xFF92400E)],
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
+                  IntrinsicHeight(
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        // Material de estudio
+                        Expanded(
+                          child: _buildSelectorButton(
+                            gradient: const LinearGradient(
+                              colors: [
+                                Color.fromARGB(255, 18, 181, 105),
+                                Color.fromARGB(255, 1, 112, 60),
+                              ],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
+                            icon: Icons.menu_book_rounded,
+                            iconColor: const Color.fromARGB(255, 18, 181, 105),
+                            title: 'Material de estudio',
+                            subtitle:
+                                _materiaNombre != null
+                                    ? '$_materiaNombre\n$_tareaNombre'
+                                    : 'Materia\nActividad, Tarea',
+                            trailing: const Icon(
+                              Icons.chevron_right_rounded,
+                              color: Colors.white70,
+                              size: 24,
+                            ),
+                            onTap: _showMaterialSelector,
+                            compact: true,
                           ),
-                          icon: Icons.menu_book_rounded,
-                          iconBgColor: const Color(0xFFB45309),
-                          title: 'Material de estudio',
-                          subtitle: _materiaNombre != null
-                              ? '$_materiaNombre\n$_tareaNombre'
-                              : 'Materia\nActividad, Tarea',
-                          trailing: const Icon(
-                            Icons.chevron_right_rounded,
-                            color: Colors.white70,
-                            size: 24,
-                          ),
-                          onTap: _showMaterialSelector,
-                          compact: true,
                         ),
-                      ),
-                      const SizedBox(width: 12),
-                      // Modo de batalla
-                      Expanded(
-                        child: _buildSelectorButton(
-                          gradient: const LinearGradient(
-                            colors: [Color(0xFFEA580C), Color(0xFFDC2626)],
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
+                        const SizedBox(width: 25),
+                        // Modo de batalla
+                        Expanded(
+                          child: _buildSelectorButton(
+                            gradient: const LinearGradient(
+                              colors: [
+                                Color.fromARGB(255, 242, 93, 12),
+                                Color.fromARGB(255, 158, 66, 4),
+                              ],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
+                            icon: Icons.whatshot_rounded,
+                            iconColor: const Color(0xFFEA580C),
+                            title: 'Modo de batalla',
+                            subtitle: _modoSeleccionado.title,
+                            trailing: const Icon(
+                              Icons.chevron_right_rounded,
+                              color: Colors.white70,
+                              size: 24,
+                            ),
+                            onTap: _showBattleModeSelector,
+                            compact: true,
                           ),
-                          icon: Icons.whatshot_rounded,
-                          iconBgColor: const Color(0xFFD03A00),
-                          title: 'Modo de batalla',
-                          subtitle: _modoSeleccionado.title,
-                          trailing: const Icon(
-                            Icons.chevron_right_rounded,
-                            color: Colors.white70,
-                            size: 24,
-                          ),
-                          onTap: _showBattleModeSelector,
-                          compact: true,
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 25),
 
                   // ── 3. Botón: Selecciona una Apuesta ──
                   _buildSelectorButton(
                     gradient: const LinearGradient(
-                      colors: [Color(0xFF16A34A), Color(0xFFCA8A04)],
+                      colors: [
+                        Color.fromARGB(255, 130, 34, 248),
+                        Color.fromARGB(255, 100, 6, 201),
+                      ],
                       begin: Alignment.centerLeft,
                       end: Alignment.centerRight,
                     ),
                     icon: Icons.monetization_on_rounded,
-                    iconBgColor: const Color(0xFF15803D),
+                    iconColor: const Color.fromARGB(255, 130, 34, 248),
                     title: 'Selecciona una Apuesta',
                     subtitle: 'Cantidad: $_costoMonedas monedas',
                     trailing: const Icon(
@@ -310,73 +321,111 @@ class _CreateVersusModalState extends State<CreateVersusModal>
                     ),
                     onTap: _showBetSelector,
                   ),
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 50),
 
                   // ── 4. Botón: Iniciar Reto ──
-                  SizedBox(
-                    width: double.infinity,
-                    height: 52,
-                    child: ElevatedButton(
-                      onPressed: (_isLanzando || !_isReadyToLaunch) ? null : _lanzarReto,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.primary,
-                        foregroundColor: Colors.black,
-                        elevation: 6,
-                        shadowColor: AppColors.primary.withValues(alpha: 0.5),
-                        shape: RoundedRectangleBorder(
+                  Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      onTap:
+                          (_isLanzando || !_isReadyToLaunch)
+                              ? null
+                              : _lanzarReto,
+                      borderRadius: BorderRadius.circular(16),
+                      child: Container(
+                        width: double.infinity,
+                        height: 52,
+                        decoration: BoxDecoration(
+                          color: AppColors.surface,
                           borderRadius: BorderRadius.circular(16),
+                          border: Border.all(
+                            color:
+                                (_isLanzando || !_isReadyToLaunch)
+                                    ? const Color.fromARGB(255, 10, 193, 47)
+                                    : const Color.fromARGB(255, 10, 193, 47),
+                            width: 1.5,
+                          ),
                         ),
-                        disabledBackgroundColor: AppColors.primary.withValues(alpha: 0.3),
-                      ),
-                      child: _isLanzando
-                          ? const SizedBox(
-                              width: 24,
-                              height: 24,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2.5,
-                                color: Colors.black,
-                              ),
-                            )
-                          : Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                const Icon(Icons.flash_on_rounded, size: 22, color: Colors.black),
-                                const SizedBox(width: 8),
-                                Text(
-                                  'Iniciar Reto',
-                                  style: AppTypography.labelLarge.copyWith(
-                                    color: Colors.black,
-                                    fontWeight: FontWeight.w800,
-                                    fontSize: 16,
+                        child: Center(
+                          child:
+                              _isLanzando
+                                  ? const SizedBox(
+                                    width: 24,
+                                    height: 24,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2.5,
+                                      color: Colors.white,
+                                    ),
+                                  )
+                                  : Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Icon(
+                                        Icons.flash_on_rounded,
+                                        size: 22,
+                                        color:
+                                            (_isLanzando || !_isReadyToLaunch)
+                                                ? const Color.fromARGB(
+                                                  95,
+                                                  255,
+                                                  255,
+                                                  255,
+                                                )
+                                                : Colors.white,
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Text(
+                                        'Iniciar Reto',
+                                        style: AppTypography.labelLarge
+                                            .copyWith(
+                                              color:
+                                                  (_isLanzando ||
+                                                          !_isReadyToLaunch)
+                                                      ? const Color.fromARGB(
+                                                        97,
+                                                        255,
+                                                        255,
+                                                        255,
+                                                      )
+                                                      : Colors.white,
+                                              fontWeight: FontWeight.w800,
+                                              fontSize: 16,
+                                            ),
+                                      ),
+                                    ],
                                   ),
-                                ),
-                              ],
-                            ),
+                        ),
+                      ),
                     ),
                   ),
                   const SizedBox(height: 10),
 
                   // ── 5. Botón: Cancelar ──
-                  SizedBox(
-                    width: double.infinity,
-                    height: 48,
-                    child: ElevatedButton(
-                      onPressed: () => Navigator.pop(context),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFFEC4899),
-                        foregroundColor: Colors.white,
-                        elevation: 4,
-                        shadowColor: const Color(0xFFEC4899).withValues(alpha: 0.4),
-                        shape: RoundedRectangleBorder(
+                  Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      onTap: () => Navigator.pop(context),
+                      borderRadius: BorderRadius.circular(16),
+                      child: Container(
+                        width: double.infinity,
+                        height: 52,
+                        decoration: BoxDecoration(
+                          color: AppColors.surface,
                           borderRadius: BorderRadius.circular(16),
+                          border: Border.all(
+                            color: const Color.fromARGB(255, 200, 30, 30),
+                            width: 1.5,
+                          ),
                         ),
-                      ),
-                      child: Text(
-                        'Cancelar',
-                        style: AppTypography.labelLarge.copyWith(
-                          color: Colors.white,
-                          fontWeight: FontWeight.w800,
-                          fontSize: 16,
+                        child: Center(
+                          child: Text(
+                            'Cancelar',
+                            style: AppTypography.labelLarge.copyWith(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w800,
+                              fontSize: 16,
+                            ),
+                          ),
                         ),
                       ),
                     ),
@@ -397,13 +446,23 @@ class _CreateVersusModalState extends State<CreateVersusModal>
   Widget _buildSelectorButton({
     required Gradient gradient,
     required IconData icon,
-    required Color iconBgColor,
+    required Color iconColor,
     required String title,
     required String subtitle,
     Widget? trailing,
     required VoidCallback onTap,
     bool compact = false,
   }) {
+    final iconBox = Container(
+      width: compact ? 38 : 48,
+      height: compact ? 38 : 48,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(compact ? 10 : 14),
+      ),
+      child: Icon(icon, color: iconColor, size: compact ? 22 : 26),
+    );
+
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -411,65 +470,90 @@ class _CreateVersusModalState extends State<CreateVersusModal>
         borderRadius: BorderRadius.circular(18),
         child: Container(
           width: double.infinity,
-          padding: EdgeInsets.all(compact ? 12 : 14),
+          padding: EdgeInsets.all(compact ? 14 : 16),
           decoration: BoxDecoration(
             gradient: gradient,
             borderRadius: BorderRadius.circular(18),
             boxShadow: [
               BoxShadow(
-                color: (gradient as LinearGradient).colors.first.withValues(alpha: 0.3),
+                color: (gradient as LinearGradient).colors.first.withValues(
+                  alpha: 0.3,
+                ),
                 blurRadius: 8,
                 offset: const Offset(0, 3),
               ),
             ],
           ),
-          child: Row(
-            children: [
-              Container(
-                width: compact ? 36 : 44,
-                height: compact ? 36 : 44,
-                decoration: BoxDecoration(
-                  color: iconBgColor.withValues(alpha: 0.5),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Icon(
-                  icon,
-                  color: Colors.white,
-                  size: compact ? 20 : 24,
-                ),
-              ),
-              SizedBox(width: compact ? 8 : 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      style: AppTypography.labelLarge.copyWith(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w800,
-                        fontSize: compact ? 12 : 14,
+          child:
+              compact
+                  // ── Layout compacto: icono+chevron arriba, texto abajo ──
+                  ? Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [iconBox, if (trailing != null) trailing],
                       ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      subtitle,
-                      style: AppTypography.bodySmall.copyWith(
-                        color: Colors.white.withValues(alpha: 0.8),
-                        fontSize: compact ? 10 : 12,
-                        height: 1.3,
+                      const SizedBox(height: 10),
+                      Text(
+                        title,
+                        style: AppTypography.labelLarge.copyWith(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w800,
+                          fontSize: 13,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
-                ),
-              ),
-              if (trailing != null) trailing,
-            ],
-          ),
+                      const SizedBox(height: 3),
+                      Text(
+                        subtitle,
+                        style: AppTypography.bodySmall.copyWith(
+                          color: Colors.white.withValues(alpha: 0.85),
+                          fontSize: 11,
+                          height: 1.3,
+                        ),
+                        maxLines: 3,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  )
+                  // ── Layout normal: fila horizontal ──
+                  : Row(
+                    children: [
+                      iconBox,
+                      const SizedBox(width: 14),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              title,
+                              style: AppTypography.labelLarge.copyWith(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w800,
+                                fontSize: 15,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            const SizedBox(height: 3),
+                            Text(
+                              subtitle,
+                              style: AppTypography.bodySmall.copyWith(
+                                color: Colors.white.withValues(alpha: 0.85),
+                                fontSize: 12,
+                                height: 1.3,
+                              ),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ],
+                        ),
+                      ),
+                      if (trailing != null) trailing,
+                    ],
+                  ),
         ),
       ),
     );
@@ -483,13 +567,14 @@ class _CreateVersusModalState extends State<CreateVersusModal>
     showDialog(
       context: context,
       barrierColor: Colors.black.withValues(alpha: 0.6),
-      builder: (dialogContext) => _FriendSelectorDialog(
-        onFriendSelected: (player) {
-          setState(() {
-            _selectedOpponent = player;
-          });
-        },
-      ),
+      builder:
+          (dialogContext) => _FriendSelectorDialog(
+            onFriendSelected: (player) {
+              setState(() {
+                _selectedOpponent = player;
+              });
+            },
+          ),
     );
   }
 
@@ -503,17 +588,18 @@ class _CreateVersusModalState extends State<CreateVersusModal>
     showDialog(
       context: context,
       barrierColor: Colors.black.withValues(alpha: 0.6),
-      builder: (dialogContext) => _MaterialSelectorDialog(
-        tasks: tasks,
-        onTaskSelected: (taskId, taskTitle, categoryId, categoryName) {
-          setState(() {
-            _tareaSeleccionadaId = taskId;
-            _tareaNombre = taskTitle;
-            _categoriaSeleccionadaId = categoryId;
-            _materiaNombre = categoryName;
-          });
-        },
-      ),
+      builder:
+          (dialogContext) => _MaterialSelectorDialog(
+            tasks: tasks,
+            onTaskSelected: (taskId, taskTitle, categoryId, categoryName) {
+              setState(() {
+                _tareaSeleccionadaId = taskId;
+                _tareaNombre = taskTitle;
+                _categoriaSeleccionadaId = categoryId;
+                _materiaNombre = categoryName;
+              });
+            },
+          ),
     );
   }
 
@@ -525,14 +611,15 @@ class _CreateVersusModalState extends State<CreateVersusModal>
     showDialog(
       context: context,
       barrierColor: Colors.black.withValues(alpha: 0.6),
-      builder: (dialogContext) => _BattleModeSelectorDialog(
-        currentMode: _modoSeleccionado,
-        onModeSelected: (mode) {
-          setState(() {
-            _modoSeleccionado = mode;
-          });
-        },
-      ),
+      builder:
+          (dialogContext) => _BattleModeSelectorDialog(
+            currentMode: _modoSeleccionado,
+            onModeSelected: (mode) {
+              setState(() {
+                _modoSeleccionado = mode;
+              });
+            },
+          ),
     );
   }
 
@@ -544,15 +631,16 @@ class _CreateVersusModalState extends State<CreateVersusModal>
     showDialog(
       context: context,
       barrierColor: Colors.black.withValues(alpha: 0.6),
-      builder: (dialogContext) => _BetSelectorDialog(
-        currentBet: _costoMonedas,
-        options: _opcionesApuesta,
-        onBetSelected: (bet) {
-          setState(() {
-            _costoMonedas = bet;
-          });
-        },
-      ),
+      builder:
+          (dialogContext) => _BetSelectorDialog(
+            currentBet: _costoMonedas,
+            options: _opcionesApuesta,
+            onBetSelected: (bet) {
+              setState(() {
+                _costoMonedas = bet;
+              });
+            },
+          ),
     );
   }
 }
@@ -597,17 +685,21 @@ class _FriendSelectorDialogState extends State<_FriendSelectorDialog> {
 
       if (currentUserId == null) return;
 
-      final response = await Supabase.instance.client
-          .from('perfiles')
-          .select('id, nombre_usuario, nivel, mascota_cosmeticos(sombrero, cara, traje)')
-          .ilike('nombre_usuario', '%$query%')
-          .neq('id', currentUserId)
-          .limit(10)
-          as List<dynamic>;
+      final response =
+          await Supabase.instance.client
+                  .from('perfiles')
+                  .select(
+                    'id, nombre_usuario, nivel, mascota_cosmeticos(sombrero, cara, traje)',
+                  )
+                  .ilike('nombre_usuario', '%$query%')
+                  .neq('id', currentUserId)
+                  .limit(10)
+              as List<dynamic>;
 
-      final results = response.map((row) {
-        return VersusPlayer.fromProfileData(row as Map<String, dynamic>);
-      }).toList();
+      final results =
+          response.map((row) {
+            return VersusPlayer.fromProfileData(row as Map<String, dynamic>);
+          }).toList();
 
       setState(() {
         _globalSearchResults = results;
@@ -631,21 +723,25 @@ class _FriendSelectorDialogState extends State<_FriendSelectorDialog> {
   Widget build(BuildContext context) {
     final friendsProvider = context.watch<FriendsProvider>();
 
-    final List<VersusPlayer> friends = friendsProvider.ranking
-        .where((entry) => !entry.isCurrentUser)
-        .map((entry) => VersusPlayer(
-              id: entry.usuarioId,
-              username: entry.nombreUsuario,
-              sombreroId: entry.sombrero,
-              cosmeticoId: entry.cosmetico,
-              trajeId: entry.traje,
-              level: 1,
-            ))
-        .toList();
+    final List<VersusPlayer> friends =
+        friendsProvider.ranking
+            .where((entry) => !entry.isCurrentUser)
+            .map(
+              (entry) => VersusPlayer(
+                id: entry.usuarioId,
+                username: entry.nombreUsuario,
+                sombreroId: entry.sombrero,
+                cosmeticoId: entry.cosmetico,
+                trajeId: entry.traje,
+                level: 1,
+              ),
+            )
+            .toList();
 
-    final List<VersusPlayer> filteredFriends = friends.where((friend) {
-      return friend.username.toLowerCase().contains(_query.toLowerCase());
-    }).toList();
+    final List<VersusPlayer> filteredFriends =
+        friends.where((friend) {
+          return friend.username.toLowerCase().contains(_query.toLowerCase());
+        }).toList();
 
     return Dialog(
       backgroundColor: Colors.transparent,
@@ -703,7 +799,10 @@ class _FriendSelectorDialogState extends State<_FriendSelectorDialog> {
                       ),
                       child: TextField(
                         controller: _searchController,
-                        style: const TextStyle(color: AppColors.textPrimary, fontSize: 14),
+                        style: const TextStyle(
+                          color: AppColors.textPrimary,
+                          fontSize: 14,
+                        ),
                         onChanged: (val) {
                           setState(() {
                             _query = val;
@@ -716,12 +815,19 @@ class _FriendSelectorDialogState extends State<_FriendSelectorDialog> {
                         decoration: InputDecoration(
                           hintText: 'Buscar por nombre...',
                           hintStyle: TextStyle(
-                            color: AppColors.textSecondary.withValues(alpha: 0.5),
+                            color: AppColors.textSecondary.withValues(
+                              alpha: 0.5,
+                            ),
                             fontSize: 13,
                           ),
                           border: InputBorder.none,
-                          prefixIcon: const Icon(Icons.search_rounded, color: AppColors.textSecondary),
-                          contentPadding: const EdgeInsets.symmetric(vertical: 14),
+                          prefixIcon: const Icon(
+                            Icons.search_rounded,
+                            color: AppColors.textSecondary,
+                          ),
+                          contentPadding: const EdgeInsets.symmetric(
+                            vertical: 14,
+                          ),
                         ),
                       ),
                     ),
@@ -733,51 +839,77 @@ class _FriendSelectorDialogState extends State<_FriendSelectorDialog> {
                         child: SizedBox(
                           width: double.infinity,
                           child: OutlinedButton.icon(
-                            onPressed: _isSearchingGlobal ? null : () => _buscarGlobalmente(_query),
-                            icon: _isSearchingGlobal
-                                ? const SizedBox(
-                                    width: 16,
-                                    height: 16,
-                                    child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.primary),
-                                  )
-                                : const Icon(Icons.language_rounded, size: 16),
+                            onPressed:
+                                _isSearchingGlobal
+                                    ? null
+                                    : () => _buscarGlobalmente(_query),
+                            icon:
+                                _isSearchingGlobal
+                                    ? const SizedBox(
+                                      width: 16,
+                                      height: 16,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        color: AppColors.primary,
+                                      ),
+                                    )
+                                    : const Icon(
+                                      Icons.language_rounded,
+                                      size: 16,
+                                    ),
                             label: Text(
-                              _isSearchingGlobal ? 'Buscando...' : 'Buscar globalmente',
-                              style: AppTypography.bodySmall.copyWith(fontWeight: FontWeight.bold),
+                              _isSearchingGlobal
+                                  ? 'Buscando...'
+                                  : 'Buscar globalmente',
+                              style: AppTypography.bodySmall.copyWith(
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
                             style: OutlinedButton.styleFrom(
                               foregroundColor: AppColors.primary,
                               side: const BorderSide(color: AppColors.primary),
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
                             ),
                           ),
                         ),
                       ),
                     // Friend list
                     Expanded(
-                      child: _isSearchingGlobal
-                          ? const Center(child: CircularProgressIndicator(color: AppColors.primary))
-                          : _searchError != null
+                      child:
+                          _isSearchingGlobal
+                              ? const Center(
+                                child: CircularProgressIndicator(
+                                  color: AppColors.primary,
+                                ),
+                              )
+                              : _searchError != null
                               ? Center(
-                                  child: Text(
-                                    _searchError!,
-                                    style: AppTypography.bodySmall.copyWith(color: AppColors.textSecondary),
-                                    textAlign: TextAlign.center,
+                                child: Text(
+                                  _searchError!,
+                                  style: AppTypography.bodySmall.copyWith(
+                                    color: AppColors.textSecondary,
                                   ),
-                                )
-                              : _query.trim().isNotEmpty && _globalSearchResults.isNotEmpty
-                                  ? _buildFriendList(_globalSearchResults)
-                                  : filteredFriends.isEmpty
-                                      ? Center(
-                                          child: Text(
-                                            _query.isEmpty
-                                                ? 'No tienes amigos agregados todavía.'
-                                                : 'No se encontraron amigos.',
-                                            style: AppTypography.bodySmall.copyWith(color: AppColors.textSecondary),
-                                            textAlign: TextAlign.center,
-                                          ),
-                                        )
-                                      : _buildFriendList(filteredFriends),
+                                  textAlign: TextAlign.center,
+                                ),
+                              )
+                              : _query.trim().isNotEmpty &&
+                                  _globalSearchResults.isNotEmpty
+                              ? _buildFriendList(_globalSearchResults)
+                              : filteredFriends.isEmpty
+                              ? Center(
+                                child: Text(
+                                  _query.isEmpty
+                                      ? 'No tienes amigos agregados todavía.'
+                                      : 'No se encontraron amigos.',
+                                  style: AppTypography.bodySmall.copyWith(
+                                    color: AppColors.textSecondary,
+                                  ),
+                                  textAlign: TextAlign.center,
+                                ),
+                              )
+                              : _buildFriendList(filteredFriends),
                     ),
                   ],
                 ),
@@ -808,7 +940,10 @@ class _FriendSelectorDialogState extends State<_FriendSelectorDialog> {
             child: Container(
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                border: Border.all(color: AppColors.primary.withValues(alpha: 0.5), width: 1.5),
+                border: Border.all(
+                  color: AppColors.primary.withValues(alpha: 0.5),
+                  width: 1.5,
+                ),
               ),
               child: ClipOval(
                 child: StaticMascotWidget(
@@ -828,7 +963,10 @@ class _FriendSelectorDialogState extends State<_FriendSelectorDialog> {
           ),
           subtitle: Text(
             'Nivel ${player.level}',
-            style: AppTypography.bodySmall.copyWith(color: AppColors.textSecondary, fontSize: 11),
+            style: AppTypography.bodySmall.copyWith(
+              color: AppColors.textSecondary,
+              fontSize: 11,
+            ),
           ),
           trailing: ElevatedButton(
             onPressed: () {
@@ -865,7 +1003,13 @@ class _FriendSelectorDialogState extends State<_FriendSelectorDialog> {
 
 class _MaterialSelectorDialog extends StatefulWidget {
   final List<dynamic> tasks;
-  final Function(String taskId, String taskTitle, String? categoryId, String categoryName) onTaskSelected;
+  final Function(
+    String taskId,
+    String taskTitle,
+    String? categoryId,
+    String categoryName,
+  )
+  onTaskSelected;
 
   const _MaterialSelectorDialog({
     required this.tasks,
@@ -873,7 +1017,8 @@ class _MaterialSelectorDialog extends StatefulWidget {
   });
 
   @override
-  State<_MaterialSelectorDialog> createState() => _MaterialSelectorDialogState();
+  State<_MaterialSelectorDialog> createState() =>
+      _MaterialSelectorDialogState();
 }
 
 class _MaterialSelectorDialogState extends State<_MaterialSelectorDialog> {
@@ -917,9 +1062,10 @@ class _MaterialSelectorDialogState extends State<_MaterialSelectorDialog> {
             Flexible(
               child: AnimatedSwitcher(
                 duration: const Duration(milliseconds: 300),
-                child: _selectedCategory == null
-                    ? _buildCategoryList()
-                    : _buildTaskList(),
+                child:
+                    _selectedCategory == null
+                        ? _buildCategoryList()
+                        : _buildTaskList(),
               ),
             ),
           ],
@@ -930,8 +1076,10 @@ class _MaterialSelectorDialogState extends State<_MaterialSelectorDialog> {
 
   Widget _buildCategoryList() {
     final categoriesBox = Hive.box<CategoryModel>('categoriesBox');
-    final catIds = widget.tasks.map((t) => t.categoryId).where((id) => id != null).toSet();
-    final categories = categoriesBox.values.where((c) => catIds.contains(c.id)).toList();
+    final catIds =
+        widget.tasks.map((t) => t.categoryId).where((id) => id != null).toSet();
+    final categories =
+        categoriesBox.values.where((c) => catIds.contains(c.id)).toList();
 
     return Padding(
       key: const ValueKey('mat_categories'),
@@ -947,7 +1095,11 @@ class _MaterialSelectorDialogState extends State<_MaterialSelectorDialog> {
               color: const Color(0xFF92400E).withValues(alpha: 0.3),
               borderRadius: BorderRadius.circular(16),
             ),
-            child: const Icon(Icons.school_rounded, color: Color(0xFFD97706), size: 28),
+            child: const Icon(
+              Icons.school_rounded,
+              color: Color(0xFFD97706),
+              size: 28,
+            ),
           ),
           const SizedBox(height: 10),
           Text(
@@ -961,7 +1113,9 @@ class _MaterialSelectorDialogState extends State<_MaterialSelectorDialog> {
           if (categories.isEmpty)
             Text(
               'No tienes materias disponibles.',
-              style: AppTypography.bodySmall.copyWith(color: AppColors.textSecondary),
+              style: AppTypography.bodySmall.copyWith(
+                color: AppColors.textSecondary,
+              ),
             )
           else
             Expanded(
@@ -971,7 +1125,10 @@ class _MaterialSelectorDialogState extends State<_MaterialSelectorDialog> {
                 itemBuilder: (context, index) {
                   final category = categories[index];
                   final color = Color(category.colorValue);
-                  final taskCount = widget.tasks.where((t) => t.categoryId == category.id).length;
+                  final taskCount =
+                      widget.tasks
+                          .where((t) => t.categoryId == category.id)
+                          .length;
 
                   return ListTile(
                     tileColor: AppColors.surfaceLight,
@@ -984,7 +1141,10 @@ class _MaterialSelectorDialogState extends State<_MaterialSelectorDialog> {
                       radius: 20,
                       child: Icon(
                         category.iconCodePoint != null
-                            ? IconData(category.iconCodePoint!, fontFamily: 'MaterialIcons')
+                            ? IconData(
+                              category.iconCodePoint!,
+                              fontFamily: 'MaterialIcons',
+                            )
                             : Icons.folder,
                         color: color,
                         size: 20,
@@ -999,9 +1159,14 @@ class _MaterialSelectorDialogState extends State<_MaterialSelectorDialog> {
                     ),
                     subtitle: Text(
                       '$taskCount tareas',
-                      style: AppTypography.bodySmall.copyWith(color: AppColors.textSecondary),
+                      style: AppTypography.bodySmall.copyWith(
+                        color: AppColors.textSecondary,
+                      ),
                     ),
-                    trailing: const Icon(Icons.chevron_right, color: AppColors.textTertiary),
+                    trailing: const Icon(
+                      Icons.chevron_right,
+                      color: AppColors.textTertiary,
+                    ),
                     onTap: () {
                       setState(() {
                         _selectedCategory = category;
@@ -1018,7 +1183,8 @@ class _MaterialSelectorDialogState extends State<_MaterialSelectorDialog> {
 
   Widget _buildTaskList() {
     final category = _selectedCategory!;
-    final tasks = widget.tasks.where((t) => t.categoryId == category.id).toList();
+    final tasks =
+        widget.tasks.where((t) => t.categoryId == category.id).toList();
     final cardsBox = Hive.box<TareaCardModel>('cardsBox');
 
     return Padding(
@@ -1035,7 +1201,11 @@ class _MaterialSelectorDialogState extends State<_MaterialSelectorDialog> {
               color: const Color(0xFF92400E).withValues(alpha: 0.3),
               borderRadius: BorderRadius.circular(16),
             ),
-            child: const Icon(Icons.school_rounded, color: Color(0xFFD97706), size: 28),
+            child: const Icon(
+              Icons.school_rounded,
+              color: Color(0xFFD97706),
+              size: 28,
+            ),
           ),
           const SizedBox(height: 6),
           Text(
@@ -1056,7 +1226,11 @@ class _MaterialSelectorDialogState extends State<_MaterialSelectorDialog> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Icon(Icons.arrow_back_rounded, color: AppColors.textSecondary, size: 16),
+                const Icon(
+                  Icons.arrow_back_rounded,
+                  color: AppColors.textSecondary,
+                  size: 16,
+                ),
                 const SizedBox(width: 4),
                 Text(
                   'Cambiar materia',
@@ -1080,7 +1254,9 @@ class _MaterialSelectorDialogState extends State<_MaterialSelectorDialog> {
           if (tasks.isEmpty)
             Text(
               'No tienes tareas en esta materia.',
-              style: AppTypography.bodySmall.copyWith(color: AppColors.textSecondary),
+              style: AppTypography.bodySmall.copyWith(
+                color: AppColors.textSecondary,
+              ),
             )
           else
             Expanded(
@@ -1089,7 +1265,8 @@ class _MaterialSelectorDialogState extends State<_MaterialSelectorDialog> {
                 separatorBuilder: (_, __) => const SizedBox(height: 6),
                 itemBuilder: (context, index) {
                   final task = tasks[index];
-                  final numCards = cardsBox.values.where((c) => c.tareaId == task.id).length;
+                  final numCards =
+                      cardsBox.values.where((c) => c.tareaId == task.id).length;
                   final color = Color(task.priorityColorValue);
 
                   return Material(
@@ -1106,7 +1283,10 @@ class _MaterialSelectorDialogState extends State<_MaterialSelectorDialog> {
                       },
                       borderRadius: BorderRadius.circular(14),
                       child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 14,
+                          vertical: 10,
+                        ),
                         decoration: BoxDecoration(
                           color: AppColors.surfaceLight,
                           borderRadius: BorderRadius.circular(14),
@@ -1132,11 +1312,16 @@ class _MaterialSelectorDialogState extends State<_MaterialSelectorDialog> {
                               ),
                             ),
                             Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 4,
+                              ),
                               decoration: BoxDecoration(
                                 color: color.withValues(alpha: 0.15),
                                 borderRadius: BorderRadius.circular(8),
-                                border: Border.all(color: color.withValues(alpha: 0.4)),
+                                border: Border.all(
+                                  color: color.withValues(alpha: 0.4),
+                                ),
                               ),
                               child: Text(
                                 '$numCards cards',
@@ -1175,7 +1360,8 @@ class _BattleModeSelectorDialog extends StatefulWidget {
   });
 
   @override
-  State<_BattleModeSelectorDialog> createState() => _BattleModeSelectorDialogState();
+  State<_BattleModeSelectorDialog> createState() =>
+      _BattleModeSelectorDialogState();
 }
 
 class _BattleModeSelectorDialogState extends State<_BattleModeSelectorDialog> {
@@ -1240,12 +1426,18 @@ class _BattleModeSelectorDialogState extends State<_BattleModeSelectorDialog> {
                             duration: const Duration(milliseconds: 200),
                             padding: const EdgeInsets.all(14),
                             decoration: BoxDecoration(
-                              color: isSelected
-                                  ? const Color(0xFFEA580C).withValues(alpha: 0.12)
-                                  : AppColors.surfaceLight,
+                              color:
+                                  isSelected
+                                      ? const Color(
+                                        0xFFEA580C,
+                                      ).withValues(alpha: 0.12)
+                                      : AppColors.surfaceLight,
                               borderRadius: BorderRadius.circular(16),
                               border: Border.all(
-                                color: isSelected ? const Color(0xFFEA580C) : AppColors.cardBorder,
+                                color:
+                                    isSelected
+                                        ? const Color(0xFFEA580C)
+                                        : AppColors.cardBorder,
                                 width: isSelected ? 1.5 : 1.0,
                               ),
                             ),
@@ -1255,23 +1447,27 @@ class _BattleModeSelectorDialogState extends State<_BattleModeSelectorDialog> {
                                   isSelected
                                       ? Icons.radio_button_checked
                                       : Icons.radio_button_unchecked,
-                                  color: isSelected
-                                      ? const Color(0xFFEA580C)
-                                      : AppColors.textTertiary,
+                                  color:
+                                      isSelected
+                                          ? const Color(0xFFEA580C)
+                                          : AppColors.textTertiary,
                                 ),
                                 const SizedBox(width: 12),
                                 Expanded(
                                   child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
                                       Text(
                                         mode.title,
-                                        style: AppTypography.bodyMedium.copyWith(
-                                          color: isSelected
-                                              ? const Color(0xFFEA580C)
-                                              : AppColors.textPrimary,
-                                          fontWeight: FontWeight.bold,
-                                        ),
+                                        style: AppTypography.bodyMedium
+                                            .copyWith(
+                                              color:
+                                                  isSelected
+                                                      ? const Color(0xFFEA580C)
+                                                      : AppColors.textPrimary,
+                                              fontWeight: FontWeight.bold,
+                                            ),
                                       ),
                                       const SizedBox(height: 2),
                                       Text(
@@ -1401,71 +1597,92 @@ class _BetSelectorDialogState extends State<_BetSelectorDialog> {
                   ),
                   const SizedBox(height: 16),
                   Row(
-                    children: widget.options.map((monto) {
-                      final isSelected = _selected == monto;
+                    children:
+                        widget.options.map((monto) {
+                          final isSelected = _selected == monto;
 
-                      return Expanded(
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 4),
-                          child: Material(
-                            color: Colors.transparent,
-                            child: InkWell(
-                              onTap: () => setState(() => _selected = monto),
-                              borderRadius: BorderRadius.circular(14),
-                              child: AnimatedContainer(
-                                duration: const Duration(milliseconds: 200),
-                                padding: const EdgeInsets.symmetric(vertical: 14),
-                                decoration: BoxDecoration(
-                                  color: isSelected
-                                      ? const Color(0xFFF59E0B).withValues(alpha: 0.2)
-                                      : AppColors.surfaceLight,
+                          return Expanded(
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 4,
+                              ),
+                              child: Material(
+                                color: Colors.transparent,
+                                child: InkWell(
+                                  onTap:
+                                      () => setState(() => _selected = monto),
                                   borderRadius: BorderRadius.circular(14),
-                                  border: Border.all(
-                                    color: isSelected
-                                        ? const Color(0xFFF59E0B)
-                                        : AppColors.cardBorder,
-                                    width: isSelected ? 2.0 : 1.0,
-                                  ),
-                                  boxShadow: isSelected
-                                      ? [
-                                          BoxShadow(
-                                            color: const Color(0xFFF59E0B).withValues(alpha: 0.25),
-                                            blurRadius: 8,
-                                          ),
-                                        ]
-                                      : null,
-                                ),
-                                child: Column(
-                                  children: [
-                                    SvgPicture.asset(
-                                      'assets/images/HyroCoins.svg',
-                                      width: 24,
-                                      height: 24,
+                                  child: AnimatedContainer(
+                                    duration: const Duration(milliseconds: 200),
+                                    padding: const EdgeInsets.symmetric(
+                                      vertical: 14,
                                     ),
-                                    const SizedBox(height: 6),
-                                    Text(
-                                      '$monto',
-                                      style: AppTypography.labelLarge.copyWith(
-                                        color: isSelected
-                                            ? const Color(0xFFF59E0B)
-                                            : AppColors.textSecondary,
-                                        fontWeight: FontWeight.w800,
-                                        fontSize: 18,
+                                    decoration: BoxDecoration(
+                                      color:
+                                          isSelected
+                                              ? const Color(
+                                                0xFFF59E0B,
+                                              ).withValues(alpha: 0.2)
+                                              : AppColors.surfaceLight,
+                                      borderRadius: BorderRadius.circular(14),
+                                      border: Border.all(
+                                        color:
+                                            isSelected
+                                                ? const Color(0xFFF59E0B)
+                                                : AppColors.cardBorder,
+                                        width: isSelected ? 2.0 : 1.0,
                                       ),
+                                      boxShadow:
+                                          isSelected
+                                              ? [
+                                                BoxShadow(
+                                                  color: const Color(
+                                                    0xFFF59E0B,
+                                                  ).withValues(alpha: 0.25),
+                                                  blurRadius: 8,
+                                                ),
+                                              ]
+                                              : null,
                                     ),
-                                  ],
+                                    child: Column(
+                                      children: [
+                                        SvgPicture.asset(
+                                          'assets/images/HyroCoins.svg',
+                                          width: 24,
+                                          height: 24,
+                                        ),
+                                        const SizedBox(height: 6),
+                                        Text(
+                                          '$monto',
+                                          style: AppTypography.labelLarge
+                                              .copyWith(
+                                                color:
+                                                    isSelected
+                                                        ? const Color(
+                                                          0xFFF59E0B,
+                                                        )
+                                                        : AppColors
+                                                            .textSecondary,
+                                                fontWeight: FontWeight.w800,
+                                                fontSize: 18,
+                                              ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
                                 ),
                               ),
                             ),
-                          ),
-                        ),
-                      );
-                    }).toList(),
+                          );
+                        }).toList(),
                   ),
                   const SizedBox(height: 16),
                   // Pozo total
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 10,
+                    ),
                     decoration: BoxDecoration(
                       color: AppColors.surfaceLight,
                       borderRadius: BorderRadius.circular(12),
@@ -1476,7 +1693,11 @@ class _BetSelectorDialogState extends State<_BetSelectorDialog> {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        const Icon(Icons.emoji_events_rounded, color: Color(0xFFF59E0B), size: 18),
+                        const Icon(
+                          Icons.emoji_events_rounded,
+                          color: Color(0xFFF59E0B),
+                          size: 18,
+                        ),
                         const SizedBox(width: 8),
                         Text(
                           'Pozo total: ${_selected * 2} Monedas',

@@ -3,8 +3,6 @@ import 'package:window_manager/window_manager.dart';
 import 'package:tray_manager/tray_manager.dart';
 import 'dart:io';
 import 'core/services/notifications_service.dart';
-import 'features/settings/settings_provider.dart';
-import 'package:provider/provider.dart';
 
 /// Agrega listeners de escritorio (window_manager, tray_manager) al estado.
 void addDesktopListeners(dynamic state) {

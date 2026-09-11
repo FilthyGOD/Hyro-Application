@@ -28,7 +28,6 @@ import 'features/auth/screens/welcome_screen.dart';
 import 'shared/layout/main_layout.dart';
 import 'core/widgets/floating_mascot.dart';
 import 'features/focus/screens/mini_focus_screen.dart';
-import 'core/utils/responsive.dart';
 import 'core/services/notifications_service.dart';
 import 'package:window_manager/window_manager.dart';
 import 'package:tray_manager/tray_manager.dart';

@@ -13,7 +13,8 @@ import '../../categories/category_provider.dart';
 import '../widgets/task_details_sheet.dart';
 import '../../missions/missions_provider.dart';
 import '../../../data/models/category_model.dart';
-import '../../../core/widgets/mobile_stats_bar.dart';
+
+import '../../stats/widgets/streak_calendar.dart';
 
 class TasksScreen extends StatefulWidget {
   const TasksScreen({super.key});
@@ -22,11 +23,21 @@ class TasksScreen extends StatefulWidget {
   State<TasksScreen> createState() => _TasksScreenState();
 }
 
-class _TasksScreenState extends State<TasksScreen> {
-  // ── Datos de prueba ──
-  // ── Las categorías serán dinámicas ──
-  String? _selectedCategoryName;
-  bool _showAllCategoriesDesktop = false;
+class _TasksScreenState extends State<TasksScreen> with SingleTickerProviderStateMixin {
+  late TabController _tabController;
+  DateTime _displayMonth = DateTime.now();
+
+  @override
+  void initState() {
+    super.initState();
+    _tabController = TabController(length: 2, vsync: this);
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -67,58 +78,162 @@ class _TasksScreenState extends State<TasksScreen> {
         builder: (context, constraints) {
           final isLargeScreen = constraints.maxWidth > 800;
 
-          final content = SingleChildScrollView(
-            child: Padding(
-              padding:
-                  isLargeScreen
-                      ? const EdgeInsets.only(
-                        left: 72,
-                        top: 32,
-                        right: 32,
-                        bottom: 32,
-                      )
-                      : EdgeInsets.only(
-                        top: MediaQuery.of(context).padding.top + 72,
-                        bottom: 32,
-                        left: 24,
-                        right: 24,
-                      ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildHeader(isMobile: !isLargeScreen),
-                  const SizedBox(height: 32),
-                  _buildTopCards(isLargeScreen: isLargeScreen),
-                  const SizedBox(height: 32),
-                  _buildCategoryCards(isLargeScreen: isLargeScreen),
-                  const SizedBox(height: 32),
-                  _buildCategoriesHeader(),
-                  const SizedBox(height: 16),
-                  _buildCategoryList(),
-                  const SizedBox(height: 80),
-                ],
+          return Padding(
+            padding: isLargeScreen
+                ? const EdgeInsets.only(
+                    left: 72,
+                    top: 32,
+                    right: 32,
+                    bottom: 0,
+                  )
+                : EdgeInsets.only(
+                    top: MediaQuery.of(context).padding.top + 24,
+                    bottom: 0,
+                    left: 24,
+                    right: 24,
+                  ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildTabBar(),
+                const SizedBox(height: 16),
+                Expanded(
+                  child: TabBarView(
+                    controller: _tabController,
+                    children: [
+                      _buildAgendaTab(isLargeScreen: isLargeScreen),
+                      _buildCalendarioTab(),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildTabBar() {
+    return Container(
+      decoration: const BoxDecoration(
+        border: Border(
+          bottom: BorderSide(
+            color: AppColors.cardBorder,
+            width: 2,
+          ),
+        ),
+      ),
+      child: TabBar(
+        controller: _tabController,
+        indicatorColor: AppColors.primary,
+        indicatorWeight: 3,
+        labelColor: Colors.white,
+        unselectedLabelColor: AppColors.textSecondary,
+        labelStyle: AppTypography.bodyLarge.copyWith(fontWeight: FontWeight.bold),
+        unselectedLabelStyle: AppTypography.bodyLarge,
+        tabs: const [
+          Tab(text: 'Agenda'),
+          Tab(text: 'Calendario'),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAgendaTab({required bool isLargeScreen}) {
+    return SingleChildScrollView(
+      child: Padding(
+        padding: const EdgeInsets.only(bottom: 80),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _buildTopCards(isLargeScreen: isLargeScreen),
+            const SizedBox(height: 32),
+            Text("Tus Categorías", style: AppTypography.h3),
+            const SizedBox(height: 16),
+            _buildVerticalCategoryList(),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCalendarioTab() {
+    return SingleChildScrollView(
+      child: Padding(
+        padding: const EdgeInsets.only(bottom: 80),
+        child: Consumer<StatsProvider>(
+          builder: (context, statsProvider, child) {
+            final stats = statsProvider.getStatsForMonth(
+              _displayMonth.year,
+              _displayMonth.month,
+            );
+            return StreakCalendar(
+              displayMonth: _displayMonth,
+              monthStats: stats,
+              onPreviousMonth: () {
+                setState(() {
+                  _displayMonth = DateTime(
+                    _displayMonth.year,
+                    _displayMonth.month - 1,
+                    1,
+                  );
+                });
+              },
+              onNextMonth: () {
+                setState(() {
+                  _displayMonth = DateTime(
+                    _displayMonth.year,
+                    _displayMonth.month + 1,
+                    1,
+                  );
+                });
+              },
+            );
+          },
+        ),
+      ),
+    );
+  }
+
+  Widget _buildVerticalCategoryList() {
+    return Consumer2<CategoryProvider, TaskProvider>(
+      builder: (context, categoryProvider, taskProvider, child) {
+        final categories = categoryProvider.categories;
+
+        if (categories.isEmpty) {
+          return Padding(
+            padding: const EdgeInsets.symmetric(vertical: 32),
+            child: Center(
+              child: Text(
+                'Aún no hay categorías. ¡Crea una!',
+                style: AppTypography.bodyLarge.copyWith(
+                  color: AppColors.textSecondary,
+                ),
               ),
             ),
           );
+        }
 
-          // En móvil, envolver en Stack para mostrar la barra de stats arriba
-          if (!isLargeScreen) {
-            return Stack(
-              children: [
-                content,
-                const Positioned(
-                  top: 0,
-                  left: 0,
-                  right: 0,
-                  child: MobileStatsBar(),
-                ),
-              ],
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: categories.map((cat) {
+            final catTasks = taskProvider.tasks
+                .where((t) => t.category == cat.name || t.categoryId == cat.id)
+                .toList();
+            
+            return _CategoryListTile(
+              key: ValueKey(cat.id),
+              category: cat,
+              tasks: catTasks,
+              onAddTask: () => _showAddTaskDialog(
+                initialCategory: cat.name,
+                categoryId: cat.id,
+              ),
             );
-          }
-
-          return content;
-        },
-      ),
+          }).toList(),
+        );
+      },
     );
   }
 
@@ -144,253 +259,7 @@ class _TasksScreenState extends State<TasksScreen> {
     }
   }
 
-  Widget _buildHeader({required bool isMobile}) {
-    return Consumer<StatsProvider>(
-      builder: (context, statsProvider, _) {
-        final streak = statsProvider.currentStreak;
-        final formattedDate = _getFormattedDate();
 
-        return SizedBox(
-          width: double.infinity,
-          child: Column(
-            crossAxisAlignment:
-                isMobile ? CrossAxisAlignment.center : CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Mis Pendientes',
-                style: isMobile ? AppTypography.h2 : AppTypography.h1,
-                textAlign: isMobile ? TextAlign.center : TextAlign.start,
-              ),
-              const SizedBox(height: 4),
-              FittedBox(
-                fit: BoxFit.scaleDown,
-                alignment: isMobile ? Alignment.center : Alignment.centerLeft,
-                child: Row(mainAxisSize: MainAxisSize.min, children: [
-                  ],
-                ),
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
-  String _getFormattedDate() {
-    final now = DateTime.now();
-    final days = [
-      'Domingo',
-      'Lunes',
-      'Martes',
-      'Miércoles',
-      'Jueves',
-      'Viernes',
-      'Sábado',
-    ];
-    final months = [
-      'Ene',
-      'Feb',
-      'Mar',
-      'Abr',
-      'May',
-      'Jun',
-      'Jul',
-      'Ago',
-      'Sep',
-      'Oct',
-      'Nov',
-      'Dic',
-    ];
-    // weekday es 1-7 (Lun-Dom), days[0] es Domingo
-    return '${days[now.weekday % 7]}, ${now.day} de ${months[now.month - 1]}';
-  }
-
-  Widget _buildCategoryCards({required bool isLargeScreen}) {
-    return Consumer2<CategoryProvider, TaskProvider>(
-      builder: (context, categoryProvider, taskProvider, child) {
-        final categories = categoryProvider.categories;
-        if (categories.isEmpty) return const SizedBox.shrink();
-
-        if (isLargeScreen) {
-          final maxVisible = 6;
-          final hasMore = categories.length > maxVisible;
-          final visibleCategories =
-              (_showAllCategoriesDesktop || !hasMore)
-                  ? categories
-                  : categories.take(maxVisible).toList();
-
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Wrap(
-                spacing: 16,
-                runSpacing: 16,
-                children:
-                    visibleCategories.map((cat) {
-                      final tasks = taskProvider.tasks.where(
-                        (t) => t.category == cat.name || t.categoryId == cat.id,
-                      );
-                      final pending = tasks.where((t) => !t.isCompleted).length;
-                      final total = tasks.length;
-
-                      final isSelected =
-                          _selectedCategoryName == cat.name ||
-                          (_selectedCategoryName == null &&
-                              cat == categories.first);
-
-                      return GestureDetector(
-                        onTap: () {
-                          setState(() {
-                            _selectedCategoryName = cat.name;
-                          });
-                        },
-                        child: Opacity(
-                          opacity: isSelected ? 1.0 : 0.5,
-                          child: SizedBox(
-                            width: 160,
-                            child: _CategoryCard(
-                              category: cat,
-                              pending: pending,
-                              total: total,
-                            ),
-                          ),
-                        ),
-                      );
-                    }).toList(),
-              ),
-              if (hasMore) ...[
-                const SizedBox(height: 16),
-                TextButton.icon(
-                  onPressed: () {
-                    setState(() {
-                      _showAllCategoriesDesktop = !_showAllCategoriesDesktop;
-                    });
-                  },
-                  icon: Icon(
-                    _showAllCategoriesDesktop
-                        ? Icons.keyboard_arrow_up
-                        : Icons.keyboard_arrow_down,
-                    color: AppColors.primary,
-                  ),
-                  label: Text(
-                    _showAllCategoriesDesktop ? 'Mostrar menos' : 'Mostrar más',
-                    style: AppTypography.bodySmall.copyWith(
-                      color: AppColors.primary,
-                    ),
-                  ),
-                ),
-              ],
-            ],
-          );
-        }
-
-        return SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          physics: const BouncingScrollPhysics(),
-          child: Row(
-            children:
-                categories.map((cat) {
-                  final tasks = taskProvider.tasks.where(
-                    (t) => t.category == cat.name || t.categoryId == cat.id,
-                  );
-                  final pending = tasks.where((t) => !t.isCompleted).length;
-                  final total = tasks.length;
-
-                  final isSelected =
-                      _selectedCategoryName == cat.name ||
-                      (_selectedCategoryName == null &&
-                          cat == categories.first);
-
-                  return Padding(
-                    padding: const EdgeInsets.only(right: 16),
-                    child: GestureDetector(
-                      onTap: () {
-                        setState(() {
-                          _selectedCategoryName = cat.name;
-                        });
-                      },
-                      child: Opacity(
-                        opacity: isSelected ? 1.0 : 0.5,
-                        child: SizedBox(
-                          width: 160,
-                          child: _CategoryCard(
-                            category: cat,
-                            pending: pending,
-                            total: total,
-                          ),
-                        ),
-                      ),
-                    ),
-                  );
-                }).toList(),
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _buildCategoriesHeader() {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text("Tus Categorías", style: AppTypography.h3),
-            const SizedBox(height: 12),
-          ],
-        );
-      },
-    );
-  }
-
-  Widget _buildCategoryList() {
-    return Consumer2<CategoryProvider, TaskProvider>(
-      builder: (context, categoryProvider, taskProvider, child) {
-        final categories = categoryProvider.categories;
-
-        if (categories.isEmpty) {
-          return Padding(
-            padding: const EdgeInsets.symmetric(vertical: 32),
-            child: Center(
-              child: Text(
-                'Aún no hay categorías. ¡Crea una!',
-                style: AppTypography.bodyLarge.copyWith(
-                  color: AppColors.textSecondary,
-                ),
-              ),
-            ),
-          );
-        }
-
-        final selectedCatName = _selectedCategoryName ?? categories.first.name;
-        final selectedCat = categories.cast<CategoryModel?>().firstWhere(
-          (c) => c!.name == selectedCatName,
-          orElse: () => categories.first,
-        );
-
-        if (selectedCat == null) return const SizedBox.shrink();
-
-        final catTasks =
-            taskProvider.tasks
-                .where(
-                  (t) =>
-                      t.category == selectedCat.name ||
-                      t.categoryId == selectedCat.id,
-                )
-                .toList();
-        return _CategoryListTile(
-          key: ValueKey(selectedCat.id),
-          category: selectedCat,
-          tasks: catTasks,
-          onAddTask:
-              () => _showAddTaskDialog(
-                initialCategory: selectedCat.name,
-                categoryId: selectedCat.id,
-              ),
-        );
-      },
-    );
-  }
 
   Widget _buildAnalyticsCard() {
     return Consumer<TaskProvider>(
@@ -1082,6 +951,50 @@ class _CategoryListTile extends StatelessWidget {
     required this.onAddTask,
   });
 
+  void _showDeleteCategoryDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (ctx) {
+        return AlertDialog(
+          backgroundColor: AppColors.surface,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          title: Text('Eliminar Categoría', style: AppTypography.h3),
+          content: Text(
+            '¿Estás seguro de que deseas eliminar "${category.name}"?\n\nLas tareas asociadas también serán eliminadas.',
+            style: AppTypography.bodyMedium.copyWith(
+              color: AppColors.textSecondary,
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text('Cancelar'),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFFEF4444),
+              ),
+              onPressed: () {
+                context.read<TaskProvider>().deleteTasksByCategory(
+                  category.id,
+                  category.name,
+                );
+                context.read<CategoryProvider>().deleteCategory(category.id);
+                Navigator.pop(ctx);
+              },
+              child: const Text(
+                'Eliminar',
+                style: TextStyle(color: Colors.white),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final pendingCount = tasks.where((t) => !t.isCompleted).length;
@@ -1140,6 +1053,45 @@ class _CategoryListTile extends StatelessWidget {
                   style: AppTypography.labelSmall.copyWith(
                     color: AppColors.textSecondary,
                   ),
+                ),
+                const SizedBox(width: 8),
+                PopupMenuButton<String>(
+                  icon: const Icon(
+                    Icons.more_horiz,
+                    color: AppColors.textTertiary,
+                    size: 20,
+                  ),
+                  color: AppColors.surface,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    side: const BorderSide(color: AppColors.cardBorder),
+                  ),
+                  onSelected: (value) {
+                    if (value == 'delete') {
+                      _showDeleteCategoryDialog(context);
+                    }
+                  },
+                  itemBuilder: (context) => [
+                    PopupMenuItem<String>(
+                      value: 'delete',
+                      child: Row(
+                        children: [
+                          const Icon(
+                            Icons.delete_outline_rounded,
+                            color: Color(0xFFEF4444),
+                            size: 18,
+                          ),
+                          const SizedBox(width: 10),
+                          Text(
+                            'Eliminar categoría',
+                            style: AppTypography.bodyMedium.copyWith(
+                              color: const Color(0xFFEF4444),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),

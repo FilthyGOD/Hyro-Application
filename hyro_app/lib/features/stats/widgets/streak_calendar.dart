@@ -9,6 +9,9 @@ class StreakCalendar extends StatelessWidget {
   final Map<String, DailyStats> monthStats;
   final VoidCallback onPreviousMonth;
   final VoidCallback onNextMonth;
+  final DateTime? selectedDate;
+  final ValueChanged<DateTime>? onDaySelected;
+  final Set<int> daysWithNotes;
 
   const StreakCalendar({
     super.key,
@@ -16,6 +19,9 @@ class StreakCalendar extends StatelessWidget {
     required this.monthStats,
     required this.onPreviousMonth,
     required this.onNextMonth,
+    this.selectedDate,
+    this.onDaySelected,
+    this.daysWithNotes = const {},
   });
 
   @override
@@ -103,8 +109,15 @@ class StreakCalendar extends StatelessWidget {
                 displayMonth.month,
                 dayIndex,
               );
+              
+              final isSelected = selectedDate != null && 
+                  selectedDate!.year == displayMonth.year && 
+                  selectedDate!.month == displayMonth.month && 
+                  selectedDate!.day == dayIndex;
+                  
+              final hasNotes = daysWithNotes.contains(dayIndex);
 
-              return _buildDayCell(dayIndex, hasFocus, isToday);
+              return _buildDayCell(dayIndex, hasFocus, isToday, isSelected, hasNotes);
             },
           ),
         ],
@@ -132,34 +145,57 @@ class StreakCalendar extends StatelessWidget {
     );
   }
 
-  Widget _buildDayCell(int day, bool hasFocus, bool isToday) {
+  Widget _buildDayCell(int day, bool hasFocus, bool isToday, bool isSelected, bool hasNotes) {
     Color bgColor = AppColors.surfaceLight;
     Color textColor = Colors.white70;
 
-    if (hasFocus) {
+    if (isSelected) {
+      bgColor = AppColors.primary;
+      textColor = Colors.white;
+    } else if (hasFocus) {
       bgColor = Colors.orange; // Streak color
       textColor = Colors.white;
     } else if (isToday) {
-      bgColor = AppColors.primary.withValues(alpha: 0.4);
-      textColor = Colors.white;
+      bgColor = AppColors.primary.withValues(alpha: 0.2);
+      textColor = AppColors.primary;
     }
 
-    return Container(
-      decoration: BoxDecoration(
-        color: bgColor,
-        borderRadius: BorderRadius.circular(8),
-        border:
-            isToday && !hasFocus ? Border.all(color: AppColors.primary) : null,
-      ),
-      child: Center(
-        child: Text(
-          day.toString(),
-          style: TextStyle(
-            color: textColor,
-            fontWeight:
-                hasFocus || isToday ? FontWeight.bold : FontWeight.normal,
-            fontSize: 14,
-          ),
+    return GestureDetector(
+      onTap: onDaySelected != null 
+          ? () => onDaySelected!(DateTime(displayMonth.year, displayMonth.month, day))
+          : null,
+      child: Container(
+        decoration: BoxDecoration(
+          color: bgColor,
+          borderRadius: BorderRadius.circular(8),
+          border: isToday && !isSelected && !hasFocus 
+              ? Border.all(color: AppColors.primary) 
+              : null,
+        ),
+        child: Stack(
+          alignment: Alignment.center,
+          children: [
+            Text(
+              day.toString(),
+              style: TextStyle(
+                color: textColor,
+                fontWeight: (hasFocus || isToday || isSelected) ? FontWeight.bold : FontWeight.normal,
+                fontSize: 14,
+              ),
+            ),
+            if (hasNotes)
+              Positioned(
+                bottom: 4,
+                child: Container(
+                  width: 4,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: isSelected ? Colors.white : AppColors.primary,
+                    shape: BoxShape.circle,
+                  ),
+                ),
+              ),
+          ],
         ),
       ),
     );

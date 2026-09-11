@@ -13,7 +13,7 @@ import '../../categories/category_provider.dart';
 import '../widgets/task_details_sheet.dart';
 import '../../missions/missions_provider.dart';
 import '../../../data/models/category_model.dart';
-
+import '../widgets/quick_note_sheet.dart';
 import '../../stats/widgets/streak_calendar.dart';
 
 class TasksScreen extends StatefulWidget {
@@ -26,6 +26,7 @@ class TasksScreen extends StatefulWidget {
 class _TasksScreenState extends State<TasksScreen> with SingleTickerProviderStateMixin {
   late TabController _tabController;
   DateTime _displayMonth = DateTime.now();
+  DateTime? _selectedCalendarDate;
 
   @override
   void initState() {
@@ -48,7 +49,14 @@ class _TasksScreenState extends State<TasksScreen> with SingleTickerProviderStat
           return Padding(
             padding: EdgeInsets.only(bottom: ui.isMusicBarVisible ? 80 : 0),
             child: GestureDetector(
-              onTap: _showAddCategoryDialog,
+              onTap: () {
+                showModalBottomSheet(
+                  context: context,
+                  isScrollControlled: true,
+                  backgroundColor: Colors.transparent,
+                  builder: (context) => const QuickNoteSheet(),
+                );
+              },
               child: Container(
                 width: 56,
                 height: 56,
@@ -162,33 +170,93 @@ class _TasksScreenState extends State<TasksScreen> with SingleTickerProviderStat
     return SingleChildScrollView(
       child: Padding(
         padding: const EdgeInsets.only(bottom: 80),
-        child: Consumer<StatsProvider>(
-          builder: (context, statsProvider, child) {
+        child: Consumer2<StatsProvider, TaskProvider>(
+          builder: (context, statsProvider, taskProvider, child) {
             final stats = statsProvider.getStatsForMonth(
               _displayMonth.year,
               _displayMonth.month,
             );
-            return StreakCalendar(
-              displayMonth: _displayMonth,
-              monthStats: stats,
-              onPreviousMonth: () {
-                setState(() {
-                  _displayMonth = DateTime(
-                    _displayMonth.year,
-                    _displayMonth.month - 1,
-                    1,
-                  );
-                });
-              },
-              onNextMonth: () {
-                setState(() {
-                  _displayMonth = DateTime(
-                    _displayMonth.year,
-                    _displayMonth.month + 1,
-                    1,
-                  );
-                });
-              },
+            
+            final Set<int> daysWithNotes = {};
+            for (final t in taskProvider.tasks) {
+              if (t.dueDate != null && 
+                  t.dueDate!.year == _displayMonth.year && 
+                  t.dueDate!.month == _displayMonth.month) {
+                daysWithNotes.add(t.dueDate!.day);
+              }
+            }
+
+            final selectedTasks = _selectedCalendarDate != null 
+                ? taskProvider.tasks.where((t) => 
+                    t.dueDate != null && 
+                    t.dueDate!.year == _selectedCalendarDate!.year && 
+                    t.dueDate!.month == _selectedCalendarDate!.month && 
+                    t.dueDate!.day == _selectedCalendarDate!.day).toList()
+                : <TaskModel>[];
+
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                StreakCalendar(
+                  displayMonth: _displayMonth,
+                  monthStats: stats,
+                  selectedDate: _selectedCalendarDate,
+                  daysWithNotes: daysWithNotes,
+                  onDaySelected: (date) {
+                    setState(() {
+                      if (_selectedCalendarDate == date) {
+                        _selectedCalendarDate = null; // Toggle off
+                      } else {
+                        _selectedCalendarDate = date;
+                      }
+                    });
+                  },
+                  onPreviousMonth: () {
+                    setState(() {
+                      _displayMonth = DateTime(
+                        _displayMonth.year,
+                        _displayMonth.month - 1,
+                        1,
+                      );
+                    });
+                  },
+                  onNextMonth: () {
+                    setState(() {
+                      _displayMonth = DateTime(
+                        _displayMonth.year,
+                        _displayMonth.month + 1,
+                        1,
+                      );
+                    });
+                  },
+                ),
+                if (_selectedCalendarDate != null) ...[
+                  const SizedBox(height: 24),
+                  Text(
+                    'Notas del ${_selectedCalendarDate!.day}',
+                    style: AppTypography.h3,
+                  ),
+                  const SizedBox(height: 16),
+                  if (selectedTasks.isEmpty)
+                    Text(
+                      'No hay notas para este día',
+                      style: AppTypography.bodyMedium.copyWith(color: AppColors.textSecondary),
+                    )
+                  else
+                    ...selectedTasks.map((t) {
+                      final timeStr = TimeOfDay.fromDateTime(t.dueDate!).format(context);
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 12),
+                        child: _UpcomingEvent(
+                          month: _getMonthAbbrev(t.dueDate!.month),
+                          day: t.dueDate!.day.toString(),
+                          title: t.title,
+                          time: timeStr,
+                        ),
+                      );
+                    }),
+                ],
+              ],
             );
           },
         ),

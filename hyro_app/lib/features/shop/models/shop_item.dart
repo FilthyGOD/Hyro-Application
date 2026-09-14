@@ -70,4 +70,26 @@ class ShopItem {
         return null;
     }
   }
+
+  /// Custom SVG asset path for items that have SVG icons (e.g. consumables)
+  String? get svgAsset {
+    if (id == 401 || nombre.toLowerCase().contains('protector')) {
+      return 'assets/icons/Escudo.svg';
+    }
+    if (id == 402 ||
+        (nombre.contains('3') &&
+            (nombre.toLowerCase().contains('leccion') ||
+                nombre.toLowerCase().contains('pomodoro') ||
+                nombre.toLowerCase().contains('xp')))) {
+      return 'assets/icons/BotellaDelgada.svg';
+    }
+    if (id == 403 ||
+        (nombre.contains('6') &&
+            (nombre.toLowerCase().contains('leccion') ||
+                nombre.toLowerCase().contains('pomodoro') ||
+                nombre.toLowerCase().contains('xp')))) {
+      return 'assets/icons/Botella.svg';
+    }
+    return null;
+  }
 }

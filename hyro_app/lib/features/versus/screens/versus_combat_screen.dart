@@ -747,7 +747,7 @@ class _VersusCombatScreenState extends State<VersusCombatScreen> {
           Row(
             children: [
               SvgPicture.asset(
-                'assets/images/HyroCoins.svg',
+                'assets/icons/Moneda3.svg',
                 width: 18,
                 height: 18,
               ),

@@ -229,7 +229,7 @@ class _ShopScreenState extends State<ShopScreen>
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     SvgPicture.asset(
-                      'assets/images/HyroCoins.svg',
+                      'assets/icons/Moneda3.svg',
                       width: 18,
                       height: 18,
                     ),
@@ -414,7 +414,7 @@ class _ShopScreenState extends State<ShopScreen>
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
                                   SvgPicture.asset(
-                                    'assets/images/HyroCoins.svg',
+                                    'assets/icons/Moneda3.svg',
                                     width: 12,
                                     height: 12,
                                   ),
@@ -532,7 +532,14 @@ class _ShopScreenState extends State<ShopScreen>
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text(item.icon, style: const TextStyle(fontSize: 48)),
+                if (item.svgAsset != null)
+                  SvgPicture.asset(
+                    item.svgAsset!,
+                    width: 48,
+                    height: 48,
+                  )
+                else
+                  Text(item.icon, style: const TextStyle(fontSize: 48)),
                 const SizedBox(height: 12),
                 Text(
                   item.nombre,
@@ -792,7 +799,14 @@ class _ShopScreenState extends State<ShopScreen>
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Text(item.icon, style: const TextStyle(fontSize: 32)),
+                          if (item.svgAsset != null)
+                            SvgPicture.asset(
+                              item.svgAsset!,
+                              width: 32,
+                              height: 32,
+                            )
+                          else
+                            Text(item.icon, style: const TextStyle(fontSize: 32)),
                           const SizedBox(height: 8),
                           Text(
                             item.nombre,
@@ -825,7 +839,7 @@ class _ShopScreenState extends State<ShopScreen>
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               SvgPicture.asset(
-                                'assets/images/HyroCoins.svg',
+                                'assets/icons/Moneda3.svg',
                                 width: 12,
                                 height: 12,
                               ),

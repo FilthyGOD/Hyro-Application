@@ -112,7 +112,7 @@ class _PremiumShopScreenState extends State<PremiumShopScreen> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   SvgPicture.asset(
-                    'assets/images/HyroCoins.svg',
+                    'assets/icons/Moneda3.svg',
                     width: 22,
                     height: 22,
                   ),
@@ -421,7 +421,7 @@ class _PremiumShopScreenState extends State<PremiumShopScreen> {
                     Row(
                       children: [
                         SvgPicture.asset(
-                          'assets/images/HyroCoins.svg',
+                          'assets/icons/Moneda3.svg',
                           width: 18,
                           height: 18,
                         ),
@@ -496,7 +496,7 @@ class _PremiumShopScreenState extends State<PremiumShopScreen> {
           child: Column(
             children: [
               SvgPicture.asset(
-                'assets/images/HyroCoins.svg',
+                'assets/icons/Moneda3.svg',
                 width: 48,
                 height: 48,
               ),
@@ -532,8 +532,8 @@ class _PremiumShopScreenState extends State<PremiumShopScreen> {
     items.sort((a, b) {
       int getOrder(String name) {
         if (name.contains('Protector')) return 1;
-        if (name.contains('3 lecciones')) return 2;
-        if (name.contains('6 lecciones')) return 3;
+        if (name.contains('3')) return 2;
+        if (name.contains('6')) return 3;
         return 4;
       }
 
@@ -555,10 +555,30 @@ class _PremiumShopScreenState extends State<PremiumShopScreen> {
 
                 // Build icon widget based on item
                 Widget iconWidget;
-                if (item.id == 401) {
-                  iconWidget = const Text(
-                    '🛡️',
-                    style: TextStyle(fontSize: 32),
+                if (item.svgAsset != null) {
+                  iconWidget = SvgPicture.asset(
+                    item.svgAsset!,
+                    width: 32,
+                    height: 32,
+                  );
+                } else if (item.id == 401 ||
+                    item.nombre.toLowerCase().contains('protector')) {
+                  iconWidget = SvgPicture.asset(
+                    'assets/icons/Escudo.svg',
+                    width: 45,
+                    height: 45,
+                  );
+                } else if (item.id == 402 || item.nombre.contains('3')) {
+                  iconWidget = SvgPicture.asset(
+                    'assets/icons/BotellaDelgada.svg',
+                    width: 32,
+                    height: 32,
+                  );
+                } else if (item.id == 403 || item.nombre.contains('6')) {
+                  iconWidget = SvgPicture.asset(
+                    'assets/icons/Botella.svg',
+                    width: 32,
+                    height: 32,
                   );
                 } else if (item.icon.contains('?')) {
                   iconWidget = Text(
@@ -654,7 +674,7 @@ class _PremiumShopScreenState extends State<PremiumShopScreen> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 SvgPicture.asset(
-                  'assets/images/HyroCoins.svg',
+                  'assets/icons/Moneda3.svg',
                   width: 16,
                   height: 16,
                 ),
@@ -733,7 +753,10 @@ class _PremiumShopScreenState extends State<PremiumShopScreen> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text(item.icon, style: const TextStyle(fontSize: 48)),
+                if (item.svgAsset != null)
+                  SvgPicture.asset(item.svgAsset!, width: 48, height: 48)
+                else
+                  Text(item.icon, style: const TextStyle(fontSize: 48)),
                 const SizedBox(height: 12),
                 Text(
                   item.nombre,

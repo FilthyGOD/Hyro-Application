@@ -363,16 +363,19 @@ class _DesktopLayout extends StatelessWidget {
                                           mainAxisSize: MainAxisSize.min,
                                           children: [
                                             if (profile.rachaActual > 0)
-                                              const Text(
-                                                '🔥',
-                                                style: TextStyle(fontSize: 16),
+                                              SvgPicture.asset(
+                                                'assets/icons/LlamaRacha.svg',
+                                                width: 18,
+                                                height: 18,
                                               )
                                             else
-                                              Icon(
-                                                Icons
-                                                    .local_fire_department_outlined,
-                                                color: AppColors.textSecondary,
-                                                size: 18,
+                                              Opacity(
+                                                opacity: 0.35,
+                                                child: SvgPicture.asset(
+                                                  'assets/icons/LlamaRacha.svg',
+                                                  width: 18,
+                                                  height: 18,
+                                                ),
                                               ),
                                             const SizedBox(width: 6),
                                             Text(
@@ -408,7 +411,7 @@ class _DesktopLayout extends StatelessWidget {
                                             mainAxisSize: MainAxisSize.min,
                                             children: [
                                               SvgPicture.asset(
-                                                'assets/images/HyroCoins.svg',
+                                                'assets/icons/Moneda3.svg',
                                                 width: 18,
                                                 height: 18,
                                               ),
@@ -447,9 +450,10 @@ class _DesktopLayout extends StatelessWidget {
                                           child: Row(
                                             mainAxisSize: MainAxisSize.min,
                                             children: [
-                                              const Text(
-                                                '🛡️',
-                                                style: TextStyle(fontSize: 16),
+                                              SvgPicture.asset(
+                                                'assets/icons/Escudo.svg',
+                                                width: 18,
+                                                height: 18,
                                               ),
                                               const SizedBox(width: 6),
                                               Text(
@@ -486,9 +490,10 @@ class _DesktopLayout extends StatelessWidget {
                                           child: Row(
                                             mainAxisSize: MainAxisSize.min,
                                             children: [
-                                              const Text(
-                                                '🧪',
-                                                style: TextStyle(fontSize: 16),
+                                              SvgPicture.asset(
+                                                'assets/icons/BotellaDelgada.svg',
+                                                width: 18,
+                                                height: 18,
                                               ),
                                               const SizedBox(width: 6),
                                               Text(

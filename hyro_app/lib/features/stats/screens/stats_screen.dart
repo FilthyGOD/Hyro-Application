@@ -401,7 +401,7 @@ class _MissionCard extends StatelessWidget {
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           SvgPicture.asset(
-                            'assets/images/HyroCoins.svg',
+                            'assets/icons/Moneda3.svg',
                             width: 14,
                             height: 14,
                           ),

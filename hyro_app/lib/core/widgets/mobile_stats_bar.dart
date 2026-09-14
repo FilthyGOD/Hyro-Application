@@ -37,7 +37,11 @@ class MobileStatsBar extends StatelessWidget {
                 MaterialPageRoute(builder: (_) => const PremiumShopScreen()),
               );
             },
-            icon: const Text('🛡️', style: TextStyle(fontSize: 26)),
+            icon: SvgPicture.asset(
+              'assets/icons/Escudo.svg',
+              width: 26,
+              height: 26,
+            ),
             value: '${profile.protectoresRachaActivos}',
           ),
           const SizedBox(width: 30),
@@ -51,12 +55,19 @@ class MobileStatsBar extends StatelessWidget {
             },
             icon:
                 profile.rachaActual > 0
-                    ? const Text('🔥', style: TextStyle(fontSize: 26))
-                    : Icon(
-                      Icons.local_fire_department_outlined,
-                      color: AppColors.textSecondary,
-                      size: 28,
-                    ),
+                    ? SvgPicture.asset(
+                        'assets/icons/LlamaRacha.svg',
+                        width: 26,
+                        height: 26,
+                      )
+                    : Opacity(
+                        opacity: 0.35,
+                        child: SvgPicture.asset(
+                          'assets/icons/LlamaRacha.svg',
+                          width: 26,
+                          height: 26,
+                        ),
+                      ),
             value: '${profile.rachaActual}',
           ),
           const SizedBox(width: 30),
@@ -69,7 +80,7 @@ class MobileStatsBar extends StatelessWidget {
               );
             },
             icon: SvgPicture.asset(
-              'assets/images/HyroCoins.svg',
+              'assets/icons/Moneda3.svg',
               width: 28,
               height: 28,
             ),
@@ -89,7 +100,11 @@ class MobileStatsBar extends StatelessWidget {
                     ),
                   );
                 },
-                icon: const Text('🧪', style: TextStyle(fontSize: 26)),
+                icon: SvgPicture.asset(
+                  'assets/icons/BotellaDelgada.svg',
+                  width: 26,
+                  height: 26,
+                ),
                 value: '${profile.sesionesXPDobleRestantes}',
               ),
               if (trailing != null) ...[const SizedBox(width: 8), trailing!],

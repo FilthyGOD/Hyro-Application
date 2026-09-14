@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:provider/provider.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
@@ -254,7 +255,11 @@ class _UserProfilePreviewBody extends StatelessWidget {
               children: [
                 Expanded(
                   child: _buildStatCard(
-                    icon: Icons.local_fire_department_rounded,
+                    customIcon: SvgPicture.asset(
+                      'assets/icons/LlamaRacha.svg',
+                      width: 22,
+                      height: 22,
+                    ),
                     iconColor: const Color(0xFFFFA726),
                     label: 'Racha',
                     value: '${profile.rachaActual}',
@@ -304,7 +309,8 @@ class _UserProfilePreviewBody extends StatelessWidget {
   // ─── Tarjeta de Estadística ───────────────────────────────────────
 
   Widget _buildStatCard({
-    required IconData icon,
+    IconData? icon,
+    Widget? customIcon,
     required Color iconColor,
     required String label,
     required String value,
@@ -323,7 +329,12 @@ class _UserProfilePreviewBody extends StatelessWidget {
               color: iconColor.withAlpha(20),
               borderRadius: BorderRadius.circular(12),
             ),
-            child: Icon(icon, color: iconColor, size: 22),
+            child: Center(
+              child: customIcon ??
+                  (icon != null
+                      ? Icon(icon, color: iconColor, size: 22)
+                      : const SizedBox()),
+            ),
           ),
           const SizedBox(width: 14),
           Expanded(
@@ -870,10 +881,16 @@ class _UserProfilePreviewBody extends StatelessWidget {
                     final item = items[index];
 
                     return ListTile(
-                      leading: Text(
-                        item.icon,
-                        style: const TextStyle(fontSize: 28),
-                      ),
+                      leading: item.svgAsset != null
+                          ? SvgPicture.asset(
+                              item.svgAsset!,
+                              width: 28,
+                              height: 28,
+                            )
+                          : Text(
+                              item.icon,
+                              style: const TextStyle(fontSize: 28),
+                            ),
                       title: Text(
                         item.nombre,
                         style: const TextStyle(color: AppColors.textPrimary),

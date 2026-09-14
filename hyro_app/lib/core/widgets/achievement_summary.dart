@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_typography.dart';
 import 'glass_card.dart';
@@ -6,14 +7,16 @@ import 'package:provider/provider.dart';
 import '../../features/profile/providers/profile_provider.dart';
 
 class AchievementCard extends StatelessWidget {
-  final IconData icon;
+  final IconData? icon;
+  final Widget? customIcon;
   final Color color;
   final String title;
   final String subtitle;
 
   const AchievementCard({
     super.key,
-    required this.icon,
+    this.icon,
+    this.customIcon,
     required this.color,
     required this.title,
     required this.subtitle,
@@ -32,7 +35,12 @@ class AchievementCard extends StatelessWidget {
               color: color.withValues(alpha: 0.12), // Approximately withAlpha(30)
               borderRadius: BorderRadius.circular(10),
             ),
-            child: Icon(icon, color: color, size: 22),
+            child: Center(
+              child: customIcon ??
+                  (icon != null
+                      ? Icon(icon, color: color, size: 22)
+                      : const SizedBox()),
+            ),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -66,7 +74,11 @@ class AchievementSummaryGrid extends StatelessWidget {
           children: [
             Expanded(
               child: AchievementCard(
-                icon: Icons.local_fire_department,
+                customIcon: SvgPicture.asset(
+                  'assets/icons/LlamaRacha.svg',
+                  width: 22,
+                  height: 22,
+                ),
                 color: Colors.orange,
                 title: 'Racha de ${profile.rachaMaxima} días',
                 subtitle: 'Récord Actual',

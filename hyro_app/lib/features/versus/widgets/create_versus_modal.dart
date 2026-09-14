@@ -1666,7 +1666,7 @@ class _BetSelectorDialogState extends State<_BetSelectorDialog> {
                                     child: Column(
                                       children: [
                                         SvgPicture.asset(
-                                          'assets/images/HyroCoins.svg',
+                                          'assets/icons/Moneda3.svg',
                                           width: 24,
                                           height: 24,
                                         ),

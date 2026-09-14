@@ -182,7 +182,7 @@ class ProfileScreen extends StatelessWidget {
                     Row(
                       children: [
                         SvgPicture.asset(
-                          'assets/images/HyroCoins.svg',
+                          'assets/icons/Moneda3.svg',
                           width: 20,
                           height: 20,
                         ),

@@ -270,7 +270,7 @@ class _VersusIntroScreenState extends State<VersusIntroScreen>
           content: Row(
             children: [
               SvgPicture.asset(
-                'assets/images/HyroCoins.svg',
+                'assets/icons/Moneda3.svg',
                 width: 24,
                 height: 24,
               ),
@@ -461,7 +461,7 @@ class _VersusIntroScreenState extends State<VersusIntroScreen>
                         child: Row(
                           children: [
                             SvgPicture.asset(
-                              'assets/images/HyroCoins.svg',
+                              'assets/icons/Moneda3.svg',
                               width: 16,
                               height: 16,
                             ),
@@ -958,7 +958,7 @@ class _VersusIntroScreenState extends State<VersusIntroScreen>
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   SvgPicture.asset(
-                    'assets/images/HyroCoins.svg',
+                    'assets/icons/Moneda3.svg',
                     width: 28,
                     height: 28,
                   ),

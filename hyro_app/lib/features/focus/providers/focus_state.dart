@@ -20,6 +20,8 @@ class TimerState {
   final bool isManualPause;
   final String? strictModeViolationApp;
   final List<QuizResultItem> quizHistory;
+  final int remainingPauseSeconds;
+  final bool isPauseExceeded;
 
   const TimerState({
     this.status = TimerStatus.idle,
@@ -37,6 +39,8 @@ class TimerState {
     this.isManualPause = false,
     this.strictModeViolationApp,
     this.quizHistory = const [],
+    this.remainingPauseSeconds = 120, // 2 minutos por defecto
+    this.isPauseExceeded = false,
   });
 
   double get progress =>
@@ -64,6 +68,8 @@ class TimerState {
     String? strictModeViolationApp,
     bool clearViolationApp = false,
     List<QuizResultItem>? quizHistory,
+    int? remainingPauseSeconds,
+    bool? isPauseExceeded,
   }) {
     return TimerState(
       status: status ?? this.status,
@@ -81,6 +87,8 @@ class TimerState {
       isManualPause: isManualPause ?? this.isManualPause,
       strictModeViolationApp: clearViolationApp ? null : (strictModeViolationApp ?? this.strictModeViolationApp),
       quizHistory: quizHistory ?? this.quizHistory,
+      remainingPauseSeconds: remainingPauseSeconds ?? this.remainingPauseSeconds,
+      isPauseExceeded: isPauseExceeded ?? this.isPauseExceeded,
     );
   }
 }

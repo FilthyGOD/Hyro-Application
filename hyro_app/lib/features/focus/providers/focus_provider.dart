@@ -59,6 +59,7 @@ class FocusProvider extends ChangeNotifier {
         quizHistory: (_state.status == TimerStatus.paused) ? _state.quizHistory : const [],
         quizCorrectCount: (_state.status == TimerStatus.paused) ? _state.quizCorrectCount : 0,
         quizTotalCount: (_state.status == TimerStatus.paused) ? _state.quizTotalCount : 0,
+        isPauseExceeded: false,
       ),
     );
     _timer?.cancel();
@@ -117,7 +118,9 @@ class FocusProvider extends ChangeNotifier {
 
   /// Pausa el temporizador. [manual] = true cuando el usuario presiona el botón de pausa.
   void pause({bool manual = true}) {
-    _timer?.cancel();
+    if (!manual) {
+      _timer?.cancel();
+    }
     NotificationsService.instance.cancelPomodoroNotification();
     _emit(
       _state.copyWith(
@@ -126,6 +129,11 @@ class FocusProvider extends ChangeNotifier {
         clearViolationApp: true,
       ),
     );
+    
+    // Si es pausa manual, el timer debe seguir corriendo para contar el tiempo de pausa
+    if (manual && (_timer == null || !_timer!.isActive)) {
+      _timer = Timer.periodic(const Duration(seconds: 1), (_) => _tick());
+    }
   }
 
   /// Reanuda un temporizador pausado.
@@ -150,6 +158,8 @@ class FocusProvider extends ChangeNotifier {
         remainingSeconds: totalSec,
         totalSeconds: totalSec,
         isStrictModeActive: false,
+        remainingPauseSeconds: 120,
+        isPauseExceeded: false,
       ),
     );
   }
@@ -182,6 +192,8 @@ class FocusProvider extends ChangeNotifier {
         totalSeconds: totalSec,
         activeTaskId: _state.activeTaskId,
         activeTaskTitle: _state.activeTaskTitle,
+        remainingPauseSeconds: 120,
+        isPauseExceeded: false,
       ),
     );
   }
@@ -200,11 +212,27 @@ class FocusProvider extends ChangeNotifier {
         totalFocusMinutes: _state.totalFocusMinutes,
         activeTaskId: _state.activeTaskId,
         activeTaskTitle: _state.activeTaskTitle,
+        remainingPauseSeconds: 120,
+        isPauseExceeded: false,
       ),
     );
   }
 
   void _tick() {
+    if (_state.status == TimerStatus.paused && _state.isManualPause) {
+      if (_state.remainingPauseSeconds > 0) {
+        _emit(_state.copyWith(remainingPauseSeconds: _state.remainingPauseSeconds - 1));
+      } else if (!_state.isPauseExceeded) {
+        _timer?.cancel();
+        _emit(_state.copyWith(
+          status: TimerStatus.paused,
+          isManualPause: false,
+          isPauseExceeded: true,
+        ));
+      }
+      return;
+    }
+
     if (_state.remainingSeconds <= 1) {
       _timer?.cancel();
       _secondsSinceLastQuiz = 0;
@@ -313,6 +341,8 @@ class FocusProvider extends ChangeNotifier {
           quizTotalCount: _state.quizTotalCount,
           quizHistory:
               _state.quizHistory, // Mantiene el historial para revisión en la pantalla final
+          remainingPauseSeconds: 120,
+          isPauseExceeded: false,
         ),
       );
     } else {
@@ -327,6 +357,8 @@ class FocusProvider extends ChangeNotifier {
           mode: TimerMode.pomodoro,
           remainingSeconds: nextDuration,
           totalSeconds: nextDuration,
+          remainingPauseSeconds: 120,
+          isPauseExceeded: false,
         ),
       );
     }

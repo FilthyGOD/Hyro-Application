@@ -62,9 +62,53 @@ class _FocusScreenState extends State<FocusScreen> {
 
     if (prev.status != curr.status ||
         prev.quizDue != curr.quizDue ||
-        prev.strictModeViolationApp != curr.strictModeViolationApp) {
+        prev.strictModeViolationApp != curr.strictModeViolationApp ||
+        prev.isPauseExceeded != curr.isPauseExceeded) {
       final mascot = context.read<MascotController>();
       final state = curr;
+
+      if (state.isPauseExceeded && !prev.isPauseExceeded) {
+        mascot.triggerPensando();
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder:
+              (_) => AlertDialog(
+                backgroundColor: AppColors.surface,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  side: const BorderSide(color: Colors.redAccent, width: 2),
+                ),
+                title: const Row(
+                  children: [
+                    Icon(Icons.timer_off, color: Colors.redAccent, size: 28),
+                    SizedBox(width: 8),
+                    Text(
+                      'Tiempo Excedido',
+                      style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                    ),
+                  ],
+                ),
+                content: const Text(
+                  'Has agotado tus 2 minutos de pausa. La sesión de enfoque se ha cancelado.',
+                  style: TextStyle(color: Colors.white70),
+                ),
+                actions: [
+                  TextButton(
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                    },
+                    child: const Text('Entendido', style: TextStyle(color: Colors.redAccent)),
+                  ),
+                ],
+              ),
+        ).then((_) {
+          mascot.triggerVolver();
+          if (!mounted) return;
+          context.read<FocusProvider>().reset();
+        });
+        return;
+      }
 
       if (state.strictModeViolationApp != null) {
         mascot.triggerPensando();

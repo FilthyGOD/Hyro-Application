@@ -3,52 +3,25 @@ import 'package:flutter/material.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/utils/format_time.dart';
 
+import 'package:provider/provider.dart';
+import '../providers/focus_provider.dart';
+
 /// Reloj de pausa integrado que reemplaza al temporizador circular principal cuando está pausado.
-class PauseClock extends StatefulWidget {
+class PauseClock extends StatelessWidget {
   final double size;
 
   const PauseClock({super.key, required this.size});
 
   @override
-  State<PauseClock> createState() => _PauseClockState();
-}
-
-class _PauseClockState extends State<PauseClock> {
-  Timer? _timer;
-  int _remainingSeconds = 300; // 5 minutos
-
-  @override
-  void initState() {
-    super.initState();
-    _startTimer();
-  }
-
-  void _startTimer() {
-    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      if (_remainingSeconds > 0) {
-        setState(() {
-          _remainingSeconds--;
-        });
-      } else {
-        _timer?.cancel();
-      }
-    });
-  }
-
-  @override
-  void dispose() {
-    _timer?.cancel();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
+    final remainingPauseSeconds = context.watch<FocusProvider>().state.remainingPauseSeconds;
+
     return SizedBox(
-      width: widget.size,
-      height: widget.size,
+      width: size,
+      height: size,
       child: Center(
         child: Padding(
-          padding: EdgeInsets.all(widget.size * 0.1),
+          padding: EdgeInsets.all(size * 0.1),
           child: FittedBox(
             fit: BoxFit.scaleDown,
             child: Column(
@@ -62,7 +35,7 @@ class _PauseClockState extends State<PauseClock> {
                 ),
                 const SizedBox(height: 16),
                 Text(
-                  FormatTime.mmss(_remainingSeconds),
+                  FormatTime.mmss(remainingPauseSeconds),
                   style: AppTypography.timerDisplay.copyWith(
                     color: Colors.white,
                   ),

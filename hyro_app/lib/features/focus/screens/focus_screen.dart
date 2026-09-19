@@ -322,15 +322,15 @@ class _DesktopLayout extends StatelessWidget {
                                       const SizedBox(height: 24),
                                     ],
                                     // El contenido (Temporizador, Controles, Desplazamiento)
-                                    if (state.isPaused && state.isManualPause)
-                                      PauseClock(size: timerSize)
-                                    else
-                                      CircularTimer(
-                                        remainingSeconds:
-                                            state.remainingSeconds,
-                                        progress: state.progress,
-                                        size: timerSize,
-                                      ),
+                                    CircularTimer(
+                                      remainingSeconds: (state.isPaused && state.isManualPause)
+                                          ? state.remainingPauseSeconds
+                                          : state.remainingSeconds,
+                                      progress: (state.isPaused && state.isManualPause)
+                                          ? ((120 - state.remainingPauseSeconds) / 120)
+                                          : state.progress,
+                                      size: timerSize,
+                                    ),
                                     const SizedBox(height: 16),
                                     if (state.isRunning &&
                                         state.quizTotalCount > 0)
@@ -380,7 +380,7 @@ class _DesktopLayout extends StatelessWidget {
                       ),
                     ),
                     // ── Columna derecha: tarjetas de información (DESPLAZABLES) ──
-                    if (!state.isRunning && !settings.hideFocusCards) ...[
+                    if (!(state.isRunning || (state.isPaused && state.isManualPause)) && !settings.hideFocusCards) ...[
                       const SizedBox(width: 48),
                       SizedBox(
                         width:
@@ -667,12 +667,13 @@ class _MobileLayout extends StatelessWidget {
                     final size =
                         (availableWidth * 0.75).clamp(160.0, 260.0) *
                         settings.timerSizeMultiplier;
-                    if (state.isPaused && state.isManualPause) {
-                      return PauseClock(size: size);
-                    }
                     return CircularTimer(
-                      remainingSeconds: state.remainingSeconds,
-                      progress: state.progress,
+                      remainingSeconds: (state.isPaused && state.isManualPause)
+                          ? state.remainingPauseSeconds
+                          : state.remainingSeconds,
+                      progress: (state.isPaused && state.isManualPause)
+                          ? ((120 - state.remainingPauseSeconds) / 120)
+                          : state.progress,
                       size: size,
                     );
                   },

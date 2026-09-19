@@ -68,7 +68,7 @@ class _MainLayoutState extends State<MainLayout> {
     final isTimerRunning = focusState.isRunning;
     final isPomodoroFinished = focusState.isFinished && 
         (focusState.mode == TimerMode.shortBreak || focusState.mode == TimerMode.longBreak);
-    final hideNavBars = isTimerRunning || isPomodoroFinished;
+    final hideNavBars = isTimerRunning || isPomodoroFinished || (focusState.isPaused && focusState.isManualPause);
 
     if (isMobile) {
       return _buildMobileLayout(hideNavBars);

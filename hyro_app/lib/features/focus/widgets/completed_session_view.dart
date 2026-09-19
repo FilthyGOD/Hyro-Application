@@ -7,14 +7,17 @@ import '../../settings/settings_provider.dart';
 import '../../mascot/mascot_controller.dart';
 import 'package:provider/provider.dart';
 import '../../stats/stats_provider.dart';
+import '../../../core/theme/app_colors.dart';
 
 class CompletedSessionView extends StatefulWidget {
   final int streak;
   final bool initialShowStreakScreen;
+  final bool isDebugMode;
   const CompletedSessionView({
     super.key,
     required this.streak,
     this.initialShowStreakScreen = false,
+    this.isDebugMode = false,
   });
 
   @override
@@ -28,9 +31,13 @@ class _CompletedSessionViewState extends State<CompletedSessionView> {
   void initState() {
     super.initState();
     _showStreakScreen = widget.initialShowStreakScreen;
-    // Dispara la animación de festejo cuando aparece esta vista
+    // Dispara la animación adecuada
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<MascotController>().triggerFestejo();
+      if (_showStreakScreen) {
+        context.read<MascotController>().triggerRacha(widget.streak);
+      } else {
+        context.read<MascotController>().triggerFestejo();
+      }
     });
   }
 
@@ -46,8 +53,9 @@ class _CompletedSessionViewState extends State<CompletedSessionView> {
       setState(() {
         _showStreakScreen = true;
       });
+      context.read<MascotController>().triggerRacha(streak);
     } else {
-      if (widget.initialShowStreakScreen) {
+      if (widget.isDebugMode) {
         Navigator.of(context).pop();
       } else {
         context.read<FocusProvider>().reset();
@@ -57,10 +65,14 @@ class _CompletedSessionViewState extends State<CompletedSessionView> {
 
   @override
   Widget build(BuildContext context) {
-    if (_showStreakScreen) {
-      return _buildStreakScreen(context);
-    }
-    return _buildSessionFinishedScreen(context);
+    return Scaffold(
+      backgroundColor: AppColors.background,
+      body: SafeArea(
+        child: _showStreakScreen 
+            ? _buildStreakScreen(context)
+            : _buildSessionFinishedScreen(context),
+      ),
+    );
   }
 
   Widget _buildSessionFinishedScreen(BuildContext context) {
@@ -80,7 +92,11 @@ class _CompletedSessionViewState extends State<CompletedSessionView> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   Center(
-                    child: _buildFestejoAnimation(isMobile),
+                    child: SizedBox(
+                      width: isMobile ? 150 : 200,
+                      height: isMobile ? 150 : 200,
+                      child: _buildMascotAnimation(),
+                    ),
                   ),
                   const SizedBox(height: 16),
                   Text(
@@ -154,7 +170,7 @@ class _CompletedSessionViewState extends State<CompletedSessionView> {
                             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25)),
                           ),
                           onPressed: () {
-                            if (widget.initialShowStreakScreen) {
+                            if (widget.isDebugMode) {
                               Navigator.of(context).pop();
                             } else {
                               final focusProvider = context.read<FocusProvider>();
@@ -243,42 +259,9 @@ class _CompletedSessionViewState extends State<CompletedSessionView> {
                 children: [
                   Center(
                     child: SizedBox(
-                      width: isMobile ? 180 : 250,
-                      height: isMobile ? 220 : 300,
-                      child: Stack(
-                        alignment: Alignment.bottomCenter,
-                        clipBehavior: Clip.none,
-                        children: [
-                          Positioned(
-                            bottom: 0,
-                            child: _buildFestejoAnimation(isMobile),
-                          ),
-                          Positioned(
-                            top: -20,
-                            child: Stack(
-                              alignment: Alignment.center,
-                              children: [
-                                SvgPicture.asset(
-                                  'assets/icons/LlamaRacha.svg',
-                                  width: 100,
-                                  height: 100,
-                                ),
-                                Padding(
-                                  padding: const EdgeInsets.only(top: 15),
-                                  child: Text(
-                                    '$streak',
-                                    style: const TextStyle(
-                                      color: Color(0xFFC62828), 
-                                      fontSize: 32,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
+                      width: isMobile ? 250 : 300,
+                      height: isMobile ? 250 : 300,
+                      child: _buildMascotAnimation(),
                     ),
                   ),
                   const SizedBox(height: 24),
@@ -317,7 +300,7 @@ class _CompletedSessionViewState extends State<CompletedSessionView> {
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25)),
                         ),
                         onPressed: () {
-                          if (widget.initialShowStreakScreen) {
+                          if (widget.isDebugMode) {
                             Navigator.of(context).pop();
                           } else {
                             context.read<FocusProvider>().reset();
@@ -380,26 +363,17 @@ class _CompletedSessionViewState extends State<CompletedSessionView> {
     return widgets;
   }
 
-  Widget _buildFestejoAnimation(bool isMobile) {
-    final size = isMobile ? 150.0 : 200.0;
+  Widget _buildMascotAnimation() {
     return Consumer<MascotController>(
       builder: (context, mascot, _) {
         if (!mascot.isLoaded) {
-          return SizedBox(
-            width: size,
-            height: size,
-            child: const Center(
-              child: Icon(Icons.star_rounded, size: 60, color: Color(0xFFF59E0B)),
-            ),
+          return const Center(
+            child: Icon(Icons.star_rounded, size: 60, color: Color(0xFFF59E0B)),
           );
         }
-        return SizedBox(
-          width: size,
-          height: size,
-          child: RiveWidget(
-            controller: mascot.controller!,
-            fit: Fit.contain,
-          ),
+        return RiveWidget(
+          controller: mascot.controller!,
+          fit: Fit.contain,
         );
       },
     );

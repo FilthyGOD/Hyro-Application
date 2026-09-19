@@ -13,6 +13,7 @@ import '../../core/widgets/animated_background.dart';
 import 'package:provider/provider.dart';
 import '../../core/providers/ui_provider.dart';
 import '../../features/focus/providers/focus_provider.dart';
+import '../../features/focus/providers/focus_state.dart';
 
 /// Scaffold del diseño principal con barra lateral responsiva + contenido + barra de radio.
 class MainLayout extends StatefulWidget {
@@ -62,10 +63,15 @@ class _MainLayoutState extends State<MainLayout> {
   Widget build(BuildContext context) {
     final isMobile = Responsive.isMobile(context);
     final isTablet = Responsive.isTablet(context);
-    final isTimerRunning = context.watch<FocusProvider>().state.isRunning;
+    
+    final focusState = context.watch<FocusProvider>().state;
+    final isTimerRunning = focusState.isRunning;
+    final isPomodoroFinished = focusState.isFinished && 
+        (focusState.mode == TimerMode.shortBreak || focusState.mode == TimerMode.longBreak);
+    final hideNavBars = isTimerRunning || isPomodoroFinished;
 
     if (isMobile) {
-      return _buildMobileLayout(isTimerRunning);
+      return _buildMobileLayout(hideNavBars);
     }
 
     return Scaffold(
@@ -116,7 +122,7 @@ class _MainLayoutState extends State<MainLayout> {
                       ),
                     ),
                     // Fondo oscuro opcional para un mejor efecto
-                    if (_isDesktopSidebarVisible && !isTimerRunning)
+                    if (_isDesktopSidebarVisible && !hideNavBars)
                       Positioned.fill(
                         child: GestureDetector(
                           onTap: () {
@@ -129,7 +135,7 @@ class _MainLayoutState extends State<MainLayout> {
                           ),
                         ),
                       ),
-                    if (!_isDesktopSidebarVisible && !isTimerRunning)
+                    if (!_isDesktopSidebarVisible && !hideNavBars)
                       Positioned(
                         top: 24,
                         left: 24,
@@ -151,7 +157,7 @@ class _MainLayoutState extends State<MainLayout> {
                       duration: const Duration(milliseconds: 300),
                       curve: Curves.easeInOut,
                       left:
-                          (_isDesktopSidebarVisible && !isTimerRunning)
+                          (_isDesktopSidebarVisible && !hideNavBars)
                               ? 0
                               : -sidebarWidth,
                       top: 0,
@@ -173,7 +179,7 @@ class _MainLayoutState extends State<MainLayout> {
     );
   }
 
-  Widget _buildMobileLayout(bool isTimerRunning) {
+  Widget _buildMobileLayout(bool hideNavBars) {
     return Scaffold(
       key: _scaffoldKey,
       body: Stack(
@@ -200,7 +206,7 @@ class _MainLayoutState extends State<MainLayout> {
         ],
       ),
       bottomNavigationBar:
-          isTimerRunning
+          hideNavBars
               ? null
               : Container(
                 decoration: BoxDecoration(

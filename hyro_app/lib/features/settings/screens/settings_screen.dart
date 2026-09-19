@@ -422,14 +422,12 @@ class _SettingsScreenState extends State<SettingsScreen>
                               '🐛 Pantalla de Sesión Completada',
                             ),
                             onPressed: () {
-                              context
-                                  .read<FocusProvider>()
-                                  .debugForceSessionCompleted();
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text(
-                                    'Simulando fin de sesión. Revisa la pantalla de Focus.',
-                                  ),
+                              showDialog(
+                                context: context,
+                                builder: (_) => CompletedSessionView(
+                                  streak: context.read<StatsProvider>().currentStreak,
+                                  initialShowStreakScreen: false,
+                                  isDebugMode: true,
                                 ),
                               );
                             },
@@ -456,12 +454,10 @@ class _SettingsScreenState extends State<SettingsScreen>
                             onPressed: () {
                               showDialog(
                                 context: context,
-                                builder: (_) => Scaffold(
-                                  backgroundColor: AppColors.background,
-                                  body: CompletedSessionView(
-                                    streak: context.read<StatsProvider>().currentStreak,
-                                    initialShowStreakScreen: true,
-                                  ),
+                                builder: (_) => CompletedSessionView(
+                                  streak: context.read<StatsProvider>().currentStreak,
+                                  initialShowStreakScreen: true,
+                                  isDebugMode: true,
                                 ),
                               );
                             },

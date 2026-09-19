@@ -10,6 +10,7 @@ import '../../../core/services/notifications_service.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../tasks/tasks_provider.dart';
 import '../../stats/stats_provider.dart';
+import '../../focus/widgets/completed_session_view.dart';
 import 'dart:io';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import '../../../core/services/strict_mode_service.dart';
@@ -435,6 +436,38 @@ class _SettingsScreenState extends State<SettingsScreen>
                             style: ElevatedButton.styleFrom(
                               backgroundColor: Colors.purple.withAlpha(50),
                               foregroundColor: Colors.purpleAccent,
+                              alignment: Alignment.centerLeft,
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 12,
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        // ── Streak Screen (Debug) ──
+                        SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton.icon(
+                            icon: const Icon(Icons.local_fire_department),
+                            label: const Text(
+                              '🔥 Pantalla de Racha (Debug)',
+                            ),
+                            onPressed: () {
+                              showDialog(
+                                context: context,
+                                builder: (_) => Scaffold(
+                                  backgroundColor: AppColors.background,
+                                  body: CompletedSessionView(
+                                    streak: context.read<StatsProvider>().currentStreak,
+                                    initialShowStreakScreen: true,
+                                  ),
+                                ),
+                              );
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.orange.withAlpha(50),
+                              foregroundColor: Colors.orangeAccent,
                               alignment: Alignment.centerLeft,
                               padding: const EdgeInsets.symmetric(
                                 horizontal: 16,

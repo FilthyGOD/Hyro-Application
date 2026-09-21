@@ -32,6 +32,9 @@ class _TasksScreenState extends State<TasksScreen> with SingleTickerProviderStat
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
+    _tabController.addListener(() {
+      setState(() {});
+    });
   }
 
   @override
@@ -50,12 +53,16 @@ class _TasksScreenState extends State<TasksScreen> with SingleTickerProviderStat
             padding: EdgeInsets.only(bottom: ui.isMusicBarVisible ? 80 : 0),
             child: GestureDetector(
               onTap: () {
-                showModalBottomSheet(
-                  context: context,
-                  isScrollControlled: true,
-                  backgroundColor: Colors.transparent,
-                  builder: (context) => const QuickNoteSheet(),
-                );
+                if (_tabController.index == 0) {
+                  _showAddCategoryDialog();
+                } else {
+                  showModalBottomSheet(
+                    context: context,
+                    isScrollControlled: true,
+                    backgroundColor: Colors.transparent,
+                    builder: (context) => const QuickNoteSheet(),
+                  );
+                }
               },
               child: Container(
                 width: 56,

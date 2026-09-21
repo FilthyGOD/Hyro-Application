@@ -746,8 +746,18 @@ class _TasksScreenState extends State<TasksScreen> with SingleTickerProviderStat
                       iconCodePoint: selectedIcon,
                     );
 
-                    context.read<CategoryProvider>().addCategory(cat);
-                    Navigator.pop(ctx);
+                    try {
+                      context.read<CategoryProvider>().addCategory(cat);
+                      Navigator.pop(ctx);
+                    } catch (e) {
+                      Navigator.pop(ctx);
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('$e'.replaceAll('Exception: ', '')),
+                          backgroundColor: Colors.redAccent,
+                        ),
+                      );
+                    }
                   },
                   child: Container(
                     padding: const EdgeInsets.symmetric(
@@ -966,8 +976,18 @@ class _TasksScreenState extends State<TasksScreen> with SingleTickerProviderStat
                       dueDate: finalDueDate,
                     );
 
-                    context.read<TaskProvider>().addTask(task);
-                    Navigator.pop(ctx);
+                    try {
+                      context.read<TaskProvider>().addTask(task);
+                      Navigator.pop(ctx);
+                    } catch (e) {
+                      Navigator.pop(ctx);
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('$e'.replaceAll('Exception: ', '')),
+                          backgroundColor: Colors.redAccent,
+                        ),
+                      );
+                    }
                   },
                   child: Container(
                     padding: const EdgeInsets.symmetric(

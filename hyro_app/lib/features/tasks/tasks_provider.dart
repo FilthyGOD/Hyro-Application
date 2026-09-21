@@ -66,7 +66,20 @@ class TaskProvider extends ChangeNotifier {
     }
   }
 
+  /// Límite máximo de tareas por categoría.
+  static const int maxTasksPerCategory = 25;
+
   Future<void> addTask(TaskModel task) async {
+    // Validar límite por categoría
+    if (task.categoryId != null || task.category != null) {
+      final tasksInCategory = _tasks.where((t) =>
+        (task.categoryId != null && t.categoryId == task.categoryId) ||
+        (task.category != null && t.category == task.category)
+      ).length;
+      if (tasksInCategory >= maxTasksPerCategory) {
+        throw Exception('Has alcanzado el límite de $maxTasksPerCategory tareas en esta categoría.');
+      }
+    }
     try {
       await _repository.addTask(task);
       _tasks.add(task);

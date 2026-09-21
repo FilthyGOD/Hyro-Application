@@ -180,6 +180,17 @@ class _TaskDetailsDialogState extends State<TaskDetailsDialog>
   // ── Fuentes (Documentos) ────────────────────────────────────────────────
 
   Future<void> _pickAndUploadDocument() async {
+    // Límite: máximo 3 fuentes por tarea
+    const maxSourcesPerTask = 3;
+    if (_fuentes.length >= maxSourcesPerTask) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Límite de 3 fuentes por tarea alcanzado.'),
+          backgroundColor: Colors.redAccent,
+        ),
+      );
+      return;
+    }
     try {
       final result = await FilePicker.platform.pickFiles(
         type: FileType.custom,
@@ -382,6 +393,31 @@ class _TaskDetailsDialogState extends State<TaskDetailsDialog>
     final front = _cardFrontController.text.trim();
     final back = _cardBackController.text.trim();
     if (front.isEmpty || back.isEmpty) return;
+
+    // Límite: máximo 15 flashcards por materia/categoría
+    const maxFlashcardsPerCategory = 15;
+    // Contar flashcards en todas las tareas de la misma categoría
+    final categoryId = _currentTask.categoryId;
+    final categoryName = _currentTask.category;
+    if (categoryId != null || categoryName != null) {
+      final tasksInCategory = context.read<TaskProvider>().tasks.where((t) =>
+        (categoryId != null && t.categoryId == categoryId) ||
+        (categoryName != null && t.category == categoryName)
+      ).toList();
+      int totalCards = 0;
+      for (final t in tasksInCategory) {
+        totalCards += _cardRepo.getCardsForTask(t.id).length;
+      }
+      if (totalCards >= maxFlashcardsPerCategory) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Límite de 15 flashcards por materia alcanzado.'),
+            backgroundColor: Colors.redAccent,
+          ),
+        );
+        return;
+      }
+    }
 
     final card = TareaCardModel(
       id: const Uuid().v4(),

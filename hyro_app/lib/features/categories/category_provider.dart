@@ -49,7 +49,13 @@ class CategoryProvider extends ChangeNotifier {
     }
   }
 
+  /// Límite máximo de categorías por cuenta.
+  static const int maxCategories = 15;
+
   Future<void> addCategory(CategoryModel category) async {
+    if (_categories.length >= maxCategories) {
+      throw Exception('Has alcanzado el límite de $maxCategories categorías.');
+    }
     await _repository.addCategory(category);
     _categories.add(category);
     notifyListeners();

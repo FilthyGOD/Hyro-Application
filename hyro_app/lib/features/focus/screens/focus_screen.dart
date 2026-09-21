@@ -644,8 +644,8 @@ class _MobileLayout extends StatelessWidget {
     final focusProvider = context.read<FocusProvider>();
     final settings = context.watch<SettingsProvider>();
 
-    // Cuando el temporizador está en marcha, usa un diseño Centrado en lugar de desplazamiento
-    if (state.isRunning) {
+    // Cuando el temporizador está en marcha o en pausa manual, usa un diseño Centrado en lugar de desplazamiento
+    if (state.isRunning || (state.isPaused && state.isManualPause)) {
       return Center(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 20),

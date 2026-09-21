@@ -264,8 +264,9 @@ class _DesktopLayout extends StatelessWidget {
   Widget build(BuildContext context) {
     final focusProvider = context.read<FocusProvider>();
     final settings = context.watch<SettingsProvider>();
+    final isActiveLayout = state.isRunning || (state.isPaused && state.isManualPause);
 
-    final isCentered = state.isRunning || settings.hideFocusCards;
+    final isCentered = isActiveLayout || settings.hideFocusCards;
 
     return Stack(
       children: [
@@ -279,7 +280,7 @@ class _DesktopLayout extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              if (!state.isRunning) ...[
+              if (!isActiveLayout) ...[
                 _buildHeader(context, streak),
                 const SizedBox(height: 32),
               ],
@@ -313,11 +314,15 @@ class _DesktopLayout extends StatelessWidget {
                                 return Column(
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
-                                    if (state.isRunning &&
+                                    if (isActiveLayout &&
                                         state.activeTaskTitle != null) ...[
                                       _ActiveTaskBadge(
                                         taskId: state.activeTaskId ?? '',
-                                        title: state.activeTaskTitle!,
+                                        title: (state.isPaused && state.isManualPause)
+                                            ? 'Pausa'
+                                            : (state.mode == TimerMode.shortBreak || state.mode == TimerMode.longBreak)
+                                                ? 'Descanso'
+                                                : state.activeTaskTitle!,
                                       ),
                                       const SizedBox(height: 24),
                                     ],
@@ -332,7 +337,7 @@ class _DesktopLayout extends StatelessWidget {
                                       size: timerSize,
                                     ),
                                     const SizedBox(height: 16),
-                                    if (state.isRunning &&
+                                    if (isActiveLayout &&
                                         state.quizTotalCount > 0)
                                       Padding(
                                         padding: const EdgeInsets.only(
@@ -380,7 +385,7 @@ class _DesktopLayout extends StatelessWidget {
                       ),
                     ),
                     // ── Columna derecha: tarjetas de información (DESPLAZABLES) ──
-                    if (!(state.isRunning || (state.isPaused && state.isManualPause)) && !settings.hideFocusCards) ...[
+                    if (!isActiveLayout && !settings.hideFocusCards) ...[
                       const SizedBox(width: 48),
                       SizedBox(
                         width:
@@ -656,7 +661,11 @@ class _MobileLayout extends StatelessWidget {
               if (state.activeTaskTitle != null) ...[
                 _ActiveTaskBadge(
                   taskId: state.activeTaskId ?? '',
-                  title: state.activeTaskTitle!,
+                  title: (state.isPaused && state.isManualPause)
+                      ? 'Pausa'
+                      : (state.mode == TimerMode.shortBreak || state.mode == TimerMode.longBreak)
+                          ? 'Descanso'
+                          : state.activeTaskTitle!,
                 ),
                 const SizedBox(height: 24),
               ],

@@ -211,16 +211,7 @@ class _CreateVersusModalState extends State<CreateVersusModal>
 
                   // ── 1. Botón: Selecciona un amigo ──
                   _buildSelectorButton(
-                    gradient: const LinearGradient(
-                      colors: [
-                        Color(0xFF4A6CF7),
-                        Color.fromARGB(255, 21, 34, 173),
-                      ],
-                      begin: Alignment.centerLeft,
-                      end: Alignment.centerRight,
-                    ),
                     icon: Icons.person_add_rounded,
-                    iconColor: const Color(0xFF4A6CF7),
                     title:
                         _selectedOpponent != null
                             ? _selectedOpponent!.username
@@ -246,16 +237,7 @@ class _CreateVersusModalState extends State<CreateVersusModal>
                         // Material de estudio
                         Expanded(
                           child: _buildSelectorButton(
-                            gradient: const LinearGradient(
-                              colors: [
-                                Color.fromARGB(255, 18, 181, 105),
-                                Color.fromARGB(255, 1, 112, 60),
-                              ],
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                            ),
                             icon: Icons.menu_book_rounded,
-                            iconColor: const Color.fromARGB(255, 18, 181, 105),
                             title: 'Material de estudio',
                             subtitle:
                                 _materiaNombre != null
@@ -274,16 +256,7 @@ class _CreateVersusModalState extends State<CreateVersusModal>
                         // Modo de batalla
                         Expanded(
                           child: _buildSelectorButton(
-                            gradient: const LinearGradient(
-                              colors: [
-                                Color.fromARGB(255, 242, 93, 12),
-                                Color.fromARGB(255, 158, 66, 4),
-                              ],
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                            ),
                             icon: Icons.whatshot_rounded,
-                            iconColor: const Color(0xFFEA580C),
                             title: 'Modo de batalla',
                             subtitle: _modoSeleccionado.title,
                             trailing: const Icon(
@@ -302,16 +275,7 @@ class _CreateVersusModalState extends State<CreateVersusModal>
 
                   // ── 3. Botón: Selecciona una Apuesta ──
                   _buildSelectorButton(
-                    gradient: const LinearGradient(
-                      colors: [
-                        Color.fromARGB(255, 130, 34, 248),
-                        Color.fromARGB(255, 100, 6, 201),
-                      ],
-                      begin: Alignment.centerLeft,
-                      end: Alignment.centerRight,
-                    ),
                     icon: Icons.monetization_on_rounded,
-                    iconColor: const Color.fromARGB(255, 130, 34, 248),
                     title: 'Selecciona una Apuesta',
                     subtitle: 'Cantidad: $_costoMonedas monedas',
                     trailing: const Icon(
@@ -463,9 +427,7 @@ class _CreateVersusModalState extends State<CreateVersusModal>
   // ═══════════════════════════════════════════════════════════════════════════
 
   Widget _buildSelectorButton({
-    required Gradient gradient,
     required IconData icon,
-    required Color iconColor,
     required String title,
     required String subtitle,
     Widget? trailing,
@@ -476,10 +438,10 @@ class _CreateVersusModalState extends State<CreateVersusModal>
       width: compact ? 38 : 48,
       height: compact ? 38 : 48,
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.surface,
         borderRadius: BorderRadius.circular(compact ? 10 : 14),
       ),
-      child: Icon(icon, color: iconColor, size: compact ? 22 : 26),
+      child: Icon(icon, color: AppColors.textPrimary, size: compact ? 22 : 26),
     );
 
     return Material(
@@ -491,17 +453,9 @@ class _CreateVersusModalState extends State<CreateVersusModal>
           width: double.infinity,
           padding: EdgeInsets.all(compact ? 14 : 16),
           decoration: BoxDecoration(
-            gradient: gradient,
+            color: AppColors.surfaceLight,
             borderRadius: BorderRadius.circular(18),
-            boxShadow: [
-              BoxShadow(
-                color: (gradient as LinearGradient).colors.first.withValues(
-                  alpha: 0.3,
-                ),
-                blurRadius: 8,
-                offset: const Offset(0, 3),
-              ),
-            ],
+            border: Border.all(color: AppColors.cardBorder, width: 1.5),
           ),
           child:
               compact

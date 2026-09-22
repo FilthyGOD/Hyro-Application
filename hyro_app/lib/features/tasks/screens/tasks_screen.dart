@@ -184,12 +184,16 @@ class _TasksScreenState extends State<TasksScreen> with SingleTickerProviderStat
               _displayMonth.month,
             );
             
-            final Set<int> daysWithNotes = {};
+            final Map<int, Color> dayNoteColors = {};
             for (final t in taskProvider.tasks) {
               if (t.dueDate != null && 
                   t.dueDate!.year == _displayMonth.year && 
                   t.dueDate!.month == _displayMonth.month) {
-                daysWithNotes.add(t.dueDate!.day);
+                // Usar el color de la nota; si ya hay uno en ese día, mantener el primero
+                dayNoteColors.putIfAbsent(
+                  t.dueDate!.day,
+                  () => Color(t.priorityColorValue),
+                );
               }
             }
 
@@ -208,7 +212,7 @@ class _TasksScreenState extends State<TasksScreen> with SingleTickerProviderStat
                   displayMonth: _displayMonth,
                   monthStats: stats,
                   selectedDate: _selectedCalendarDate,
-                  daysWithNotes: daysWithNotes,
+                  dayNoteColors: dayNoteColors,
                   onDaySelected: (date) {
                     setState(() {
                       if (_selectedCalendarDate == date) {
@@ -501,6 +505,44 @@ class _TasksScreenState extends State<TasksScreen> with SingleTickerProviderStat
     return '';
   }
 
+  // ── Limit Dialog ──
+  void _showLimitDialog(BuildContext context, String title, String message) {
+    showDialog(
+      context: context,
+      builder: (ctx) {
+        return AlertDialog(
+          backgroundColor: AppColors.surface,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+            side: const BorderSide(color: Colors.redAccent, width: 2),
+          ),
+          title: Row(
+            children: [
+              const Icon(Icons.warning_amber_rounded, color: Colors.redAccent, size: 28),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  title,
+                  style: AppTypography.h3.copyWith(color: Colors.white),
+                ),
+              ),
+            ],
+          ),
+          content: Text(
+            message,
+            style: AppTypography.bodyMedium.copyWith(color: Colors.white70),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text('Entendido', style: TextStyle(color: Colors.redAccent)),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   // ── Dialogs ──
   void _showAddCategoryDialog() {
     final titleController = TextEditingController();
@@ -746,18 +788,18 @@ class _TasksScreenState extends State<TasksScreen> with SingleTickerProviderStat
                       iconCodePoint: selectedIcon,
                     );
 
-                    try {
-                      context.read<CategoryProvider>().addCategory(cat);
+                    final categoryProvider = context.read<CategoryProvider>();
+                    if (categoryProvider.categories.length >= CategoryProvider.maxCategories) {
                       Navigator.pop(ctx);
-                    } catch (e) {
-                      Navigator.pop(ctx);
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text('$e'.replaceAll('Exception: ', '')),
-                          backgroundColor: Colors.redAccent,
-                        ),
+                      _showLimitDialog(
+                        context,
+                        'Límite de Categorías',
+                        'Has alcanzado el máximo de ${CategoryProvider.maxCategories} categorías. Elimina alguna antes de crear otra.',
                       );
+                      return;
                     }
+                    categoryProvider.addCategory(cat);
+                    Navigator.pop(ctx);
                   },
                   child: Container(
                     padding: const EdgeInsets.symmetric(
@@ -976,18 +1018,25 @@ class _TasksScreenState extends State<TasksScreen> with SingleTickerProviderStat
                       dueDate: finalDueDate,
                     );
 
-                    try {
-                      context.read<TaskProvider>().addTask(task);
-                      Navigator.pop(ctx);
-                    } catch (e) {
-                      Navigator.pop(ctx);
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text('$e'.replaceAll('Exception: ', '')),
-                          backgroundColor: Colors.redAccent,
-                        ),
-                      );
+                    // Validar límite de tareas por categoría
+                    final taskProvider = context.read<TaskProvider>();
+                    if (task.categoryId != null || task.category != null) {
+                      final tasksInCategory = taskProvider.tasks.where((t) =>
+                        (task.categoryId != null && t.categoryId == task.categoryId) ||
+                        (task.category != null && t.category == task.category)
+                      ).length;
+                      if (tasksInCategory >= TaskProvider.maxTasksPerCategory) {
+                        Navigator.pop(ctx);
+                        _showLimitDialog(
+                          context,
+                          'Límite de Tareas',
+                          'Has alcanzado el máximo de ${TaskProvider.maxTasksPerCategory} tareas en esta categoría. Elimina alguna antes de crear otra.',
+                        );
+                        return;
+                      }
                     }
+                    taskProvider.addTask(task);
+                    Navigator.pop(ctx);
                   },
                   child: Container(
                     padding: const EdgeInsets.symmetric(

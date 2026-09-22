@@ -16,7 +16,9 @@ import 'data/models/user_profile.dart';
 
 // Importación condicional de paquetes nativos
 // En web no se importan dart:io ni paquetes nativos
-import 'main_native.dart' if (dart.library.html) 'main_web.dart' as platform_main;
+import 'main_native.dart'
+    if (dart.library.html) 'main_web.dart'
+    as platform_main;
 
 void main(List<String> args) async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -57,4 +59,4 @@ void main(List<String> args) async {
   runApp(HyroApp(isar: isar));
 }
 // koko estuvo aquí
-// koko estuvo aquí x2
+// koko estuvo aquí x23

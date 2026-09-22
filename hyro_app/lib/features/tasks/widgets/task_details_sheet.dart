@@ -177,17 +177,53 @@ class _TaskDetailsDialogState extends State<TaskDetailsDialog>
     context.read<TaskProvider>().updateTask(updated);
   }
 
+  // ── Limit Dialog ──
+  void _showLimitDialog(String title, String message) {
+    showDialog(
+      context: context,
+      builder: (ctx) {
+        return AlertDialog(
+          backgroundColor: AppColors.surface,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+            side: const BorderSide(color: Colors.redAccent, width: 2),
+          ),
+          title: Row(
+            children: [
+              const Icon(Icons.warning_amber_rounded, color: Colors.redAccent, size: 28),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  title,
+                  style: AppTypography.h3.copyWith(color: Colors.white),
+                ),
+              ),
+            ],
+          ),
+          content: Text(
+            message,
+            style: AppTypography.bodyMedium.copyWith(color: Colors.white70),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text('Entendido', style: TextStyle(color: Colors.redAccent)),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   // ── Fuentes (Documentos) ────────────────────────────────────────────────
 
   Future<void> _pickAndUploadDocument() async {
     // Límite: máximo 3 fuentes por tarea
     const maxSourcesPerTask = 3;
     if (_fuentes.length >= maxSourcesPerTask) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Límite de 3 fuentes por tarea alcanzado.'),
-          backgroundColor: Colors.redAccent,
-        ),
+      _showLimitDialog(
+        'Límite de Fuentes',
+        'Has alcanzado el máximo de $maxSourcesPerTask fuentes por tarea. Elimina alguna antes de agregar otra.',
       );
       return;
     }
@@ -409,11 +445,9 @@ class _TaskDetailsDialogState extends State<TaskDetailsDialog>
         totalCards += _cardRepo.getCardsForTask(t.id).length;
       }
       if (totalCards >= maxFlashcardsPerCategory) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Límite de 15 flashcards por materia alcanzado.'),
-            backgroundColor: Colors.redAccent,
-          ),
+        _showLimitDialog(
+          'Límite de Flashcards',
+          'Has alcanzado el máximo de $maxFlashcardsPerCategory flashcards en esta materia. Elimina alguna antes de crear otra.',
         );
         return;
       }

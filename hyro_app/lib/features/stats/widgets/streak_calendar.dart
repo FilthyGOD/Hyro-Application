@@ -11,7 +11,8 @@ class StreakCalendar extends StatelessWidget {
   final VoidCallback onNextMonth;
   final DateTime? selectedDate;
   final ValueChanged<DateTime>? onDaySelected;
-  final Set<int> daysWithNotes;
+  /// Map of day number → note color for that day.
+  final Map<int, Color> dayNoteColors;
 
   const StreakCalendar({
     super.key,
@@ -21,7 +22,7 @@ class StreakCalendar extends StatelessWidget {
     required this.onNextMonth,
     this.selectedDate,
     this.onDaySelected,
-    this.daysWithNotes = const {},
+    this.dayNoteColors = const {},
   });
 
   @override
@@ -46,7 +47,7 @@ class StreakCalendar extends StatelessWidget {
     final year = displayMonth.year;
 
     return GlassCard(
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.all(20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -82,17 +83,17 @@ class StreakCalendar extends StatelessWidget {
               );
             },
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: 16),
           _buildDaysOfWeek(),
-          const SizedBox(height: 12),
+          const SizedBox(height: 8),
           GridView.builder(
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
             gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: 7,
-              crossAxisSpacing: 8,
-              mainAxisSpacing: 8,
-              childAspectRatio: 1.0,
+              crossAxisSpacing: 6,
+              mainAxisSpacing: 6,
+              childAspectRatio: 1.4,
             ),
             itemCount: startingEmptyDays + daysInMonth,
             itemBuilder: (context, index) {
@@ -115,9 +116,9 @@ class StreakCalendar extends StatelessWidget {
                   selectedDate!.month == displayMonth.month && 
                   selectedDate!.day == dayIndex;
                   
-              final hasNotes = daysWithNotes.contains(dayIndex);
+              final noteColor = dayNoteColors[dayIndex];
 
-              return _buildDayCell(dayIndex, hasFocus, isToday, isSelected, hasNotes);
+              return _buildDayCell(dayIndex, hasFocus, isToday, isSelected, noteColor);
             },
           ),
         ],
@@ -145,7 +146,7 @@ class StreakCalendar extends StatelessWidget {
     );
   }
 
-  Widget _buildDayCell(int day, bool hasFocus, bool isToday, bool isSelected, bool hasNotes) {
+  Widget _buildDayCell(int day, bool hasFocus, bool isToday, bool isSelected, Color? noteColor) {
     Color bgColor = AppColors.surfaceLight;
     Color textColor = Colors.white70;
 
@@ -180,17 +181,17 @@ class StreakCalendar extends StatelessWidget {
               style: TextStyle(
                 color: textColor,
                 fontWeight: (hasFocus || isToday || isSelected) ? FontWeight.bold : FontWeight.normal,
-                fontSize: 14,
+                fontSize: 13,
               ),
             ),
-            if (hasNotes)
+            if (noteColor != null)
               Positioned(
-                bottom: 4,
+                bottom: 3,
                 child: Container(
-                  width: 4,
-                  height: 4,
+                  width: 5,
+                  height: 5,
                   decoration: BoxDecoration(
-                    color: isSelected ? Colors.white : AppColors.primary,
+                    color: isSelected ? Colors.white : noteColor,
                     shape: BoxShape.circle,
                   ),
                 ),

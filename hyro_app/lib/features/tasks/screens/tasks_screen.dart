@@ -15,6 +15,7 @@ import '../../missions/missions_provider.dart';
 import '../../../data/models/category_model.dart';
 import '../widgets/quick_note_sheet.dart';
 import '../../stats/widgets/streak_calendar.dart';
+import 'category_detail_screen.dart';
 
 class TasksScreen extends StatefulWidget {
   const TasksScreen({super.key});
@@ -294,23 +295,56 @@ class _TasksScreenState extends State<TasksScreen> with SingleTickerProviderStat
           );
         }
 
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: categories.map((cat) {
-            final catTasks = taskProvider.tasks
-                .where((t) => t.category == cat.name || t.categoryId == cat.id)
+        // Build a 2-column grid
+        final List<Widget> rows = [];
+        for (int i = 0; i < categories.length; i += 2) {
+          final first = categories[i];
+          final firstTasks = taskProvider.tasks
+              .where((t) => t.category == first.name || t.categoryId == first.id)
+              .toList();
+
+          Widget? secondCard;
+          if (i + 1 < categories.length) {
+            final second = categories[i + 1];
+            final secondTasks = taskProvider.tasks
+                .where((t) => t.category == second.name || t.categoryId == second.id)
                 .toList();
-            
-            return _CategoryListTile(
-              key: ValueKey(cat.id),
-              category: cat,
-              tasks: catTasks,
-              onAddTask: () => _showAddTaskDialog(
-                initialCategory: cat.name,
-                categoryId: cat.id,
+            secondCard = Expanded(
+              child: _CategoryGridCard(
+                key: ValueKey(second.id),
+                category: second,
+                tasks: secondTasks,
               ),
             );
-          }).toList(),
+          }
+
+          rows.add(
+            Padding(
+              padding: const EdgeInsets.only(bottom: 16),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: _CategoryGridCard(
+                      key: ValueKey(first.id),
+                      category: first,
+                      tasks: firstTasks,
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  if (secondCard != null)
+                    secondCard
+                  else
+                    const Expanded(child: SizedBox()),
+                ],
+              ),
+            ),
+          );
+        }
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: rows,
         );
       },
     );
@@ -1082,200 +1116,150 @@ class _TasksScreenState extends State<TasksScreen> with SingleTickerProviderStat
 // PRIVATE WIDGETS
 // ═══════════════════════════════════════════════════
 
-// ── Category List Tile ──
-class _CategoryListTile extends StatelessWidget {
+// ── Category Grid Card (solid design) ──
+class _CategoryGridCard extends StatelessWidget {
   final CategoryModel category;
   final List<TaskModel> tasks;
-  final VoidCallback onAddTask;
 
-  const _CategoryListTile({
+  const _CategoryGridCard({
     super.key,
     required this.category,
     required this.tasks,
-    required this.onAddTask,
   });
-
-  void _showDeleteCategoryDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (ctx) {
-        return AlertDialog(
-          backgroundColor: AppColors.surface,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
-          title: Text('Eliminar Categoría', style: AppTypography.h3),
-          content: Text(
-            '¿Estás seguro de que deseas eliminar "${category.name}"?\n\nLas tareas asociadas también serán eliminadas.',
-            style: AppTypography.bodyMedium.copyWith(
-              color: AppColors.textSecondary,
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(ctx),
-              child: const Text('Cancelar'),
-            ),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFFEF4444),
-              ),
-              onPressed: () {
-                context.read<TaskProvider>().deleteTasksByCategory(
-                  category.id,
-                  category.name,
-                );
-                context.read<CategoryProvider>().deleteCategory(category.id);
-                Navigator.pop(ctx);
-              },
-              child: const Text(
-                'Eliminar',
-                style: TextStyle(color: Colors.white),
-              ),
-            ),
-          ],
-        );
-      },
-    );
-  }
 
   @override
   Widget build(BuildContext context) {
-    final pendingCount = tasks.where((t) => !t.isCompleted).length;
     final color = Color(category.colorValue);
+    final pendingTasks = tasks.where((t) => !t.isCompleted).toList();
 
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 16),
-      child: GlassCard(
-        padding: const EdgeInsets.all(0),
-        child: Theme(
-          data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
-          child: ExpansionTile(
-            initiallyExpanded: true,
-            collapsedIconColor: AppColors.textSecondary,
-            iconColor: color,
-            title: Row(
-              children: [
-                Container(
-                  width: 32,
-                  height: 32,
-                  decoration: BoxDecoration(
-                    color: color.withValues(alpha: 0.3),
-                    shape: BoxShape.circle,
-                  ),
-                  child: Center(
-                    child:
-                        category.iconCodePoint != null
-                            ? Icon(
-                              IconData(
-                                category.iconCodePoint!,
-                                fontFamily: 'MaterialIcons',
-                              ),
-                              size: 16,
-                              color: color,
-                            )
-                            : Text(
-                              category.name.isNotEmpty
-                                  ? category.name[0].toUpperCase()
-                                  : 'C',
-                              style: TextStyle(
-                                color: color,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    category.name,
-                    style: AppTypography.labelLarge.copyWith(fontSize: 16),
-                  ),
-                ),
-                Text(
-                  '$pendingCount PENDIENTES',
-                  style: AppTypography.labelSmall.copyWith(
-                    color: AppColors.textSecondary,
-                  ),
-                ),
-                const SizedBox(width: 8),
-                PopupMenuButton<String>(
-                  icon: const Icon(
-                    Icons.more_horiz,
-                    color: AppColors.textTertiary,
-                    size: 20,
-                  ),
-                  color: AppColors.surface,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    side: const BorderSide(color: AppColors.cardBorder),
-                  ),
-                  onSelected: (value) {
-                    if (value == 'delete') {
-                      _showDeleteCategoryDialog(context);
-                    }
-                  },
-                  itemBuilder: (context) => [
-                    PopupMenuItem<String>(
-                      value: 'delete',
-                      child: Row(
-                        children: [
-                          const Icon(
-                            Icons.delete_outline_rounded,
-                            color: Color(0xFFEF4444),
-                            size: 18,
-                          ),
-                          const SizedBox(width: 10),
-                          Text(
-                            'Eliminar categoría',
-                            style: AppTypography.bodyMedium.copyWith(
-                              color: const Color(0xFFEF4444),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-            children: [
-              Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 8,
-                ),
-                child: Column(
-                  children: [
-                    if (tasks.isEmpty)
-                      Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 8),
-                        child: Text(
-                          'Aún no hay tareas',
-                          style: AppTypography.bodySmall,
-                        ),
-                      )
-                    else
-                      ...tasks.map((t) => _TaskTile(task: t)),
-                    const SizedBox(height: 8),
-                    SizedBox(
-                      width: double.infinity,
-                      child: TextButton.icon(
-                        icon: const Icon(Icons.add, size: 18),
-                        label: const Text('Agregar Tarea'),
-                        style: TextButton.styleFrom(
-                          foregroundColor: color,
-                          alignment: Alignment.centerLeft,
-                          padding: const EdgeInsets.symmetric(vertical: 12),
-                        ),
-                        onPressed: onAddTask,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
+    // Tiempo estudiado basado en pomodoros (25 min c/u)
+    final totalPomodoros =
+        tasks.fold<int>(0, (sum, t) => sum + t.pomodorosCompleted);
+    final totalMinutes = totalPomodoros * 25;
+    final hours = totalMinutes ~/ 60;
+    final mins = totalMinutes % 60;
+    final tiempoStr =
+        hours > 0 ? '${hours}h ${mins}min' : '${mins}min';
+
+    // Prioridad predominante
+    String dominantPriority = 'MEDIA';
+    Color priorityColor = const Color(0xFFF59E0B);
+    if (pendingTasks.isNotEmpty) {
+      final highCount = pendingTasks
+          .where(
+              (t) => t.priority == 'HIGH' || t.priority == 'ALTA PRIORIDAD')
+          .length;
+      final lowCount = pendingTasks
+          .where((t) => t.priority == 'LOW' || t.priority == 'BAJA')
+          .length;
+      if (highCount >= lowCount && highCount > 0) {
+        dominantPriority = 'Prioridad';
+        priorityColor = const Color(0xFFEF4444);
+      } else if (lowCount > highCount) {
+        dominantPriority = 'Prioridad';
+        priorityColor = const Color(0xFF22C55E);
+      } else {
+        dominantPriority = 'Prioridad';
+      }
+    }
+
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => CategoryDetailScreen(category: category),
           ),
+        );
+      },
+      child: Container(
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(color: AppColors.cardBorder, width: 1),
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // ── Top colored section with icon ──
+            Container(
+              width: double.infinity,
+              height: 90,
+              decoration: BoxDecoration(
+                color: color.withValues(alpha: 0.7),
+              ),
+              child: Center(
+                child: category.iconCodePoint != null
+                    ? Icon(
+                        IconData(
+                          category.iconCodePoint!,
+                          fontFamily: 'MaterialIcons',
+                        ),
+                        size: 36,
+                        color: Colors.white.withValues(alpha: 0.9),
+                      )
+                    : Text(
+                        category.name.isNotEmpty
+                            ? category.name[0].toUpperCase()
+                            : 'C',
+                        style: TextStyle(
+                          color: Colors.white.withValues(alpha: 0.9),
+                          fontSize: 32,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+              ),
+            ),
+
+            // ── Bottom dark section with info ──
+            Padding(
+              padding: const EdgeInsets.fromLTRB(14, 14, 14, 14),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  // Category name
+                  Text(
+                    category.name,
+                    style: AppTypography.labelLarge.copyWith(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w800,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 4),
+                  // Study time
+                  Text(
+                    'Tiempo estudiado',
+                    style: AppTypography.bodySmall.copyWith(
+                      color: AppColors.textSecondary,
+                      fontSize: 11,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  // Priority badge
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 12, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: priorityColor.withValues(alpha: 0.2),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(
+                      dominantPriority,
+                      style: AppTypography.labelSmall.copyWith(
+                        color: priorityColor,
+                        fontWeight: FontWeight.w800,
+                        fontSize: 11,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
         ),
       ),
     );

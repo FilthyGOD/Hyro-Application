@@ -6,6 +6,7 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/utils/responsive.dart';
 import '../../../core/widgets/glass_card.dart';
+import '../../../core/widgets/insufficient_coins_dialog.dart';
 import '../../mascot/mascot_controller.dart';
 import '../providers/shop_provider.dart';
 import '../../profile/providers/profile_provider.dart';
@@ -164,13 +165,20 @@ class _ShopScreenState extends State<ShopScreen>
       final mascot = context.read<MascotController>();
       mascot.triggerCompra(itemId);
     } else if (!success && mounted) {
-      // Show error snackbar
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(shop.error ?? 'Error al comprar'),
-          backgroundColor: Colors.red.shade700,
-        ),
-      );
+      // Show error snackbar or custom dialog
+      if (shop.error == 'No tienes suficientes monedas') {
+        showDialog(
+          context: context,
+          builder: (context) => const InsufficientCoinsDialog(),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(shop.error ?? 'Error al comprar'),
+            backgroundColor: Colors.red.shade700,
+          ),
+        );
+      }
     }
 
     if (mounted) setState(() => _isPurchasing = false);
@@ -712,11 +720,9 @@ class _ShopScreenState extends State<ShopScreen>
     if (currentUserId == null) return;
 
     if (profile.monedas < item.precio) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Text('No tienes suficientes monedas'),
-          backgroundColor: Colors.red.shade700,
-        ),
+      showDialog(
+        context: context,
+        builder: (context) => const InsufficientCoinsDialog(),
       );
       return;
     }

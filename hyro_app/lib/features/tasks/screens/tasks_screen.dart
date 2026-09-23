@@ -1229,33 +1229,6 @@ class _CategoryGridCard extends StatelessWidget {
                     overflow: TextOverflow.ellipsis,
                     textAlign: TextAlign.center,
                   ),
-                  const SizedBox(height: 4),
-                  // Study time
-                  Text(
-                    'Tiempo estudiado',
-                    style: AppTypography.bodySmall.copyWith(
-                      color: AppColors.textSecondary,
-                      fontSize: 11,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  // Priority badge
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 12, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: priorityColor.withValues(alpha: 0.2),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Text(
-                      dominantPriority,
-                      style: AppTypography.labelSmall.copyWith(
-                        color: priorityColor,
-                        fontWeight: FontWeight.w800,
-                        fontSize: 11,
-                      ),
-                    ),
-                  ),
                 ],
               ),
             ),

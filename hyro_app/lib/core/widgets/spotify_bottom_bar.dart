@@ -54,11 +54,6 @@ class _SpotifyBottomBarState extends State<SpotifyBottomBar> {
                 style: AppTypography.bodySmall.copyWith(color: Colors.white),
               ),
             ),
-            TextButton(
-              onPressed: widget.authService.authenticate,
-              style: TextButton.styleFrom(foregroundColor: Colors.white),
-              child: const Text('Conectar'),
-            ),
           ],
         ),
       );

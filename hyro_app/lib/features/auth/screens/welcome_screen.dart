@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:hyro/core/theme/app_colors.dart';
 import 'package:hyro/core/theme/app_typography.dart';
+import 'package:hyro/features/onboarding/screens/onboarding_screen.dart';
 import 'login_screen.dart';
 
 class WelcomeScreen extends StatelessWidget {
@@ -37,7 +38,7 @@ class WelcomeScreen extends StatelessWidget {
               const SizedBox(height: 16),
               // Subtitle
               Text(
-                'Alcanza tus metas mientras te diviertes.\nGratis de por vida.',
+                '¡Hola! Soy Jairo. Prepárate para estudiar inteligente,\n ganar recompensas y destruir las distracciones.',
                 textAlign: TextAlign.center,
                 style: AppTypography.bodyLarge.copyWith(
                   color: const Color.fromARGB(255, 120, 129, 156),
@@ -75,7 +76,10 @@ class WelcomeScreen extends StatelessWidget {
                 ),
                 child: ElevatedButton(
                   onPressed: () {
-                    // Funcionalidad para iniciar tutorial (aún no implementada)
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => const OnboardingScreen()),
+                    );
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.transparent,

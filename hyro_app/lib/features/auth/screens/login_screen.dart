@@ -21,6 +21,7 @@ class _LoginScreenState extends State<LoginScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _isLoading = false;
+  bool _obscurePassword = true;
   Timer? _greetingTimer;
   final _random = Random();
   bool _hasFiredInitialSaludo = false;
@@ -230,12 +231,13 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                         const SizedBox(height: 24),
                         _buildInputField(
-                          label: 'CONTRASEÃÑA',
+                          label: 'CONTRASEÑA',
                           hint: '...........',
                           controller: _passwordController,
                           prefixIcon: Icons.lock_outline,
                           isPassword: true,
                           actionText: 'Olvide mi contraseña',
+                          maxLength: 15,
                         ),
                         const SizedBox(height: 32),
                         _buildGradientButton(
@@ -425,6 +427,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       isPassword: true,
                       actionText: 'Olvide mi contraseña',
                       isDesktop: true,
+                      maxLength: 15,
                     ),
                     const SizedBox(height: 32),
                     _buildGradientButton(
@@ -466,6 +469,7 @@ class _LoginScreenState extends State<LoginScreen> {
     bool isPassword = false,
     String? actionText,
     bool isDesktop = false,
+    int? maxLength,
   }) {
     final labelColor = isDesktop ? Colors.white54 : Colors.white60;
 
@@ -498,9 +502,11 @@ class _LoginScreenState extends State<LoginScreen> {
         const SizedBox(height: 8),
         TextField(
           controller: controller,
-          obscureText: isPassword,
+          obscureText: isPassword ? _obscurePassword : false,
+          maxLength: maxLength,
           style: const TextStyle(color: Colors.white, fontSize: 14),
           decoration: InputDecoration(
+            counterText: '',
             hintText: hint,
             hintStyle: const TextStyle(color: Colors.white24),
             prefixIcon: Icon(
@@ -510,10 +516,17 @@ class _LoginScreenState extends State<LoginScreen> {
             ),
             suffixIcon:
                 isPassword
-                    ? const Icon(
-                      Icons.remove_red_eye_outlined,
-                      color: Colors.white38,
-                      size: 18,
+                    ? IconButton(
+                      icon: Icon(
+                        _obscurePassword ? Icons.remove_red_eye_outlined : Icons.visibility_off_outlined,
+                        color: Colors.white38,
+                        size: 18,
+                      ),
+                      onPressed: () {
+                        setState(() {
+                          _obscurePassword = !_obscurePassword;
+                        });
+                      },
                     )
                     : null,
             filled: true,
@@ -690,8 +703,8 @@ class _LoginScreenState extends State<LoginScreen> {
         isMobile
             ? const Color(0xFF3CDCF8)
             : const Color(0xFFCC88FF); // Móvil usa Cian, Escritorio usa Púrpura
-    final prefix = isMobile ? "Â¿No tienes una cuenta? " : "Â¿Nuevo en Hyro? ";
-    final suffix = isMobile ? "RegÃ­strate" : "Crear una cuenta";
+    final prefix = isMobile ? "¿No tienes una cuenta? " : "¿Nuevo en Hyro? ";
+    final suffix = isMobile ? "Regístrate" : "Crear una cuenta";
 
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,

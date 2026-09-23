@@ -522,7 +522,7 @@ class _SettingsScreenState extends State<SettingsScreen>
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Spotify', style: AppTypography.h3),
+                  Text('Spotify (Próximamente)', style: AppTypography.h3),
                   const SizedBox(height: 12),
                   Row(
                     children: [

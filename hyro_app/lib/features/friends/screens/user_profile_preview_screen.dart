@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:hyro/core/widgets/insufficient_coins_dialog.dart';
 import 'package:provider/provider.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../auth/providers/auth_provider.dart';
@@ -945,11 +947,9 @@ class _UserProfilePreviewBody extends StatelessWidget {
     ProfileProvider profile,
   ) async {
     if (profile.monedas < item.precio) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Text('No tienes suficientes monedas'),
-          backgroundColor: Colors.red.shade700,
-        ),
+      showDialog(
+        context: context,
+        builder: (context) => const InsufficientCoinsDialog(),
       );
       return;
     }

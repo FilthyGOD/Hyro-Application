@@ -58,9 +58,9 @@ class VersusRepository {
   }) async {
     try {
       // Validación básica en el cliente (UX rápida antes de llamar al RPC)
-      if (![20, 50, 100].contains(apuestaMonedas)) {
+      if (![0, 20, 50, 100].contains(apuestaMonedas)) {
         throw const VersusException(
-          'La apuesta debe ser 20, 50 o 100 monedas.',
+          'La apuesta debe ser 0, 20, 50 o 100 monedas.',
           code: 'INVALID_BET',
         );
       }

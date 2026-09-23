@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../../../core/widgets/insufficient_coins_dialog.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../auth/providers/auth_provider.dart';
@@ -1446,6 +1447,17 @@ class _FriendsScreenState extends State<FriendsScreen> {
                 color: Colors.black,
                 bgColor: AppColors.primary,
                 onTap: () async {
+                  final profile = context.read<ProfileProvider>();
+                  if (match.betCoins > 0 && profile.monedas < match.betCoins) {
+                    showDialog(
+                      context: context,
+                      builder: (context) => const InsufficientCoinsDialog(
+                        body: 'La apuesta es muy alta, desafíalo a una cantidad menor',
+                      ),
+                    );
+                    return;
+                  }
+
                   final versusProvider = context.read<VersusProvider>();
                   if (match.battleMode == BattleMode.clashSubjects) {
                     final tasks = context.read<TaskProvider>().tasks;

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:hyro/core/widgets/insufficient_coins_dialog.dart';
 import 'package:provider/provider.dart';
 import 'package:hive/hive.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -53,7 +54,7 @@ class _CreateVersusModalState extends State<CreateVersusModal>
   late AnimationController _animController;
   late Animation<double> _scaleAnimation;
 
-  static const List<int> _opcionesApuesta = [20, 50, 100];
+  static const List<int> _opcionesApuesta = [0, 20, 50, 100];
 
   @override
   void initState() {
@@ -96,6 +97,28 @@ class _CreateVersusModalState extends State<CreateVersusModal>
 
     if (_tareaSeleccionadaId == null) {
       _mostrarError('Selecciona una tarea antes de lanzar el reto.');
+      return;
+    }
+
+    final pendingBattlesWithOpponent = versus.activeBattles.where((b) => 
+      b.estadoDb == 'pendiente' && 
+      b.isChallenger && 
+      b.opponent.id == _selectedOpponent!.id
+    ).length;
+
+    if (pendingBattlesWithOpponent >= 2) {
+      _mostrarError('Ya tienes 2 retos pendientes con este amigo. Espera a que acepte uno.');
+      return;
+    }
+
+    final profile = context.read<ProfileProvider>();
+    if (_costoMonedas > 0 && profile.monedas < _costoMonedas) {
+      showDialog(
+        context: context,
+        builder: (context) => const InsufficientCoinsDialog(
+          body: 'La apuesta es muy alta, desafíalo a una cantidad menor',
+        ),
+      );
       return;
     }
 
@@ -1569,12 +1592,16 @@ class _BetSelectorDialogState extends State<_BetSelectorDialog> {
                     ),
                   ),
                   const SizedBox(height: 16),
-                  Row(
+                  Wrap(
+                    spacing: 12,
+                    runSpacing: 12,
+                    alignment: WrapAlignment.center,
                     children:
                         widget.options.map((monto) {
                           final isSelected = _selected == monto;
 
-                          return Expanded(
+                          return SizedBox(
+                            width: 100,
                             child: Padding(
                               padding: const EdgeInsets.symmetric(
                                 horizontal: 4,

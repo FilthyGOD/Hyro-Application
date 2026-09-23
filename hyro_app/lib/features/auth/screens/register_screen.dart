@@ -21,6 +21,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _isLoading = false;
+  bool _obscurePassword = true;
   Timer? _greetingTimer;
   final _random = Random();
   bool _hasFiredInitialSaludo = false;
@@ -250,6 +251,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           hint: 'Tu nombre',
                           controller: _nameController,
                           prefixIcon: Icons.person_outline,
+                          maxLength: 15,
                         ),
                         const SizedBox(height: 24),
                         _buildInputField(
@@ -265,6 +267,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           controller: _passwordController,
                           prefixIcon: Icons.lock_outline,
                           isPassword: true,
+                          maxLength: 15,
                         ),
                         const SizedBox(height: 32),
                         _buildGradientButton(
@@ -440,6 +443,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       controller: _nameController,
                       prefixIcon: Icons.person_outline,
                       isDesktop: true,
+                      maxLength: 15,
                     ),
                     const SizedBox(height: 24),
                     _buildInputField(
@@ -457,6 +461,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       prefixIcon: Icons.lock_outline,
                       isPassword: true,
                       isDesktop: true,
+                      maxLength: 15,
                     ),
                     const SizedBox(height: 32),
                     _buildGradientButton(
@@ -497,6 +502,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     required IconData prefixIcon,
     bool isPassword = false,
     bool isDesktop = false,
+    int? maxLength,
   }) {
     final labelColor = isDesktop ? Colors.white54 : Colors.white60;
 
@@ -515,9 +521,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
         const SizedBox(height: 8),
         TextField(
           controller: controller,
-          obscureText: isPassword,
+          obscureText: isPassword ? _obscurePassword : false,
+          maxLength: maxLength,
           style: const TextStyle(color: Colors.white, fontSize: 14),
           decoration: InputDecoration(
+            counterText: '',
             hintText: hint,
             hintStyle: const TextStyle(color: Colors.white24),
             prefixIcon: Icon(
@@ -527,10 +535,17 @@ class _RegisterScreenState extends State<RegisterScreen> {
             ),
             suffixIcon:
                 isPassword
-                    ? const Icon(
-                      Icons.remove_red_eye_outlined,
-                      color: Colors.white38,
-                      size: 18,
+                    ? IconButton(
+                      icon: Icon(
+                        _obscurePassword ? Icons.remove_red_eye_outlined : Icons.visibility_off_outlined,
+                        color: Colors.white38,
+                        size: 18,
+                      ),
+                      onPressed: () {
+                        setState(() {
+                          _obscurePassword = !_obscurePassword;
+                        });
+                      },
                     )
                     : null,
             filled: true,
@@ -571,13 +586,16 @@ class _RegisterScreenState extends State<RegisterScreen> {
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(12),
         gradient: const LinearGradient(
-          colors: [Color(0xFF3CDCF8), Color(0xFFCC88FF)],
+          colors: [
+            Color.fromARGB(255, 0, 149, 255),
+            Color.fromARGB(255, 32, 43, 200),
+          ],
           begin: Alignment.centerLeft,
           end: Alignment.centerRight,
         ),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF3CDCF8).withOpacity(0.3),
+            color: const Color.fromARGB(255, 0, 149, 255).withValues(alpha: 0.3),
             blurRadius: 20,
             offset: const Offset(0, 8),
           ),

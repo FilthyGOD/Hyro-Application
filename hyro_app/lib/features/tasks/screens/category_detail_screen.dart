@@ -269,7 +269,7 @@ class CategoryDetailScreen extends StatelessWidget {
                                 ),
                               ),
                               Text(
-                                'Promedio',
+                                'Hechas',
                                 style: AppTypography.bodySmall.copyWith(
                                   color: catColor,
                                   fontSize: 11,

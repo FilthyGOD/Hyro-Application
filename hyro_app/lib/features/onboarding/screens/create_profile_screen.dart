@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:hyro/core/theme/app_colors.dart';
 import 'package:hyro/core/theme/app_typography.dart';
 import 'package:hyro/features/auth/screens/login_screen.dart';
@@ -40,10 +41,11 @@ class CreateProfileScreen extends StatelessWidget {
               ),
               const SizedBox(height: 16),
               // Mascot
-              Image.asset(
-                'assets/images/app_icon.png',
-                width: 140,
-                height: 140,
+              SvgPicture.asset(
+                'assets/images/JairitoHD_Saludo.svg',
+                width: 150,
+                height: 150,
+                fit: BoxFit.contain,
               ),
               const Spacer(),
               // Primary Button

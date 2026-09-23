@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:hyro/core/theme/app_colors.dart';
 import 'package:hyro/core/theme/app_typography.dart';
 import 'package:hyro/features/onboarding/screens/onboarding_screen.dart';
@@ -18,11 +19,12 @@ class WelcomeScreen extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               const Spacer(),
-              // Icon
-              Image.asset(
-                'assets/images/app_icon.png',
-                width: 160,
-                height: 160,
+              // Mascot Saludo SVG
+              SvgPicture.asset(
+                'assets/images/JairitoHD_Saludo.svg',
+                width: 180,
+                height: 180,
+                fit: BoxFit.contain,
               ),
               const SizedBox(height: 32),
               // Title

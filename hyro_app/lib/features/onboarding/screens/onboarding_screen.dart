@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:hyro/core/theme/app_colors.dart';
 import 'package:hyro/core/theme/app_typography.dart';
 import 'package:hyro/features/onboarding/widgets/onboarding_progress_bar.dart';
@@ -16,7 +17,7 @@ class OnboardingScreen extends StatefulWidget {
 class _OnboardingScreenState extends State<OnboardingScreen> {
   final PageController _pageController = PageController();
   int _currentPage = 0;
-  
+
   // Selected options state
   String? _discoverySource;
   String? _studentProfile;
@@ -27,13 +28,13 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
   // Total pages: 8 (0 to 7)
   final int _totalPages = 8;
-  
+
   bool _isLoadingComplete = false;
   String _loadingText = "Configurando tu plan de estudio personalizado...";
   final List<String> _loadingSubtexts = [
     "Preparando tu cronómetro...",
     "Escondiendo las distracciones...",
-    "¡Todo listo para empezar a ganar monedas!"
+    "¡Todo listo para empezar a ganar monedas!",
   ];
   int _loadingSubtextIndex = 0;
   Timer? _loadingTimer;
@@ -105,25 +106,31 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: isLastPage
-          ? null
-          : AppBar(
-              backgroundColor: Colors.transparent,
-              elevation: 0,
-              leading: isFirstPage
-                  ? null
-                  : IconButton(
-                      icon: const Icon(Icons.arrow_back, color: Colors.white),
-                      onPressed: _previousPage,
-                    ),
-              title: isFirstPage
-                  ? null
-                  : OnboardingProgressBar(
-                      currentStep: _currentPage,
-                      totalSteps: _totalPages - 2, 
-                    ),
-              centerTitle: true,
-            ),
+      appBar:
+          isLastPage
+              ? null
+              : AppBar(
+                backgroundColor: Colors.transparent,
+                elevation: 0,
+                leading:
+                    isFirstPage
+                        ? null
+                        : IconButton(
+                          icon: const Icon(
+                            Icons.arrow_back,
+                            color: Colors.white,
+                          ),
+                          onPressed: _previousPage,
+                        ),
+                title:
+                    isFirstPage
+                        ? null
+                        : OnboardingProgressBar(
+                          currentStep: _currentPage,
+                          totalSteps: _totalPages - 2,
+                        ),
+                centerTitle: true,
+              ),
       body: PageView(
         controller: _pageController,
         physics: const NeverScrollableScrollPhysics(),
@@ -146,7 +153,11 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     );
   }
 
-  Widget _buildBottomButton({required bool isEnabled, required String text, VoidCallback? onPressed}) {
+  Widget _buildBottomButton({
+    required bool isEnabled,
+    required String text,
+    VoidCallback? onPressed,
+  }) {
     return Padding(
       padding: const EdgeInsets.all(24.0),
       child: Container(
@@ -154,24 +165,33 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         height: 56,
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(16),
-          gradient: isEnabled
-              ? const LinearGradient(
-                  colors: [
-                    Color.fromARGB(255, 0, 149, 255),
-                    Color.fromARGB(255, 32, 43, 200),
-                  ],
-                  begin: Alignment.centerLeft,
-                  end: Alignment.centerRight,
-                )
-              : null,
+          gradient:
+              isEnabled
+                  ? const LinearGradient(
+                    colors: [
+                      Color.fromARGB(255, 0, 149, 255),
+                      Color.fromARGB(255, 32, 43, 200),
+                    ],
+                    begin: Alignment.centerLeft,
+                    end: Alignment.centerRight,
+                  )
+                  : null,
           color: isEnabled ? null : AppColors.surfaceLight,
-          boxShadow: isEnabled ? [
-            BoxShadow(
-              color: const Color.fromARGB(255, 0, 149, 255).withValues(alpha: 0.3),
-              blurRadius: 20,
-              offset: const Offset(0, 8),
-            ),
-          ] : null,
+          boxShadow:
+              isEnabled
+                  ? [
+                    BoxShadow(
+                      color: const Color.fromARGB(
+                        255,
+                        0,
+                        149,
+                        255,
+                      ).withValues(alpha: 0.3),
+                      blurRadius: 20,
+                      offset: const Offset(0, 8),
+                    ),
+                  ]
+                  : null,
         ),
         child: ElevatedButton(
           onPressed: isEnabled ? (onPressed ?? _nextPage) : null,
@@ -201,7 +221,12 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       child: Column(
         children: [
           const Spacer(),
-          Image.asset('assets/images/app_icon.png', width: 160, height: 160),
+          SvgPicture.asset(
+            'assets/images/JairitoHD_SaludoInv.svg',
+            width: 180,
+            height: 180,
+            fit: BoxFit.contain,
+          ),
           const SizedBox(height: 32),
           Text(
             '¡Hola! Soy Jairo.',
@@ -241,18 +266,28 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Image.asset('assets/images/app_icon.png', width: 48, height: 48),
+              SvgPicture.asset(
+                'assets/images/JairitoHD_Encuesta.svg',
+                width: 64,
+                height: 64,
+                fit: BoxFit.contain,
+              ),
               const SizedBox(width: 16),
               Expanded(
                 child: Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
                     color: AppColors.surfaceLight,
-                    borderRadius: BorderRadius.circular(16).copyWith(topLeft: const Radius.circular(0)),
+                    borderRadius: BorderRadius.circular(
+                      16,
+                    ).copyWith(topLeft: const Radius.circular(0)),
                   ),
                   child: Text(
                     question,
-                    style: AppTypography.bodyLarge.copyWith(color: Colors.white, fontWeight: FontWeight.bold),
+                    style: AppTypography.bodyLarge.copyWith(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
               ),
@@ -275,10 +310,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             },
           ),
         ),
-        _buildBottomButton(
-          isEnabled: selectedValue != null,
-          text: 'CONTINUAR',
-        ),
+        _buildBottomButton(isEnabled: selectedValue != null, text: 'CONTINUAR'),
       ],
     );
   }
@@ -318,7 +350,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       question: "Seamos honestos... ¿Cuál es tu mayor enemigo al estudiar?",
       options: [
         {'text': 'Las redes sociales (Me distraigo rápido)', 'emoji': '📱'},
-        {'text': 'Dejar todo para el último minuto (Procrastinación)', 'emoji': '⏳'},
+        {
+          'text': 'Dejar todo para el último minuto (Procrastinación)',
+          'emoji': '⏳',
+        },
         {'text': 'Me cuesta concentrarme por mucho tiempo', 'emoji': '🧠'},
         {'text': 'Me aburro rápido de los apuntes', 'emoji': '🥱'},
       ],
@@ -331,9 +366,18 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     return _buildQuestionPage(
       question: "¿Qué técnica de estudio quieres que probemos juntos?",
       options: [
-        {'text': 'Pomodoro Clásico (25 min trabajo / 5 min descanso)', 'emoji': '🍅'},
-        {'text': 'Enfoque Profundo (50 min trabajo / 10 min descanso)', 'emoji': '🔥'},
-        {'text': 'Ráfagas Cortas (15 min trabajo / 3 min descanso)', 'emoji': '⚡'},
+        {
+          'text': 'Pomodoro Clásico (25 min trabajo / 5 min descanso)',
+          'emoji': '🍅',
+        },
+        {
+          'text': 'Enfoque Profundo (50 min trabajo / 10 min descanso)',
+          'emoji': '🔥',
+        },
+        {
+          'text': 'Ráfagas Cortas (15 min trabajo / 3 min descanso)',
+          'emoji': '⚡',
+        },
         {'text': 'No sé, ¡Tú recomiéndame!', 'emoji': '🤔'},
       ],
       selectedValue: _studyTechnique,
@@ -357,7 +401,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
   Widget _buildRewardPage() {
     return _buildQuestionPage(
-      question: "¡Excelente meta! Por cada sesión completada ganarás Hyro-Monedas. ¿En qué te gustaría gastarlas primero?",
+      question:
+          "¡Excelente meta! Por cada sesión completada ganarás Hyro-Monedas. ¿En qué te gustaría gastarlas primero?",
       options: [
         {'text': 'Accesorios y ropa nueva para mí (Jairo)', 'emoji': '🕶️'},
         {'text': 'Desafiar a mis amigos en un "Duelo"', 'emoji': '⚔️'},
@@ -376,11 +421,18 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Image.asset('assets/images/app_icon.png', width: 120, height: 120),
+              SvgPicture.asset(
+                'assets/images/Jairo_Constructor.svg',
+                height: 200,
+                fit: BoxFit.contain,
+              ),
               const SizedBox(height: 48),
               Text(
                 _loadingText,
-                style: AppTypography.displayLarge.copyWith(fontSize: 24, color: Colors.white),
+                style: AppTypography.displayLarge.copyWith(
+                  fontSize: 24,
+                  color: Colors.white,
+                ),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 32),
@@ -399,7 +451,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 child: Text(
                   _loadingSubtexts[_loadingSubtextIndex],
                   key: ValueKey<int>(_loadingSubtextIndex),
-                  style: AppTypography.bodyLarge.copyWith(color: AppColors.textSecondary),
+                  style: AppTypography.bodyLarge.copyWith(
+                    color: AppColors.textSecondary,
+                  ),
                   textAlign: TextAlign.center,
                 ),
               ),

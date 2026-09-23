@@ -1,12 +1,24 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:window_manager/window_manager.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:io';
 
 class UiProvider with ChangeNotifier {
   bool _isMusicBarVisible = false;
   bool _isMusicBarMinimized = false;
   bool _isMiniMode = false;
+  SharedPreferences? _prefs;
+
+  UiProvider() {
+    _loadPrefs();
+  }
+
+  Future<void> _loadPrefs() async {
+    _prefs = await SharedPreferences.getInstance();
+    _isMusicBarVisible = _prefs?.getBool('isMusicBarVisible') ?? false;
+    notifyListeners();
+  }
 
   bool get isMusicBarVisible => _isMusicBarVisible;
   bool get isMusicBarMinimized => _isMusicBarMinimized;
@@ -14,11 +26,13 @@ class UiProvider with ChangeNotifier {
 
   void toggleMusicBar() {
     _isMusicBarVisible = !_isMusicBarVisible;
+    _prefs?.setBool('isMusicBarVisible', _isMusicBarVisible);
     notifyListeners();
   }
 
   void setMusicBarVisibility(bool visible) {
     _isMusicBarVisible = visible;
+    _prefs?.setBool('isMusicBarVisible', visible);
     notifyListeners();
   }
 

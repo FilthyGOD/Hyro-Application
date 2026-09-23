@@ -424,7 +424,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const Text(
-                      'Ãšnete a Hyro',
+                      'Unete a Hyro',
                       style: TextStyle(
                         fontSize: 28,
                         fontWeight: FontWeight.bold,
@@ -537,7 +537,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 isPassword
                     ? IconButton(
                       icon: Icon(
-                        _obscurePassword ? Icons.remove_red_eye_outlined : Icons.visibility_off_outlined,
+                        _obscurePassword
+                            ? Icons.remove_red_eye_outlined
+                            : Icons.visibility_off_outlined,
                         color: Colors.white38,
                         size: 18,
                       ),
@@ -595,7 +597,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
         ),
         boxShadow: [
           BoxShadow(
-            color: const Color.fromARGB(255, 0, 149, 255).withValues(alpha: 0.3),
+            color: const Color.fromARGB(
+              255,
+              0,
+              149,
+              255,
+            ).withValues(alpha: 0.3),
             blurRadius: 20,
             offset: const Offset(0, 8),
           ),

@@ -1016,22 +1016,41 @@ class _FriendsScreenState extends State<FriendsScreen> {
       child: Center(
         child: Column(
           children: [
-            const Icon(
-              Icons.error_outline_rounded,
-              color: Colors.redAccent,
-              size: 32,
+            SvgPicture.asset(
+              'assets/images/JairitoHD_SinInternet.svg',
+              height: 140,
+              fit: BoxFit.contain,
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 16),
             Text(
-              'Error cargando datos',
-              style: AppTypography.bodyMedium.copyWith(color: Colors.redAccent),
+              'Sin conexión a internet',
+              style: AppTypography.h3.copyWith(fontSize: 16),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              'No se pudo cargar el ranking. Comprueba tu conexión e intenta de nuevo.',
+              textAlign: TextAlign.center,
+              style: AppTypography.bodySmall.copyWith(
+                color: AppColors.textSecondary,
+              ),
             ),
             const SizedBox(height: 16),
             TextButton.icon(
               onPressed: _refreshData,
               icon: const Icon(Icons.refresh, size: 18),
               label: const Text('Reintentar'),
-              style: TextButton.styleFrom(foregroundColor: AppColors.primary),
+              style: TextButton.styleFrom(
+                foregroundColor: AppColors.primary,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 10,
+                ),
+                backgroundColor: AppColors.surfaceLight,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  side: const BorderSide(color: AppColors.cardBorder),
+                ),
+              ),
             ),
           ],
         ),
@@ -1312,24 +1331,23 @@ class _FriendsScreenState extends State<FriendsScreen> {
                 onTap: () async {
                   try {
                     await FriendsService().acceptGift(gift.id);
-                    if (context.mounted) {
-                      await context.read<ProfileProvider>().loadProfile(
-                        currentUserId,
-                      );
-                      await context.read<ShopProvider>().loadShop(
-                        currentUserId,
-                      );
-                      if (context.mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text(
-                              '¡Regalo de ${gift.objetoNombre} aceptado con éxito!',
-                            ),
-                            backgroundColor: AppColors.breakGreen,
-                          ),
-                        );
-                      }
-                    }
+                    if (!context.mounted) return;
+                    await context.read<ProfileProvider>().loadProfile(
+                      currentUserId,
+                    );
+                    if (!context.mounted) return;
+                    await context.read<ShopProvider>().loadShop(
+                      currentUserId,
+                    );
+                    if (!context.mounted) return;
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          '¡Regalo de ${gift.objetoNombre} aceptado con éxito!',
+                        ),
+                        backgroundColor: AppColors.breakGreen,
+                      ),
+                    );
                   } catch (e) {
                     if (context.mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(

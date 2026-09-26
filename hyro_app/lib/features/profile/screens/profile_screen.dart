@@ -254,8 +254,12 @@ class ProfileScreen extends StatelessWidget {
             SizedBox(
               width: double.infinity,
               child: OutlinedButton.icon(
-                onPressed: () {
-                  context.read<AuthProvider>().logout();
+                onPressed: () async {
+                  final profileProvider = context.read<ProfileProvider>();
+                  await context.read<AuthProvider>().logout(profileProvider);
+                  if (context.mounted) {
+                    await profileProvider.loadProfile(null);
+                  }
                 },
                 icon: const Icon(Icons.logout),
                 label: const Text('Cerrar Sesión'),

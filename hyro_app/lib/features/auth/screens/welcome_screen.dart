@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:provider/provider.dart';
 import 'package:hyro/core/theme/app_colors.dart';
 import 'package:hyro/core/theme/app_typography.dart';
 import 'package:hyro/features/onboarding/screens/onboarding_screen.dart';
+import 'package:hyro/features/auth/providers/auth_provider.dart';
 import 'login_screen.dart';
 
 class WelcomeScreen extends StatelessWidget {
@@ -129,6 +131,31 @@ class WelcomeScreen extends StatelessWidget {
                       color: Colors.white,
                       fontWeight: FontWeight.w600,
                       fontSize: 14,
+                      letterSpacing: 0.5,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
+              // Continuar sin cuenta — solo guardados locales
+              SizedBox(
+                width: double.infinity,
+                height: 48,
+                child: TextButton(
+                  onPressed: () {
+                    context.read<AuthProvider>().continueWithoutAccount();
+                  },
+                  style: TextButton.styleFrom(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                  ),
+                  child: Text(
+                    'CONTINUAR SIN CUENTA',
+                    style: TextStyle(
+                      color: Colors.white.withValues(alpha: 0.45),
+                      fontWeight: FontWeight.w500,
+                      fontSize: 13,
                       letterSpacing: 0.5,
                     ),
                   ),

@@ -54,6 +54,25 @@ class ProfileProvider extends ChangeNotifier {
     super.dispose();
   }
 
+  /// Resetea el perfil a sus valores por defecto de invitado y cancela suscripciones.
+  void resetProfile() {
+    nivel = 1;
+    experiencia = 0;
+    monedas = 0;
+    rachaActual = 0;
+    rachaMaxima = 0;
+    minutosEnfoqueTotal = 0;
+    tareasCompletadas = 0;
+    sesionesMes = 0;
+    nombreUsuario = null;
+    codigoAmigo = null;
+    protectoresRachaActivos = 0;
+    sesionesXPDobleRestantes = 0;
+    _profileSubscription?.cancel();
+    _profileSubscription = null;
+    notifyListeners();
+  }
+
   /// Carga el perfil desde Supabase o localmente si [userId] es nulo.
   Future<void> loadProfile(String? userId) async {
     // 1. Blindaje: Envolvemos el aviso inicial en un microtask

@@ -70,7 +70,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       if (mounted && authProvider.isAuthenticated && !authProvider.isGuest) {
         authProvider.removeListener(authListener);
         Navigator.of(context).popUntil((route) => route.isFirst);
-        appShellKey.currentState?.navigateTo(0);
+        appShellKey.currentState?.navigateTo(2);
       }
     }
 
@@ -669,7 +669,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       setState(() => _isLoading = false);
       if (auth.isAuthenticated && !auth.isGuest) {
         Navigator.of(context).popUntil((route) => route.isFirst);
-        appShellKey.currentState?.navigateTo(0);
+        appShellKey.currentState?.navigateTo(2);
       }
     }
   }

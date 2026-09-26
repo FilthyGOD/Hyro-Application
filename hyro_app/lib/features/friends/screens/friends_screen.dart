@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:provider/provider.dart';
 import '../../../core/widgets/insufficient_coins_dialog.dart';
 import '../../../core/theme/app_colors.dart';
@@ -1137,18 +1138,11 @@ class _FriendsScreenState extends State<FriendsScreen> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Container(
-                width: 80,
-                height: 80,
-                decoration: BoxDecoration(
-                  color: AppColors.primary.withAlpha(15),
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(
-                  Icons.lock_outline_rounded,
-                  color: AppColors.primary,
-                  size: 40,
-                ),
+              SvgPicture.asset(
+                'assets/images/JairitoHD_SinInternet.svg',
+                width: 140,
+                height: 140,
+                fit: BoxFit.contain,
               ),
               const SizedBox(height: 24),
               Text(

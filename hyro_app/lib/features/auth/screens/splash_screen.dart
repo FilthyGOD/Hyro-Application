@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import 'package:rive/rive.dart';
-import '../../mascot/mascot_controller.dart';
+import 'package:lottie/lottie.dart';
 
 class SplashScreen extends StatelessWidget {
   const SplashScreen({super.key});
@@ -14,41 +12,27 @@ class SplashScreen extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-                  // Animación de carga de Rive (SM inicia en estado de carga)
-                  Consumer<MascotController>(
-                    builder: (context, mascot, _) {
-                      if (!mascot.isLoaded) {
-                        return const SizedBox(
-                          width: 200,
-                          height: 200,
-                          child: Center(
-                            child: CircularProgressIndicator(color: Colors.blueAccent),
-                          ),
-                        );
-                      }
-                      return SizedBox(
-                        width: 200,
-                        height: 200,
-                        child: RiveWidget(
-                          controller: mascot.controller!,
-                          fit: Fit.contain,
-                        ),
-                      );
-                    },
-                  ),
-                  const SizedBox(height: 24),
-                  const Text(
-                    'Hyro',
-                    style: TextStyle(
-                      fontSize: 40,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                      letterSpacing: 2,
-                    ),
-                  ),
-                ],
+            SizedBox(
+              width: 120,
+              height: 120,
+              child: Lottie.asset(
+                'assets/mascot/JairitoCarga.lottie',
+                fit: BoxFit.contain,
               ),
             ),
+            const SizedBox(height: 24),
+            const Text(
+              'Hyro',
+              style: TextStyle(
+                fontSize: 40,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+                letterSpacing: 2,
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

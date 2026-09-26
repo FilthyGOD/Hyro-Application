@@ -252,6 +252,24 @@ class _SettingsScreenState extends State<SettingsScreen>
               ),
             ),
             const SizedBox(height: 16),
+            // ── Personalización ──
+            GlassCard(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Personalización', style: AppTypography.h3),
+                  const SizedBox(height: 20),
+                  _MascotBubbleModeSelector(
+                    currentMode: settings.mascotBubbleMode,
+                    onModeChanged: (mode) {
+                      settings.setMascotBubbleMode(mode);
+                    },
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
             // ── Notifications Test (debug only) ──
             if (Supabase.instance.client.auth.currentUser?.email ==
                 'jairothehyrax@gmail.com')
@@ -716,6 +734,75 @@ class _TimerSizeSelector extends StatelessWidget {
             selected: {currentSize},
             onSelectionChanged: (Set<TimerSize> newSelection) {
               onSizeChanged(newSelection.first);
+            },
+            style: ButtonStyle(
+              backgroundColor: WidgetStateProperty.resolveWith<Color>((states) {
+                if (states.contains(WidgetState.selected)) {
+                  return AppColors.primary.withAlpha(50);
+                }
+                return Colors.transparent;
+              }),
+              foregroundColor: WidgetStateProperty.resolveWith<Color>((states) {
+                if (states.contains(WidgetState.selected)) {
+                  return AppColors.primary;
+                }
+                return Colors.white70;
+              }),
+              side: WidgetStateProperty.all(
+                const BorderSide(color: AppColors.cardBorder),
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _MascotBubbleModeSelector extends StatelessWidget {
+  final MascotBubbleMode currentMode;
+  final ValueChanged<MascotBubbleMode> onModeChanged;
+
+  const _MascotBubbleModeSelector({
+    required this.currentMode,
+    required this.onModeChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text('Estilo de la Burbuja de Hyro', style: AppTypography.labelLarge),
+        const SizedBox(height: 4),
+        Text(
+          'Elige cómo se muestra la mascota flotante en tu pantalla',
+          style: AppTypography.bodySmall,
+        ),
+        const SizedBox(height: 12),
+        SizedBox(
+          width: double.infinity,
+          child: SegmentedButton<MascotBubbleMode>(
+            segments: const [
+              ButtonSegment(
+                value: MascotBubbleMode.normal,
+                label: Text('Normal', style: TextStyle(fontSize: 12)),
+                icon: Icon(Icons.circle_outlined, size: 16),
+              ),
+              ButtonSegment(
+                value: MascotBubbleMode.glass,
+                label: Text('Glass', style: TextStyle(fontSize: 12)),
+                icon: Icon(Icons.auto_awesome, size: 16),
+              ),
+              ButtonSegment(
+                value: MascotBubbleMode.none,
+                label: Text('Sin Burbuja', style: TextStyle(fontSize: 12)),
+                icon: Icon(Icons.pets, size: 16),
+              ),
+            ],
+            selected: {currentMode},
+            onSelectionChanged: (Set<MascotBubbleMode> newSelection) {
+              onModeChanged(newSelection.first);
             },
             style: ButtonStyle(
               backgroundColor: WidgetStateProperty.resolveWith<Color>((states) {

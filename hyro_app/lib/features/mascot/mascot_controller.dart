@@ -139,10 +139,12 @@ class MascotController extends ChangeNotifier {
     if (_decenas == null)
       debugPrint('WARNING: Rive input "decenas" not found!');
 
-    notifyListeners();
+    // Disparar 'volver' y restaurar cosméticos inmediatamente para saltar la animación
+    // inicial de jairo44.riv (la carga inicial se maneja ahora con JairitoCarga.lottie)
+    _triggerVolver?.fire();
+    restoreEquippedState();
 
-    // No restauramos el equipamiento aquí para que la animación inicial 'cargando'
-    // se mantenga sin cosméticos. Se restaurarán al llamar a triggerVolver().
+    notifyListeners();
 
     // Iniciar el bucle de saludo inactivo
     _startIdleLoop();

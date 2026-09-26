@@ -83,10 +83,10 @@ class HyroApp extends StatelessWidget {
             if (auth.isLoading) {
               return const SplashScreen();
             }
-            if (auth.isGuest) {
+            if (auth.isGuest && !auth.hasSkippedLogin) {
               return const WelcomeScreen();
             }
-            // Solo los usuarios logueados o que hayan pasado el tutorial entrarán al shell
+            // Usuarios logueados o que eligieron continuar sin cuenta entrarán al shell
             return AppShell(key: appShellKey, authProvider: auth);
           },
         ),

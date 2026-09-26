@@ -71,16 +71,25 @@ class ProfileScreen extends StatelessWidget {
                 );
               }
               return Container(
-                width: 144,
-                height: 144,
+                width: 170, // ⚙️ Tamaño del círculo (Ancho)
+                height: 170, // ⚙️ Tamaño del círculo (Alto)
                 decoration: const BoxDecoration(
                   shape: BoxShape.circle,
                   color: AppColors.surfaceLight,
                 ),
                 clipBehavior: Clip.hardEdge,
-                child: RiveWidget(
-                  controller: mascot.controller!,
-                  fit: Fit.contain,
+                child: Transform.scale(
+                  scale: 1.4, // ⚙️ Zoom/Escala de la mascota dentro del círculo
+                  child: Transform.translate(
+                    offset: const Offset(
+                      1,
+                      -10,
+                    ), // ⚙️ Centrado (X, Y) de la mascota
+                    child: RiveWidget(
+                      controller: mascot.controller!,
+                      fit: Fit.contain,
+                    ),
+                  ),
                 ),
               );
             },
@@ -98,7 +107,10 @@ class ProfileScreen extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.only(bottom: 4),
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 3,
+                ),
                 decoration: BoxDecoration(
                   color: AppColors.primary.withAlpha(15),
                   borderRadius: BorderRadius.circular(16),
@@ -254,8 +266,12 @@ class ProfileScreen extends StatelessWidget {
             SizedBox(
               width: double.infinity,
               child: OutlinedButton.icon(
-                onPressed: () {
-                  context.read<AuthProvider>().logout();
+                onPressed: () async {
+                  final profileProvider = context.read<ProfileProvider>();
+                  await context.read<AuthProvider>().logout(profileProvider);
+                  if (context.mounted) {
+                    await profileProvider.loadProfile(null);
+                  }
                 },
                 icon: const Icon(Icons.logout),
                 label: const Text('Cerrar Sesión'),

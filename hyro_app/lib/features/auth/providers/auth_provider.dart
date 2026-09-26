@@ -2,7 +2,9 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:hyro/data/models/user_profile.dart';
+import 'package:hyro/features/profile/providers/profile_provider.dart';
 
 // Importación condicional para código que usa dart:io
 import 'package:hyro/features/auth/providers/auth_native.dart'
@@ -13,6 +15,7 @@ class AuthProvider extends ChangeNotifier {
   final dynamic isar; // Isar en nativo, null en web
   UserProfile? _currentUser;
   bool _isLoading = true;
+  bool _hasSkippedLogin = false;
   StreamSubscription<AuthState>? _authSubscription;
   StreamSubscription<dynamic>? _linkSubscription;
 
@@ -30,6 +33,9 @@ class AuthProvider extends ChangeNotifier {
       _currentUser != null && _currentUser!.isActivelyLoggedIn;
 
   bool get isGuest => _currentUser?.usernameOrEmail == 'guest_local';
+
+  /// Indica que el usuario guest eligió explícitamente continuar sin cuenta.
+  bool get hasSkippedLogin => _hasSkippedLogin;
 
   /// Devuelve el UUID del usuario en Supabase, o null si no tiene sesión iniciada vía Supabase.
   String? get supabaseUserId => Supabase.instance.client.auth.currentUser?.id;
@@ -139,6 +145,13 @@ class AuthProvider extends ChangeNotifier {
   Future<void> _loadUserSession() async {
     _isLoading = true;
     notifyListeners();
+
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      _hasSkippedLogin = prefs.getBool('has_skipped_login') ?? false;
+    } catch (e) {
+      debugPrint('Error cargando has_skipped_login: $e');
+    }
 
     // 1. Verificar primero si hay una sesión activa de Supabase
     final supabaseSession = Supabase.instance.client.auth.currentSession;
@@ -271,9 +284,24 @@ class AuthProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  // ─── Continuar sin cuenta ──────────────────────────────────────────────────
+
+  /// Permite al usuario continuar usando la app sin crear cuenta.
+  /// Solo usará guardados locales.
+  Future<void> continueWithoutAccount() async {
+    _hasSkippedLogin = true;
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool('has_skipped_login', true);
+    } catch (e) {
+      debugPrint('Error guardando has_skipped_login: $e');
+    }
+    notifyListeners();
+  }
+
   // ─── Cierre de Sesión ────────────────────────────────────────────────────────
 
-  Future<void> logout() async {
+  Future<void> logout([ProfileProvider? profileProvider]) async {
     try {
       await Supabase.instance.client.auth.signOut();
 
@@ -290,6 +318,16 @@ class AuthProvider extends ChangeNotifier {
       }
       _currentUser = null;
     }
+
+    _hasSkippedLogin = false;
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove('has_skipped_login');
+    } catch (e) {
+      debugPrint('Error borrando has_skipped_login: $e');
+    }
+
+    profileProvider?.resetProfile();
 
     // Volver al modo invitado
     await _loginAsGuest();

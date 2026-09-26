@@ -25,6 +25,7 @@ class _LoginScreenState extends State<LoginScreen> {
   Timer? _greetingTimer;
   final _random = Random();
   bool _hasFiredInitialSaludo = false;
+  AuthProvider? _authProvider;
 
   @override
   void initState() {
@@ -32,7 +33,38 @@ class _LoginScreenState extends State<LoginScreen> {
     // Dispara el saludo en el primer frame después de que el widget se construye
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _fireInitialSaludo();
+      _setupAuthListener();
     });
+  }
+
+  void _setupAuthListener() {
+    if (!mounted) return;
+    _authProvider = context.read<AuthProvider>();
+    _authProvider?.addListener(_onAuthChanged);
+    _onAuthChanged();
+  }
+
+  void _onAuthChanged() {
+    if (!mounted || _authProvider == null) return;
+    if (_authProvider!.isAuthenticated && !_authProvider!.isGuest) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        final nav = Navigator.of(context);
+        if (nav.canPop()) {
+          nav.popUntil((route) => route.isFirst);
+          if (nav.canPop()) {
+            nav.pop();
+          }
+        } else {
+          nav.pushReplacement(
+            MaterialPageRoute(
+              builder: (_) => AppShell(key: appShellKey, authProvider: _authProvider!),
+            ),
+          );
+        }
+        appShellKey.currentState?.navigateTo(2);
+      });
+    }
   }
 
   void _fireInitialSaludo() {
@@ -66,18 +98,6 @@ class _LoginScreenState extends State<LoginScreen> {
 
       mascot.addListener(listener);
     }
-
-    // Listener de Auth para cerrar LoginScreen automáticamente cuando OAuth se complete vía navegador externo (Deep Link)
-    final authProvider = context.read<AuthProvider>();
-    void authListener() {
-      if (mounted && authProvider.isAuthenticated && !authProvider.isGuest) {
-        authProvider.removeListener(authListener);
-        Navigator.of(context).popUntil((route) => route.isFirst);
-        appShellKey.currentState?.navigateTo(0);
-      }
-    }
-
-    authProvider.addListener(authListener);
   }
 
   void _startGreetingLoop() {
@@ -121,10 +141,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
       if (mounted) {
         setState(() => _isLoading = false);
-        if (auth.isAuthenticated && !auth.isGuest) {
-          Navigator.of(context).popUntil((route) => route.isFirst);
-          appShellKey.currentState?.navigateTo(0);
-        }
+        _onAuthChanged();
       }
     } on AuthException catch (e) {
       if (mounted) {
@@ -145,6 +162,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   void dispose() {
+    _authProvider?.removeListener(_onAuthChanged);
     _greetingTimer?.cancel();
     _emailController.dispose();
     _passwordController.dispose();
@@ -644,9 +662,14 @@ class _LoginScreenState extends State<LoginScreen> {
     final auth = context.read<AuthProvider>();
     try {
       await auth.signInWithGoogle();
-      // signInWithOAuth solo abre el navegador y retorna.
+      // En Android con Google Sign-In nativo, el await completa el flujo completo.
+      // Verificamos si ya está autenticado para cerrar la pantalla inmediatamente.
+      if (mounted && auth.isAuthenticated && !auth.isGuest) {
+        _onAuthChanged();
+      }
+      // En Desktop/Web, signInWithOAuth solo abre el navegador y retorna.
       // La autenticación real ocurre cuando el deep link regresa a la app,
-      // y el Consumer en app.dart se reconstruirá automáticamente.
+      // y _onAuthChanged escuchará el evento de AuthProvider.
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

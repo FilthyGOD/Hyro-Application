@@ -5,6 +5,7 @@ import 'package:rive/rive.dart' hide Animation;
 import '../theme/app_colors.dart';
 import '../utils/responsive.dart';
 import '../../features/mascot/mascot_controller.dart';
+import '../../features/settings/settings_provider.dart';
 
 /// Burbuja de mascota flotante y arrastrable que sigue al usuario en todas las pantallas.
 /// Se oculta cuando [visible] es falso (por ejemplo, en la pantalla de la Tienda).
@@ -66,17 +67,176 @@ class _FloatingMascotState extends State<FloatingMascot>
     final isMobile = Responsive.isMobile(context);
     final bubbleSize = _getBubbleSize(isMobile);
     final screenSize = MediaQuery.sizeOf(context);
+    final settings = context.watch<SettingsProvider>();
+    final bubbleMode = settings.mascotBubbleMode;
 
     // Volver a verificar la posición si el tamaño de la pantalla cambió
     if (_posX != null && _posY != null) {
-       _clampPosition(screenSize, bubbleSize);
+      _clampPosition(screenSize, bubbleSize);
     } else {
-       _initPositionIfNeeded(screenSize, bubbleSize);
+      _initPositionIfNeeded(screenSize, bubbleSize);
     }
 
     // Cuando se oculta, desliza hacia el borde derecho
     final targetX = widget.visible ? _posX! : screenSize.width + 20;
     final targetY = _posY!;
+
+    Widget buildMascotContent({
+      double scale = 1.6,
+      Offset offset = const Offset(0, -10),
+    }) {
+      return Consumer<MascotController>(
+        builder: (context, mascot, _) {
+          if (!widget.visible) {
+            return const SizedBox();
+          }
+          if (!mascot.isLoaded) {
+            return const Center(
+              child: SizedBox(
+                width: 28,
+                height: 28,
+                child: CircularProgressIndicator(
+                  color: AppColors.primary,
+                  strokeWidth: 2,
+                ),
+              ),
+            );
+          }
+          return Padding(
+            padding: const EdgeInsets.all(10),
+            child: Transform.scale(
+              scale: scale,
+              child: Transform.translate(
+                offset: offset,
+                child: RiveWidget(
+                  controller: mascot.controller!,
+                  fit: Fit.contain,
+                ),
+              ),
+            ),
+          );
+        },
+      );
+    }
+
+    Widget buildBubbleContainer() {
+      switch (bubbleMode) {
+        // ── 1. MODO NORMAL (CON BURBUJA AZUL MARINO) ──────────────────────────
+        case MascotBubbleMode.normal:
+          return Container(
+            width: bubbleSize,
+            height: bubbleSize,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              gradient: const LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [Color(0xFF182040), Color(0xFF131829)],
+              ),
+              border: Border.all(
+                color: AppColors.primary.withAlpha(_isDragging ? 140 : 80),
+                width: _isDragging ? 2.0 : 1.5,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: AppColors.primary.withAlpha(_isDragging ? 70 : 40),
+                  blurRadius: _isDragging ? 32 : 24,
+                  spreadRadius: _isDragging ? 4 : 2,
+                ),
+                BoxShadow(
+                  color: Colors.black.withAlpha(80),
+                  blurRadius: 12,
+                  spreadRadius: 0,
+                ),
+              ],
+            ),
+            child: ClipOval(
+              child: BackdropFilter(
+                filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                // ⚙️ PARÁMETROS MODO NORMAL:
+                // scale: Zoom de la mascota (1.6)
+                // offset: Alineación X, Y (0, -10)
+                child: buildMascotContent(
+                  scale: 1.6,
+                  offset: const Offset(0, -10),
+                ),
+              ),
+            ),
+          );
+
+        // ── 2. MODO GLASS (EFECTO CRISTAL TRASLÚCIDO) ─────────────────────────
+        case MascotBubbleMode.glass:
+          return Container(
+            width: bubbleSize,
+            height: bubbleSize,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              // 🔍 Opacidad del fondo cristalino (0.01 = 1% opacidad)
+              color: Colors.white.withValues(alpha: _isDragging ? 0.05 : 0.01),
+              border: Border.all(
+                // 🔍 Opacidad del borde brillante (0.35 = 35% de brillo blanco)
+                color: Colors.white.withValues(
+                  alpha: _isDragging ? 0.60 : 0.35,
+                ),
+                width: _isDragging ? 1.5 : 1.0,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: const Color(
+                    0xFF3CDCF8,
+                  ).withValues(alpha: _isDragging ? 0.25 : 0.12),
+                  blurRadius: _isDragging ? 20 : 14,
+                  spreadRadius: _isDragging ? 2 : 1,
+                ),
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.10),
+                  blurRadius: 8,
+                ),
+              ],
+            ),
+            child: ClipOval(
+              child: BackdropFilter(
+                // 🔍 Desenfoque de cristal (sigmaX: 2, sigmaY: 2)
+                filter: ImageFilter.blur(sigmaX: 2, sigmaY: 2),
+                // ⚙️ PARÁMETROS MODO GLASS:
+                // scale: Zoom de la mascota (1.6)
+                // offset: Alineación X, Y (0, -10)
+                child: buildMascotContent(
+                  scale: 1.6,
+                  offset: const Offset(0, -10),
+                ),
+              ),
+            ),
+          );
+
+        // ── 3. MODO SIN BURBUJA (LA PURA MASCOTA MÁS GRANDE) ─────────────────
+        case MascotBubbleMode.none:
+          return Container(
+            width: bubbleSize,
+            height: bubbleSize,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: Colors.transparent,
+              boxShadow:
+                  _isDragging
+                      ? [
+                        BoxShadow(
+                          color: const Color(
+                            0xFF3CDCF8,
+                          ).withValues(alpha: 0.25),
+                          blurRadius: 20,
+                          spreadRadius: 2,
+                        ),
+                      ]
+                      : null,
+            ),
+            // ⚙️ PARÁMETROS MODO SIN BURBUJA:
+            // scale: Zoom ampliado a 2.2 para hacer a la mascota más grande
+            // offset: Alineación X, Y (0, -6)
+            child: buildMascotContent(scale: 2.2, offset: const Offset(0, -6)),
+          );
+      }
+    }
 
     return AnimatedPositioned(
       duration: _isDragging ? Duration.zero : const Duration(milliseconds: 400),
@@ -119,78 +279,7 @@ class _FloatingMascotState extends State<FloatingMascot>
             child: AnimatedScale(
               scale: _isDragging ? 1.08 : 1.0,
               duration: const Duration(milliseconds: 200),
-              child: Container(
-                width: bubbleSize,
-                height: bubbleSize,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  gradient: const LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [Color(0xFF182040), Color(0xFF131829)],
-                  ),
-                  border: Border.all(
-                    color: AppColors.primary.withAlpha(_isDragging ? 140 : 80),
-                    width: _isDragging ? 2.0 : 1.5,
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: AppColors.primary.withAlpha(_isDragging ? 70 : 40),
-                      blurRadius: _isDragging ? 32 : 24,
-                      spreadRadius: _isDragging ? 4 : 2,
-                    ),
-                    BoxShadow(
-                      color: Colors.black.withAlpha(80),
-                      blurRadius: 12,
-                      spreadRadius: 0,
-                    ),
-                  ],
-                ),
-                child: ClipOval(
-                  child: BackdropFilter(
-                    filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-                    child: Consumer<MascotController>(
-                      builder: (context, mascot, _) {
-                        if (!widget.visible) {
-                          return const SizedBox();
-                        }
-                        if (!mascot.isLoaded) {
-                          return const Center(
-                            child: SizedBox(
-                              width: 28,
-                              height: 28,
-                              child: CircularProgressIndicator(
-                                color: AppColors.primary,
-                                strokeWidth: 2,
-                              ),
-                            ),
-                          );
-                        }
-                        return Padding(
-                          padding: const EdgeInsets.all(10),
-                          // 1. Usa Transform.scale para hacer un "zoom" manual y eliminar bordes
-                          child: Transform.scale(
-                            scale:
-                                1.6, // Súbelo a 1.8 o 2.0 si sigue sobrando espacio
-                            // 2. Usa Transform.translate para centrarlo (si quedó muy arriba o abajo)
-                            child: Transform.translate(
-                              offset: const Offset(
-                                0,
-                                -10,
-                              ), // Ajusta los píxeles en X y Y a tu gusto
-                              child: RiveWidget(
-                                controller: mascot.controller!,
-                                // Cambia a Fit.cover si quieres que llene todo el espacio ignorando la relación de aspecto
-                                fit: Fit.contain,
-                              ),
-                            ),
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-                ),
-              ),
+              child: buildBubbleContainer(),
             ),
           ),
         ),

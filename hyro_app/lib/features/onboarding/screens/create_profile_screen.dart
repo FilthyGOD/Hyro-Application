@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:provider/provider.dart';
 import 'package:hyro/core/theme/app_colors.dart';
 import 'package:hyro/core/theme/app_typography.dart';
+import 'package:hyro/features/auth/providers/auth_provider.dart';
 import 'package:hyro/features/auth/screens/login_screen.dart';
 
 class CreateProfileScreen extends StatelessWidget {
@@ -72,10 +74,9 @@ class CreateProfileScreen extends StatelessWidget {
                 ),
                 child: ElevatedButton(
                   onPressed: () {
-                    Navigator.pushAndRemoveUntil(
+                    Navigator.push(
                       context,
                       MaterialPageRoute(builder: (_) => const LoginScreen()),
-                      (route) => false,
                     );
                   },
                   style: ElevatedButton.styleFrom(
@@ -96,7 +97,34 @@ class CreateProfileScreen extends StatelessWidget {
                   ),
                 ),
               ),
-
+              const SizedBox(height: 12),
+              // Continuar sin cuenta
+              SizedBox(
+                width: double.infinity,
+                height: 48,
+                child: TextButton(
+                  onPressed: () {
+                    context.read<AuthProvider>().continueWithoutAccount();
+                    if (Navigator.of(context).canPop()) {
+                      Navigator.of(context).popUntil((route) => route.isFirst);
+                    }
+                  },
+                  style: TextButton.styleFrom(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                  ),
+                  child: Text(
+                    'CONTINUAR SIN CUENTA',
+                    style: TextStyle(
+                      color: Colors.white.withValues(alpha: 0.45),
+                      fontWeight: FontWeight.w500,
+                      fontSize: 13,
+                      letterSpacing: 0.5,
+                    ),
+                  ),
+                ),
+              ),
             ],
           ),
         ),

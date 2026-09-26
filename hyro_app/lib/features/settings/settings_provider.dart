@@ -3,12 +3,15 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 enum TimerSize { small, medium }
 
+enum MascotBubbleMode { normal, none, glass }
+
 class SettingsProvider extends ChangeNotifier {
   double _pomodoroDuration = 25;
   double _shortBreakDuration = 5;
   double _longBreakDuration = 15;
   bool _notificationsEnabled = true;
   TimerSize _timerSize = TimerSize.medium;
+  MascotBubbleMode _mascotBubbleMode = MascotBubbleMode.normal;
   bool _autoPauseTimer = true;
   bool _minimizeToTray = true;
   bool _strictMode = false;
@@ -30,6 +33,9 @@ class SettingsProvider extends ChangeNotifier {
     _longBreakDuration = _prefs?.getDouble('longBreakDuration') ?? 15;
     _notificationsEnabled = _prefs?.getBool('notificationsEnabled') ?? true;
     _timerSize = TimerSize.values[_prefs?.getInt('timerSize') ?? 1]; // 1 is medium
+    _mascotBubbleMode = MascotBubbleMode.values[
+      (_prefs?.getInt('mascotBubbleMode') ?? 0).clamp(0, MascotBubbleMode.values.length - 1)
+    ];
     _autoPauseTimer = _prefs?.getBool('autoPauseTimer') ?? true;
     _minimizeToTray = _prefs?.getBool('minimizeToTray') ?? true;
     _strictMode = _prefs?.getBool('strictMode') ?? false;
@@ -45,6 +51,7 @@ class SettingsProvider extends ChangeNotifier {
   double get longBreakDuration => _longBreakDuration;
   bool get notificationsEnabled => _notificationsEnabled;
   TimerSize get timerSize => _timerSize;
+  MascotBubbleMode get mascotBubbleMode => _mascotBubbleMode;
   bool get autoPauseTimer => _autoPauseTimer;
   bool get minimizeToTray => _minimizeToTray;
   bool get strictMode => _strictMode;
@@ -93,6 +100,13 @@ class SettingsProvider extends ChangeNotifier {
     if (_timerSize == size) return;
     _timerSize = size;
     _prefs?.setInt('timerSize', size.index);
+    notifyListeners();
+  }
+
+  void setMascotBubbleMode(MascotBubbleMode mode) {
+    if (_mascotBubbleMode == mode) return;
+    _mascotBubbleMode = mode;
+    _prefs?.setInt('mascotBubbleMode', mode.index);
     notifyListeners();
   }
 

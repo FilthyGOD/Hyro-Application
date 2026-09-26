@@ -29,6 +29,9 @@ dependencies:
   # Rive Animations
   rive: ^0.14.4
 
+  # Lottie Animations
+  lottie: ^3.1.2
+
   # Google Sign In
   google_sign_in: ^6.2.1
 

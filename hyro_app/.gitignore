@@ -46,3 +46,8 @@ app.*.map.json
 
 # Output/log files at project root (preserves CMakeLists.txt in subdirs)
 /*.txt
+
+# Android signing credentials (NEVER commit these)
+/android/key.properties
+/android/*.jks
+/android/*.keystore

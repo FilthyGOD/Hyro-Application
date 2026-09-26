@@ -23,11 +23,6 @@ android {
         jvmTarget = JavaVersion.VERSION_11.toString()
     }
 
-    packaging {
-        jniLibs {
-            keepDebugSymbols.add("**/*.so")
-        }
-    }
 
     defaultConfig {
         // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
@@ -59,9 +54,6 @@ android {
     buildTypes {
         release {
             signingConfig = signingConfigs.getByName("release")
-            ndk {
-                debugSymbolLevel = "none"
-            }
         }
     }
 }

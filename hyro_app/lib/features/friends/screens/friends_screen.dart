@@ -26,6 +26,7 @@ import '../../../data/repositories/note_repository.dart';
 import '../../../data/models/tarea_nota_model.dart';
 import '../../../data/models/category_model.dart';
 import 'package:uuid/uuid.dart';
+import '../../../core/widgets/task_received_dialog.dart';
 import '../../../data/local/note_local_ds.dart';
 import '../../../data/remote/note_remote_ds.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -1597,15 +1598,40 @@ class _FriendsScreenState extends State<FriendsScreen> {
       ),
       child: Row(
         children: [
-          // Icono
-          Container(
-            width: 48,
-            height: 48,
-            decoration: BoxDecoration(
-              color: AppColors.primary.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(14),
-            ),
-            child: const Icon(Icons.description_rounded, color: AppColors.primary),
+          // Avatar del remitente o icono genérico si no se encuentra
+          Builder(
+            builder: (context) {
+              final senderEntry = friends.ranking.cast<RankingEntry?>().firstWhere(
+                (r) => r?.usuarioId == sharedTask.remitenteId,
+                orElse: () => null,
+              );
+
+              if (senderEntry != null) {
+                return Container(
+                  width: 48,
+                  height: 48,
+                  decoration: BoxDecoration(
+                    color: AppColors.surfaceLight,
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  child: StaticMascotWidget(
+                    sombrero: senderEntry.sombrero,
+                    cosmetico: senderEntry.cosmetico,
+                    traje: senderEntry.traje,
+                  ),
+                );
+              }
+
+              return Container(
+                width: 48,
+                height: 48,
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: const Icon(Icons.description_rounded, color: AppColors.primary),
+              );
+            },
           ),
           const SizedBox(width: 12),
 
@@ -1767,8 +1793,11 @@ class _FriendsScreenState extends State<FriendsScreen> {
 
                   await friends.acceptSharedTask(sharedTask.id, currentUserId);
                   if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Tarea guardada en ${selectedCategory.name}.')),
+                    showDialog(
+                      context: context,
+                      builder: (context) => TaskReceivedDialog(
+                        categoryName: selectedCategory.name,
+                      ),
                     );
                   }
                 },

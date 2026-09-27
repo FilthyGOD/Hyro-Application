@@ -18,6 +18,7 @@ import '../../../data/local/note_local_ds.dart';
 import '../../../data/remote/note_remote_ds.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../friends/widgets/static_mascot_widget.dart';
+import '../../../core/widgets/task_shared_dialog.dart';
 /// Pantalla de detalle de una categoría — muestra header con color,
 /// promedio de progreso, y lista de tareas.
 class CategoryDetailScreen extends StatefulWidget {
@@ -1117,8 +1118,12 @@ class _DetailTaskTile extends StatelessWidget {
                           final success = await friends.shareTask(currentUserId, friend.usuarioId, task.title, tareaDatos);
                           if (success && ctx.mounted) {
                             Navigator.pop(ctx);
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text('Tarea compartida con éxito.')),
+                            showDialog(
+                              context: context,
+                              builder: (context) => TaskSharedDialog(
+                                noteName: task.title,
+                                friendName: friend.nombreUsuario,
+                              ),
                             );
                           } else if (ctx.mounted) {
                             ScaffoldMessenger.of(context).showSnackBar(

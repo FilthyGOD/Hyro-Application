@@ -14,17 +14,24 @@ import '../widgets/task_details_sheet.dart';
 
 /// Pantalla de detalle de una categoría — muestra header con color,
 /// promedio de progreso, y lista de tareas.
-class CategoryDetailScreen extends StatelessWidget {
+class CategoryDetailScreen extends StatefulWidget {
   final CategoryModel category;
 
   const CategoryDetailScreen({super.key, required this.category});
 
   @override
+  State<CategoryDetailScreen> createState() => _CategoryDetailScreenState();
+}
+
+class _CategoryDetailScreenState extends State<CategoryDetailScreen> {
+  String _sortOption = 'Fecha';
+
+  @override
   Widget build(BuildContext context) {
     final categoryProvider = context.watch<CategoryProvider>();
     final category = categoryProvider.categories.firstWhere(
-      (c) => c.id == this.category.id,
-      orElse: () => this.category,
+      (c) => c.id == widget.category.id,
+      orElse: () => widget.category,
     );
     final catColor = Color(category.colorValue);
 
@@ -36,6 +43,22 @@ class CategoryDetailScreen extends StatelessWidget {
               .where(
                   (t) => t.category == category.name || t.categoryId == category.id)
               .toList();
+
+          tasks.sort((a, b) {
+            if (_sortOption == 'Alfabético') {
+              return a.title.toLowerCase().compareTo(b.title.toLowerCase());
+            } else if (_sortOption == 'Prioridad') {
+              int priorityVal(String p) {
+                if (p == 'HIGH' || p == 'ALTA PRIORIDAD') return 1;
+                if (p == 'MEDIUM' || p == 'MEDIA') return 2;
+                if (p == 'LOW' || p == 'BAJA') return 3;
+                return 4;
+              }
+              return priorityVal(a.priority).compareTo(priorityVal(b.priority));
+            } else {
+              return b.createdAt.compareTo(a.createdAt);
+            }
+          });
 
           final total = tasks.length;
           final completed = tasks.where((t) => t.isCompleted).length;
@@ -106,7 +129,7 @@ class CategoryDetailScreen extends StatelessWidget {
                               if (value == 'edit') {
                                 _showEditCategoryDialog(context, category);
                               } else if (value == 'delete') {
-                                _showDeleteCategoryDialog(context);
+                                _showDeleteCategoryDialog(context, category);
                               }
                             },
                             itemBuilder: (context) => [
@@ -258,6 +281,43 @@ class CategoryDetailScreen extends StatelessWidget {
                 ),
               ),
 
+              // ── Opciones de Ordenamiento ──
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      Text(
+                        'Ordenar por: ',
+                        style: AppTypography.bodySmall.copyWith(color: AppColors.textSecondary),
+                      ),
+                      const SizedBox(width: 8),
+                      DropdownButton<String>(
+                        value: _sortOption,
+                        dropdownColor: AppColors.surfaceLight,
+                        style: AppTypography.bodySmall.copyWith(color: AppColors.primary),
+                        icon: const Icon(Icons.arrow_drop_down, color: AppColors.primary, size: 16),
+                        underline: const SizedBox(),
+                        items: ['Fecha', 'Prioridad', 'Alfabético'].map((String value) {
+                          return DropdownMenuItem<String>(
+                            value: value,
+                            child: Text(value),
+                          );
+                        }).toList(),
+                        onChanged: (newValue) {
+                          if (newValue != null) {
+                            setState(() {
+                              _sortOption = newValue;
+                            });
+                          }
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+
               // ── Lista de tareas ──
               if (tasks.isEmpty)
                 SliverToBoxAdapter(
@@ -299,7 +359,7 @@ class CategoryDetailScreen extends StatelessWidget {
         },
       ),
       floatingActionButton: GestureDetector(
-        onTap: () => _showAddTaskDialog(context),
+        onTap: () => _showAddTaskDialog(context, category),
         child: Container(
           width: 56,
           height: 56,
@@ -325,7 +385,7 @@ class CategoryDetailScreen extends StatelessWidget {
     );
   }
 
-  void _showDeleteCategoryDialog(BuildContext context) {
+  void _showDeleteCategoryDialog(BuildContext context, CategoryModel category) {
     showDialog(
       context: context,
       builder: (ctx) {
@@ -555,7 +615,7 @@ class CategoryDetailScreen extends StatelessWidget {
     );
   }
 
-  void _showAddTaskDialog(BuildContext context) {
+  void _showAddTaskDialog(BuildContext context, CategoryModel category) {
     final titleController = TextEditingController();
     String selectedPriority = 'MEDIA';
     DateTime? selectedDueDate;
@@ -686,7 +746,7 @@ class CategoryDetailScreen extends StatelessWidget {
                         .length;
                     if (tasksInCategory >= TaskProvider.maxTasksPerCategory) {
                       Navigator.pop(ctx);
-                      _showLimitDialog(context);
+                      _showLimitDialog(context, category);
                       return;
                     }
                     taskProvider.addTask(task);
@@ -729,7 +789,7 @@ class CategoryDetailScreen extends StatelessWidget {
     );
   }
 
-  void _showLimitDialog(BuildContext context) {
+  void _showLimitDialog(BuildContext context, CategoryModel category) {
     showDialog(
       context: context,
       builder: (ctx) {

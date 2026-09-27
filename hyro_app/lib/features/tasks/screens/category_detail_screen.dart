@@ -19,6 +19,7 @@ import '../../../data/remote/note_remote_ds.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../friends/widgets/static_mascot_widget.dart';
 import '../../../core/widgets/task_shared_dialog.dart';
+import '../widgets/category_exam_config_dialog.dart';
 /// Pantalla de detalle de una categoría — muestra header con color,
 /// promedio de progreso, y lista de tareas.
 class CategoryDetailScreen extends StatefulWidget {
@@ -283,6 +284,59 @@ class _CategoryDetailScreenState extends State<CategoryDetailScreen> {
                           ),
                         ),
                       ),
+                    ),
+                  ),
+                ),
+              ),
+
+              // ── Banner Examen Diagnóstico ──
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+                  child: GlassCard(
+                    padding: const EdgeInsets.all(16),
+                    borderColor: catColor.withValues(alpha: 0.25),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Text(
+                          'Examen de Conocimientos',
+                          style: AppTypography.bodyMedium.copyWith(
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          'Pon a prueba lo que has aprendido en ${category.name}',
+                          style: AppTypography.bodySmall.copyWith(
+                            color: Colors.white70,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 16),
+                        ElevatedButton.icon(
+                          onPressed: () {
+                            showDialog(
+                              context: context,
+                              builder: (ctx) => CategoryExamConfigDialog(
+                                categoryId: widget.category.id,
+                                categoryName: category.name,
+                              ),
+                            );
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF10B981),
+                            foregroundColor: Colors.white,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          icon: const Icon(Icons.quiz_rounded, size: 18),
+                          label: const Text('Generar Examen'),
+                        ),
+                      ],
                     ),
                   ),
                 ),

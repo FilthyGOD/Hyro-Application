@@ -24,7 +24,8 @@ import '../../../data/remote/card_remote_ds.dart';
 import '../../../data/remote/source_remote_ds.dart';
 import '../../auth/providers/auth_provider.dart';
 import '../tasks_provider.dart';
-import '../../../core/widgets/glass_card.dart';
+import '../../../data/models/category_model.dart';
+import '../../categories/category_provider.dart';
 
 class TaskDetailsDialog extends StatefulWidget {
   final TaskModel task;
@@ -39,11 +40,10 @@ class _TaskDetailsDialogState extends State<TaskDetailsDialog>
     with SingleTickerProviderStateMixin {
   late TextEditingController _notesController;
   late TextEditingController _newSubtaskController;
-  late TextEditingController _chatInputController;
 
   late TaskModel _currentTask;
   bool _isUploadingDocument = false;
-  int _selectedTab = 1; // Comienza en la pestaña Chat
+  int _selectedTab = 1; // Comienza en la pestaña Notas
 
   // Estado de Flashcards — respaldado por CardRepository
   final List<TareaCardModel> _flashcards = [];
@@ -66,7 +66,6 @@ class _TaskDetailsDialogState extends State<TaskDetailsDialog>
     _currentTask = widget.task.copyWith();
     _notesController = TextEditingController(text: _currentTask.notes ?? '');
     _newSubtaskController = TextEditingController();
-    _chatInputController = TextEditingController();
     _cardFrontController = TextEditingController();
     _cardBackController = TextEditingController();
 
@@ -164,7 +163,6 @@ class _TaskDetailsDialogState extends State<TaskDetailsDialog>
   void dispose() {
     _notesController.dispose();
     _newSubtaskController.dispose();
-    _chatInputController.dispose();
     _cardFrontController.dispose();
     _cardBackController.dispose();
     super.dispose();
@@ -341,83 +339,413 @@ class _TaskDetailsDialogState extends State<TaskDetailsDialog>
     }
   }
 
-  // ── Chat (Notas) ────────────────────────────────────────────────────────
+  void _showAddNoteDialog() {
+    final titleController = TextEditingController();
+    final textController = TextEditingController();
+    String? selectedTag;
+    final tags = [
+      'Duda',
+      'Concepto',
+      'Viene en el examen',
+      'Resumen',
+      'Pregunta',
+      'Sin categoría',
+    ];
 
-  void _sendChatMessage() {
-    final text = _chatInputController.text.trim();
-    if (text.isEmpty) return;
-    final nota = TareaNotaModel(
-      id: const Uuid().v4(),
-      tareaId: _currentTask.id,
-      usuarioId: '',
-      contenido: text,
+    showDialog(
+      context: context,
+      builder: (ctx) {
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            return AlertDialog(
+              backgroundColor: AppColors.surface,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+              title: Text('Nueva nota', style: AppTypography.h3),
+              content: SizedBox(
+                width: 400,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    DropdownButtonFormField<String>(
+                      value: selectedTag,
+                      decoration: InputDecoration(
+                        hintText: 'Etiqueta (opcional)',
+                        hintStyle: AppTypography.bodySmall.copyWith(
+                          color: AppColors.textTertiary,
+                        ),
+                        filled: true,
+                        fillColor: AppColors.surfaceLight,
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 10,
+                        ),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide: BorderSide.none,
+                        ),
+                      ),
+                      dropdownColor: AppColors.surfaceLight,
+                      style: AppTypography.bodyMedium.copyWith(
+                        color: AppColors.textPrimary,
+                        fontSize: 13,
+                      ),
+                      items: tags.map((t) => DropdownMenuItem(
+                        value: t, 
+                        child: Row(
+                          children: [
+                            Container(
+                              width: 10,
+                              height: 10,
+                              decoration: BoxDecoration(
+                                color: _getColorForTag(t),
+                                shape: BoxShape.circle,
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Text(t),
+                          ],
+                        ),
+                      )).toList(),
+                      onChanged: (val) {
+                        setDialogState(() {
+                          selectedTag = val;
+                        });
+                      },
+                    ),
+                    const SizedBox(height: 12),
+                    TextField(
+                      controller: titleController,
+                      maxLength: 60,
+                      style: AppTypography.bodyMedium.copyWith(
+                        color: AppColors.textPrimary,
+                      ),
+                      decoration: InputDecoration(
+                        hintText: 'Titulo-Pregunta',
+                        hintStyle: AppTypography.bodySmall.copyWith(
+                          color: AppColors.textTertiary,
+                        ),
+                        filled: true,
+                        fillColor: AppColors.surfaceLight,
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 10,
+                        ),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide: BorderSide.none,
+                        ),
+                      ),
+                      onChanged: (_) => setDialogState(() {}),
+                    ),
+                    TextField(
+                      controller: textController,
+                      maxLength: 600,
+                      maxLines: 3,
+                      style: AppTypography.bodyMedium.copyWith(
+                        color: AppColors.textPrimary,
+                      ),
+                      decoration: InputDecoration(
+                        hintText: 'Texto',
+                        hintStyle: AppTypography.bodySmall.copyWith(
+                          color: AppColors.textTertiary,
+                        ),
+                        filled: true,
+                        fillColor: AppColors.surfaceLight,
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 10,
+                        ),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide: BorderSide.none,
+                        ),
+                      ),
+                      onChanged: (_) => setDialogState(() {}),
+                    ),
+                  ],
+                ),
+              ),
+              actions: [
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: GestureDetector(
+                    onTap: () {
+                      final title = titleController.text.trim();
+                      final text = textController.text.trim();
+                      if (title.isEmpty && text.isEmpty) return;
+                      String content = '';
+                      if (title.isNotEmpty) {
+                        content += '[{TITLE}]$title[{/TITLE}]\n';
+                      }
+                      if (text.isNotEmpty) {
+                        content += text;
+                      }
+                      content = content.trim(); // remove trailing newline if only title provided
+
+                      if (selectedTag != null && selectedTag != 'Sin categoría') {
+                        content = '[{TAG:$selectedTag}]\n$content';
+                      }
+                      final nota = TareaNotaModel(
+                        id: const Uuid().v4(),
+                        tareaId: _currentTask.id,
+                        usuarioId: '',
+                        contenido: content,
+                      );
+                      _noteRepo.addNote(nota);
+                      setState(() {
+                        _chatNotes.add(nota);
+                      });
+                      _saveTask();
+                      Navigator.pop(ctx);
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 8,
+                      ),
+                      decoration: BoxDecoration(
+                        gradient: const LinearGradient(
+                          colors: [AppColors.primary, AppColors.primaryDark],
+                        ),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(
+                            Icons.add_rounded,
+                            color: Colors.white,
+                            size: 16,
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            'Crear',
+                            style: AppTypography.labelLarge.copyWith(
+                              color: Colors.white,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            );
+          },
+        );
+      },
     );
-    _noteRepo.addNote(nota);
-    setState(() {
-      _chatNotes.add(nota);
-    });
-    _chatInputController.clear();
-    _saveTask();
   }
 
   void _showEditNoteDialog(int index) {
     final nota = _chatNotes[index];
-    final controller = TextEditingController(text: nota.contenido);
+    String displayContent = nota.contenido;
+    String? selectedTag;
+
+    if (displayContent.startsWith('[{TAG:')) {
+      final endIdx = displayContent.indexOf('}]\n');
+      if (endIdx != -1) {
+        selectedTag = displayContent.substring(6, endIdx);
+        displayContent = displayContent.substring(endIdx + 3);
+      }
+    }
+
+    String initialTitle = '';
+    String initialText = displayContent;
+
+    if (displayContent.startsWith('[{TITLE}]')) {
+      final titleEndIdx = displayContent.indexOf('[{/TITLE}]');
+      if (titleEndIdx != -1) {
+        initialTitle = displayContent.substring(9, titleEndIdx);
+        final remaining = displayContent.substring(titleEndIdx + 10);
+        initialText = remaining.startsWith('\n') ? remaining.substring(1) : remaining;
+      }
+    }
+
+    final titleController = TextEditingController(text: initialTitle);
+    final textController = TextEditingController(text: initialText);
+    final tags = [
+      'Duda',
+      'Concepto',
+      'Viene en el examen',
+      'Resumen',
+      'Pregunta',
+      'Sin categoría',
+    ];
+
     showDialog(
       context: context,
-      builder: (context) {
-        return AlertDialog(
-          backgroundColor: AppColors.surface,
-          title: Text('Editar Nota', style: AppTypography.labelLarge),
-          content: SizedBox(
-            width: 400,
-            child: TextField(
-              controller: controller,
-              maxLines: null,
-              style: AppTypography.bodyMedium.copyWith(
-                color: AppColors.textPrimary,
+      builder: (ctx) {
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            return AlertDialog(
+              backgroundColor: AppColors.surface,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
               ),
-              decoration: InputDecoration(
-                filled: true,
-                fillColor: AppColors.surfaceLight,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide.none,
+              title: Text('Editar Nota', style: AppTypography.h3),
+              content: SizedBox(
+                width: 400,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    DropdownButtonFormField<String>(
+                      value: selectedTag,
+                      decoration: InputDecoration(
+                        hintText: 'Etiqueta (opcional)',
+                        hintStyle: AppTypography.bodySmall.copyWith(
+                          color: AppColors.textTertiary,
+                        ),
+                        filled: true,
+                        fillColor: AppColors.surfaceLight,
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 10,
+                        ),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide: BorderSide.none,
+                        ),
+                      ),
+                      dropdownColor: AppColors.surfaceLight,
+                      style: AppTypography.bodyMedium.copyWith(
+                        color: AppColors.textPrimary,
+                        fontSize: 13,
+                      ),
+                      items: tags.map((t) => DropdownMenuItem(
+                        value: t, 
+                        child: Row(
+                          children: [
+                            Container(
+                              width: 10,
+                              height: 10,
+                              decoration: BoxDecoration(
+                                color: _getColorForTag(t),
+                                shape: BoxShape.circle,
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Text(t),
+                          ],
+                        ),
+                      )).toList(),
+                      onChanged: (val) {
+                        setDialogState(() {
+                          selectedTag = val;
+                        });
+                      },
+                    ),
+                    const SizedBox(height: 12),
+                    TextField(
+                      controller: titleController,
+                      maxLength: 60,
+                      style: AppTypography.bodyMedium.copyWith(
+                        color: AppColors.textPrimary,
+                      ),
+                      decoration: InputDecoration(
+                        hintText: 'Titulo-Pregunta',
+                        hintStyle: AppTypography.bodySmall.copyWith(
+                          color: AppColors.textTertiary,
+                        ),
+                        filled: true,
+                        fillColor: AppColors.surfaceLight,
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 10,
+                        ),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide: BorderSide.none,
+                        ),
+                      ),
+                      onChanged: (_) => setDialogState(() {}),
+                    ),
+                    TextField(
+                      controller: textController,
+                      maxLength: 600,
+                      maxLines: 3,
+                      style: AppTypography.bodyMedium.copyWith(
+                        color: AppColors.textPrimary,
+                      ),
+                      decoration: InputDecoration(
+                        hintText: 'Texto',
+                        hintStyle: AppTypography.bodySmall.copyWith(
+                          color: AppColors.textTertiary,
+                        ),
+                        filled: true,
+                        fillColor: AppColors.surfaceLight,
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 10,
+                        ),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide: BorderSide.none,
+                        ),
+                      ),
+                      onChanged: (_) => setDialogState(() {}),
+                    ),
+                  ],
                 ),
               ),
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text(
-                'Cancelar',
-                style: AppTypography.bodyMedium.copyWith(
-                  color: AppColors.textTertiary,
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(ctx),
+                  child: Text(
+                    'Cancelar',
+                    style: AppTypography.bodyMedium.copyWith(
+                      color: AppColors.textTertiary,
+                    ),
+                  ),
                 ),
-              ),
-            ),
-            TextButton(
-              onPressed: () {
-                final newText = controller.text.trim();
-                if (newText.isNotEmpty && newText != nota.contenido) {
-                  final updatedNota = nota.copyWith(contenido: newText);
-                  _noteRepo.updateNote(updatedNota);
-                  setState(() {
-                    _chatNotes[index] = updatedNota;
-                  });
-                  _saveTask();
-                }
-                Navigator.pop(context);
-              },
-              child: Text(
-                'Guardar',
-                style: AppTypography.labelLarge.copyWith(
-                  color: AppColors.primary,
+                TextButton(
+                  onPressed: () {
+                    final title = titleController.text.trim();
+                    final text = textController.text.trim();
+                    
+                    if (title.isEmpty && text.isEmpty) {
+                      Navigator.pop(ctx);
+                      return;
+                    }
+                    
+                    String content = '';
+                    if (title.isNotEmpty) {
+                      content += '[{TITLE}]$title[{/TITLE}]\n';
+                    }
+                    if (text.isNotEmpty) {
+                      content += text;
+                    }
+                    content = content.trim();
+
+                    if (selectedTag != null && selectedTag != 'Sin categoría') {
+                      content = '[{TAG:$selectedTag}]\n$content';
+                    }
+                    
+                    if (content != nota.contenido) {
+                      final updatedNota = nota.copyWith(contenido: content);
+                      _noteRepo.updateNote(updatedNota);
+                      setState(() {
+                        _chatNotes[index] = updatedNota;
+                      });
+                      _saveTask();
+                    }
+                    Navigator.pop(ctx);
+                  },
+                  child: Text(
+                    'Guardar',
+                    style: AppTypography.labelLarge.copyWith(
+                      color: AppColors.primary,
+                    ),
+                  ),
                 ),
-              ),
-            ),
-          ],
+              ],
+            );
+          },
         );
       },
     );
@@ -642,100 +970,88 @@ class _TaskDetailsDialogState extends State<TaskDetailsDialog>
 
   @override
   Widget build(BuildContext context) {
-    return Dialog(
-      backgroundColor: Colors.transparent,
-      insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 32),
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 520, maxHeight: 700),
-        child: GlassCard(
-          padding: EdgeInsets.zero,
-          child: Column(
-            children: [
-              // ── Encabezado ──
-              _buildHeader(),
-
-              // ── Contenido de Pestaña ──
-              Expanded(
-                child: AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 250),
-                  child: _buildTabContent(),
-                ),
-              ),
-
-              // ── Navegación Inferior ──
-              _buildBottomNav(),
-            ],
-          ),
-        ),
+    final categoryProvider = context.watch<CategoryProvider>();
+    final category = categoryProvider.categories.firstWhere(
+      (c) => c.id == _currentTask.categoryId || c.name == _currentTask.category,
+      orElse: () => CategoryModel(
+        id: '',
+        name: 'Sin categoría',
+        colorValue: _currentTask.priorityColorValue, // fallback to priority color or orange
       ),
     );
-  }
+    final catColor = _currentTask.category != null
+        ? Color(category.colorValue)
+        : const Color(0xFFF59E0B);
 
-  // ── ENCABEZADO ──────────────────────────────────────────────────────────
-
-  Widget _buildHeader() {
-    return Container(
-      padding: const EdgeInsets.fromLTRB(20, 16, 12, 12),
-      decoration: const BoxDecoration(
-        border: Border(
-          bottom: BorderSide(color: AppColors.cardBorder, width: 1),
-        ),
-      ),
-      child: Row(
+    return Scaffold(
+      backgroundColor: AppColors.background,
+      body: Column(
         children: [
-          // Icono de actividad
+          // ── Header con color ──
           Container(
-            width: 36,
-            height: 36,
+            padding: EdgeInsets.only(
+              top: MediaQuery.of(context).padding.top + 12,
+              left: 16,
+              right: 16,
+              bottom: 20,
+            ),
             decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                colors: [AppColors.primary, AppColors.primaryDark],
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [catColor, catColor.withValues(alpha: 0.7)],
               ),
-              borderRadius: BorderRadius.circular(10),
             ),
-            child: const Icon(
-              Icons.auto_stories_rounded,
-              color: Colors.white,
-              size: 18,
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            child: Row(
               children: [
-                Text(
-                  _currentTask.title,
-                  style: AppTypography.labelLarge.copyWith(fontSize: 15),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
+                GestureDetector(
+                  onTap: () {
+                    _saveTask();
+                    Navigator.pop(context);
+                  },
+                  child: Container(
+                    width: 36,
+                    height: 36,
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.2),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: const Icon(Icons.arrow_back_ios_new_rounded,
+                        color: Colors.white, size: 16),
+                  ),
                 ),
-                const SizedBox(height: 2),
-                Text(
-                  _currentTask.category ?? 'Sin categoría',
-                  style: AppTypography.bodySmall.copyWith(
-                    color: AppColors.textTertiary,
-                    fontSize: 11,
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Text(
+                    _currentTask.title,
+                    style: AppTypography.h3.copyWith(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w800,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
               ],
             ),
           ),
-          IconButton(
-            icon: const Icon(
-              Icons.close_rounded,
-              color: AppColors.textSecondary,
-              size: 20,
+
+          // ── Contenido de Pestaña ──
+          Expanded(
+            child: AnimatedSwitcher(
+              duration: const Duration(milliseconds: 250),
+              child: _buildTabContent(),
             ),
-            onPressed: () {
-              _saveTask();
-              Navigator.pop(context);
-            },
           ),
+
+          // ── Navegación Inferior ──
+          _buildBottomNav(),
         ],
       ),
     );
   }
+
+
 
   // ── CONTENIDO DE PESTAÑA ────────────────────────────────────────────────
 
@@ -955,69 +1271,124 @@ class _TaskDetailsDialogState extends State<TaskDetailsDialog>
   // ── PESTAÑA NOTAS ───────────────────────────────────────────────────────
 
   Widget _buildChatTab() {
-    return Padding(
+    return Stack(
       key: const ValueKey('chat'),
-      padding: const EdgeInsets.all(0),
-      child: Column(
-        children: [
-          // Área de mensajes
-          Expanded(
-            child:
-                _chatNotes.isEmpty
-                    ? Center(
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            Icons.chat_bubble_outline_rounded,
-                            color: AppColors.textTertiary.withAlpha(100),
-                            size: 48,
-                          ),
-                          const SizedBox(height: 12),
-                          Text(
-                            'Escribe notas, apuntes o detalles\nsobre esta actividad.',
-                            textAlign: TextAlign.center,
-                            style: AppTypography.bodyMedium.copyWith(
-                              color: AppColors.textTertiary,
-                            ),
-                          ),
-                        ],
-                      ),
-                    )
-                    : ListView.builder(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 12,
-                      ),
-                      itemCount: _chatNotes.length,
-                      itemBuilder:
-                          (context, index) => _buildChatBubble(
-                            _chatNotes[index].contenido,
-                            index,
-                          ),
+      children: [
+        Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Conteo de notas
+              Row(
+                children: [
+                  Icon(
+                    Icons.chat_bubble_outline_rounded,
+                    color: AppColors.textTertiary,
+                    size: 16,
+                  ),
+                  const SizedBox(width: 6),
+                  Text(
+                    '${_chatNotes.length} nota${_chatNotes.length != 1 ? 's' : ''}',
+                    style: AppTypography.bodySmall.copyWith(
+                      color: AppColors.textTertiary,
                     ),
-          ),
-
-          // Aviso legal
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-            child: Text(
-              'Las notas se guardan automáticamente.',
-              style: AppTypography.bodySmall.copyWith(
-                color: AppColors.textTertiary,
-                fontSize: 10,
+                  ),
+                ],
               ),
+              const SizedBox(height: 12),
+
+              // Lista de notas
+              Expanded(
+                child:
+                    _chatNotes.isEmpty
+                        ? Center(
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.chat_bubble_outline_rounded,
+                                color: AppColors.textTertiary.withAlpha(100),
+                                size: 48,
+                              ),
+                              const SizedBox(height: 12),
+                              Text(
+                                'Escribe notas, apuntes o detalles\nsobre esta actividad.',
+                                textAlign: TextAlign.center,
+                                style: AppTypography.bodyMedium.copyWith(
+                                  color: AppColors.textTertiary,
+                                ),
+                              ),
+                            ],
+                          ),
+                        )
+                        : ListView.builder(
+                          padding: EdgeInsets.zero,
+                          itemCount: _chatNotes.length,
+                          itemBuilder:
+                              (context, index) => _buildChatBubble(
+                                _chatNotes[index].contenido,
+                                index,
+                              ),
+                        ),
+              ),
+            ],
+          ),
+        ),
+        // FAB para agregar notas
+        Positioned(
+          right: 20,
+          bottom: 20,
+          child: GestureDetector(
+            onTap: _showAddNoteDialog,
+            child: Container(
+              width: 56,
+              height: 56,
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [AppColors.primary, AppColors.primaryDark],
+                ),
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(
+                    color: AppColors.primary.withValues(alpha: 0.4),
+                    blurRadius: 12,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: const Icon(Icons.add, color: Colors.white, size: 28),
             ),
           ),
-
-          // Área de entrada
-          _buildChatInput(),
-        ],
-      ),
+        ),
+      ],
     );
   }
 
-  Widget _buildChatBubble(String text, int index) {
+  Widget _buildChatBubble(String originalText, int index) {
+    String displayContent = originalText;
+    String? badgeTag;
+
+    if (displayContent.startsWith('[{TAG:')) {
+      final endIdx = displayContent.indexOf('}]\n');
+      if (endIdx != -1) {
+        badgeTag = displayContent.substring(6, endIdx);
+        displayContent = displayContent.substring(endIdx + 3);
+      }
+    }
+
+    String titleText = '';
+    String bodyText = displayContent;
+    
+    if (displayContent.startsWith('[{TITLE}]')) {
+      final titleEndIdx = displayContent.indexOf('[{/TITLE}]');
+      if (titleEndIdx != -1) {
+        titleText = displayContent.substring(9, titleEndIdx);
+        final remaining = displayContent.substring(titleEndIdx + 10);
+        bodyText = remaining.startsWith('\n') ? remaining.substring(1) : remaining;
+      }
+    }
+
     return Padding(
       padding: const EdgeInsets.only(bottom: 10),
       child: Align(
@@ -1040,20 +1411,56 @@ class _TaskDetailsDialogState extends State<TaskDetailsDialog>
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                text,
-                style: AppTypography.bodyMedium.copyWith(
-                  color: AppColors.textPrimary,
-                  height: 1.4,
+              if (badgeTag != null) ...[
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      width: 8,
+                      height: 8,
+                      decoration: BoxDecoration(
+                        color: _getColorForTag(badgeTag),
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      badgeTag,
+                      style: AppTypography.bodySmall.copyWith(
+                        color: AppColors.textTertiary,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
                 ),
-              ),
+                const SizedBox(height: 8),
+              ],
+              if (titleText.isNotEmpty) ...[
+                Text(
+                  titleText,
+                  style: AppTypography.h3.copyWith(
+                    color: AppColors.textPrimary,
+                    fontSize: 16,
+                  ),
+                ),
+                if (bodyText.isNotEmpty) const SizedBox(height: 6),
+              ],
+              if (bodyText.isNotEmpty)
+                Text(
+                  bodyText,
+                  style: AppTypography.bodyMedium.copyWith(
+                    color: AppColors.textPrimary,
+                    height: 1.4,
+                  ),
+                ),
               const SizedBox(height: 6),
               Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   // Botón de copiar
                   _chatActionIcon(Icons.copy_rounded, () async {
-                    await Clipboard.setData(ClipboardData(text: text));
+                    await Clipboard.setData(ClipboardData(text: displayContent));
                     if (mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(
@@ -1135,64 +1542,7 @@ class _TaskDetailsDialogState extends State<TaskDetailsDialog>
     );
   }
 
-  Widget _buildChatInput() {
-    return Container(
-      padding: const EdgeInsets.fromLTRB(12, 8, 8, 8),
-      decoration: const BoxDecoration(
-        border: Border(top: BorderSide(color: AppColors.cardBorder, width: 1)),
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: TextField(
-              controller: _chatInputController,
-              style: AppTypography.bodyMedium.copyWith(
-                color: AppColors.textPrimary,
-              ),
-              maxLines: 3,
-              minLines: 1,
-              decoration: InputDecoration(
-                hintText: 'Escribe una nota...',
-                hintStyle: AppTypography.bodyMedium.copyWith(
-                  color: AppColors.textTertiary,
-                ),
-                filled: true,
-                fillColor: AppColors.surfaceLight,
-                contentPadding: const EdgeInsets.symmetric(
-                  horizontal: 14,
-                  vertical: 10,
-                ),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(20),
-                  borderSide: BorderSide.none,
-                ),
-              ),
-              onSubmitted: (_) => _sendChatMessage(),
-            ),
-          ),
-          const SizedBox(width: 8),
-          GestureDetector(
-            onTap: _sendChatMessage,
-            child: Container(
-              width: 36,
-              height: 36,
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [AppColors.primary, AppColors.primaryDark],
-                ),
-                borderRadius: BorderRadius.circular(18),
-              ),
-              child: const Icon(
-                Icons.send_rounded,
-                color: Colors.white,
-                size: 16,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+
 
   // ── PESTAÑA TARJETAS ────────────────────────────────────────────────────
 
@@ -1459,14 +1809,15 @@ class _TaskDetailsDialogState extends State<TaskDetailsDialog>
 
   Widget _buildBottomNav() {
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+      padding: EdgeInsets.only(
+        top: 8,
+        bottom: MediaQuery.of(context).padding.bottom + 8,
+        left: 16,
+        right: 16,
+      ),
       decoration: const BoxDecoration(
         color: AppColors.surface,
         border: Border(top: BorderSide(color: AppColors.cardBorder, width: 1)),
-        borderRadius: BorderRadius.only(
-          bottomLeft: Radius.circular(16),
-          bottomRight: Radius.circular(16),
-        ),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -1518,6 +1869,24 @@ class _TaskDetailsDialogState extends State<TaskDetailsDialog>
         ),
       ),
     );
+  }
+
+  Color _getColorForTag(String label) {
+    switch (label) {
+      case 'Duda':
+        return Colors.blueAccent;
+      case 'Concepto':
+        return Colors.amberAccent;
+      case 'Viene en el examen':
+        return Colors.redAccent;
+      case 'Resumen':
+        return Colors.greenAccent;
+      case 'Pregunta':
+        return Colors.orangeAccent;
+      case 'Sin categoría':
+      default:
+        return Colors.grey;
+    }
   }
 }
 

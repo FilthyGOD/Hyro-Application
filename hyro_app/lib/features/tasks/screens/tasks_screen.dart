@@ -1494,9 +1494,11 @@ class _TaskTile extends StatelessWidget {
             Expanded(
               child: GestureDetector(
                 onTap: () {
-                  showDialog(
-                    context: context,
-                    builder: (_) => TaskDetailsDialog(task: task),
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => TaskDetailsDialog(task: task),
+                    ),
                   );
                 },
                 behavior: HitTestBehavior.opaque,

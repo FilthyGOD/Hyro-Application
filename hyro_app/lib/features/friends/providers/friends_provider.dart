@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../models/friends_models.dart';
+import '../models/shared_task_model.dart';
 import '../services/friends_service.dart';
 
 /// Estado reactivo para el sistema de amigos.
@@ -10,6 +11,7 @@ class FriendsProvider extends ChangeNotifier {
   // ── Estado ──
   List<RankingEntry> ranking = [];
   List<FriendRequest> pendingRequests = [];
+  List<SharedTaskModel> pendingSharedTasks = [];
   SearchResult? searchResult;
 
   bool isLoading = false;
@@ -32,10 +34,12 @@ class FriendsProvider extends ChangeNotifier {
       final results = await Future.wait([
         _service.getFriendsRanking(userId),
         _service.getPendingRequests(userId),
+        _service.getPendingSharedTasks(userId),
       ]);
 
       final rankingData = results[0];
       final requestsData = results[1];
+      final sharedTasksData = results[2];
 
       ranking = rankingData
           .map((json) => RankingEntry.fromJson(json, currentUserId: userId))
@@ -44,12 +48,56 @@ class FriendsProvider extends ChangeNotifier {
       pendingRequests = requestsData
           .map((json) => FriendRequest.fromJson(json))
           .toList();
+
+      pendingSharedTasks = sharedTasksData
+          .map((json) => SharedTaskModel.fromJson(json))
+          .toList();
     } catch (e) {
       error = 'Error cargando datos de amigos: $e';
       debugPrint(error);
     } finally {
       isLoading = false;
       Future.microtask(() => notifyListeners());
+    }
+  }
+
+  Future<bool> shareTask(String remitenteId, String destinatarioId, String tareaTitulo, Map<String, dynamic> tareaDatos) async {
+    try {
+      await _service.shareTask(
+        remitenteId: remitenteId, 
+        destinatarioId: destinatarioId, 
+        tareaTitulo: tareaTitulo, 
+        tareaDatos: tareaDatos,
+      );
+      actionMessage = 'Tarea enviada con éxito';
+      notifyListeners();
+      return true;
+    } catch (e) {
+      actionMessage = e.toString().replaceAll('Exception: ', '');
+      notifyListeners();
+      return false;
+    }
+  }
+
+  Future<void> acceptSharedTask(String id, String userId) async {
+    try {
+      await _service.acceptSharedTask(id);
+      actionMessage = 'Tarea recibida';
+      await loadFriendsData(userId);
+    } catch (e) {
+      actionMessage = 'Error al aceptar: $e';
+      notifyListeners();
+    }
+  }
+
+  Future<void> rejectSharedTask(String id, String userId) async {
+    try {
+      await _service.rejectSharedTask(id);
+      actionMessage = 'Tarea rechazada';
+      await loadFriendsData(userId);
+    } catch (e) {
+      actionMessage = 'Error al rechazar: $e';
+      notifyListeners();
     }
   }
 

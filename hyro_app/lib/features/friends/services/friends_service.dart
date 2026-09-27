@@ -543,4 +543,58 @@ class FriendsService {
   Future<void> rejectGift(String giftId) async {
     await _supabase.rpc('rechazar_regalo', params: {'p_regalo_id': giftId});
   }
+
+  // ─── Tareas Compartidas ─────────────────────────────────────────
+
+  Future<void> shareTask({
+    required String remitenteId,
+    required String destinatarioId,
+    required String tareaTitulo,
+    required Map<String, dynamic> tareaDatos,
+  }) async {
+    final countResponse = await _supabase
+        .from('tareas_compartidas')
+        .select('id')
+        .eq('remitente_id', remitenteId)
+        .eq('destinatario_id', destinatarioId)
+        .eq('estado', 'pendiente')
+        .count(CountOption.exact);
+        
+    final count = countResponse.count;
+    if (count != null && count >= 2) {
+      throw Exception('Solo puedes tener 2 tareas compartidas pendientes con este amigo.');
+    }
+
+    await _supabase.from('tareas_compartidas').insert({
+      'remitente_id': remitenteId,
+      'destinatario_id': destinatarioId,
+      'tarea_titulo': tareaTitulo,
+      'tarea_datos': tareaDatos,
+      'estado': 'pendiente',
+    });
+  }
+
+  Future<List<Map<String, dynamic>>> getPendingSharedTasks(String userId) async {
+    try {
+      final response = await _supabase
+          .from('tareas_compartidas')
+          .select('id, remitente_id, tarea_titulo, tarea_datos, enviado_en, perfiles!tareas_compartidas_remitente_id_fkey(nombre_usuario)')
+          .eq('destinatario_id', userId)
+          .eq('estado', 'pendiente')
+          .order('enviado_en', ascending: false);
+          
+      return (response as List<dynamic>).cast<Map<String, dynamic>>();
+    } catch (e) {
+      debugPrint('Error fetch shared tasks: $e');
+      return [];
+    }
+  }
+
+  Future<void> acceptSharedTask(String id) async {
+    await _supabase.from('tareas_compartidas').update({'estado': 'aceptada'}).eq('id', id);
+  }
+
+  Future<void> rejectSharedTask(String id) async {
+    await _supabase.from('tareas_compartidas').update({'estado': 'rechazada'}).eq('id', id);
+  }
 }

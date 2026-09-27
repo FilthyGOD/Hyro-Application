@@ -20,6 +20,15 @@ import '../../versus/models/versus_models.dart';
 import '../../versus/widgets/task_selector_sheet.dart';
 import '../../../data/models/task_model.dart';
 import '../../tasks/tasks_provider.dart';
+import '../models/shared_task_model.dart';
+import '../../categories/category_provider.dart';
+import '../../../data/repositories/note_repository.dart';
+import '../../../data/models/tarea_nota_model.dart';
+import '../../../data/models/category_model.dart';
+import 'package:uuid/uuid.dart';
+import '../../../data/local/note_local_ds.dart';
+import '../../../data/remote/note_remote_ds.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 /// Pantalla de Amigos — Ranking semanal, solicitudes pendientes y búsqueda por código.
 class FriendsScreen extends StatefulWidget {
@@ -129,6 +138,22 @@ class _FriendsScreenState extends State<FriendsScreen> {
                   // ── Mensaje de acción temporal ──
                   if (friends.actionMessage != null)
                     _buildActionMessage(friends),
+
+                  // ── Tareas Compartidas Pendientes ──
+                  if (friends.pendingSharedTasks.isNotEmpty) ...[
+                    _buildSectionHeader(
+                      'Tareas Recibidas',
+                      '${friends.pendingSharedTasks.length}',
+                    ),
+                    const SizedBox(height: 12),
+                    ...friends.pendingSharedTasks.map(
+                      (task) => Padding(
+                        padding: const EdgeInsets.only(bottom: 8),
+                        child: _buildSharedTaskBanner(context, task, friends, userId!),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                  ],
 
                   // ── Solicitudes Pendientes ──
                   if (friends.pendingRequests.isNotEmpty) ...[
@@ -1535,6 +1560,216 @@ class _FriendsScreenState extends State<FriendsScreen> {
                         );
                       }
                     }
+                  }
+                },
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ─── Tareas Compartidas Banner ──────────────────────────────────────────
+
+  Widget _buildSharedTaskBanner(
+    BuildContext context, 
+    SharedTaskModel sharedTask, 
+    FriendsProvider friends, 
+    String currentUserId
+  ) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: AppColors.primary.withValues(alpha: 0.6),
+          width: 1.5,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.primary.withValues(alpha: 0.15),
+            blurRadius: 8,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          // Icono
+          Container(
+            width: 48,
+            height: 48,
+            decoration: BoxDecoration(
+              color: AppColors.primary.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: const Icon(Icons.description_rounded, color: AppColors.primary),
+          ),
+          const SizedBox(width: 12),
+
+          // Información de la tarea
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '¡${sharedTask.remitenteNombre} te quiere mandar unas notas!',
+                  style: AppTypography.bodyMedium.copyWith(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  sharedTask.tareaTitulo,
+                  style: AppTypography.bodySmall.copyWith(
+                    color: AppColors.textSecondary,
+                    fontSize: 11,
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          // Botones de acción
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Rechazar
+              _buildActionButton(
+                icon: Icons.close_rounded,
+                color: const Color(0xFFEF4444),
+                bgColor: const Color(0xFFEF4444).withValues(alpha: 0.15),
+                onTap: () async {
+                  final confirm = await showDialog<bool>(
+                    context: context,
+                    builder: (ctx) => AlertDialog(
+                      backgroundColor: AppColors.surface,
+                      title: const Text('¿Rechazar tarea?', style: TextStyle(color: Colors.white)),
+                      content: const Text('Se eliminará esta tarea de tus pendientes.', style: TextStyle(color: AppColors.textSecondary)),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.pop(ctx, false),
+                          child: const Text('Cancelar', style: TextStyle(color: AppColors.textSecondary)),
+                        ),
+                        TextButton(
+                          onPressed: () => Navigator.pop(ctx, true),
+                          child: const Text('Rechazar', style: TextStyle(color: Color(0xFFEF4444))),
+                        ),
+                      ],
+                    ),
+                  );
+
+                  if (confirm == true) {
+                    await friends.rejectSharedTask(sharedTask.id, currentUserId);
+                  }
+                },
+              ),
+              const SizedBox(width: 8),
+              // Aceptar
+              _buildActionButton(
+                icon: Icons.check_rounded,
+                color: Colors.black,
+                bgColor: AppColors.primary,
+                onTap: () async {
+                  final categories = context.read<CategoryProvider>().categories;
+                  if (categories.isEmpty) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Crea una categoría primero.')),
+                    );
+                    return;
+                  }
+
+                  // Mostrar modal para seleccionar categoría
+                  final selectedCategory = await showModalBottomSheet<CategoryModel>(
+                    context: context,
+                    backgroundColor: AppColors.surfaceLight,
+                    shape: const RoundedRectangleBorder(
+                      borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+                    ),
+                    builder: (ctx) {
+                      return Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 20),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              '¿En qué materia quieres guardar esto?',
+                              style: AppTypography.h3.copyWith(color: Colors.white),
+                            ),
+                            const SizedBox(height: 16),
+                            Expanded(
+                              child: ListView.builder(
+                                shrinkWrap: true,
+                                itemCount: categories.length,
+                                itemBuilder: (context, index) {
+                                  final cat = categories[index];
+                                  return ListTile(
+                                    leading: CircleAvatar(
+                                      backgroundColor: Color(cat.colorValue),
+                                      radius: 12,
+                                    ),
+                                    title: Text(cat.name, style: AppTypography.bodyMedium.copyWith(color: Colors.white)),
+                                    onTap: () => Navigator.pop(ctx, cat),
+                                  );
+                                },
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                  );
+
+                  if (selectedCategory == null) return;
+
+                  final uuid = const Uuid().v4();
+                  
+                  // Crear la tarea localmente
+                  final newTask = TaskModel(
+                    id: uuid,
+                    title: sharedTask.tareaTitulo,
+                    description: sharedTask.tareaDatos['descripcion'] as String?,
+                    category: selectedCategory.name,
+                    categoryId: selectedCategory.id,
+                    notes: sharedTask.tareaDatos['notas_str'] as String?,
+                    usuarioId: currentUserId,
+                  );
+
+                  await context.read<TaskProvider>().addTask(newTask);
+
+                  // Recrear las notas
+                  final noteList = sharedTask.tareaDatos['notas_lista'] as List<dynamic>?;
+                  if (noteList != null) {
+                    final auth = context.read<AuthProvider>();
+                    final supabaseClient = Supabase.instance.client;
+                    final noteRepo = NoteRepository(
+                      local: NoteLocalDataSource(),
+                      remote: NoteRemoteDataSource(supabaseClient),
+                      isAuthenticated: () => auth.isAuthenticated,
+                      getUserId: () => auth.supabaseUserId,
+                    );
+                    
+                    for (final n in noteList) {
+                      final content = n.toString();
+                      final noteUuid = const Uuid().v4();
+                      final nuevaNota = TareaNotaModel(
+                        id: noteUuid,
+                        tareaId: uuid,
+                        usuarioId: currentUserId,
+                        contenido: content,
+                      );
+                      await noteRepo.addNote(nuevaNota);
+                    }
+                  }
+
+                  await friends.acceptSharedTask(sharedTask.id, currentUserId);
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Tarea guardada en ${selectedCategory.name}.')),
+                    );
                   }
                 },
               ),

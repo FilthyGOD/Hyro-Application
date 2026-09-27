@@ -11,7 +11,13 @@ import '../tasks_provider.dart';
 import '../../categories/category_provider.dart';
 import '../../missions/missions_provider.dart';
 import '../widgets/task_details_sheet.dart';
-
+import '../../auth/providers/auth_provider.dart';
+import '../../friends/providers/friends_provider.dart';
+import '../../../data/repositories/note_repository.dart';
+import '../../../data/local/note_local_ds.dart';
+import '../../../data/remote/note_remote_ds.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../friends/widgets/static_mascot_widget.dart';
 /// Pantalla de detalle de una categoría — muestra header con color,
 /// promedio de progreso, y lista de tareas.
 class CategoryDetailScreen extends StatefulWidget {
@@ -1035,6 +1041,109 @@ class _DetailTaskTile extends StatelessWidget {
     );
   }
 
+  void _showShareTaskDialog(BuildContext context) {
+    final friendsProvider = context.read<FriendsProvider>();
+    final authProvider = context.read<AuthProvider>();
+    final currentUserId = authProvider.supabaseUserId;
+
+    if (currentUserId == null) return;
+
+    if (friendsProvider.ranking.isEmpty) {
+      friendsProvider.loadFriendsData(currentUserId);
+    }
+
+    showDialog(
+      context: context,
+      builder: (ctx) {
+        return AlertDialog(
+          backgroundColor: AppColors.surface,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          title: Text('Compartir Tarea', style: AppTypography.h3.copyWith(color: Colors.white)),
+          content: SizedBox(
+            width: double.maxFinite,
+            height: 300,
+            child: Consumer<FriendsProvider>(
+              builder: (context, friends, _) {
+                if (friends.isLoading) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+
+                final friendList = friends.ranking.where((f) => !f.isCurrentUser).toList();
+                
+                if (friendList.isEmpty) {
+                  return Center(
+                    child: Text('No tienes amigos para compartir tareas.', style: AppTypography.bodyMedium.copyWith(color: AppColors.textSecondary)),
+                  );
+                }
+
+                return ListView.builder(
+                  itemCount: friendList.length,
+                  itemBuilder: (context, index) {
+                    final friend = friendList[index];
+                    return ListTile(
+                      leading: SizedBox(
+                        width: 40,
+                        height: 40,
+                        child: StaticMascotWidget(
+                          sombrero: friend.sombrero,
+                          cosmetico: friend.cosmetico,
+                          traje: friend.traje,
+                        ),
+                      ),
+                      title: Text(friend.nombreUsuario, style: AppTypography.bodyMedium.copyWith(color: Colors.white)),
+                      trailing: IconButton(
+                        icon: const Icon(Icons.send_rounded, color: AppColors.primary),
+                        onPressed: () async {
+                          // Serializar notas
+                          final auth = context.read<AuthProvider>();
+                          final supabaseClient = Supabase.instance.client;
+                          final noteRepo = NoteRepository(
+                            local: NoteLocalDataSource(),
+                            remote: NoteRemoteDataSource(supabaseClient),
+                            isAuthenticated: () => auth.isAuthenticated,
+                            getUserId: () => auth.supabaseUserId,
+                          );
+                          final notasLocales = noteRepo.getNotesForTask(task.id);
+                          
+                          final tareaDatos = {
+                            'titulo': task.title,
+                            'descripcion': task.description,
+                            'notas_str': task.notes, // Concatenated string
+                            'notas_lista': notasLocales.map((n) => n.contenido).toList(),
+                          };
+
+                          final success = await friends.shareTask(currentUserId, friend.usuarioId, task.title, tareaDatos);
+                          if (success && ctx.mounted) {
+                            Navigator.pop(ctx);
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('Tarea compartida con éxito.')),
+                            );
+                          } else if (ctx.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text(friends.actionMessage ?? 'Error al compartir')),
+                            );
+                          }
+                        },
+                      ),
+                    );
+                  },
+                );
+              },
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text('Cerrar', style: TextStyle(color: AppColors.textSecondary)),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final priorityColor = Color(task.priorityColorValue);
@@ -1141,6 +1250,8 @@ class _DetailTaskTile extends StatelessWidget {
             onSelected: (value) {
               if (value == 'edit') {
                 _showEditTaskDialog(context);
+              } else if (value == 'share') {
+                _showShareTaskDialog(context);
               } else if (value == 'delete') {
                 _showDeleteTaskDialog(context);
               }
@@ -1158,6 +1269,23 @@ class _DetailTaskTile extends StatelessWidget {
                     const SizedBox(width: 10),
                     Text(
                       'Editar actividad',
+                      style: AppTypography.bodyMedium.copyWith(color: Colors.white),
+                    ),
+                  ],
+                ),
+              ),
+              PopupMenuItem<String>(
+                value: 'share',
+                child: Row(
+                  children: [
+                    const Icon(
+                      Icons.share_rounded,
+                      color: Colors.white,
+                      size: 18,
+                    ),
+                    const SizedBox(width: 10),
+                    Text(
+                      'Compartir tarea',
                       style: AppTypography.bodyMedium.copyWith(color: Colors.white),
                     ),
                   ],

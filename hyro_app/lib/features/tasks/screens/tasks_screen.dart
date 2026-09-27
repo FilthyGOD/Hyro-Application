@@ -879,7 +879,6 @@ class _TasksScreenState extends State<TasksScreen> with SingleTickerProviderStat
     String? categoryId,
   }) {
     final titleController = TextEditingController();
-    final descriptionController = TextEditingController();
     String selectedPriority = 'MEDIA';
     int pomodorosTarget = 1;
     DateTime? selectedDueDate;
@@ -907,14 +906,6 @@ class _TasksScreenState extends State<TasksScreen> with SingleTickerProviderStat
                         controller: titleController,
                         decoration: const InputDecoration(
                           hintText: 'Título de la tarea',
-                        ),
-                        style: AppTypography.bodyLarge,
-                      ),
-                      const SizedBox(height: 12),
-                      TextField(
-                        controller: descriptionController,
-                        decoration: const InputDecoration(
-                          hintText: 'Descripción (opcional)',
                         ),
                         style: AppTypography.bodyLarge,
                       ),
@@ -1043,7 +1034,7 @@ class _TasksScreenState extends State<TasksScreen> with SingleTickerProviderStat
                     final task = TaskModel(
                       id: const Uuid().v4(),
                       title: title,
-                      description: descriptionController.text.trim(),
+                      description: '',
                       category: resolvedCatName,
                       categoryId: resolvedCatId ?? matchedCat?.id,
                       priority: selectedPriority,

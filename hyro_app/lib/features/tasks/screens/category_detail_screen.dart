@@ -21,6 +21,11 @@ class CategoryDetailScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final categoryProvider = context.watch<CategoryProvider>();
+    final category = categoryProvider.categories.firstWhere(
+      (c) => c.id == this.category.id,
+      orElse: () => this.category,
+    );
     final catColor = Color(category.colorValue);
 
     return Scaffold(
@@ -45,35 +50,6 @@ class CategoryDetailScreen extends StatelessWidget {
           final tiempoStr = hours > 0
               ? '${hours}h ${mins}min estudiado'
               : '${mins}min estudiado';
-
-          // Prioridad predominante
-          final pendingTasks = tasks.where((t) => !t.isCompleted).toList();
-          String dominantPriority = 'MEDIA';
-          if (pendingTasks.isNotEmpty) {
-            final highCount = pendingTasks
-                .where((t) =>
-                    t.priority == 'HIGH' || t.priority == 'ALTA PRIORIDAD')
-                .length;
-            final lowCount =
-                pendingTasks.where((t) => t.priority == 'LOW' || t.priority == 'BAJA').length;
-            if (highCount >= lowCount && highCount > 0) {
-              dominantPriority = 'ALTA';
-            } else if (lowCount > highCount) {
-              dominantPriority = 'BAJA';
-            }
-          }
-
-          Color priorityColor;
-          switch (dominantPriority) {
-            case 'ALTA':
-              priorityColor = const Color(0xFFEF4444);
-              break;
-            case 'BAJA':
-              priorityColor = const Color(0xFF22C55E);
-              break;
-            default:
-              priorityColor = const Color(0xFFF59E0B);
-          }
 
           return CustomScrollView(
             slivers: [
@@ -127,11 +103,30 @@ class CategoryDetailScreen extends StatelessWidget {
                               side: const BorderSide(color: AppColors.cardBorder),
                             ),
                             onSelected: (value) {
-                              if (value == 'delete') {
+                              if (value == 'edit') {
+                                _showEditCategoryDialog(context, category);
+                              } else if (value == 'delete') {
                                 _showDeleteCategoryDialog(context);
                               }
                             },
                             itemBuilder: (context) => [
+                              PopupMenuItem<String>(
+                                value: 'edit',
+                                child: Row(
+                                  children: [
+                                    const Icon(
+                                      Icons.edit_outlined,
+                                      color: Colors.white,
+                                      size: 18,
+                                    ),
+                                    const SizedBox(width: 10),
+                                    Text(
+                                      'Editar categoría',
+                                      style: AppTypography.bodyMedium.copyWith(color: Colors.white),
+                                    ),
+                                  ],
+                                ),
+                              ),
                               PopupMenuItem<String>(
                                 value: 'delete',
                                 child: Row(
@@ -205,34 +200,13 @@ class CategoryDetailScreen extends StatelessWidget {
                                   overflow: TextOverflow.ellipsis,
                                 ),
                                 const SizedBox(height: 4),
-                                // Priority badge + time
-                                Row(
-                                  children: [
-                                    Container(
-                                      padding: const EdgeInsets.symmetric(
-                                          horizontal: 10, vertical: 3),
-                                      decoration: BoxDecoration(
-                                        color: priorityColor.withValues(alpha: 0.3),
-                                        borderRadius: BorderRadius.circular(8),
-                                      ),
-                                      child: Text(
-                                        dominantPriority,
-                                        style: AppTypography.labelSmall.copyWith(
-                                          color: priorityColor,
-                                          fontWeight: FontWeight.w800,
-                                          fontSize: 11,
-                                        ),
-                                      ),
-                                    ),
-                                    const SizedBox(width: 12),
-                                    Text(
-                                      tiempoStr,
-                                      style: AppTypography.bodySmall.copyWith(
-                                        color: Colors.white.withValues(alpha: 0.8),
-                                        fontSize: 12,
-                                      ),
-                                    ),
-                                  ],
+                                // Time studied
+                                Text(
+                                  tiempoStr,
+                                  style: AppTypography.bodySmall.copyWith(
+                                    color: Colors.white.withValues(alpha: 0.8),
+                                    fontSize: 12,
+                                  ),
                                 ),
                               ],
                             ),
@@ -396,9 +370,193 @@ class CategoryDetailScreen extends StatelessWidget {
     );
   }
 
+  void _showEditCategoryDialog(BuildContext context, CategoryModel currentCategory) {
+    final titleController = TextEditingController(text: currentCategory.name);
+    int selectedColor = currentCategory.colorValue;
+    int? selectedIcon = currentCategory.iconCodePoint;
+    bool showAllColors = false;
+    bool showAllIcons = false;
+
+    final colors = [
+      0xFF22C55E, 0xFF3B82F6, 0xFFEF4444, 0xFFF59E0B, 0xFF8B5CF6, 0xFFEC4899, 0xFF06B6D4,
+      0xFF14B8A6, 0xFF10B981, 0xFF84CC16, 0xFFEAB308, 0xFFF97316, 0xFF6366F1, 0xFFD946EF,
+      0xFFF43F5E, 0xFF64748B, 0xFF78716C, 0xFFA855F7, 0xFF0EA5E9, 0xFF2DD4BF, 0xFFFBBF24,
+      0xFFFB923C, 0xFF9333EA,
+    ];
+
+    final icons = [
+      Icons.school.codePoint, Icons.person.codePoint, Icons.work.codePoint,
+      Icons.menu_book.codePoint, Icons.computer.codePoint, Icons.sports_esports.codePoint,
+      Icons.music_note.codePoint, Icons.fitness_center.codePoint, Icons.flight.codePoint,
+      Icons.palette.codePoint, Icons.shopping_bag.codePoint, Icons.book.codePoint,
+      Icons.language.codePoint, Icons.calculate.codePoint, Icons.science.codePoint,
+      Icons.biotech.codePoint, Icons.build.codePoint, Icons.code.codePoint,
+      Icons.terminal.codePoint, Icons.brush.codePoint, Icons.camera_alt.codePoint,
+      Icons.movie.codePoint, Icons.sports_soccer.codePoint, Icons.directions_car.codePoint,
+    ];
+
+    showDialog(
+      context: context,
+      builder: (ctx) {
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            final displayColors = showAllColors ? colors : colors.take(7).toList();
+            final displayIcons = showAllIcons ? icons : icons.take(11).toList();
+            return AlertDialog(
+              backgroundColor: AppColors.surface,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              title: Text('Editar Categoría', style: AppTypography.h3),
+              content: SingleChildScrollView(
+                child: SizedBox(
+                  width: 400,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      TextField(
+                        controller: titleController,
+                        decoration: const InputDecoration(hintText: 'Nombre de la categoría'),
+                        style: AppTypography.bodyLarge,
+                      ),
+                      const SizedBox(height: 20),
+                      Text('Color', style: AppTypography.bodySmall),
+                      const SizedBox(height: 12),
+                      Wrap(
+                        spacing: 12,
+                        runSpacing: 12,
+                        children: displayColors.map((colorValue) {
+                          final isSelected = selectedColor == colorValue;
+                          return GestureDetector(
+                            onTap: () => setDialogState(() => selectedColor = colorValue),
+                            child: Container(
+                              width: 40,
+                              height: 40,
+                              decoration: BoxDecoration(
+                                color: Color(colorValue),
+                                shape: BoxShape.circle,
+                                border: isSelected
+                                    ? Border.all(color: Colors.white, width: 3)
+                                    : null,
+                                boxShadow: isSelected
+                                    ? [
+                                        BoxShadow(
+                                          color: Color(colorValue).withValues(alpha: 0.5),
+                                          blurRadius: 8,
+                                          spreadRadius: 2,
+                                        )
+                                      ]
+                                    : null,
+                              ),
+                              child: isSelected
+                                  ? const Icon(Icons.check, color: Colors.white, size: 20)
+                                  : null,
+                            ),
+                          );
+                        }).toList(),
+                      ),
+                      if (colors.length > 7)
+                        TextButton(
+                          onPressed: () => setDialogState(() => showAllColors = !showAllColors),
+                          child: Text(
+                            showAllColors ? 'Mostrar menos' : 'Mostrar más',
+                            style: AppTypography.bodySmall.copyWith(color: AppColors.primary),
+                          ),
+                        ),
+                      const SizedBox(height: 20),
+                      Text('Ícono (Opcional)', style: AppTypography.bodySmall),
+                      const SizedBox(height: 12),
+                      Wrap(
+                        spacing: 12,
+                        runSpacing: 12,
+                        children: displayIcons.map((iconCode) {
+                          final isSelected = selectedIcon == iconCode;
+                          return GestureDetector(
+                            onTap: () {
+                              setDialogState(() {
+                                selectedIcon = isSelected ? null : iconCode;
+                              });
+                            },
+                            child: Container(
+                              width: 48,
+                              height: 48,
+                              decoration: BoxDecoration(
+                                color: isSelected
+                                    ? AppColors.primary.withValues(alpha: 0.2)
+                                    : AppColors.surfaceLight,
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(
+                                  color: isSelected
+                                      ? AppColors.primary
+                                      : AppColors.cardBorder,
+                                ),
+                              ),
+                              child: Icon(
+                                IconData(iconCode, fontFamily: 'MaterialIcons'),
+                                color: isSelected ? AppColors.primary : Colors.white70,
+                                size: 24,
+                              ),
+                            ),
+                          );
+                        }).toList(),
+                      ),
+                      if (icons.length > 11)
+                        TextButton(
+                          onPressed: () => setDialogState(() => showAllIcons = !showAllIcons),
+                          child: Text(
+                            showAllIcons ? 'Mostrar menos' : 'Mostrar más',
+                            style: AppTypography.bodySmall.copyWith(color: AppColors.primary),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(ctx),
+                  child: const Text('Cancelar'),
+                ),
+                GestureDetector(
+                  onTap: () {
+                    final title = titleController.text.trim();
+                    if (title.isEmpty) return;
+                    
+                    final updatedCategory = CategoryModel(
+                      id: currentCategory.id,
+                      name: title,
+                      colorValue: selectedColor,
+                      iconCodePoint: selectedIcon,
+                    );
+                    
+                    final categoryProvider = context.read<CategoryProvider>();
+                    categoryProvider.updateCategory(updatedCategory);
+                    
+                    Navigator.pop(ctx);
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        colors: [Color.fromARGB(255, 0, 149, 255), Color.fromARGB(255, 32, 43, 200)],
+                      ),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const Text(
+                      'Guardar',
+                      style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+                    ),
+                  ),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
   void _showAddTaskDialog(BuildContext context) {
     final titleController = TextEditingController();
-    final descriptionController = TextEditingController();
     String selectedPriority = 'MEDIA';
     DateTime? selectedDueDate;
 
@@ -424,14 +582,6 @@ class CategoryDetailScreen extends StatelessWidget {
                         controller: titleController,
                         decoration: const InputDecoration(
                           hintText: 'Título de la tarea',
-                        ),
-                        style: AppTypography.bodyLarge,
-                      ),
-                      const SizedBox(height: 12),
-                      TextField(
-                        controller: descriptionController,
-                        decoration: const InputDecoration(
-                          hintText: 'Descripción (opcional)',
                         ),
                         style: AppTypography.bodyLarge,
                       ),
@@ -519,7 +669,7 @@ class CategoryDetailScreen extends StatelessWidget {
                     final task = TaskModel(
                       id: const Uuid().v4(),
                       title: title,
-                      description: descriptionController.text.trim(),
+                      description: '',
                       category: category.name,
                       categoryId: category.id,
                       priority: selectedPriority,
@@ -625,6 +775,165 @@ class _DetailTaskTile extends StatelessWidget {
   final Color catColor;
 
   const _DetailTaskTile({required this.task, required this.catColor});
+
+  void _showEditTaskDialog(BuildContext context) {
+    final titleController = TextEditingController(text: task.title);
+    
+    String selectedPriority = task.priority;
+    if (selectedPriority == 'HIGH') selectedPriority = 'ALTA PRIORIDAD';
+    else if (selectedPriority == 'MEDIUM') selectedPriority = 'MEDIA';
+    else if (selectedPriority == 'LOW') selectedPriority = 'BAJA';
+    else if (!['ALTA PRIORIDAD', 'MEDIA', 'BAJA'].contains(selectedPriority)) {
+      selectedPriority = 'MEDIA';
+    }
+
+    DateTime? selectedDueDate = task.dueDate;
+
+    showDialog(
+      context: context,
+      builder: (ctx) {
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            return AlertDialog(
+              backgroundColor: AppColors.surface,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+              title: Text('Editar Tarea', style: AppTypography.h3),
+              content: SingleChildScrollView(
+                child: SizedBox(
+                  width: 400,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      TextField(
+                        controller: titleController,
+                        decoration: const InputDecoration(
+                          hintText: 'Título de la tarea',
+                        ),
+                        style: AppTypography.bodyLarge,
+                      ),
+                      const SizedBox(height: 20),
+                      Text('Prioridad', style: AppTypography.bodySmall),
+                      const SizedBox(height: 8),
+                      DropdownButtonFormField<String>(
+                        initialValue: selectedPriority,
+                        dropdownColor: AppColors.surfaceLight,
+                        items: ['ALTA PRIORIDAD', 'MEDIA', 'BAJA'].map((p) {
+                          return DropdownMenuItem(value: p, child: Text(p));
+                        }).toList(),
+                        onChanged: (val) {
+                          if (val != null) {
+                            setDialogState(() => selectedPriority = val);
+                          }
+                        },
+                      ),
+                      const SizedBox(height: 20),
+                      Text(
+                        'Fecha de Vencimiento (Opcional)',
+                        style: AppTypography.bodySmall,
+                      ),
+                      const SizedBox(height: 8),
+                      InkWell(
+                        onTap: () async {
+                          final date = await showDatePicker(
+                            context: context,
+                            initialDate: selectedDueDate ?? DateTime.now(),
+                            firstDate: DateTime.now(),
+                            lastDate:
+                                DateTime.now().add(const Duration(days: 365)),
+                          );
+                          if (date != null) {
+                            setDialogState(() => selectedDueDate = date);
+                          }
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 12, vertical: 12),
+                          decoration: BoxDecoration(
+                            color: AppColors.surfaceLight,
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(color: AppColors.cardBorder),
+                          ),
+                          child: Text(
+                            selectedDueDate != null
+                                ? '${selectedDueDate!.day}/${selectedDueDate!.month}/${selectedDueDate!.year}'
+                                : 'Seleccionar Fecha',
+                            style: AppTypography.bodyMedium,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(ctx),
+                  child: const Text('Cancelar'),
+                ),
+                GestureDetector(
+                  onTap: () {
+                    final title = titleController.text.trim();
+                    if (title.isEmpty) return;
+
+                    int colorValue = 0xFFF59E0B;
+                    if (selectedPriority == 'ALTA PRIORIDAD') {
+                      colorValue = 0xFFEF4444;
+                    }
+                    if (selectedPriority == 'BAJA') {
+                      colorValue = 0xFF22C55E;
+                    }
+
+                    DateTime? finalDueDate;
+                    if (selectedDueDate != null) {
+                      finalDueDate = DateTime(
+                        selectedDueDate!.year,
+                        selectedDueDate!.month,
+                        selectedDueDate!.day,
+                      );
+                    }
+
+                    final updatedTask = task.copyWith(
+                      title: title,
+                      priority: selectedPriority,
+                      priorityColorValue: colorValue,
+                      dueDate: finalDueDate,
+                    );
+
+                    context.read<TaskProvider>().updateTask(updatedTask);
+                    Navigator.pop(ctx);
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 24, vertical: 12),
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        colors: [
+                          Color.fromARGB(255, 0, 149, 255),
+                          Color.fromARGB(255, 32, 43, 200),
+                        ],
+                      ),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const Text(
+                      'Guardar',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 14,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
 
   void _showDeleteTaskDialog(BuildContext context) {
     showDialog(
@@ -754,24 +1063,6 @@ class _DetailTaskTile extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 8),
-          // Pomodoro count
-          Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Icon(
-                Icons.local_fire_department,
-                size: 16,
-                color: Color(0xFFFFA600),
-              ),
-              const SizedBox(width: 3),
-              Text(
-                '${task.pomodorosCompleted}',
-                style: AppTypography.labelSmall.copyWith(
-                  color: AppColors.textSecondary,
-                ),
-              ),
-            ],
-          ),
           // Three dots menu
           PopupMenuButton<String>(
             icon: const Icon(
@@ -786,11 +1077,30 @@ class _DetailTaskTile extends StatelessWidget {
               side: const BorderSide(color: AppColors.cardBorder),
             ),
             onSelected: (value) {
-              if (value == 'delete') {
+              if (value == 'edit') {
+                _showEditTaskDialog(context);
+              } else if (value == 'delete') {
                 _showDeleteTaskDialog(context);
               }
             },
             itemBuilder: (context) => [
+              PopupMenuItem<String>(
+                value: 'edit',
+                child: Row(
+                  children: [
+                    const Icon(
+                      Icons.edit_outlined,
+                      color: Colors.white,
+                      size: 18,
+                    ),
+                    const SizedBox(width: 10),
+                    Text(
+                      'Editar actividad',
+                      style: AppTypography.bodyMedium.copyWith(color: Colors.white),
+                    ),
+                  ],
+                ),
+              ),
               PopupMenuItem<String>(
                 value: 'delete',
                 child: Row(

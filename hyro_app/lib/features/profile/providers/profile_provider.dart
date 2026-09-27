@@ -73,6 +73,12 @@ class ProfileProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Actualiza el nombre de usuario en memoria y notifica listeners.
+  void updateNombreUsuario(String nombre) {
+    nombreUsuario = nombre;
+    notifyListeners();
+  }
+
   /// Carga el perfil desde Supabase o localmente si [userId] es nulo.
   Future<void> loadProfile(String? userId) async {
     // 1. Blindaje: Envolvemos el aviso inicial en un microtask

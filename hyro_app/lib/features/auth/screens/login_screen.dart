@@ -9,6 +9,7 @@ import '../../mascot/mascot_controller.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../app.dart';
 import 'register_screen.dart';
+import '../../../core/widgets/loading_overlay.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -20,7 +21,8 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
-  bool _isLoading = false;
+  /// Solo controla el estado del boton de email/password y su spinner.
+  bool _isEmailLoading = false;
   bool _obscurePassword = true;
   Timer? _greetingTimer;
   final _random = Random();
@@ -132,7 +134,7 @@ class _LoginScreenState extends State<LoginScreen> {
       return;
     }
 
-    setState(() => _isLoading = true);
+    setState(() => _isEmailLoading = true);
 
     final auth = context.read<AuthProvider>();
 
@@ -140,19 +142,19 @@ class _LoginScreenState extends State<LoginScreen> {
       await auth.signInWithEmail(email, password);
 
       if (mounted) {
-        setState(() => _isLoading = false);
+        setState(() => _isEmailLoading = false);
         _onAuthChanged();
       }
     } on AuthException catch (e) {
       if (mounted) {
-        setState(() => _isLoading = false);
+        setState(() => _isEmailLoading = false);
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(SnackBar(content: Text('Error: ${e.message}')));
       }
     } catch (e) {
       if (mounted) {
-        setState(() => _isLoading = false);
+        setState(() => _isEmailLoading = false);
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(SnackBar(content: Text('Error al iniciar sesion: $e')));
@@ -171,33 +173,39 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(
-        0xFF101422,
-      ), // Azul marino oscuro de los diseños
-      body: SafeArea(
-        child: Stack(
-          children: [
-            const Positioned.fill(child: AnimatedBackground()),
-            LayoutBuilder(
-              builder: (context, constraints) {
-                if (constraints.maxWidth >= 850) {
-                  return _buildDesktopLayout();
-                } else {
-                  return _buildMobileLayout();
-                }
-              },
-            ),
-            if (Navigator.of(context).canPop())
-              Positioned(
-                top: 16,
-                left: 16,
-                child: IconButton(
-                  icon: const Icon(Icons.close, color: Colors.white, size: 30),
-                  onPressed: () => Navigator.of(context).pop(),
-                ),
+    // Escuchamos isProcessingOAuth del AuthProvider para mostrar el overlay
+    // DESPUES del retorno del deep link de Google (no antes de abrir Chrome).
+    final auth = context.watch<AuthProvider>();
+
+    return LoadingOverlay(
+      isVisible: auth.isProcessingOAuth,
+      message: 'Espere un momento...',
+      child: Scaffold(
+        backgroundColor: const Color(0xFF101422),
+        body: SafeArea(
+          child: Stack(
+            children: [
+              const Positioned.fill(child: AnimatedBackground()),
+              LayoutBuilder(
+                builder: (context, constraints) {
+                  if (constraints.maxWidth >= 850) {
+                    return _buildDesktopLayout();
+                  } else {
+                    return _buildMobileLayout();
+                  }
+                },
               ),
-          ],
+              if (Navigator.of(context).canPop())
+                Positioned(
+                  top: 16,
+                  left: 16,
+                  child: IconButton(
+                    icon: const Icon(Icons.close, color: Colors.white, size: 30),
+                    onPressed: () => Navigator.of(context).pop(),
+                  ),
+                ),
+            ],
+          ),
         ),
       ),
     );
@@ -606,7 +614,7 @@ class _LoginScreenState extends State<LoginScreen> {
         ],
       ),
       child: ElevatedButton(
-        onPressed: _isLoading ? null : onPressed,
+        onPressed: _isEmailLoading ? null : onPressed,
         style: ElevatedButton.styleFrom(
           backgroundColor: Colors.transparent,
           shadowColor: Colors.transparent,
@@ -615,7 +623,7 @@ class _LoginScreenState extends State<LoginScreen> {
           ),
         ),
         child:
-            _isLoading
+            _isEmailLoading
                 ? const SizedBox(
                   width: 24,
                   height: 24,
@@ -659,22 +667,24 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   void _signInWithGoogle() async {
+    // NO activamos loading local. signInWithOAuth solo abre el navegador y retorna
+    // inmediatamente. El overlay aparece CUANDO el deep link regresa a la app y
+    // el AuthProvider emite isProcessingOAuth = true desde _listenAuthChanges.
     final auth = context.read<AuthProvider>();
     try {
       await auth.signInWithGoogle();
-      // En Android con Google Sign-In nativo, el await completa el flujo completo.
-      // Verificamos si ya está autenticado para cerrar la pantalla inmediatamente.
+      // En Android nativo el await puede completar el flujo entero.
+      // Si ya esta autenticado al volver, navegamos de inmediato.
       if (mounted && auth.isAuthenticated && !auth.isGuest) {
         _onAuthChanged();
       }
-      // En Desktop/Web, signInWithOAuth solo abre el navegador y retorna.
-      // La autenticación real ocurre cuando el deep link regresa a la app,
-      // y _onAuthChanged escuchará el evento de AuthProvider.
+      // En Desktop/Web: el deep link dispara AuthChangeEvent.signedIn
+      // que activa isProcessingOAuth en el provider -> el Consumer lo muestra.
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error al iniciar sesión con Google: $e'),
+            content: Text('Error al iniciar sesion con Google: $e'),
             backgroundColor: Colors.red.shade700,
           ),
         );
@@ -689,7 +699,7 @@ class _LoginScreenState extends State<LoginScreen> {
   }) {
     return OutlinedButton.icon(
       onPressed:
-          text == 'Google' ? (_isLoading ? null : _signInWithGoogle) : () {},
+          text == 'Google' ? _signInWithGoogle : () {},
       icon: Container(
         padding: const EdgeInsets.all(2),
         decoration: const BoxDecoration(

@@ -16,6 +16,9 @@ class AuthProvider extends ChangeNotifier {
   UserProfile? _currentUser;
   bool _isLoading = true;
   bool _hasSkippedLogin = false;
+  bool _needsGoogleUsernameSetup = false;
+  /// true mientras se procesa el retorno de OAuth (deep link recibido → sync en curso).
+  bool _isProcessingOAuth = false;
   StreamSubscription<AuthState>? _authSubscription;
   StreamSubscription<dynamic>? _linkSubscription;
 
@@ -34,10 +37,16 @@ class AuthProvider extends ChangeNotifier {
 
   bool get isGuest => _currentUser?.usernameOrEmail == 'guest_local';
 
-  /// Indica que el usuario guest eligió explícitamente continuar sin cuenta.
+  /// true cuando un usuario de Google recien logueado aun no configuro su nombre_usuario.
+  bool get needsGoogleUsernameSetup => _needsGoogleUsernameSetup;
+
+  /// true mientras se valida el retorno de OAuth (deep link recibido, sync en progreso).
+  bool get isProcessingOAuth => _isProcessingOAuth;
+
+  /// Indica que el usuario guest eligio explicitamente continuar sin cuenta.
   bool get hasSkippedLogin => _hasSkippedLogin;
 
-  /// Devuelve el UUID del usuario en Supabase, o null si no tiene sesión iniciada vía Supabase.
+  /// Devuelve el UUID del usuario en Supabase, o null si no tiene sesion iniciada via Supabase.
   String? get supabaseUserId => Supabase.instance.client.auth.currentUser?.id;
 
   // ─── Listener de Autenticación de Supabase ──────────────────────────────────
@@ -49,24 +58,68 @@ class AuthProvider extends ChangeNotifier {
       final event = data.event;
       final session = data.session;
       debugPrint(
-        '🚨 [Hyro Auth] Estado de auth cambió: $event, session: ${session != null ? "SÍ" : "NO"}',
+        '[Hyro Auth] Estado de auth cambio: $event, session: ${session != null ? "SI" : "NO"}',
       );
 
       if (event == AuthChangeEvent.signedIn && session != null) {
-        debugPrint(
-          '🚨 [Hyro Auth] signedIn detectado, sincronizando usuario: ${session.user.email}',
-        );
+        debugPrint('[Hyro Auth] signedIn detectado — activando isProcessingOAuth');
+        // Activar el flag ANTES de sincronizar para que el UI muestre el overlay
+        _isProcessingOAuth = true;
+        notifyListeners();
+
         await _syncSupabaseUserToIsar(session.user);
+        // Despues de sincronizar, verificar si es Google y necesita setup de nombre
+        await _checkGoogleUsernameSetup(session.user);
+
+        // Sync terminado — apagar el flag
+        _isProcessingOAuth = false;
+        notifyListeners();
         debugPrint(
-          '🚨 [Hyro Auth] Sync completado. isGuest=$isGuest, isAuthenticated=$isAuthenticated, isLoading=$isLoading',
+          '[Hyro Auth] Sync completado. isGuest=$isGuest, isAuthenticated=$isAuthenticated, needsGoogleUsernameSetup=$_needsGoogleUsernameSetup',
         );
       }
     });
   }
 
-  /// Después del inicio de sesión OAuth con Supabase, crea/actualiza el usuario local en Isar
-  /// y sincroniza el progreso local de invitado a la nube (solo en el primer inicio de sesión).
+  /// Despues del inicio de sesion OAuth con Supabase, crea/actualiza el usuario local en Isar
+  /// y sincroniza el progreso local de invitado a la nube (solo en el primer inicio de sesion).
   bool _isSyncingUser = false;
+
+  /// Verifica si el usuario autenticado via Google aun no ha configurado su nombre_usuario.
+  Future<void> _checkGoogleUsernameSetup(User supabaseUser) async {
+    final provider = supabaseUser.appMetadata['provider'] as String?;
+    final providers = supabaseUser.appMetadata['providers'];
+    final isGoogle = provider == 'google' ||
+        (providers is List && providers.contains('google'));
+
+    if (!isGoogle) {
+      _needsGoogleUsernameSetup = false;
+      notifyListeners();
+      return;
+    }
+
+    try {
+      final response = await Supabase.instance.client
+          .from('perfiles')
+          .select('nombre_usuario')
+          .eq('id', supabaseUser.id)
+          .maybeSingle();
+
+      final nombreUsuario = response?['nombre_usuario'] as String?;
+      _needsGoogleUsernameSetup =
+          nombreUsuario == null || nombreUsuario.trim().isEmpty;
+    } catch (e) {
+      debugPrint('Advertencia: Error verificando nombre_usuario para Google setup: $e');
+      _needsGoogleUsernameSetup = false;
+    }
+    notifyListeners();
+  }
+
+  /// Marca el setup de nombre de Google como completado.
+  void completeGoogleUsernameSetup() {
+    _needsGoogleUsernameSetup = false;
+    notifyListeners();
+  }
 
   Future<void> _syncSupabaseUserToIsar(User supabaseUser) async {
     if (_isSyncingUser) return;

@@ -30,6 +30,7 @@ import '../../../core/widgets/task_received_dialog.dart';
 import '../../../data/local/note_local_ds.dart';
 import '../../../data/remote/note_remote_ds.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../widgets/username_feature_notification_card.dart';
 
 /// Pantalla de Amigos — Ranking semanal, solicitudes pendientes y búsqueda por código.
 class FriendsScreen extends StatefulWidget {
@@ -87,7 +88,11 @@ class _FriendsScreenState extends State<FriendsScreen> {
                   // ── Header ──
                   _buildHeader(context),
                   const SizedBox(height: 8),
-                  const SizedBox(height: 16),
+
+                  // ── Tarjeta de Novedad: Cambio de Nombre de Usuario ──
+                  const UsernameFeatureNotificationCard(),
+
+                  const SizedBox(height: 8),
 
                   // Buzón de regalos pendientes
                   if (userId != null) ...[

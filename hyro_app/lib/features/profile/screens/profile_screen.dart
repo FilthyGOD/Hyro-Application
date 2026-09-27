@@ -14,10 +14,37 @@ import '../../settings/screens/settings_screen.dart';
 import '../../../core/widgets/mobile_stats_bar.dart';
 import '../../../core/widgets/achievement_summary.dart';
 import '../../../core/widgets/recent_milestones.dart';
+import '../widgets/username_change_dialog.dart';
 
 /// Profile screen showing user info, level/XP, coins, and daily missions.
-class ProfileScreen extends StatelessWidget {
+class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
+
+  @override
+  State<ProfileScreen> createState() => _ProfileScreenState();
+}
+
+class _ProfileScreenState extends State<ProfileScreen> {
+
+  /// Abre el dialogo de cambio de nombre de usuario.
+  Future<void> _openUsernameDialog(BuildContext context) async {
+    final profile = context.read<ProfileProvider>();
+    final messenger = ScaffoldMessenger.of(context);
+    final result = await UsernameChangeDialog.show(
+      context,
+      currentUsername: profile.nombreUsuario,
+    );
+    if (result != null && mounted) {
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text('Nombre actualizado a: $result'),
+          backgroundColor: AppColors.primary.withAlpha(200),
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        ),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -106,22 +133,70 @@ class ProfileScreen extends StatelessWidget {
           if (!auth.isGuest && profile.displayTag != null)
             Padding(
               padding: const EdgeInsets.only(bottom: 4),
-              child: Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 10,
-                  vertical: 3,
-                ),
-                decoration: BoxDecoration(
-                  color: AppColors.primary.withAlpha(15),
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: AppColors.primary.withAlpha(40)),
-                ),
-                child: Text(
-                  profile.displayTag!,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 3,
+                    ),
+                    decoration: BoxDecoration(
+                      color: AppColors.primary.withAlpha(15),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: AppColors.primary.withAlpha(40)),
+                    ),
+                    child: Text(
+                      profile.displayTag!,
+                      style: AppTypography.bodySmall.copyWith(
+                        color: AppColors.primary,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                  // Botón de editar nombre de usuario
+                  GestureDetector(
+                    onTap: () => _openUsernameDialog(context),
+                    child: Container(
+                      padding: const EdgeInsets.all(4),
+                      decoration: BoxDecoration(
+                        color: AppColors.surfaceLight,
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: AppColors.cardBorder,
+                          width: 1,
+                        ),
+                      ),
+                      child: const Icon(
+                        Icons.edit_rounded,
+                        color: AppColors.textSecondary,
+                        size: 12,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            )
+          else if (!auth.isGuest && profile.nombreUsuario == null)
+            // Si no tiene displayTag pero hay sesion, mostrar boton para configurar nombre
+            Padding(
+              padding: const EdgeInsets.only(bottom: 4),
+              child: TextButton.icon(
+                onPressed: () => _openUsernameDialog(context),
+                icon: const Icon(Icons.add_circle_outline,
+                    color: AppColors.primary, size: 14),
+                label: Text(
+                  'Configurar nombre',
                   style: AppTypography.bodySmall.copyWith(
                     color: AppColors.primary,
                     fontWeight: FontWeight.w600,
                   ),
+                ),
+                style: TextButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                  minimumSize: Size.zero,
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                 ),
               ),
             ),

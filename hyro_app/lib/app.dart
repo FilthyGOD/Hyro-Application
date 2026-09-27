@@ -25,6 +25,7 @@ import 'package:isar/isar.dart';
 import 'features/auth/providers/auth_provider.dart';
 import 'features/auth/screens/splash_screen.dart';
 import 'features/auth/screens/welcome_screen.dart';
+import 'features/auth/screens/username_setup_screen.dart';
 import 'shared/layout/main_layout.dart';
 import 'core/widgets/floating_mascot.dart';
 import 'features/focus/screens/mini_focus_screen.dart';
@@ -86,7 +87,13 @@ class HyroApp extends StatelessWidget {
             if (auth.isGuest && !auth.hasSkippedLogin) {
               return const WelcomeScreen();
             }
-            // Usuarios logueados o que eligieron continuar sin cuenta entrarán al shell
+            // Usuario de Google que aun no ha configurado su nombre_usuario
+            if (auth.isAuthenticated && !auth.isGuest && auth.needsGoogleUsernameSetup) {
+              return UsernameSetupScreen(
+                onComplete: () => auth.completeGoogleUsernameSetup(),
+              );
+            }
+            // Usuarios logueados o que eligieron continuar sin cuenta entraran al shell
             return AppShell(key: appShellKey, authProvider: auth);
           },
         ),

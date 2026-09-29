@@ -68,7 +68,7 @@ class _UsernameFeatureNotificationCardState
       opacity: _fadeAnim,
       child: SizeTransition(
         sizeFactor: _sizeAnim,
-        alignment: Alignment.topCenter,
+        axisAlignment: -1.0,
         child: Container(
           margin: const EdgeInsets.only(bottom: 16),
           padding: const EdgeInsets.all(16),

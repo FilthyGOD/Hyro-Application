@@ -21,30 +21,48 @@ class ShopProvider extends ChangeNotifier {
   // ─── Cargar Catálogo e Inventario ──────────────────────────────────────────
 
   static const List<ShopItem> _defaultCatalog = [
-    ShopItem(
-      id: 101,
-      nombre: 'Sombrero de Copa',
-      categoria: 'Sombrero',
-      precio: 1,
-    ),
+    // Sombreros (200 -> 350 -> 550)
     ShopItem(
       id: 102,
-      nombre: 'Sombrero Vaquero',
+      nombre: 'Sombrero mexicano',
       categoria: 'Sombrero',
-      precio: 1,
+      precio: 200,
     ),
+    ShopItem(id: 104, nombre: 'Soldado', categoria: 'Sombrero', precio: 200),
+    ShopItem(
+      id: 105,
+      nombre: 'Sombrero Gnomo',
+      categoria: 'Sombrero',
+      precio: 200,
+    ),
+    ShopItem(id: 106, nombre: 'Construcción', categoria: 'Sombrero', precio: 200),
     ShopItem(
       id: 103,
-      nombre: 'Sombrero Payaso',
+      nombre: 'Peluca de payaso',
       categoria: 'Sombrero',
-      precio: 1,
+      precio: 350,
     ),
-    ShopItem(id: 201, nombre: 'Monóculo', categoria: 'Cara', precio: 1),
-    ShopItem(id: 202, nombre: 'Gafas de Sol', categoria: 'Cara', precio: 1),
-    ShopItem(id: 203, nombre: 'Nariz de Payaso', categoria: 'Cara', precio: 1),
-    ShopItem(id: 301, nombre: 'Smoking', categoria: 'Traje', precio: 1),
-    ShopItem(id: 302, nombre: 'Poncho', categoria: 'Traje', precio: 1),
-    ShopItem(id: 303, nombre: 'Traje Payaso', categoria: 'Traje', precio: 1),
+    ShopItem(id: 107, nombre: 'Bruja', categoria: 'Sombrero', precio: 350),
+    ShopItem(
+      id: 101,
+      nombre: 'Sombrero elegante',
+      categoria: 'Sombrero',
+      precio: 550,
+    ),
+
+    // Cara (200 -> 350 -> 550)
+    ShopItem(id: 202, nombre: 'Bigote', categoria: 'Cara', precio: 200),
+    ShopItem(id: 206, nombre: 'Barba Gnomo', categoria: 'Cara', precio: 200),
+    ShopItem(id: 203, nombre: 'Nariz de payaso', categoria: 'Cara', precio: 350),
+    ShopItem(id: 204, nombre: 'Lentes Oscuros', categoria: 'Cara', precio: 350),
+    ShopItem(id: 201, nombre: 'Monoculo', categoria: 'Cara', precio: 550),
+    ShopItem(id: 205, nombre: 'Lentes Flow', categoria: 'Cara', precio: 550),
+
+    // Traje (200 -> 350 -> 550)
+    ShopItem(id: 302, nombre: 'Zarape', categoria: 'Traje', precio: 200),
+    ShopItem(id: 304, nombre: 'Traje Gnomo', categoria: 'Traje', precio: 200),
+    ShopItem(id: 303, nombre: 'Traje de payaso', categoria: 'Traje', precio: 350),
+    ShopItem(id: 301, nombre: 'Traje elegante', categoria: 'Traje', precio: 550),
   ];
 
   /// Obtiene el catálogo completo de la tienda y los artículos propiedad del usuario.
@@ -73,6 +91,13 @@ class ShopProvider extends ChangeNotifier {
             catalogData
                 .map((e) => ShopItem.fromJson(Map<String, dynamic>.from(e)))
                 .toList();
+
+        final existingIds = catalog.map((i) => i.id).toSet();
+        for (final defaultItem in _defaultCatalog) {
+          if (!existingIds.contains(defaultItem.id)) {
+            catalog.add(defaultItem);
+          }
+        }
       } catch (e) {
         debugPrint('Usando catálogo local por error de BD: $e');
         catalog = List.from(_defaultCatalog);
@@ -131,7 +156,8 @@ class ShopProvider extends ChangeNotifier {
             inventoryData.map((e) => (e['objeto_id'] as num).toInt()).toSet();
         ownedQuantities = {
           for (var e in inventoryData)
-            (e['objeto_id'] as num).toInt(): (e['cantidad'] as num?)?.toInt() ?? 1
+            (e['objeto_id'] as num).toInt():
+                (e['cantidad'] as num?)?.toInt() ?? 1,
         };
       }
     } catch (e) {
@@ -151,7 +177,8 @@ class ShopProvider extends ChangeNotifier {
       (i) => i.id == itemId,
       orElse: () => _defaultCatalog.firstWhere((i) => i.id == itemId),
     );
-    final isStackable = item.categoria.toLowerCase() == 'objeto' || itemId >= 400;
+    final isStackable =
+        item.categoria.toLowerCase() == 'objeto' || itemId >= 400;
 
     // Verificación previa local
     if (!isStackable && ownedItemIds.contains(itemId)) {
@@ -224,14 +251,21 @@ class ShopProvider extends ChangeNotifier {
   /// Comprueba si el usuario posee un artículo dado.
   bool ownsItem(int itemId) => ownedItemIds.contains(itemId);
 
-  /// Obtiene los artículos del catálogo filtrados por palabra clave de categoría.
-  List<ShopItem> itemsByCategory(String category) =>
-      catalog
-          .where(
-            (item) =>
-                item.categoria.toLowerCase().contains(category.toLowerCase()),
-          )
-          .toList();
+  /// Obtiene los artículos del catálogo filtrados por palabra clave de categoría, ordenados de menor a mayor precio.
+  List<ShopItem> itemsByCategory(String category) {
+    final filtered = catalog
+        .where(
+          (item) =>
+              item.categoria.toLowerCase().contains(category.toLowerCase()),
+        )
+        .toList();
+    filtered.sort((a, b) {
+      final cmp = a.precio.compareTo(b.precio);
+      if (cmp != 0) return cmp;
+      return a.id.compareTo(b.id);
+    });
+    return filtered;
+  }
 
   /// Traduce las excepciones de Postgres a mensajes fáciles de entender por el usuario.
   String _friendlyError(String pgMsg) {

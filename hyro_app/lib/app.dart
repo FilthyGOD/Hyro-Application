@@ -350,9 +350,7 @@ class AppShellState extends State<AppShell>
       debugPrint('⚠️ Error programando notificaciones: $e');
     }
 
-    // SM comienza en cargando → transición a movimiento_suave
     final mascot = context.read<MascotController>();
-    mascot.triggerVolver();
     mascot.markInitialLoadComplete();
   }
 

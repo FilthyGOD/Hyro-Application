@@ -383,16 +383,35 @@ class _ShopScreenState extends State<ShopScreen>
                           mainAxisSize: MainAxisSize.min,
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            item.imageAsset != null
-                                ? Image.asset(
-                                  item.imageAsset!,
-                                  height: 48,
-                                  fit: BoxFit.contain,
-                                )
-                                : Text(
-                                  item.id == nadaId ? '❌' : item.icon,
-                                  style: const TextStyle(fontSize: 36),
+                            if (item.svgAsset != null)
+                              Transform.translate(
+                                offset: Offset(0, item.previewOffsetY),
+                                child: Transform.scale(
+                                  scale: item.previewScale,
+                                  child: SvgPicture.asset(
+                                    item.svgAsset!,
+                                    height: 48,
+                                    fit: BoxFit.contain,
+                                  ),
                                 ),
+                              )
+                            else if (item.imageAsset != null)
+                              Transform.translate(
+                                offset: Offset(0, item.previewOffsetY),
+                                child: Transform.scale(
+                                  scale: item.previewScale,
+                                  child: Image.asset(
+                                    item.imageAsset!,
+                                    height: 48,
+                                    fit: BoxFit.contain,
+                                  ),
+                                ),
+                              )
+                            else
+                              Text(
+                                item.id == nadaId ? '❌' : item.icon,
+                                style: const TextStyle(fontSize: 36),
+                              ),
                             const SizedBox(height: 8),
                             Expanded(
                               child: Text(

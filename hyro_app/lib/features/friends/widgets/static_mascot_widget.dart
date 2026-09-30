@@ -27,7 +27,7 @@ Future<File?> _loadRiveFileOnce() async {
   _isLoadingFile = true;
   try {
     _cachedRiveFile = await File.asset(
-      'assets/mascot/jairo44.riv',
+      'assets/mascot/jairo48.riv',
       riveFactory: kIsWeb ? Factory.rive : Factory.flutter,
     );
   } catch (e) {

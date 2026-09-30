@@ -92,12 +92,12 @@ class MascotController extends ChangeNotifier {
 
   Future<void> _loadRiveFile() async {
     final file = await File.asset(
-      'assets/mascot/jairo44.riv',
+      'assets/mascot/jairo48.riv',
       riveFactory: kIsWeb ? Factory.rive : Factory.flutter,
     );
 
     if (file == null) {
-      debugPrint('ERROR: Could not load Rive file jairo44.riv');
+      debugPrint('ERROR: Could not load Rive file jairo48.riv');
       return;
     }
 
@@ -122,7 +122,7 @@ class MascotController extends ChangeNotifier {
     _triggerFestejo = sm.trigger('trigger_festejo');
     _triggerPensando = sm.trigger('trigger_pensando');
 
-    // Resolver entradas num\u00e9ricas
+    // Resolver entradas numéricas
     _shopItemId = sm.number('shop_item_id');
     _sombrero = sm.number('sombrero') ?? sm.number('control_sombrero');
     _cara = sm.number('cara') ?? sm.number('control_cara');
@@ -139,9 +139,7 @@ class MascotController extends ChangeNotifier {
     if (_decenas == null)
       debugPrint('WARNING: Rive input "decenas" not found!');
 
-    // Disparar 'volver' y restaurar cosméticos inmediatamente para saltar la animación
-    // inicial de jairo44.riv (la carga inicial se maneja ahora con JairitoCarga.lottie)
-    _triggerVolver?.fire();
+    // Restaurar cosméticos equipados (la carga inicial se maneja ahora con JairitoCarga.lottie)
     restoreEquippedState();
 
     notifyListeners();

@@ -833,24 +833,18 @@ class _FriendsScreenState extends State<FriendsScreen> {
               ),
             ],
           ),
-          ConstrainedBox(
-            constraints: const BoxConstraints(maxHeight: 400),
-            child: ListView.builder(
-              shrinkWrap: true,
-              itemCount: ranking.length,
-              itemBuilder: (context, index) {
-                return Padding(
-                  padding: EdgeInsets.only(
-                    bottom: index < ranking.length - 1 ? 8 : 0,
-                  ),
-                  child: _buildRankingItem(
-                    rank: index + 1,
-                    entry: ranking[index],
-                  ),
-                );
-              },
-            ),
-          ),
+          const SizedBox(height: 16),
+          ...List.generate(ranking.length, (index) {
+            return Padding(
+              padding: EdgeInsets.only(
+                bottom: index < ranking.length - 1 ? 8 : 0,
+              ),
+              child: _buildRankingItem(
+                rank: index + 1,
+                entry: ranking[index],
+              ),
+            );
+          }),
         ],
       ),
     );

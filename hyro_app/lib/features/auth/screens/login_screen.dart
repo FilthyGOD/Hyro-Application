@@ -51,20 +51,8 @@ class _LoginScreenState extends State<LoginScreen> {
     if (_authProvider!.isAuthenticated && !_authProvider!.isGuest) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!mounted) return;
-        final nav = Navigator.of(context);
-        if (nav.canPop()) {
-          nav.popUntil((route) => route.isFirst);
-          if (nav.canPop()) {
-            nav.pop();
-          }
-        } else {
-          nav.pushReplacement(
-            MaterialPageRoute(
-              builder: (_) => AppShell(key: appShellKey, authProvider: _authProvider!),
-            ),
-          );
-        }
-        appShellKey.currentState?.navigateTo(2);
+        Navigator.of(context).popUntil((route) => route.isFirst);
+        // El MaterialApp actualizará automáticamente el root a AppShell al detectar isAuthenticated
       });
     }
   }

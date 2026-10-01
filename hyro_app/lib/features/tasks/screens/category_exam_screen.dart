@@ -352,9 +352,10 @@ class _CategoryExamScreenState extends State<CategoryExamScreen> {
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(24.0),
-          child: Column(
+        child: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(24.0),
+            child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Container(
@@ -398,22 +399,43 @@ class _CategoryExamScreenState extends State<CategoryExamScreen> {
                 ),
               ),
               const SizedBox(height: 40),
-              ElevatedButton(
-                onPressed: () {
+              GestureDetector(
+                onTap: () {
                   Navigator.pop(context);
                 },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primary,
-                  foregroundColor: Colors.white,
-                  minimumSize: const Size(double.infinity, 56),
-                  shape: RoundedRectangleBorder(
+                child: Container(
+                  width: 250,
+                  height: 56,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [
+                        Color(0xFF34D399),
+                        Color(0xFF059669),
+                      ],
+                    ),
                     borderRadius: BorderRadius.circular(16),
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xFF10B981).withAlpha(60),
+                        blurRadius: 12,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: const Text(
+                    'Volver a la Materia',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
                   ),
                 ),
-                child: const Text('Volver a la Materia', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
               ),
             ],
           ),
+        ),
         ),
       ),
     );

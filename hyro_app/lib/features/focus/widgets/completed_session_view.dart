@@ -93,8 +93,8 @@ class _CompletedSessionViewState extends State<CompletedSessionView> {
                 children: [
                   Center(
                     child: SizedBox(
-                      width: isMobile ? 150 : 200,
-                      height: isMobile ? 150 : 200,
+                      width: isMobile ? 250 : 300,
+                      height: isMobile ? 250 : 300,
                       child: _buildMascotAnimation(),
                     ),
                   ),
@@ -148,38 +148,26 @@ class _CompletedSessionViewState extends State<CompletedSessionView> {
                   const SizedBox(height: 48),
                   Column(
                     children: [
-                      SizedBox(
+                      _GradientButton(
+                        label: 'Finalizar',
                         width: 250,
                         height: 45,
-                        child: ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF4285F4),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25)),
-                          ),
-                          onPressed: _onFinalizar,
-                          child: const Text('Finalizar', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
-                        ),
+                        onTap: _onFinalizar,
                       ),
                       const SizedBox(height: 16),
-                      SizedBox(
+                      _GradientButton(
+                        label: 'Descanso',
                         width: 250,
                         height: 45,
-                        child: ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF4285F4),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25)),
-                          ),
-                          onPressed: () {
-                            if (widget.isDebugMode) {
-                              Navigator.of(context).pop();
-                            } else {
-                              final focusProvider = context.read<FocusProvider>();
-                              focusProvider.setMode(TimerMode.shortBreak);
-                              focusProvider.start();
-                            }
-                          },
-                          child: const Text('Descanso', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
-                        ),
+                        onTap: () {
+                          if (widget.isDebugMode) {
+                            Navigator.of(context).pop();
+                          } else {
+                            final focusProvider = context.read<FocusProvider>();
+                            focusProvider.setMode(TimerMode.shortBreak);
+                            focusProvider.start();
+                          }
+                        },
                       ),
                     ],
                   ),
@@ -291,23 +279,22 @@ class _CompletedSessionViewState extends State<CompletedSessionView> {
                   ),
                   const SizedBox(height: 48),
                   Center(
-                    child: SizedBox(
+                    child: _GradientButton(
+                      label: 'ok',
                       width: 200,
                       height: 50,
-                      child: ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF4285F4),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25)),
-                        ),
-                        onPressed: () {
-                          if (widget.isDebugMode) {
-                            Navigator.of(context).pop();
-                          } else {
-                            context.read<FocusProvider>().reset();
-                          }
-                        },
-                        child: const Text('ok', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
-                      ),
+                      gradientColors: const [
+                        Color(0xFFFF9800), // Lighter orange
+                        Color(0xFFF57C00), // Darker orange
+                      ],
+                      shadowColor: const Color(0xFFF57C00).withAlpha(60),
+                      onTap: () {
+                        if (widget.isDebugMode) {
+                          Navigator.of(context).pop();
+                        } else {
+                          context.read<FocusProvider>().reset();
+                        }
+                      },
                     ),
                   ),
                 ],
@@ -321,14 +308,20 @@ class _CompletedSessionViewState extends State<CompletedSessionView> {
 
   List<Widget> _buildWeekDays() {
     final now = DateTime.now();
+    // Monday is 1, Sunday is 7. Calculate start of current week.
+    final startOfWeek = now.subtract(Duration(days: now.weekday - 1));
+    
     final List<Widget> widgets = [];
     final daysOfWeek = ['L', 'Ma', 'Mi', 'J', 'V', 'S', 'D'];
+    final statsProvider = context.read<StatsProvider>();
     
-    for (int i = 6; i >= 0; i--) {
-      final day = now.subtract(Duration(days: i));
-      final isToday = (i == 0);
-      final dayName = daysOfWeek[day.weekday - 1];
-      bool isChecked = isToday;
+    for (int i = 0; i < 7; i++) {
+      final day = startOfWeek.add(Duration(days: i));
+      final isToday = day.year == now.year && day.month == now.month && day.day == now.day;
+      final dayName = daysOfWeek[i];
+      
+      final stats = statsProvider.getStatsForDate(day);
+      final hasStreak = (stats != null && stats.focusSessions > 0) || isToday;
       
       widgets.add(
         Column(
@@ -336,7 +329,7 @@ class _CompletedSessionViewState extends State<CompletedSessionView> {
             Text(
               dayName,
               style: TextStyle(
-                color: isChecked ? const Color(0xFFF57C00) : Colors.white54,
+                color: hasStreak ? const Color(0xFFF57C00) : Colors.white54,
                 fontWeight: FontWeight.bold,
               ),
             ),
@@ -346,9 +339,9 @@ class _CompletedSessionViewState extends State<CompletedSessionView> {
               height: 28,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: isChecked ? const Color(0xFFF57C00) : const Color(0xFF2D3748),
+                color: hasStreak ? const Color(0xFFF57C00) : const Color(0xFF2D3748),
               ),
-              child: isChecked 
+              child: hasStreak 
                 ? const Icon(Icons.check, size: 20, color: Colors.black)
                 : null,
             ),
@@ -356,7 +349,7 @@ class _CompletedSessionViewState extends State<CompletedSessionView> {
         ),
       );
       
-      if (i > 0) {
+      if (i < 6) {
         widgets.add(const SizedBox(width: 8));
       }
     }
@@ -376,6 +369,111 @@ class _CompletedSessionViewState extends State<CompletedSessionView> {
           fit: Fit.contain,
         );
       },
+    );
+  }
+}
+
+class _GradientButton extends StatefulWidget {
+  final String label;
+  final VoidCallback onTap;
+  final double width;
+  final double height;
+  final IconData? icon;
+  final List<Color>? gradientColors;
+  final Color? shadowColor;
+
+  const _GradientButton({
+    required this.label,
+    required this.onTap,
+    this.width = 250,
+    this.height = 45,
+    this.icon,
+    this.gradientColors,
+    this.shadowColor,
+  });
+
+  @override
+  State<_GradientButton> createState() => _GradientButtonState();
+}
+
+class _GradientButtonState extends State<_GradientButton> with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _scaleAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 100),
+    );
+    _scaleAnimation = Tween<double>(begin: 1.0, end: 0.95).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
+    );
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return MouseRegion(
+      cursor: SystemMouseCursors.click,
+      child: GestureDetector(
+        onTapDown: (_) => _controller.forward(),
+        onTapUp: (_) {
+          _controller.reverse();
+          widget.onTap();
+        },
+        onTapCancel: () => _controller.reverse(),
+        child: AnimatedBuilder(
+          animation: _scaleAnimation,
+          builder: (context, child) {
+            return Transform.scale(scale: _scaleAnimation.value, child: child);
+          },
+          child: Container(
+            width: widget.width,
+            height: widget.height,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: widget.gradientColors ?? const [
+                  Color.fromARGB(255, 0, 149, 255),
+                  Color.fromARGB(255, 32, 43, 200),
+                ],
+              ),
+              borderRadius: BorderRadius.circular(12),
+              boxShadow: [
+                BoxShadow(
+                  color: widget.shadowColor ?? AppColors.primary.withAlpha(60),
+                  blurRadius: 12,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (widget.icon != null) ...[
+                  Icon(widget.icon, color: Colors.white, size: 20),
+                  const SizedBox(width: 8),
+                ],
+                Text(
+                  widget.label,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

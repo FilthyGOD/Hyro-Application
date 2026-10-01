@@ -23,6 +23,11 @@ class StatsProvider extends ChangeNotifier {
     return _repository.getStatsForMonth(year, month);
   }
 
+  /// Gets the stats for a specific date
+  DailyStats? getStatsForDate(DateTime date) {
+    return _repository.getStatsForDate(date);
+  }
+
   /// Called when a timer session is completed
   Future<void> addFocusSession(int durationMinutes, String? userId) async {
     await _repository.addSession(durationMinutes);

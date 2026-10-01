@@ -828,15 +828,21 @@ class _FriendsScreenState extends State<FriendsScreen> {
               ),
             ],
           ),
-          const SizedBox(height: 16),
-          ...List.generate(ranking.length, (index) {
-            return Padding(
-              padding: EdgeInsets.only(
-                bottom: index < ranking.length - 1 ? 8 : 0,
-              ),
-              child: _buildRankingItem(rank: index + 1, entry: ranking[index]),
-            );
-          }),
+          ConstrainedBox(
+            constraints: const BoxConstraints(maxHeight: 400),
+            child: ListView.builder(
+              shrinkWrap: true,
+              itemCount: ranking.length,
+              itemBuilder: (context, index) {
+                return Padding(
+                  padding: EdgeInsets.only(
+                    bottom: index < ranking.length - 1 ? 8 : 0,
+                  ),
+                  child: _buildRankingItem(rank: index + 1, entry: ranking[index]),
+                );
+              },
+            ),
+          ),
         ],
       ),
     );
@@ -851,6 +857,17 @@ class _FriendsScreenState extends State<FriendsScreen> {
 
     final rankColor = rankColors[rank] ?? AppColors.textSecondary;
     final isMe = entry.isCurrentUser;
+
+    BoxBorder? border;
+    Color bgColor = Colors.transparent;
+
+    if (rank <= 3) {
+      border = Border.all(color: rankColor.withAlpha(100), width: 1.5);
+      bgColor = rankColor.withAlpha(15);
+    } else if (isMe) {
+      border = Border.all(color: AppColors.primary.withAlpha(40));
+      bgColor = AppColors.primary.withAlpha(15);
+    }
 
     // onTap navega al perfil completo del amigo
     return GestureDetector(
@@ -870,10 +887,9 @@ class _FriendsScreenState extends State<FriendsScreen> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
         decoration: BoxDecoration(
-          color: isMe ? AppColors.primary.withAlpha(15) : Colors.transparent,
+          color: bgColor,
           borderRadius: BorderRadius.circular(12),
-          border:
-              isMe ? Border.all(color: AppColors.primary.withAlpha(40)) : null,
+          border: border,
         ),
         child: Row(
           children: [

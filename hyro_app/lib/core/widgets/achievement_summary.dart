@@ -26,6 +26,7 @@ class AchievementCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return GlassCard(
       padding: const EdgeInsets.all(16),
+      borderColor: color,
       child: Row(
         children: [
           Container(

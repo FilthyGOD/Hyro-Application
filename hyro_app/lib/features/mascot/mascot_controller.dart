@@ -1,4 +1,4 @@
-import 'dart:async';
+﻿import 'dart:async';
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
@@ -21,7 +21,9 @@ class MascotController extends ChangeNotifier {
   TriggerInput? _triggerEstudiando;
   TriggerInput? _triggerHueva;
   TriggerInput? _triggerCompra;
-  TriggerInput? _triggerVolver;
+  TriggerInput? _triggerVolver; // movimiento_suave → estatico
+  TriggerInput? _triggerVolverEstatico; // regresar a estado estatico
+  TriggerInput? _triggerContinuar; // estatico → movimiento_suave
   TriggerInput? _triggerCargando;
   TriggerInput? _triggerRacha;
   TriggerInput? _triggerFestejo;
@@ -65,11 +67,12 @@ class MascotController extends ChangeNotifier {
       final userId = Supabase.instance.client.auth.currentUser?.id;
       if (userId != null) {
         try {
-          final response = await Supabase.instance.client
-              .from('mascota_cosmeticos')
-              .select('sombrero, cara, traje')
-              .eq('usuario_id', userId)
-              .maybeSingle();
+          final response =
+              await Supabase.instance.client
+                  .from('mascota_cosmeticos')
+                  .select('sombrero, cara, traje')
+                  .eq('usuario_id', userId)
+                  .maybeSingle();
 
           if (response != null) {
             equippedSombrero = (response['sombrero'] as num?)?.toInt() ?? 100;
@@ -92,12 +95,12 @@ class MascotController extends ChangeNotifier {
 
   Future<void> _loadRiveFile() async {
     final file = await File.asset(
-      'assets/mascot/jairo48.riv',
+      'assets/mascot/jairo50.riv',
       riveFactory: kIsWeb ? Factory.rive : Factory.flutter,
     );
 
     if (file == null) {
-      debugPrint('ERROR: Could not load Rive file jairo48.riv');
+      debugPrint('ERROR: Could not load Rive file jairo50.riv');
       return;
     }
 
@@ -116,7 +119,12 @@ class MascotController extends ChangeNotifier {
     _triggerEstudiando = sm.trigger('trigger_estudiando');
     _triggerHueva = sm.trigger('trigger_hueva');
     _triggerCompra = sm.trigger('trigger_compra');
-    _triggerVolver = sm.trigger('volver');
+    _triggerVolver = sm.trigger('volver'); // movimiento_suave → estatico
+    _triggerVolverEstatico =
+        sm.trigger('volver_estatico') ?? sm.trigger('trigger_volver_estatico');
+    _triggerContinuar = sm.trigger(
+      'trigger_continuar',
+    ); // estatico → movimiento_suave
     _triggerCargando = sm.trigger('trigger_cargando');
     _triggerRacha = sm.trigger('trigger_racha');
     _triggerFestejo = sm.trigger('trigger_festejo');
@@ -141,6 +149,9 @@ class MascotController extends ChangeNotifier {
 
     // Restaurar cosméticos equipados (la carga inicial se maneja ahora con JairitoCarga.lottie)
     restoreEquippedState();
+
+    // Disparar trigger_continuar para salir de 'estatico' y activar el movimiento/animaciones de la mascota principal
+    _triggerContinuar?.fire();
 
     notifyListeners();
 
@@ -168,6 +179,21 @@ class MascotController extends ChangeNotifier {
   }
 
   // ── Public API ─────────────────────────────────────────
+
+  /// Vuelve al estado "estatico".
+  void triggerVolverEstatico() {
+    if (_triggerVolverEstatico != null) {
+      _triggerVolverEstatico!.fire();
+    } else {
+      _triggerVolver?.fire();
+    }
+  }
+
+  /// Sale del estado "estatico" y activa "movimiento_suave".
+  void triggerContinuar() {
+    _triggerContinuar?.fire();
+  }
+
   void triggerSaludo() {
     _triggerSaludo?.fire();
   }
@@ -331,13 +357,15 @@ class MascotController extends ChangeNotifier {
     FriendsService().syncCosmetics(
       userId,
       sombrero: equippedSombrero,
-      cosmetico: equippedCara,   // Rive 'cara' → BD 'cosmetico'
-      traje: equippedCuerpo,     // Rive 'cuerpo' → BD 'traje'
+      cosmetico: equippedCara, // Rive 'cara' → BD 'cosmetico'
+      traje: equippedCuerpo, // Rive 'cuerpo' → BD 'traje'
     );
   }
 
   void _listenToAuthChanges() {
-    _authSubscription = Supabase.instance.client.auth.onAuthStateChange.listen((data) {
+    _authSubscription = Supabase.instance.client.auth.onAuthStateChange.listen((
+      data,
+    ) {
       final event = data.event;
       final session = data.session;
       if (event == AuthChangeEvent.signedIn && session != null) {
@@ -348,11 +376,12 @@ class MascotController extends ChangeNotifier {
 
   Future<void> loadCosmeticsFromSupabase(String userId) async {
     try {
-      final response = await Supabase.instance.client
-          .from('mascota_cosmeticos')
-          .select('sombrero, cara, traje')
-          .eq('usuario_id', userId)
-          .maybeSingle();
+      final response =
+          await Supabase.instance.client
+              .from('mascota_cosmeticos')
+              .select('sombrero, cara, traje')
+              .eq('usuario_id', userId)
+              .maybeSingle();
 
       if (response != null) {
         equippedSombrero = (response['sombrero'] as num?)?.toInt() ?? 100;
@@ -384,6 +413,8 @@ class MascotController extends ChangeNotifier {
     _triggerHueva?.dispose();
     _triggerCompra?.dispose();
     _triggerVolver?.dispose();
+    _triggerVolverEstatico?.dispose();
+    _triggerContinuar?.dispose();
     _triggerCargando?.dispose();
     _triggerRacha?.dispose();
     _triggerFestejo?.dispose();

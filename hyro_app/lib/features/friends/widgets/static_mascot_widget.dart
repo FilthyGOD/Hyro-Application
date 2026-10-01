@@ -1,10 +1,10 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:rive/rive.dart';
 
 // ignore_for_file: deprecated_member_use
 
-/// Cache global del archivo Rive para reutilizarlo en múltiples instancias.
+/// Cache global del archivo Rive para reutilizarlo en multiples instancias.
 /// Se carga una sola vez y se comparte entre todos los StaticMascotWidget.
 File? _cachedRiveFile;
 bool _isLoadingFile = false;
@@ -14,7 +14,7 @@ Future<File?> _loadRiveFileOnce() async {
   if (_cachedRiveFile != null) return _cachedRiveFile;
 
   if (_isLoadingFile) {
-    // Ya se está cargando, esperar a que termine
+    // Ya se esta cargando, esperar a que termine
     final completer = Future<File?>(() async {
       while (_isLoadingFile) {
         await Future.delayed(const Duration(milliseconds: 50));
@@ -27,7 +27,7 @@ Future<File?> _loadRiveFileOnce() async {
   _isLoadingFile = true;
   try {
     _cachedRiveFile = await File.asset(
-      'assets/mascot/jairo48.riv',
+      'assets/mascot/jairo50.riv',
       riveFactory: kIsWeb ? Factory.rive : Factory.flutter,
     );
   } catch (e) {
@@ -38,36 +38,44 @@ Future<File?> _loadRiveFileOnce() async {
   return _cachedRiveFile;
 }
 
-/// Widget que renderiza la mascota Rive de forma estática con cosméticos inyectados.
+/// Widget que renderiza la mascota Rive con cosmeticos inyectados.
 ///
-/// Crucial para rendimiento:
+/// Crucial para rendimiento en listas (pantalla de amigos):
 /// - Usa el mismo archivo .riv cacheado (una sola instancia de File)
 /// - Crea un RiveWidgetController independiente por widget
-/// - Inyecta los valores de cosméticos y captura un solo frame
-/// - Después del primer frame, reemplaza el RiveWidget por una imagen estática
-///   via RepaintBoundary para que la mascota no consuma recursos al hacer scroll
+/// - Inyecta los valores de cosmeticos al controlador
+/// - La State Machine arranca en el estado "estatico"
 ///
-/// [animated] = true: Usa trigger "volver" para mostrar la mascota con animación
-///   de movimiento (usado en la pantalla de perfil preview).
-/// [animated] = false (default): Usa trigger "atras" para saltar la animación
-///   intro y luego pausa la mascota para rendimiento en listas/ranking.
+/// [animated] = false (default): Inyecta cosmeticos y pausa el controlador
+///   (_controller.active = false) para que Rive dibuje un solo frame
+///   estatico y libere recursos. Ideal para listas de amigos / ranking.
+///
+/// [animated] = true: Dispara "trigger_continuar" para que la mascota entre
+///   en movimiento_suave. Ideal para la pantalla de perfil preview.
 class StaticMascotWidget extends StatefulWidget {
-  /// Valor de sombrero (ID numérico, ej: 100, 101, 102...)
+  /// Valor de sombrero (ID numerico, ej: 100, 101, 102...)
   final int sombrero;
 
-  /// Valor de cosmético/cara (ID numérico, ej: 200, 201, 202...)
+  /// Valor de cosmetico/cara (ID numerico, ej: 200, 201, 202...)
   /// En la BD es 'cara', en Rive es 'cara'.
   final int cosmetico;
 
-  /// Valor de traje/cuerpo (ID numérico, ej: 300, 301, 302...)
+  /// Valor de traje/cuerpo (ID numerico, ej: 300, 301, 302...)
   /// En la BD es 'traje', en Rive es 'cuerpo'.
   final int traje;
 
-  /// Tamaño del widget (ancho y alto).
+  /// Tamano del widget (ancho y alto).
   final double size;
 
-  /// Si es true, la mascota se muestra animada (con trigger "volver").
-  /// Si es false, se dispara "atras" y se pausa para rendimiento.
+  /// Factor de escala/zoom para hacer al personaje mas grande dentro de su contenedor (default: 1.5).
+  final double scale;
+
+  /// Desplazamiento X, Y para centrar la mascota visualmente (default: Offset(0, -2)).
+  final Offset offset;
+
+  /// Si es true, la mascota se muestra animada (con trigger "trigger_continuar").
+  /// Si es false, se inyectan cosmeticos, se dibuja el frame y se pausa el
+  /// controlador para ahorrar recursos.
   final bool animated;
 
   const StaticMascotWidget({
@@ -75,7 +83,9 @@ class StaticMascotWidget extends StatefulWidget {
     required this.sombrero,
     required this.cosmetico,
     required this.traje,
-    this.size = 48,
+    this.size = 52,
+    this.scale = 1.5,
+    this.offset = const Offset(0, -2),
     this.animated = false,
   });
 
@@ -104,9 +114,10 @@ class _StaticMascotWidgetState extends State<StaticMascotWidget> {
 
     final sm = controller.stateMachine;
 
-    // Inyectar valores de cosméticos
-    // Mapeo: sombrero → sombrero, cara (BD) → cara (Rive), traje (BD) → cuerpo (Rive)
-    final sombreroInput = sm.number('sombrero') ?? sm.number('control_sombrero');
+    // Inyectar valores de cosmeticos.
+    // Mapeo: sombrero -> sombrero, cara (BD) -> cara (Rive), traje (BD) -> cuerpo (Rive)
+    final sombreroInput =
+        sm.number('sombrero') ?? sm.number('control_sombrero');
     final caraInput = sm.number('cara') ?? sm.number('control_cara');
     final cuerpoInput = sm.number('cuerpo') ?? sm.number('control_cuerpo');
 
@@ -123,60 +134,64 @@ class _StaticMascotWidgetState extends State<StaticMascotWidget> {
       _controller = controller;
     });
 
+    // La State Machine arranca en "estatico" por defecto.
     if (widget.animated) {
-      // Modo animado: disparar "atras" primero para saltar intro,
-      // luego un pequeño delay y disparar "volver" para animar
+      // Modo animado: dispara trigger_continuar para entrar en movimiento_suave
       _setupAnimatedMode(sm);
     } else {
-      // Modo estático: disparar "atras" para saltar intro y luego pausar
+      // Modo estatico: dispara volver_estatico, espera unos frames para que Rive
+      // renderice los cosmeticos en el estado "estatico" y luego pausa el controlador.
       _setupStaticMode(sm);
     }
   }
 
-  /// Modo estático: dispara "volver" para ir directamente al idle (evitando giros),
-  /// espera unos frames para que los cosméticos se apliquen, y luego
-  /// pausa la state machine para liberar recursos.
+  /// Modo estatico:
+  /// Dispara "volver_estatico" para asegurar que la mascota este en la animacion
+  /// estatica. Esperamos unos frames para que Rive aplique los cosmeticos y dibuje
+  /// el frame correctamente, luego pausamos el controlador para liberar
+  /// recursos del motor de Rive.
   Future<void> _setupStaticMode(StateMachine sm) async {
-    // Disparar "volver" para evitar que giren y vayan al idle directamente
-    final triggerVolver = sm.trigger('volver');
-    triggerVolver?.fire();
+    final triggerVolverEstatico =
+        sm.trigger('volver_estatico') ??
+        sm.trigger('trigger_volver_estatico') ??
+        sm.trigger('volver');
+    triggerVolverEstatico?.fire();
 
-    // Esperar un poco para que la transición se procese
-    await Future.delayed(const Duration(milliseconds: 100));
-
-    if (!mounted) return;
-
-    // Congelar después de unos frames
-    _scheduleFreeze();
-  }
-
-  /// Modo animado: dispara "atras" para saltar intro, espera,
-  /// luego dispara "volver" para activar la animación de movimiento.
-  Future<void> _setupAnimatedMode(StateMachine sm) async {
-    // Disparar "atras" primero para saltar la animación de intro
-    final triggerAtras = sm.trigger('atras');
-    triggerAtras?.fire();
-
-    // Pequeño delay para que Rive procese la transición
+    // Dar tiempo al motor de Rive para procesar el primer frame con cosmeticos y trigger
     await Future.delayed(const Duration(milliseconds: 150));
 
     if (!mounted) return;
 
-    // Ahora disparar "volver" para activar la animación de movimiento
-    final triggerVolver = sm.trigger('volver');
-    triggerVolver?.fire();
-
-    // No congelamos — dejamos la animación corriendo
+    // Congelar la animacion frame a frame de forma segura
+    _scheduleFreeze();
   }
 
+  /// Modo animado:
+  /// Dispara "trigger_continuar" para salir de "estatico" y entrar en
+  /// "movimiento_suave". La animacion queda corriendo sin pausar.
+  Future<void> _setupAnimatedMode(StateMachine sm) async {
+    // Pequeno delay para que Rive procese el estado inicial "estatico"
+    await Future.delayed(const Duration(milliseconds: 100));
+
+    if (!mounted) return;
+
+    // Disparar trigger_continuar para activar la animacion de movimiento
+    final triggerContinuar = sm.trigger('trigger_continuar');
+    triggerContinuar?.fire();
+
+    // No pausamos -- dejamos la animacion corriendo
+  }
+
+  /// Pausa el controlador de Rive despues de [_frameCount] frames para
+  /// asegurar que los cosmeticos esten renderizados antes de detener el motor.
   void _scheduleFreeze() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted || _controller == null) return;
       _frameCount++;
-      // Damos 3 frames para que Rive renderice completamente con cosméticos
+      // Esperamos 3 frames para que Rive renderice completamente con cosmeticos
       if (_frameCount >= 3) {
-        // Cosméticos aplicados — RepaintBoundary aísla el repintado
-        return;
+        // Pausar el controlador: el motor de Rive deja de actualizar este widget
+        _controller!.active = false;
       } else {
         _scheduleFreeze();
       }
@@ -186,7 +201,7 @@ class _StaticMascotWidgetState extends State<StaticMascotWidget> {
   @override
   void didUpdateWidget(StaticMascotWidget oldWidget) {
     super.didUpdateWidget(oldWidget);
-    // Si cambian los cosméticos, actualizar los inputs y descongelar
+    // Si cambian los cosmeticos, actualizar los inputs y recongelar
     if (oldWidget.sombrero != widget.sombrero ||
         oldWidget.cosmetico != widget.cosmetico ||
         oldWidget.traje != widget.traje) {
@@ -198,7 +213,8 @@ class _StaticMascotWidgetState extends State<StaticMascotWidget> {
     if (_controller == null) return;
 
     final sm = _controller!.stateMachine;
-    final sombreroInput = sm.number('sombrero') ?? sm.number('control_sombrero');
+    final sombreroInput =
+        sm.number('sombrero') ?? sm.number('control_sombrero');
     final caraInput = sm.number('cara') ?? sm.number('control_cara');
     final cuerpoInput = sm.number('cuerpo') ?? sm.number('control_cuerpo');
 
@@ -206,7 +222,16 @@ class _StaticMascotWidgetState extends State<StaticMascotWidget> {
     caraInput?.value = widget.cosmetico.toDouble();
     cuerpoInput?.value = widget.traje.toDouble();
 
-    // Reiniciar conteo de frames para recongelar
+    final triggerVolverEstatico =
+        sm.trigger('volver_estatico') ??
+        sm.trigger('trigger_volver_estatico') ??
+        sm.trigger('volver');
+    triggerVolverEstatico?.fire();
+
+    // Reactivar el controlador para que Rive aplique los nuevos cosmeticos
+    _controller!.active = true;
+
+    // Reiniciar conteo de frames para recongelar despues de renderizar
     _frameCount = 0;
     setState(() {});
     _scheduleFreeze();
@@ -238,15 +263,21 @@ class _StaticMascotWidgetState extends State<StaticMascotWidget> {
       );
     }
 
-    // Envolver en RepaintBoundary para aislar el repintado.
-    // Cuando _frozen es true, el widget deja de actualizarse visualmente
-    // porque no se llama a setState, reduciendo el consumo de recursos en scroll.
+    // RepaintBoundary aisla el repintado de cada instancia.
+    // Cuando el controlador esta pausado (active = false), el motor de Rive
+    // deja de actualizar este subtree, reduciendo el consumo en scroll.
     return RepaintBoundary(
       child: SizedBox(
         width: widget.size,
         height: widget.size,
         child: IgnorePointer(
-          child: RiveWidget(controller: _controller!),
+          child: Transform.scale(
+            scale: widget.scale,
+            child: Transform.translate(
+              offset: widget.offset,
+              child: RiveWidget(controller: _controller!),
+            ),
+          ),
         ),
       ),
     );

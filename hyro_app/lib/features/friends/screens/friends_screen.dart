@@ -155,7 +155,12 @@ class _FriendsScreenState extends State<FriendsScreen> {
                     ...friends.pendingSharedTasks.map(
                       (task) => Padding(
                         padding: const EdgeInsets.only(bottom: 8),
-                        child: _buildSharedTaskBanner(context, task, friends, userId!),
+                        child: _buildSharedTaskBanner(
+                          context,
+                          task,
+                          friends,
+                          userId!,
+                        ),
                       ),
                     ),
                     const SizedBox(height: 16),
@@ -838,7 +843,10 @@ class _FriendsScreenState extends State<FriendsScreen> {
                   padding: EdgeInsets.only(
                     bottom: index < ranking.length - 1 ? 8 : 0,
                   ),
-                  child: _buildRankingItem(rank: index + 1, entry: ranking[index]),
+                  child: _buildRankingItem(
+                    rank: index + 1,
+                    entry: ranking[index],
+                  ),
                 );
               },
             ),
@@ -908,13 +916,13 @@ class _FriendsScreenState extends State<FriendsScreen> {
             const SizedBox(width: 8),
             // Mascota Rive estática con cosméticos
             ClipRRect(
-              borderRadius: BorderRadius.circular(10),
+              borderRadius: BorderRadius.circular(12),
               child: Container(
-                width: 40,
-                height: 40,
+                width: 48,
+                height: 48,
                 decoration: BoxDecoration(
                   color: AppColors.surfaceLight,
-                  borderRadius: BorderRadius.circular(10),
+                  borderRadius: BorderRadius.circular(12),
                   border: Border.all(
                     color:
                         isMe
@@ -927,7 +935,8 @@ class _FriendsScreenState extends State<FriendsScreen> {
                   sombrero: entry.sombrero,
                   cosmetico: entry.cosmetico,
                   traje: entry.traje,
-                  size: 40,
+                  size: 52,
+                  scale: 1.5,
                 ),
               ),
             ),
@@ -1383,9 +1392,7 @@ class _FriendsScreenState extends State<FriendsScreen> {
                       currentUserId,
                     );
                     if (!context.mounted) return;
-                    await context.read<ShopProvider>().loadShop(
-                      currentUserId,
-                    );
+                    await context.read<ShopProvider>().loadShop(currentUserId);
                     if (!context.mounted) return;
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
@@ -1510,9 +1517,11 @@ class _FriendsScreenState extends State<FriendsScreen> {
                   if (match.betCoins > 0 && profile.monedas < match.betCoins) {
                     showDialog(
                       context: context,
-                      builder: (context) => const InsufficientCoinsDialog(
-                        body: 'La apuesta es muy alta, desafíalo a una cantidad menor',
-                      ),
+                      builder:
+                          (context) => const InsufficientCoinsDialog(
+                            body:
+                                'La apuesta es muy alta, desafíalo a una cantidad menor',
+                          ),
                     );
                     return;
                   }
@@ -1595,10 +1604,10 @@ class _FriendsScreenState extends State<FriendsScreen> {
   // ─── Tareas Compartidas Banner ──────────────────────────────────────────
 
   Widget _buildSharedTaskBanner(
-    BuildContext context, 
-    SharedTaskModel sharedTask, 
-    FriendsProvider friends, 
-    String currentUserId
+    BuildContext context,
+    SharedTaskModel sharedTask,
+    FriendsProvider friends,
+    String currentUserId,
   ) {
     return Container(
       padding: const EdgeInsets.all(12),
@@ -1622,10 +1631,12 @@ class _FriendsScreenState extends State<FriendsScreen> {
           // Avatar del remitente o icono genérico si no se encuentra
           Builder(
             builder: (context) {
-              final senderEntry = friends.ranking.cast<RankingEntry?>().firstWhere(
-                (r) => r?.usuarioId == sharedTask.remitenteId,
-                orElse: () => null,
-              );
+              final senderEntry = friends.ranking
+                  .cast<RankingEntry?>()
+                  .firstWhere(
+                    (r) => r?.usuarioId == sharedTask.remitenteId,
+                    orElse: () => null,
+                  );
 
               if (senderEntry != null) {
                 return Container(
@@ -1650,7 +1661,10 @@ class _FriendsScreenState extends State<FriendsScreen> {
                   color: AppColors.primary.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(14),
                 ),
-                child: const Icon(Icons.description_rounded, color: AppColors.primary),
+                child: const Icon(
+                  Icons.description_rounded,
+                  color: AppColors.primary,
+                ),
               );
             },
           ),
@@ -1692,25 +1706,43 @@ class _FriendsScreenState extends State<FriendsScreen> {
                 onTap: () async {
                   final confirm = await showDialog<bool>(
                     context: context,
-                    builder: (ctx) => AlertDialog(
-                      backgroundColor: AppColors.surface,
-                      title: const Text('¿Rechazar tarea?', style: TextStyle(color: Colors.white)),
-                      content: const Text('Se eliminará esta tarea de tus pendientes.', style: TextStyle(color: AppColors.textSecondary)),
-                      actions: [
-                        TextButton(
-                          onPressed: () => Navigator.pop(ctx, false),
-                          child: const Text('Cancelar', style: TextStyle(color: AppColors.textSecondary)),
+                    builder:
+                        (ctx) => AlertDialog(
+                          backgroundColor: AppColors.surface,
+                          title: const Text(
+                            '¿Rechazar tarea?',
+                            style: TextStyle(color: Colors.white),
+                          ),
+                          content: const Text(
+                            'Se eliminará esta tarea de tus pendientes.',
+                            style: TextStyle(color: AppColors.textSecondary),
+                          ),
+                          actions: [
+                            TextButton(
+                              onPressed: () => Navigator.pop(ctx, false),
+                              child: const Text(
+                                'Cancelar',
+                                style: TextStyle(
+                                  color: AppColors.textSecondary,
+                                ),
+                              ),
+                            ),
+                            TextButton(
+                              onPressed: () => Navigator.pop(ctx, true),
+                              child: const Text(
+                                'Rechazar',
+                                style: TextStyle(color: Color(0xFFEF4444)),
+                              ),
+                            ),
+                          ],
                         ),
-                        TextButton(
-                          onPressed: () => Navigator.pop(ctx, true),
-                          child: const Text('Rechazar', style: TextStyle(color: Color(0xFFEF4444))),
-                        ),
-                      ],
-                    ),
                   );
 
                   if (confirm == true) {
-                    await friends.rejectSharedTask(sharedTask.id, currentUserId);
+                    await friends.rejectSharedTask(
+                      sharedTask.id,
+                      currentUserId,
+                    );
                   }
                 },
               ),
@@ -1721,64 +1753,79 @@ class _FriendsScreenState extends State<FriendsScreen> {
                 color: Colors.black,
                 bgColor: AppColors.primary,
                 onTap: () async {
-                  final categories = context.read<CategoryProvider>().categories;
+                  final categories =
+                      context.read<CategoryProvider>().categories;
                   if (categories.isEmpty) {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Crea una categoría primero.')),
+                      const SnackBar(
+                        content: Text('Crea una categoría primero.'),
+                      ),
                     );
                     return;
                   }
 
                   // Mostrar modal para seleccionar categoría
-                  final selectedCategory = await showModalBottomSheet<CategoryModel>(
-                    context: context,
-                    backgroundColor: AppColors.surfaceLight,
-                    shape: const RoundedRectangleBorder(
-                      borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-                    ),
-                    builder: (ctx) {
-                      return Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 20),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(
-                              '¿En qué materia quieres guardar esto?',
-                              style: AppTypography.h3.copyWith(color: Colors.white),
-                            ),
-                            const SizedBox(height: 16),
-                            Expanded(
-                              child: ListView.builder(
-                                shrinkWrap: true,
-                                itemCount: categories.length,
-                                itemBuilder: (context, index) {
-                                  final cat = categories[index];
-                                  return ListTile(
-                                    leading: CircleAvatar(
-                                      backgroundColor: Color(cat.colorValue),
-                                      radius: 12,
-                                    ),
-                                    title: Text(cat.name, style: AppTypography.bodyMedium.copyWith(color: Colors.white)),
-                                    onTap: () => Navigator.pop(ctx, cat),
-                                  );
-                                },
-                              ),
-                            ),
-                          ],
+                  final selectedCategory =
+                      await showModalBottomSheet<CategoryModel>(
+                        context: context,
+                        backgroundColor: AppColors.surfaceLight,
+                        shape: const RoundedRectangleBorder(
+                          borderRadius: BorderRadius.vertical(
+                            top: Radius.circular(20),
+                          ),
                         ),
+                        builder: (ctx) {
+                          return Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 20),
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  '¿En qué materia quieres guardar esto?',
+                                  style: AppTypography.h3.copyWith(
+                                    color: Colors.white,
+                                  ),
+                                ),
+                                const SizedBox(height: 16),
+                                Expanded(
+                                  child: ListView.builder(
+                                    shrinkWrap: true,
+                                    itemCount: categories.length,
+                                    itemBuilder: (context, index) {
+                                      final cat = categories[index];
+                                      return ListTile(
+                                        leading: CircleAvatar(
+                                          backgroundColor: Color(
+                                            cat.colorValue,
+                                          ),
+                                          radius: 12,
+                                        ),
+                                        title: Text(
+                                          cat.name,
+                                          style: AppTypography.bodyMedium
+                                              .copyWith(color: Colors.white),
+                                        ),
+                                        onTap: () => Navigator.pop(ctx, cat),
+                                      );
+                                    },
+                                  ),
+                                ),
+                              ],
+                            ),
+                          );
+                        },
                       );
-                    },
-                  );
 
                   if (selectedCategory == null) return;
 
                   final uuid = const Uuid().v4();
-                  
+
                   // Crear la tarea localmente
                   final newTask = TaskModel(
                     id: uuid,
                     title: sharedTask.tareaTitulo,
-                    description: sharedTask.tareaDatos['descripcion'] as String?,
+                    description:
+                        sharedTask.tareaDatos['descripcion'] as String?,
                     category: selectedCategory.name,
                     categoryId: selectedCategory.id,
                     notes: sharedTask.tareaDatos['notas_str'] as String?,
@@ -1788,7 +1835,8 @@ class _FriendsScreenState extends State<FriendsScreen> {
                   await context.read<TaskProvider>().addTask(newTask);
 
                   // Recrear las notas
-                  final noteList = sharedTask.tareaDatos['notas_lista'] as List<dynamic>?;
+                  final noteList =
+                      sharedTask.tareaDatos['notas_lista'] as List<dynamic>?;
                   if (noteList != null) {
                     final auth = context.read<AuthProvider>();
                     final supabaseClient = Supabase.instance.client;
@@ -1798,7 +1846,7 @@ class _FriendsScreenState extends State<FriendsScreen> {
                       isAuthenticated: () => auth.isAuthenticated,
                       getUserId: () => auth.supabaseUserId,
                     );
-                    
+
                     for (final n in noteList) {
                       final content = n.toString();
                       final noteUuid = const Uuid().v4();
@@ -1816,9 +1864,10 @@ class _FriendsScreenState extends State<FriendsScreen> {
                   if (context.mounted) {
                     showDialog(
                       context: context,
-                      builder: (context) => TaskReceivedDialog(
-                        categoryName: selectedCategory.name,
-                      ),
+                      builder:
+                          (context) => TaskReceivedDialog(
+                            categoryName: selectedCategory.name,
+                          ),
                     );
                   }
                 },

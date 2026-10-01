@@ -25,72 +25,59 @@ class VersusActiveBattlesSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
+        const SizedBox(height: 16), // Separación adicional desde arriba
+        
         // Encabezado de la Sección
         Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(6),
-                  decoration: BoxDecoration(
-                    color: AppColors.pomodoroRed.withValues(alpha: 0.2),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: const Icon(
-                    Icons.sports_esports_rounded,
-                    color: AppColors.pomodoroRedLight,
-                    size: 18,
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  'Modo Versus',
-                  style: AppTypography.h3.copyWith(color: AppColors.textPrimary),
-                ),
-              ],
-            ),
-            if (activeMatches.isNotEmpty)
-              Text(
-                '${activeMatches.length} activas',
-                style: AppTypography.bodySmall.copyWith(color: AppColors.textSecondary),
+            Container(
+              padding: const EdgeInsets.all(6),
+              decoration: BoxDecoration(
+                color: const Color(0xFF6D28D9).withValues(alpha: 0.2),
+                borderRadius: BorderRadius.circular(8),
               ),
+              child: const Icon(
+                Icons.sports_esports_rounded,
+                color: Color(0xFF8B5CF6),
+                size: 18,
+              ),
+            ),
+            const SizedBox(width: 8),
+            Text(
+              'Modo Versus',
+              style: AppTypography.h2.copyWith(color: AppColors.textPrimary),
+            ),
           ],
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: 20),
 
-        // Lista Horizontal: Botón "Iniciar Duelo" + Tarjetas de Combates
-        SizedBox(
-          height: 160,
-          child: ListView(
-            scrollDirection: Axis.horizontal,
-            physics: const BouncingScrollPhysics(),
-            children: [
-              // ── Botón Principal "Iniciar Duelo" ──
-              _buildStartDuelButton(context),
+        // ── Botón Principal "Iniciar Duelo" ──
+        _buildStartDuelButton(context),
 
-              const SizedBox(width: 12),
-
-              // ── Tarjetas de Combates en Proceso ──
-              ...activeMatches.map((match) => Padding(
-                    padding: const EdgeInsets.only(right: 12),
-                    child: _buildMatchCard(context, match),
-                  )),
-            ],
+        if (activeMatches.isNotEmpty) ...[
+          const SizedBox(height: 24),
+          // ── Tarjetas de Combates en Proceso ──
+          Wrap(
+            spacing: 12,
+            runSpacing: 16,
+            alignment: WrapAlignment.center,
+            children: activeMatches.map((match) => _buildMatchCard(context, match)).toList(),
           ),
-        ),
+        ],
       ],
     );
   }
 
-  /// Botón principal llamativo con icono de espadas/duelo
+  /// Botón principal en forma de píldora
   Widget _buildStartDuelButton(BuildContext context) {
     return Container(
-      width: 125,
+      width: 300,
+      height: 60,
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(30),
         gradient: const LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
@@ -118,38 +105,27 @@ class VersusActiveBattlesSection extends StatelessWidget {
               },
             );
           },
-          borderRadius: BorderRadius.circular(20),
-          child: Padding(
-            padding: const EdgeInsets.all(12),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.2),
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(
-                    Icons.flash_on_rounded,
-                    color: Colors.white,
-                    size: 26,
-                  ),
+          borderRadius: BorderRadius.circular(30),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(
+                Icons.flash_on_rounded,
+                color: Colors.white,
+                size: 20,
+              ),
+              const SizedBox(height: 2),
+              Text(
+                'INICIAR DUELO',
+                textAlign: TextAlign.center,
+                style: AppTypography.labelLarge.copyWith(
+                  color: Colors.white,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: 0.5,
                 ),
-                const SizedBox(height: 10),
-                Text(
-                  'INICIAR\nDUELO',
-                  textAlign: TextAlign.center,
-                  style: AppTypography.labelLarge.copyWith(
-                    color: Colors.white,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w900,
-                    height: 1.1,
-                    letterSpacing: 0.5,
-                  ),
-                ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),

@@ -207,267 +207,306 @@ class _ShopScreenState extends State<ShopScreen>
     final isDesktop = Responsive.isDesktop(context);
     final profile = context.watch<ProfileProvider>();
     final shop = context.watch<ShopProvider>();
+    final currentCategory = _CosmeticCategory.values[_currentTabIndex];
+    final selectedId = _selectedItem[currentCategory] ?? -1;
 
-    return SingleChildScrollView(
+    return Padding(
       padding: EdgeInsets.only(
-        top: isDesktop ? 32 : (MediaQuery.of(context).padding.top + 72),
-        left: isDesktop ? 72 : 20,
-        right: isDesktop ? 32 : 20,
-        bottom: 32,
+        top: isDesktop ? 32 : (MediaQuery.of(context).padding.top + 8),
       ),
       child: Column(
         children: [
           // Header with coin count
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text('Tienda', style: AppTypography.h1),
-              const SizedBox(width: 16),
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 6,
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            decoration: BoxDecoration(
+              color: const Color(0xFF161B2A), // Fondo oscuro
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                SvgPicture.asset(
+                  'assets/icons/Moneda3.svg',
+                  width: 20,
+                  height: 20,
                 ),
-                decoration: BoxDecoration(
-                  color: Colors.amber.withAlpha(25),
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: Colors.amber.withAlpha(60)),
+                const SizedBox(width: 8),
+                Text(
+                  '${profile.monedas}',
+                  style: AppTypography.labelLarge.copyWith(
+                    color: Colors.amber,
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    SvgPicture.asset(
-                      'assets/icons/Moneda3.svg',
-                      width: 18,
-                      height: 18,
-                    ),
-                    const SizedBox(width: 4),
-                    Text(
-                      '${profile.monedas}',
-                      style: AppTypography.labelLarge.copyWith(
-                        color: Colors.amber,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
+              ],
+            ),
           ),
-          const SizedBox(height: 4),
-
-          const SizedBox(height: 24),
+          const SizedBox(height: 8),
 
           // ── Mascot Preview ──
-          GlassCard(
-            padding: const EdgeInsets.all(24),
-            child: Consumer<MascotController>(
-              builder: (context, mascot, _) {
-                final previewSize = isDesktop ? 380.0 : 260.0;
-                if (!mascot.isLoaded) {
-                  return SizedBox(
-                    width: previewSize,
-                    height: previewSize,
-                    child: const Center(
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 8),
+              child: Consumer<MascotController>(
+                builder: (context, mascot, _) {
+                  if (!mascot.isLoaded) {
+                    return const Center(
                       child: CircularProgressIndicator(
                         color: AppColors.primary,
                         strokeWidth: 2,
                       ),
+                    );
+                  }
+                  return AspectRatio(
+                    aspectRatio: 1,
+                    child: RiveWidget(
+                      controller: mascot.controller!,
+                      fit: Fit.contain,
                     ),
                   );
-                }
-                return SizedBox(
-                  width: previewSize,
-                  height: previewSize,
-                  child: RiveWidget(
-                    controller: mascot.controller!,
-                    fit: Fit.contain,
-                  ),
-                );
-              },
-            ),
-          ),
-          const SizedBox(height: 24),
-
-          // ── Loading / Content ──
-          if (shop.isLoading)
-            const Padding(
-              padding: EdgeInsets.all(48),
-              child: CircularProgressIndicator(color: AppColors.primary),
-            )
-          else
-            GlassCard(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                children: [
-                  TabBar(
-                    controller: _tabController,
-                    indicatorColor: AppColors.timerColor,
-                    labelColor: AppColors.textPrimary,
-                    unselectedLabelColor: AppColors.textSecondary,
-                    labelStyle: AppTypography.labelLarge,
-                    unselectedLabelStyle: AppTypography.bodyMedium,
-                    dividerColor: AppColors.cardBorder,
-                    tabs: const [
-                      Tab(text: 'Sombreros'),
-                      Tab(text: 'Cara'),
-                      Tab(text: 'Cuerpo'),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  SizedBox(
-                    height: 280,
-                    child: TabBarView(
-                      controller: _tabController,
-                      children: [
-                        _buildCategoryTab(shop, _CosmeticCategory.sombrero),
-                        _buildCategoryTab(shop, _CosmeticCategory.cara),
-                        _buildCategoryTab(shop, _CosmeticCategory.cuerpo),
-                      ],
-                    ),
-                  ),
-                ],
+                },
               ),
             ),
-          const SizedBox(height: 24),
-          const SizedBox(height: 80),
+          ),
+          const SizedBox(height: 8),
+
+          // Action button (Equipar / Comprar)
+          if (selectedId >= 0)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              child: _buildActionButton(
+                shop,
+                currentCategory,
+                selectedId,
+                _nadaId(currentCategory),
+              ),
+            ),
+          const SizedBox(height: 16),
+
+          // ── Custom Tabs ──
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              _buildCustomTabIcon(0, Icons.child_care),
+              const SizedBox(width: 16),
+              _buildCustomTabIcon(1, Icons.remove_red_eye),
+              const SizedBox(width: 16),
+              _buildCustomTabIcon(2, Icons.accessibility_new_rounded),
+            ],
+          ),
+          const SizedBox(height: 16),
+
+          // ── Loading / Content Grid ──
+          Container(
+            width: double.infinity,
+            alignment: Alignment.topCenter, // Mantiene los items arriba
+            padding: EdgeInsets.only(
+              top: 24,
+              left: 16,
+              right: 16,
+              bottom: isDesktop ? 24 : 90,
+            ),
+            decoration: const BoxDecoration(
+              color: Color(0xFF0F1522), // Fondo oscuro profundo
+              borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
+            ),
+            child:
+                shop.isLoading
+                    ? const Center(
+                      child: CircularProgressIndicator(
+                        color: AppColors.primary,
+                      ),
+                    )
+                    : _buildCategoryGrid(shop, currentCategory),
+          ),
         ],
       ),
     );
   }
 
-  // ── Generic Category Tab ──
-  Widget _buildCategoryTab(ShopProvider shop, _CosmeticCategory category) {
+  Widget _buildCustomTabIcon(int index, IconData icon) {
+    final isSelected = _currentTabIndex == index;
+    // Opcionalmente podemos usar iconos específicos basados en el índice
+    IconData displayIcon = icon;
+    if (index == 0) displayIcon = Icons.smart_toy_outlined; // Sombrero/Cabeza
+    if (index == 1) displayIcon = Icons.face; // Cara/Bigote
+    if (index == 2) displayIcon = Icons.checkroom; // Cuerpo/Traje
+
+    return GestureDetector(
+      onTap: () {
+        setState(() => _currentTabIndex = index);
+        _tabController.animateTo(index);
+        _handleTabSelection();
+      },
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        width: 64,
+        height: 64,
+        decoration: BoxDecoration(
+          color: const Color(0xFF1A1F30), // Fondo caja tab
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color:
+                isSelected
+                    ? Colors.white.withValues(alpha: 0.2)
+                    : Colors.transparent,
+            width: 2,
+          ),
+        ),
+        child: Icon(
+          displayIcon,
+          color: isSelected ? Colors.white : Colors.white54,
+          size: 32,
+        ),
+      ),
+    );
+  }
+
+  // ── Generic Category Grid ──
+  Widget _buildCategoryGrid(ShopProvider shop, _CosmeticCategory category) {
     final items = _itemsForCategory(shop, category);
     final selected = _selectedItem[category]!;
     final nadaId = _nadaId(category);
 
-    return Column(
+    return Row(
       children: [
+        const Icon(
+          Icons.arrow_back_ios_new_rounded,
+          color: Colors.white54,
+          size: 24,
+        ),
+        const SizedBox(width: 8),
         Expanded(
-          child: SingleChildScrollView(
-            child: Wrap(
-              spacing: 12,
-              runSpacing: 12,
-              alignment: WrapAlignment.center,
-              children:
-                  items.map((item) {
-                    final isSelected = selected == item.id;
-                    final isOwned = shop.ownsItem(item.id) || item.id == nadaId;
+          child: SizedBox(
+            height: 170, // Increased to accommodate taller cards
+            child: ListView.builder(
+              scrollDirection: Axis.horizontal,
+              physics: const BouncingScrollPhysics(),
+              itemCount: items.length,
+              itemBuilder: (context, index) {
+                final item = items[index];
+                final isSelected = selected == item.id;
+                final isOwned = shop.ownsItem(item.id) || item.id == nadaId;
 
-                    return GestureDetector(
-                      onTap: () => _onSelect(category, item.id),
-                      child: AnimatedContainer(
-                        duration: const Duration(milliseconds: 200),
-                        width: 100,
-                        height: 135, // Forzar misma altura siempre
-                        padding: const EdgeInsets.symmetric(
-                          vertical:
-                              12, // Reduce un poco el padding vertical para acomodar la altura fija
-                          horizontal: 8,
-                        ),
-                        decoration: BoxDecoration(
+                return Padding(
+                  padding: const EdgeInsets.only(right: 16),
+                  child: GestureDetector(
+                    onTap: () => _onSelect(category, item.id),
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 200),
+                      width: 110, // Increased width
+                      height:
+                          160, // Increased height to match "extend it upwards"
+                      padding: const EdgeInsets.symmetric(
+                        vertical: 12,
+                        horizontal: 8,
+                      ),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF161B2A),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(
                           color:
                               isSelected
-                                  ? AppColors.timerColor.withAlpha(30)
-                                  : AppColors.surfaceLight,
-                          borderRadius: BorderRadius.circular(16),
-                          border: Border.all(
-                            color:
-                                isSelected
-                                    ? AppColors.timerColor
-                                    : AppColors.cardBorder,
-                            width: isSelected ? 2 : 1,
-                          ),
-                        ),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            if (item.svgAsset != null)
-                              Transform.translate(
-                                offset: Offset(0, item.previewOffsetY),
-                                child: Transform.scale(
-                                  scale: item.previewScale,
-                                  child: SvgPicture.asset(
-                                    item.svgAsset!,
-                                    height: 48,
-                                    fit: BoxFit.contain,
-                                  ),
-                                ),
-                              )
-                            else if (item.imageAsset != null)
-                              Transform.translate(
-                                offset: Offset(0, item.previewOffsetY),
-                                child: Transform.scale(
-                                  scale: item.previewScale,
-                                  child: Image.asset(
-                                    item.imageAsset!,
-                                    height: 48,
-                                    fit: BoxFit.contain,
-                                  ),
-                                ),
-                              )
-                            else
-                              Text(
-                                item.id == nadaId ? '❌' : item.icon,
-                                style: const TextStyle(fontSize: 36),
-                              ),
-                            const SizedBox(height: 8),
-                            Expanded(
-                              child: Text(
-                                item.nombre,
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
-                                style: AppTypography.bodySmall.copyWith(
-                                  color:
-                                      isSelected
-                                          ? AppColors.textPrimary
-                                          : AppColors.textSecondary,
-                                ),
-                                textAlign: TextAlign.center,
-                              ),
-                            ),
-                            if (isOwned && item.id != nadaId) ...[
-                              Text(
-                                'Comprado',
-                                style: AppTypography.bodySmall.copyWith(
-                                  color: AppColors.breakGreen,
-                                  fontSize: 10,
-                                ),
-                              ),
-                            ],
-                            if (!isOwned) ...[
-                              Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  SvgPicture.asset(
-                                    'assets/icons/Moneda3.svg',
-                                    width: 12,
-                                    height: 12,
-                                  ),
-                                  const SizedBox(width: 2),
-                                  Text(
-                                    '${item.precio}',
-                                    style: AppTypography.bodySmall.copyWith(
-                                      color: Colors.amber,
-                                      fontSize: 10,
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ],
+                                  ? const Color(0xFF3B82F6)
+                                  : Colors.transparent, // Outline azul
+                          width: 2,
                         ),
                       ),
-                    );
-                  }).toList(),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          if (item.svgAsset != null)
+                            Transform.translate(
+                              offset: Offset(0, item.previewOffsetY),
+                              child: Transform.scale(
+                                scale: item.previewScale,
+                                child: SvgPicture.asset(
+                                  item.svgAsset!,
+                                  height: 48,
+                                  fit: BoxFit.contain,
+                                ),
+                              ),
+                            )
+                          else if (item.imageAsset != null)
+                            Transform.translate(
+                              offset: Offset(0, item.previewOffsetY),
+                              child: Transform.scale(
+                                scale: item.previewScale,
+                                child: Image.asset(
+                                  item.imageAsset!,
+                                  height: 48,
+                                  fit: BoxFit.contain,
+                                ),
+                              ),
+                            )
+                          else
+                            Text(
+                              item.id == nadaId ? '❌' : item.icon,
+                              style: const TextStyle(fontSize: 36),
+                            ),
+                          const SizedBox(height: 8),
+                          Expanded(
+                            child: Text(
+                              item.nombre,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              style: AppTypography.bodySmall.copyWith(
+                                color: Colors.white,
+                                fontSize: 10,
+                                fontWeight: FontWeight.w600,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                          ),
+                          if (isOwned && item.id != nadaId) ...[
+                            Text(
+                              'Comprado',
+                              style: AppTypography.bodySmall.copyWith(
+                                color: AppColors.breakGreen,
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
+                          if (!isOwned) ...[
+                            Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                SvgPicture.asset(
+                                  'assets/icons/Moneda3.svg',
+                                  width: 12,
+                                  height: 12,
+                                ),
+                                const SizedBox(width: 4),
+                                Text(
+                                  '${item.precio}',
+                                  style: AppTypography.bodySmall.copyWith(
+                                    color: Colors.amber,
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                  ),
+                );
+              },
             ),
           ),
         ),
-        const SizedBox(height: 12),
-        // Action button
-        if (selected >= 0) _buildActionButton(shop, category, selected, nadaId),
+        const SizedBox(width: 8),
+        const Icon(
+          Icons.arrow_forward_ios_rounded,
+          color: Colors.white54,
+          size: 24,
+        ),
       ],
     );
   }
@@ -480,37 +519,35 @@ class _ShopScreenState extends State<ShopScreen>
   ) {
     final isOwned = shop.ownsItem(selected) || selected == nadaId;
 
-    if (selected == nadaId) {
-      return _ShopButton(
-        label: 'Equipar',
-        icon: Icons.checkroom,
-        color: AppColors.timerColor,
-        onTap: () => _onEquip(category, nadaId),
+    if (selected == nadaId || isOwned) {
+      return Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          _ShopButton(
+            label: 'Equipar',
+            icon: Icons.person_outline,
+            color: AppColors.timerColor,
+            onTap: () => _onEquip(category, selected),
+          ),
+        ],
       );
     }
 
-    if (isOwned) {
-      return _ShopButton(
-        label: 'Equipar',
-        icon: Icons.checkroom,
-        color: AppColors.timerColor,
-        onTap: () => _onEquip(category, selected),
-      );
-    }
-
-    // Not owned — show price and buy button
     final items = _itemsForCategory(shop, category);
     final itemIdx = items.indexWhere((i) => i.id == selected);
-
-    // If the selected/equipped item is not in the current catalog (e.g. from old prefs), hide button.
     if (itemIdx == -1) return const SizedBox.shrink();
 
     final item = items[itemIdx];
-    return _ShopButton(
-      label: _isPurchasing ? 'Comprando...' : 'Comprar · ${item.precio} 🪙',
-      icon: Icons.shopping_cart,
-      color: AppColors.timerColor,
-      onTap: _isPurchasing ? () {} : () => _onBuy(category, selected),
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        _ShopButton(
+          label: _isPurchasing ? 'Comprando...' : 'Comprar · ${item.precio} 🪙',
+          icon: Icons.shopping_cart,
+          color: AppColors.timerColor,
+          onTap: _isPurchasing ? () {} : () => _onBuy(category, selected),
+        ),
+      ],
     );
   }
 
@@ -560,11 +597,7 @@ class _ShopScreenState extends State<ShopScreen>
               mainAxisSize: MainAxisSize.min,
               children: [
                 if (item.svgAsset != null)
-                  SvgPicture.asset(
-                    item.svgAsset!,
-                    width: 48,
-                    height: 48,
-                  )
+                  SvgPicture.asset(item.svgAsset!, width: 48, height: 48)
                 else
                   Text(item.icon, style: const TextStyle(fontSize: 48)),
                 const SizedBox(height: 12),
@@ -831,7 +864,10 @@ class _ShopScreenState extends State<ShopScreen>
                               height: 32,
                             )
                           else
-                            Text(item.icon, style: const TextStyle(fontSize: 32)),
+                            Text(
+                              item.icon,
+                              style: const TextStyle(fontSize: 32),
+                            ),
                           const SizedBox(height: 8),
                           Text(
                             item.nombre,

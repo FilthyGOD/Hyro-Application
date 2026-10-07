@@ -23,7 +23,13 @@ class SpotifyAuthService extends ChangeNotifier {
   String? get accessToken => _accessToken;
   bool get isAuthenticated => _isAuthenticated;
 
-  SpotifyAuthService() {
+  static final SpotifyAuthService _instance = SpotifyAuthService._internal();
+
+  factory SpotifyAuthService() {
+    return _instance;
+  }
+
+  SpotifyAuthService._internal() {
     _loadToken();
   }
 

@@ -335,6 +335,7 @@ class _DesktopLayout extends StatelessWidget {
                                           ? ((120 - state.remainingPauseSeconds) / 120)
                                           : state.progress,
                                       size: timerSize,
+                                      isIdle: !state.isRunning && !state.isPaused,
                                     ),
                                     const SizedBox(height: 16),
                                     if (isActiveLayout &&
@@ -684,6 +685,7 @@ class _MobileLayout extends StatelessWidget {
                           ? ((120 - state.remainingPauseSeconds) / 120)
                           : state.progress,
                       size: size,
+                      isIdle: !state.isRunning && !state.isPaused,
                     );
                   },
                 ),
@@ -757,6 +759,7 @@ class _MobileLayout extends StatelessWidget {
                         remainingSeconds: state.remainingSeconds,
                         progress: state.progress,
                         size: size,
+                        isIdle: !state.isRunning && !state.isPaused,
                       );
                     },
                   ),

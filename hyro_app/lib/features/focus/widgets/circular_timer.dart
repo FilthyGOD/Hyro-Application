@@ -10,6 +10,7 @@ class CircularTimer extends StatelessWidget {
   final double progress;
   final String label;
   final double size;
+  final bool isIdle;
 
   const CircularTimer({
     super.key,
@@ -17,6 +18,7 @@ class CircularTimer extends StatelessWidget {
     required this.progress,
     this.label = '',
     this.size = 300,
+    this.isIdle = false,
   });
 
   @override
@@ -32,6 +34,7 @@ class CircularTimer extends StatelessWidget {
             size: Size(size, size),
             painter: _TimerRingPainter(
               progress: progress,
+              isIdle: isIdle,
               progressColor: AppColors.timerColor,
               trackColor: AppColors.surfaceLight,
               glowColor: AppColors.timerGlow,
@@ -66,6 +69,7 @@ class CircularTimer extends StatelessWidget {
 
 class _TimerRingPainter extends CustomPainter {
   final double progress;
+  final bool isIdle;
   final Color progressColor;
   final Color trackColor;
   final Color glowColor;
@@ -73,6 +77,7 @@ class _TimerRingPainter extends CustomPainter {
 
   _TimerRingPainter({
     required this.progress,
+    required this.isIdle,
     required this.progressColor,
     required this.trackColor,
     required this.glowColor,
@@ -83,8 +88,10 @@ class _TimerRingPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final center = Offset(size.width / 2, size.height / 2);
     final radius = (size.width - strokeWidth) / 2;
+    // Para que se vacíe de "izquierda a derecha" (la parte izquierda desaparece primero),
+    // fijamos el inicio en -pi/2 y reducimos el barrido.
     const startAngle = -pi / 2;
-    final sweepAngle = 2 * pi * progress;
+    final sweepAngle = 2 * pi * (1 - progress);
 
     // Pista
     final trackPaint =
@@ -96,8 +103,8 @@ class _TimerRingPainter extends CustomPainter {
 
     canvas.drawCircle(center, radius, trackPaint);
 
-    // Arco de progreso
-    if (progress > 0) {
+    // Arco de progreso (no dibujar si está inactivo)
+    if (!isIdle && progress < 1) {
       final progressPaint =
           Paint()
             ..color = progressColor
@@ -134,5 +141,5 @@ class _TimerRingPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant _TimerRingPainter oldDelegate) =>
-      oldDelegate.progress != progress;
+      oldDelegate.progress != progress || oldDelegate.isIdle != isIdle;
 }

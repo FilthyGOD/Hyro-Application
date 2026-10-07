@@ -73,6 +73,7 @@ class MiniFocusScreen extends StatelessWidget {
                     progress: state.progress,
                     label: _getTimerLabel(state.mode),
                     size: 160,
+                    isIdle: !state.isRunning && !state.isPaused,
                   ),
                   const SizedBox(height: 24),
                   TimerControls(

@@ -14,6 +14,7 @@ import '../../focus/widgets/completed_session_view.dart';
 import 'dart:io';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import '../../../core/services/strict_mode_service.dart';
+import '../../../core/services/spotify/spotify_auth_service.dart';
 
 /// Settings screen for Pomodoro durations, notifications, and theme.
 class SettingsScreen extends StatefulWidget {
@@ -562,7 +563,9 @@ class _SettingsScreenState extends State<SettingsScreen>
                         ),
                       ),
                       ElevatedButton(
-                        onPressed: () {},
+                        onPressed: () {
+                          SpotifyAuthService().authenticate();
+                        },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: const Color(0xFF1DB954),
                         ),

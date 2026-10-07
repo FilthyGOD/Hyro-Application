@@ -55,7 +55,6 @@ class _MainLayoutState extends State<MainLayout> {
   @override
   void dispose() {
     _spotifyPlayerService.dispose();
-    _spotifyAuthService.dispose();
     super.dispose();
   }
 

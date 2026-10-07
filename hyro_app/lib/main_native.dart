@@ -3,6 +3,7 @@ import 'package:rive/rive.dart';
 import 'package:isar/isar.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:window_manager/window_manager.dart';
+
 import 'package:windows_single_instance/windows_single_instance.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'dart:io';
@@ -51,40 +52,37 @@ Future<void> platformInit(List<String> args) async {
     }
   }
 
-  // ─── EL CADENERO OFICIAL (PARCHADO PARA NULLS) ───────────────────
+  // ─── EL CADENERO OFICIAL (RESTAURADO CON SOPORTE PKCE) ───────────────────
   if (Platform.isWindows) {
-    // Le ponemos "bool?" y "??" para que nunca sea nulo
     bool? resultadoInstancia = await WindowsSingleInstance.ensureSingleInstance(
       args,
       "hyro_app_instancia_unica",
       onSecondWindow: (List<String> nuevosArgs) async {
-        debugPrint(
-          '🚨 [Hyro Debug] onSecondWindow llamado con ${nuevosArgs.length} args',
-        );
-        for (var arg in nuevosArgs) {
-          debugPrint('🚨 [Hyro Debug] Arg: $arg');
-        }
+        debugPrint('🚨 [Hyro Debug] onSecondWindow llamado con ${nuevosArgs.length} args');
         if (nuevosArgs.isNotEmpty) {
-          final enlace = nuevosArgs.first;
+          // El navegador a veces pasa el ejecutable como primer argumento y la URL como segundo.
+          // Buscamos el primer argumento que parezca una URL.
+          final enlace = nuevosArgs.firstWhere(
+            (arg) => arg.startsWith('io.supabase.hyroapp://'),
+            orElse: () => nuevosArgs.first,
+          );
           debugPrint('🚨 [Hyro Debug] ¡Link robado del clon!: $enlace');
           try {
-            final response = await Supabase.instance.client.auth
-                .getSessionFromUrl(Uri.parse(enlace));
-            debugPrint(
-              '🚨 [Hyro Debug] getSessionFromUrl exitoso! User: ${response.session?.user.email}',
-            );
+            final uri = Uri.parse(enlace);
+            if (uri.queryParameters.containsKey('code')) {
+              await Supabase.instance.client.auth.exchangeCodeForSession(uri.queryParameters['code']!);
+              debugPrint('🚨 [Hyro Debug] exchangeCodeForSession exitoso!');
+            } else {
+              final response = await Supabase.instance.client.auth.getSessionFromUrl(uri);
+              debugPrint('🚨 [Hyro Debug] getSessionFromUrl exitoso! User: ${response.session?.user.email}');
+            }
           } catch (e) {
-            debugPrint(
-              '🚨 [Hyro Debug] Error en Supabase getSessionFromUrl: $e',
-            );
+            debugPrint('🚨 [Hyro Debug] Error procesando enlace en onSecondWindow: $e');
           }
-        } else {
-          debugPrint('🚨 [Hyro Debug] onSecondWindow: sin args');
         }
       },
     );
 
-    // Si es falso (o sea, es el clon), se cierra. Si es nulo, sigue adelante.
     if (resultadoInstancia == false) {
       exit(0);
     }

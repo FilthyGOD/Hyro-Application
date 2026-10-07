@@ -38,7 +38,11 @@ StreamSubscription<Uri>? listenForDeepLinksPC() {
       final initialUri = await appLinks.getInitialLink();
       if (initialUri != null && initialUri.scheme == 'io.supabase.hyroapp') {
         debugPrint('🚨 [Hyro Debug] Link inicial atrapado: $initialUri');
-        await Supabase.instance.client.auth.getSessionFromUrl(initialUri);
+        if (initialUri.queryParameters.containsKey('code')) {
+          await Supabase.instance.client.auth.exchangeCodeForSession(initialUri.queryParameters['code']!);
+        } else {
+          await Supabase.instance.client.auth.getSessionFromUrl(initialUri);
+        }
       }
     } catch (e) {
       debugPrint('🚨 [Hyro Debug] Error leyendo link inicial: $e');
@@ -50,7 +54,11 @@ StreamSubscription<Uri>? listenForDeepLinksPC() {
       if (uri.scheme != 'io.supabase.hyroapp') return;
       debugPrint('🚨 [Hyro Debug] Link atrapado en stream: $uri');
       try {
-        await Supabase.instance.client.auth.getSessionFromUrl(uri);
+        if (uri.queryParameters.containsKey('code')) {
+          await Supabase.instance.client.auth.exchangeCodeForSession(uri.queryParameters['code']!);
+        } else {
+          await Supabase.instance.client.auth.getSessionFromUrl(uri);
+        }
       } catch (e) {
         debugPrint('🚨 [Hyro Debug] Error en Supabase con el link: $e');
       }

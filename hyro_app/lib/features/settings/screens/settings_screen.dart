@@ -253,6 +253,181 @@ class _SettingsScreenState extends State<SettingsScreen>
               ),
             ),
             const SizedBox(height: 16),
+            // ── Notificaciones ──
+            GlassCard(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Notificaciones', style: AppTypography.h3),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Configura la hora a la que deseas recibir el recordatorio para estudiar y mantener tu racha.',
+                    style: AppTypography.bodySmall,
+                  ),
+                  const Divider(height: 24),
+                  _ToggleSetting(
+                    label: 'Recordatorio Diario',
+                    subtitle:
+                        'Recibe una notificación motivacional a tu hora elegida',
+                    value: settings.notificationsEnabled,
+                    onChanged: (v) async {
+                      settings.setNotificationsEnabled(v);
+                      if (v) {
+                        final pendingTasks = context
+                            .read<TaskProvider>()
+                            .tasks
+                            .where((t) => !t.isCompleted)
+                            .length;
+                        final stats = context.read<StatsProvider>();
+                        await NotificationsService.instance
+                            .scheduleDailyNotifications(
+                              pendingTaskCount: pendingTasks,
+                              currentStreak: stats.currentStreak,
+                              hadSessionToday: stats.todaysStats != null,
+                              customHour: settings.notificationHour,
+                              customMinute: settings.notificationMinute,
+                            );
+                      } else {
+                        await NotificationsService.instance
+                            .cancelDailyNotifications();
+                      }
+                    },
+                  ),
+                  if (settings.notificationsEnabled) ...[
+                    const SizedBox(height: 16),
+                    InkWell(
+                      onTap: () async {
+                        final picked = await showTimePicker(
+                          context: context,
+                          initialTime: settings.notificationTime,
+                          helpText: 'SELECCIONA LA HORA DEL RECORDATORIO',
+                          cancelText: 'CANCELAR',
+                          confirmText: 'ACEPTAR',
+                          builder: (context, child) {
+                            return Theme(
+                              data: Theme.of(context).copyWith(
+                                colorScheme: const ColorScheme.dark(
+                                  primary: AppColors.primary,
+                                  onPrimary: Colors.white,
+                                  surface: AppColors.surface,
+                                  onSurface: Colors.white,
+                                ),
+                                timePickerTheme: TimePickerThemeData(
+                                  backgroundColor: AppColors.surface,
+                                  dialBackgroundColor: AppColors.background,
+                                  hourMinuteColor:
+                                      AppColors.primary.withAlpha(40),
+                                  hourMinuteTextColor: Colors.white,
+                                  dayPeriodColor:
+                                      AppColors.primary.withAlpha(40),
+                                  dayPeriodTextColor: Colors.white,
+                                ),
+                              ),
+                              child: child!,
+                            );
+                          },
+                        );
+                        if (picked != null && context.mounted) {
+                          settings.setNotificationTime(picked);
+                          final pendingTasks = context
+                              .read<TaskProvider>()
+                              .tasks
+                              .where((t) => !t.isCompleted)
+                              .length;
+                          final stats = context.read<StatsProvider>();
+                          await NotificationsService.instance
+                              .scheduleDailyNotifications(
+                                pendingTaskCount: pendingTasks,
+                                currentStreak: stats.currentStreak,
+                                hadSessionToday: stats.todaysStats != null,
+                                customHour: picked.hour,
+                                customMinute: picked.minute,
+                              );
+                          if (!context.mounted) return;
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                'Recordatorio programado a las ${picked.format(context)}',
+                              ),
+                              backgroundColor: AppColors.primary,
+                              behavior: SnackBarBehavior.floating,
+                            ),
+                          );
+                        }
+                      },
+                      borderRadius: BorderRadius.circular(12),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 14,
+                        ),
+                        decoration: BoxDecoration(
+                          color: AppColors.surface.withAlpha(120),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: Colors.white.withAlpha(20),
+                          ),
+                        ),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'Hora del Recordatorio',
+                                    style: AppTypography.labelLarge,
+                                  ),
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    'Toca para cambiar la hora de entrega',
+                                    style: AppTypography.bodySmall,
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 6,
+                              ),
+                              decoration: BoxDecoration(
+                                color: AppColors.primary.withAlpha(40),
+                                borderRadius: BorderRadius.circular(8),
+                                border: Border.all(
+                                  color: AppColors.primary.withAlpha(80),
+                                ),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  const Icon(
+                                    Icons.access_time_rounded,
+                                    size: 16,
+                                    color: AppColors.primary,
+                                  ),
+                                  const SizedBox(width: 6),
+                                  Text(
+                                    settings.notificationTime.format(context),
+                                    style: AppTypography.labelLarge.copyWith(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
             // ── Personalización ──
             GlassCard(
               padding: const EdgeInsets.all(20),
@@ -364,6 +539,31 @@ class _SettingsScreenState extends State<SettingsScreen>
                             style: ElevatedButton.styleFrom(
                               backgroundColor: Colors.indigo.withAlpha(50),
                               foregroundColor: Colors.indigoAccent,
+                              alignment: Alignment.centerLeft,
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 12,
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        // ── Session Done / Racha Asegurada ──
+                        SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton.icon(
+                            icon: const Icon(Icons.verified_rounded),
+                            label: const Text('🎉 Racha Asegurada (Sesión Hoy)'),
+                            onPressed: () {
+                              NotificationsService.instance
+                                  .testSessionDoneMotivation(
+                                    pendingTasks: pendingTasks,
+                                    streak: streak > 0 ? streak : 3,
+                                  );
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.green.withAlpha(50),
+                              foregroundColor: Colors.greenAccent,
                               alignment: Alignment.centerLeft,
                               padding: const EdgeInsets.symmetric(
                                 horizontal: 16,

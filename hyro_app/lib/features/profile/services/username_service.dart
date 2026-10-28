@@ -13,7 +13,7 @@ class UsernameService {
     if (trimmed.isEmpty) return 'El nombre no puede estar vacio.';
     if (trimmed.length < 3) return 'Minimo 3 caracteres.';
     if (trimmed.length > 24) return 'Maximo 24 caracteres.';
-    final validChars = RegExp(r'^[a-zA-Z0-9_\-\.]+$');
+    final validChars = RegExp(r'^[a-zA-Z0-9_\-\.\ ]+$');
     if (!validChars.hasMatch(trimmed)) {
       return 'Solo letras, numeros, _, - y . estan permitidos.';
     }

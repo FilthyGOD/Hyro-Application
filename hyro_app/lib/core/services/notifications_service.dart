@@ -6,6 +6,8 @@ import 'package:timezone/data/latest_all.dart' as tz;
 import 'package:permission_handler/permission_handler.dart';
 import 'dart:io';
 import 'package:timezone/timezone.dart' as tz;
+import 'package:flutter_timezone/flutter_timezone.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class NotificationsService {
   static final NotificationsService _instance = NotificationsService._();
@@ -82,17 +84,55 @@ class NotificationsService {
     '¿Hoy sí vas a estudiar? ¡No lo decepciones!',
   ];
 
-  /// Mensajes de riesgo de racha (racha > 0 pero sin sesión hoy)
+  /// Mensajes cuando el usuario YA completó su sesión de Pomodoro hoy (Racha protegida / Gran trabajo)
+  static const List<String> _sessionDoneTitles = [
+    '🎉 ¡Excelente trabajo hoy!',
+    '🔥 ¡Racha asegurada!',
+    '✨ ¡Objetivo cumplido!',
+    '🏆 ¡Día conquistado!',
+    '💪 ¡Gran constancia!',
+  ];
+
+  static const List<String> _sessionDoneBodies = [
+    'Ya aseguraste tu racha de {streak} días. ¡Sigue así!',
+    'Completaste tu sesión de hoy. ¡Descansa o adelanta con tus {n} pendientes!',
+    '¡Tu racha de {streak} días está a salvo! Gran dedicación.',
+    'Cumpliste con tu enfoque de hoy. Hyro está orgulloso de ti.',
+    'Sesión completada con éxito. ¡Mañana vamos por más!',
+  ];
+
+  /// Mensajes de riesgo de racha (racha > 0 pero aún sin sesión hoy)
   static const List<String> _streakRiskTitles = [
-    '🔥 ¡Racha en peligro!',
-    '😰 ¡No la pierdas!',
-    '⚠️ ¡Tu racha te necesita!',
+    '🔥 ¡Tu racha está en juego!',
+    '⚠️ ¡No pierdas tu racha!',
+    '⏰ Momento de estudiar',
+    '📖 Protege tu racha hoy',
+    '⚡ ¿Un Pomodoro rápido?',
   ];
 
   static const List<String> _streakRiskBodies = [
     '¡No pierdas tu racha de {streak} días! Haz una sesión ahora para protegerla.',
-    'Tu racha de {streak} días está a punto de romperse. ¡Solo necesitas un Pomodoro!',
-    'Llevas {streak} días seguidos. ¡No dejes que se pierda por hoy! ',
+    'Tu racha de {streak} días necesita un Pomodoro hoy. ¡Aún hay tiempo!',
+    'Llevas {streak} días seguidos. ¡Una sesión rápida de enfoque y listo!',
+    'Tienes {n} tareas pendientes y tu racha te espera. ¿Te animas?',
+    '25 minutos de enfoque hoy para mantener tus {streak} días de racha.',
+  ];
+
+  /// Mensajes de motivación general (sin racha previa y sin sesión hoy)
+  static const List<String> _generalMotivationTitles = [
+    '🌅 ¡Momento de enfocarse!',
+    '📚 ¡Hora de estudiar!',
+    '🎯 ¿Listo para avanzar?',
+    '💡 ¿Un Pomodoro hoy?',
+    '🚀 ¡A por tus metas!',
+  ];
+
+  static const List<String> _generalMotivationBodies = [
+    'Tienes {n} tareas pendientes. ¡Hoy es un gran día para avanzar!',
+    '25 minutos de enfoque pueden marcar la diferencia. ¡Vamos con todo!',
+    'Empieza hoy tu racha de estudio con una sesión de Pomodoro.',
+    'Cada sesión cuenta. ¡Dedícale unos minutos a tus {n} pendientes!',
+    'Tu futuro yo te lo agradecerá. ¡Comienza una sesión ahora!',
   ];
 
   /// Mensajes de inactividad (2+ días sin sesión) — para uso futuro
@@ -116,6 +156,15 @@ class NotificationsService {
 
   Future<void> init() async {
     tz.initializeTimeZones();
+    try {
+      if (!kIsWeb) {
+        final timezoneInfo = await FlutterTimezone.getLocalTimezone();
+        tz.setLocalLocation(tz.getLocation(timezoneInfo.identifier));
+        debugPrint('⏰ Timezone configurado: ${timezoneInfo.identifier}');
+      }
+    } catch (e) {
+      debugPrint('⚠️ Error configurando timezone: $e');
+    }
 
     const AndroidInitializationSettings initializationSettingsAndroid =
         AndroidInitializationSettings('@mipmap/launcher_icon');
@@ -170,104 +219,73 @@ class NotificationsService {
   // NOTIFICACIONES DIARIAS PROGRAMADAS
   // ═══════════════════════════════════════════════════════════════════
 
-  /// Programa las 3 notificaciones diarias (mañana, tarde, noche).
-  /// Utiliza datos reales para llenar los marcadores de posición.
-  /// Llama a esto después de cargar tareas/estadísticas al inicio y al cambiar de usuario.
+  /// Programa la notificación diaria a la hora configurada por el usuario (o guardada localmente).
+  /// Si el usuario ya completó su sesión de Pomodoro hoy, envía un mensaje de felicitación/racha protegida
+  /// y NUNCA un mensaje de advertencia o "vas a perder tu racha" o "deberías estudiar".
   Future<void> scheduleDailyNotifications({
     required int pendingTaskCount,
     required int currentStreak,
     bool hadSessionToday = false,
+    int? customHour,
+    int? customMinute,
   }) async {
     // Cancela notificaciones diarias anteriores antes de reprogramar
-    await _cancelDailyNotifications();
+    await cancelDailyNotifications();
 
-    // Decide la variante del mensaje según el contexto
-    final bool streakAtRisk = currentStreak > 0 && !hadSessionToday;
+    final prefs = await SharedPreferences.getInstance();
+    final bool notificationsEnabled =
+        prefs.getBool('notificationsEnabled') ?? true;
+    if (!notificationsEnabled) {
+      debugPrint('🔕 Notificaciones diarias desactivadas en configuración');
+      return;
+    }
 
-    // =========================================================================
-    // 💡 NOTA PARA CAMBIAR EL HORARIO DE LAS NOTIFICACIONES:
-    // Puedes elegir la hora a la que se mandan modificando el parámetro 'hour'
-    // en los recuadros de abajo (ej. hour: 8 para las 8:00 AM).
-    // =========================================================================
+    final int hour = customHour ?? prefs.getInt('notif_reminder_hour') ?? 20;
+    final int minute =
+        customMinute ?? prefs.getInt('notif_reminder_minute') ?? 0;
 
-    // ── Mañana 8:00 AM ──
-    if (streakAtRisk && currentStreak >= 3) {
-      // Usa mensajes de riesgo de racha en la mañana si la racha está en riesgo
+    final String title;
+    final String body;
+
+    if (hadSessionToday) {
+      // ✅ El usuario ya estudió hoy: mensaje de felicitación / racha asegurada
+      final idx = _random.nextInt(_sessionDoneTitles.length);
+      title = _sessionDoneTitles[idx];
+      body = _fillPlaceholders(
+        _sessionDoneBodies[idx],
+        pendingTaskCount,
+        currentStreak,
+      );
+    } else if (currentStreak > 0) {
+      // ⚠️ El usuario tiene racha activa pero aún no ha estudiado hoy
       final idx = _random.nextInt(_streakRiskTitles.length);
-      await _scheduleDailyAtTime(
-        id: 200,
-        hour: 8,
-        minute: 0,
-        title: _streakRiskTitles[idx],
-        body: _fillPlaceholders(
-          _streakRiskBodies[idx],
-          pendingTaskCount,
-          currentStreak,
-        ),
+      title = _streakRiskTitles[idx];
+      body = _fillPlaceholders(
+        _streakRiskBodies[idx],
+        pendingTaskCount,
+        currentStreak,
       );
     } else {
-      final idx = _random.nextInt(_morningTitles.length);
-      await _scheduleDailyAtTime(
-        id: 200,
-        hour: 8,
-        minute: 0,
-        title: _morningTitles[idx],
-        body: _fillPlaceholders(
-          _morningBodies[idx],
-          pendingTaskCount,
-          currentStreak,
-        ),
+      // 🚀 Sin racha activa, mensaje motivador general
+      final idx = _random.nextInt(_generalMotivationTitles.length);
+      title = _generalMotivationTitles[idx];
+      body = _fillPlaceholders(
+        _generalMotivationBodies[idx],
+        pendingTaskCount,
+        currentStreak,
       );
     }
 
-    // ── Tarde 2:00 PM ──
-    {
-      final idx = _random.nextInt(_afternoonTitles.length);
-      await _scheduleDailyAtTime(
-        id: 201,
-        hour: 14,
-        minute: 0,
-        title: _afternoonTitles[idx],
-        body: _fillPlaceholders(
-          _afternoonBodies[idx],
-          pendingTaskCount,
-          currentStreak,
-        ),
-      );
-    }
-
-    // ── Noche 8:00 PM ──
-    if (streakAtRisk) {
-      // Si aún no hay sesión para la noche, presiona un poco más
-      final idx = _random.nextInt(_streakRiskTitles.length);
-      await _scheduleDailyAtTime(
-        id: 202,
-        hour: 20,
-        minute: 20,
-        title: _streakRiskTitles[idx],
-        body: _fillPlaceholders(
-          _streakRiskBodies[idx],
-          pendingTaskCount,
-          currentStreak,
-        ),
-      );
-    } else {
-      final idx = _random.nextInt(_eveningTitles.length);
-      await _scheduleDailyAtTime(
-        id: 202,
-        hour: 20,
-        minute: 0,
-        title: _eveningTitles[idx],
-        body: _fillPlaceholders(
-          _eveningBodies[idx],
-          pendingTaskCount,
-          currentStreak,
-        ),
-      );
-    }
+    await _scheduleDailyAtTime(
+      id: 200,
+      hour: hour,
+      minute: minute,
+      title: title,
+      body: body,
+    );
 
     debugPrint(
-      '📬 Notificaciones diarias programadas (tareas: $pendingTaskCount, racha: $currentStreak)',
+      '📬 Notificación diaria programada a las ${hour.toString().padLeft(2, '0')}:${minute.toString().padLeft(2, '0')} (tareas: $pendingTaskCount, racha: $currentStreak, sesionHoy: $hadSessionToday)',
     );
   }
 
@@ -279,15 +297,20 @@ class NotificationsService {
     required String title,
     required String body,
   }) async {
-    final now = DateTime.now();
-    var targetDate = DateTime(now.year, now.month, now.day, hour, minute);
+    final now = tz.TZDateTime.now(tz.local);
+    var targetDate = tz.TZDateTime(
+      tz.local,
+      now.year,
+      now.month,
+      now.day,
+      hour,
+      minute,
+    );
 
     // Si la hora ya pasó hoy, programar para mañana
     if (targetDate.isBefore(now)) {
       targetDate = targetDate.add(const Duration(days: 1));
     }
-
-    final scheduledDate = tz.TZDateTime.from(targetDate, tz.local);
 
     const AndroidNotificationDetails androidDetails =
         AndroidNotificationDetails(
@@ -307,7 +330,7 @@ class NotificationsService {
       id: id,
       title: title,
       body: body,
-      scheduledDate: scheduledDate,
+      scheduledDate: targetDate,
       notificationDetails: platformDetails,
       androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
       matchDateTimeComponents:
@@ -315,7 +338,8 @@ class NotificationsService {
     );
   }
 
-  Future<void> _cancelDailyNotifications() async {
+  /// Cancela todas las notificaciones diarias programadas.
+  Future<void> cancelDailyNotifications() async {
     await flutterLocalNotificationsPlugin.cancel(id: 200);
     await flutterLocalNotificationsPlugin.cancel(id: 201);
     await flutterLocalNotificationsPlugin.cancel(id: 202);
@@ -554,6 +578,34 @@ class NotificationsService {
     );
   }
 
+  /// Prueba la notificación de racha asegurada (cuando ya se completó la sesión de hoy).
+  Future<void> testSessionDoneMotivation({
+    int pendingTasks = 3,
+    int streak = 5,
+  }) async {
+    const AndroidNotificationDetails androidDetails =
+        AndroidNotificationDetails(
+          'daily_motivation',
+          'Motivación Diaria',
+          channelDescription:
+              'Notificaciones motivacionales a lo largo del día',
+          importance: Importance.high,
+          priority: Priority.high,
+        );
+    const NotificationDetails platformDetails = NotificationDetails(
+      android: androidDetails,
+      iOS: DarwinNotificationDetails(),
+    );
+
+    final idx = _random.nextInt(_sessionDoneTitles.length);
+    await flutterLocalNotificationsPlugin.show(
+      id: 1,
+      title: _sessionDoneTitles[idx],
+      body: _fillPlaceholders(_sessionDoneBodies[idx], pendingTasks, streak),
+      notificationDetails: platformDetails,
+    );
+  }
+
   /// Prueba de finalización de pomodoro con mensajes reales.
   Future<void> testPomodoroEnd() async {
     const AndroidNotificationDetails androidDetails =
@@ -595,10 +647,21 @@ class NotificationsService {
     bool isPomodoro,
     int secondsRemaining,
   ) async {
+    // Si no quedan segundos o el tiempo es inválido, no programar
+    if (secondsRemaining <= 0) return;
+
+    final prefs = await SharedPreferences.getInstance();
+    final bool notificationsEnabled =
+        prefs.getBool('notificationsEnabled') ?? true;
+    if (!notificationsEnabled) return;
+
+    // Asegurarse de cancelar cualquier notificación previa de pomodoro
+    await cancelPomodoroNotification();
+
     const int notificationId = 100;
-    String title =
+    final String title =
         isPomodoro ? '🎯 ¡Pomodoro completado!' : '🔔 ¡Se acabó el descanso!';
-    String body =
+    final String body =
         isPomodoro
             ? 'Buen trabajo. ¡Es hora de un merecido descanso!'
             : 'Es hora de volver al ruedo y seguir rompiéndola.';
@@ -617,8 +680,12 @@ class NotificationsService {
       iOS: DarwinNotificationDetails(),
     );
 
-    final targetTime = DateTime.now().add(Duration(seconds: secondsRemaining));
-    final scheduledDate = tz.TZDateTime.from(targetTime, tz.local);
+    final now = tz.TZDateTime.now(tz.local);
+    final scheduledDate = now.add(Duration(seconds: secondsRemaining));
+
+    if (scheduledDate.isBefore(now) || scheduledDate.isAtSameMomentAs(now)) {
+      return;
+    }
 
     await flutterLocalNotificationsPlugin.zonedSchedule(
       id: notificationId,

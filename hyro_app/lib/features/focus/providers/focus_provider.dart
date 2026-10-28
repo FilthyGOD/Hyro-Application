@@ -16,6 +16,7 @@ import 'focus_state.dart';
 /// Reemplaza a TimerCubit (BLoC) para estandarizar el patrón de estado.
 class FocusProvider extends ChangeNotifier {
   Timer? _timer;
+  DateTime? _targetEndTime;
   int _secondsSinceLastQuiz = 0;
   final StatsProvider? statsProvider;
   final SettingsProvider? settingsProvider;
@@ -48,17 +49,30 @@ class FocusProvider extends ChangeNotifier {
   void start({String? taskId, String? taskTitle, bool isStrictMode = false}) {
     if (_state.status == TimerStatus.running) return;
 
+    // Asegurar que remainingSeconds sea válido (si es 0 o negativo, reiniciar a la duración del modo)
+    int secondsToRun = _state.remainingSeconds;
+    if (secondsToRun <= 0) {
+      secondsToRun = _durationForMode(_state.mode) * 60;
+    }
+    _targetEndTime = DateTime.now().add(Duration(seconds: secondsToRun));
+
     _emit(
       _state.copyWith(
         status: TimerStatus.running,
+        remainingSeconds: secondsToRun,
+        totalSeconds:
+            _state.totalSeconds <= 0 ? secondsToRun : _state.totalSeconds,
         activeTaskId: taskId ?? _state.activeTaskId,
         activeTaskTitle: taskTitle ?? _state.activeTaskTitle,
         quizDue: false,
         isStrictModeActive: isStrictMode || _state.isStrictModeActive,
         clearViolationApp: true,
-        quizHistory: (_state.status == TimerStatus.paused) ? _state.quizHistory : const [],
-        quizCorrectCount: (_state.status == TimerStatus.paused) ? _state.quizCorrectCount : 0,
-        quizTotalCount: (_state.status == TimerStatus.paused) ? _state.quizTotalCount : 0,
+        quizHistory:
+            (_state.status == TimerStatus.paused) ? _state.quizHistory : const [],
+        quizCorrectCount:
+            (_state.status == TimerStatus.paused) ? _state.quizCorrectCount : 0,
+        quizTotalCount:
+            (_state.status == TimerStatus.paused) ? _state.quizTotalCount : 0,
         isPauseExceeded: false,
       ),
     );
@@ -66,7 +80,7 @@ class FocusProvider extends ChangeNotifier {
     _timer = Timer.periodic(const Duration(seconds: 1), (_) => _tick());
     NotificationsService.instance.schedulePomodoroEndNotification(
       _state.mode == TimerMode.pomodoro,
-      _state.remainingSeconds,
+      secondsToRun,
     );
 
     // Inicia el monitoreo del modo estricto si está habilitado
@@ -121,6 +135,7 @@ class FocusProvider extends ChangeNotifier {
     if (!manual) {
       _timer?.cancel();
     }
+    _targetEndTime = null;
     NotificationsService.instance.cancelPomodoroNotification();
     _emit(
       _state.copyWith(
@@ -129,7 +144,7 @@ class FocusProvider extends ChangeNotifier {
         clearViolationApp: true,
       ),
     );
-    
+
     // Si es pausa manual, el timer debe seguir corriendo para contar el tiempo de pausa
     if (manual && (_timer == null || !_timer!.isActive)) {
       _timer = Timer.periodic(const Duration(seconds: 1), (_) => _tick());
@@ -145,6 +160,7 @@ class FocusProvider extends ChangeNotifier {
   /// Reinicia el temporizador al comienzo del modo actual.
   void reset() {
     _timer?.cancel();
+    _targetEndTime = null;
     NotificationsService.instance.cancelPomodoroNotification();
     _secondsSinceLastQuiz = 0;
     // Detiene el monitoreo estricto si estaba activo
@@ -174,6 +190,7 @@ class FocusProvider extends ChangeNotifier {
   /// Detiene el temporizador completamente y vuelve a pomodoro inactivo.
   void stop() {
     _timer?.cancel();
+    _targetEndTime = null;
     NotificationsService.instance.cancelPomodoroNotification();
     _secondsSinceLastQuiz = 0;
     // Detiene el monitoreo estricto si estaba activo
@@ -201,6 +218,7 @@ class FocusProvider extends ChangeNotifier {
   /// Cambia el modo del temporizador (Pomodoro, Descanso Corto, Descanso Largo).
   void setMode(TimerMode mode) {
     _timer?.cancel();
+    _targetEndTime = null;
     NotificationsService.instance.cancelPomodoroNotification();
     final totalSec = _durationForMode(mode) * 60;
     _emit(
@@ -221,21 +239,36 @@ class FocusProvider extends ChangeNotifier {
   void _tick() {
     if (_state.status == TimerStatus.paused && _state.isManualPause) {
       if (_state.remainingPauseSeconds > 0) {
-        _emit(_state.copyWith(remainingPauseSeconds: _state.remainingPauseSeconds - 1));
+        _emit(
+          _state.copyWith(
+            remainingPauseSeconds: _state.remainingPauseSeconds - 1,
+          ),
+        );
       } else if (!_state.isPauseExceeded) {
         _timer?.cancel();
-        _emit(_state.copyWith(
-          status: TimerStatus.paused,
-          isManualPause: false,
-          isPauseExceeded: true,
-        ));
+        _emit(
+          _state.copyWith(
+            status: TimerStatus.paused,
+            isManualPause: false,
+            isPauseExceeded: true,
+          ),
+        );
       }
       return;
     }
 
-    if (_state.remainingSeconds <= 1) {
+    final int remaining;
+    if (_targetEndTime != null) {
+      remaining = _targetEndTime!.difference(DateTime.now()).inSeconds;
+    } else {
+      remaining = _state.remainingSeconds - 1;
+    }
+
+    if (remaining <= 0) {
       _timer?.cancel();
+      _targetEndTime = null;
       _secondsSinceLastQuiz = 0;
+      NotificationsService.instance.cancelPomodoroNotification();
       _onTimerFinished();
     } else {
       _secondsSinceLastQuiz++;
@@ -257,7 +290,7 @@ class FocusProvider extends ChangeNotifier {
 
       _emit(
         _state.copyWith(
-          remainingSeconds: _state.remainingSeconds - 1,
+          remainingSeconds: remaining,
           quizDue: triggerQuiz ? true : null,
         ),
       );
@@ -285,6 +318,7 @@ class FocusProvider extends ChangeNotifier {
     if (_state.isStrictModeActive) {
       _strictModeService.stopStrictMonitoring();
     }
+    NotificationsService.instance.cancelPomodoroNotification();
 
     if (_state.mode == TimerMode.pomodoro) {
       final newSessions = _state.completedSessions + 1;
@@ -303,6 +337,15 @@ class FocusProvider extends ChangeNotifier {
           userId,
           currentDynamicStreak,
           focusMinutes,
+        );
+
+        // Actualizar la notificación diaria con hadSessionToday: true para que felicite al usuario y no diga "vas a perder tu racha" o "deberías estudiar"
+        final pendingCount =
+            taskProvider?.tasks.where((t) => !t.isCompleted).length ?? 0;
+        NotificationsService.instance.scheduleDailyNotifications(
+          pendingTaskCount: pendingCount,
+          currentStreak: currentDynamicStreak,
+          hadSessionToday: true,
         );
       });
 

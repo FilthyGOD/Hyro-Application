@@ -18,6 +18,8 @@ class SettingsProvider extends ChangeNotifier {
   bool _hideFocusCards = false;
   bool _focusQuizEnabled = true;
   double _focusQuizIntervalMinutes = 5;
+  int _notificationHour = 20;
+  int _notificationMinute = 0;
 
   SharedPreferences? _prefs;
 
@@ -42,6 +44,8 @@ class SettingsProvider extends ChangeNotifier {
     _hideFocusCards = _prefs?.getBool('hideFocusCards') ?? false;
     _focusQuizEnabled = _prefs?.getBool('focusQuizEnabled') ?? true;
     _focusQuizIntervalMinutes = _prefs?.getDouble('focusQuizIntervalMinutes') ?? 5;
+    _notificationHour = _prefs?.getInt('notif_reminder_hour') ?? 20;
+    _notificationMinute = _prefs?.getInt('notif_reminder_minute') ?? 0;
 
     notifyListeners();
   }
@@ -50,6 +54,10 @@ class SettingsProvider extends ChangeNotifier {
   double get shortBreakDuration => _shortBreakDuration;
   double get longBreakDuration => _longBreakDuration;
   bool get notificationsEnabled => _notificationsEnabled;
+  int get notificationHour => _notificationHour;
+  int get notificationMinute => _notificationMinute;
+  TimeOfDay get notificationTime =>
+      TimeOfDay(hour: _notificationHour, minute: _notificationMinute);
   TimerSize get timerSize => _timerSize;
   MascotBubbleMode get mascotBubbleMode => _mascotBubbleMode;
   bool get autoPauseTimer => _autoPauseTimer;
@@ -93,6 +101,17 @@ class SettingsProvider extends ChangeNotifier {
     if (_notificationsEnabled == value) return;
     _notificationsEnabled = value;
     _prefs?.setBool('notificationsEnabled', value);
+    notifyListeners();
+  }
+
+  void setNotificationTime(TimeOfDay time) {
+    if (_notificationHour == time.hour && _notificationMinute == time.minute) {
+      return;
+    }
+    _notificationHour = time.hour;
+    _notificationMinute = time.minute;
+    _prefs?.setInt('notif_reminder_hour', time.hour);
+    _prefs?.setInt('notif_reminder_minute', time.minute);
     notifyListeners();
   }
 

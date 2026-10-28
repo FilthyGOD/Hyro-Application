@@ -158,9 +158,9 @@ class NotificationsService {
     tz.initializeTimeZones();
     try {
       if (!kIsWeb) {
-        final timezoneInfo = await FlutterTimezone.getLocalTimezone();
-        tz.setLocalLocation(tz.getLocation(timezoneInfo.identifier));
-        debugPrint('⏰ Timezone configurado: ${timezoneInfo.identifier}');
+        final timezoneName = await FlutterTimezone.getLocalTimezone();
+        tz.setLocalLocation(tz.getLocation(timezoneName));
+        debugPrint('⏰ Timezone configurado: $timezoneName');
       }
     } catch (e) {
       debugPrint('⚠️ Error configurando timezone: $e');

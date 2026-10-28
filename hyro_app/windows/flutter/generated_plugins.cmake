@@ -5,6 +5,7 @@
 list(APPEND FLUTTER_PLUGIN_LIST
   app_links
   audioplayers_windows
+  flutter_timezone
   isar_flutter_libs
   permission_handler_windows
   rive_native

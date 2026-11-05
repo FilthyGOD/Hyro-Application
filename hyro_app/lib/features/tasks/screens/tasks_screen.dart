@@ -15,6 +15,9 @@ import '../../missions/missions_provider.dart';
 import '../../../data/models/category_model.dart';
 import '../../../core/widgets/animated_background.dart';
 import 'category_detail_screen.dart';
+import '../../../shared/widgets/floating_glass_navigation_bar.dart';
+import '../../../shared/widgets/global_create_modal.dart';
+import '../../../app.dart';
 
 class AgendaScreen extends StatefulWidget {
   const AgendaScreen({super.key});
@@ -33,37 +36,6 @@ class _AgendaScreenState extends State<AgendaScreen> {
         const Positioned.fill(child: AnimatedBackground()),
         Scaffold(
           backgroundColor: Colors.transparent,
-          floatingActionButton: Consumer<UiProvider>(
-            builder: (context, ui, _) {
-              return Padding(
-                padding: EdgeInsets.only(bottom: ui.isMusicBarVisible ? 80 : 0),
-                child: GestureDetector(
-                  onTap: _showAddCategoryDialog,
-                  child: Container(
-                    width: 56,
-                    height: 56,
-                    decoration: BoxDecoration(
-                      gradient: const LinearGradient(
-                        colors: [
-                          Color.fromARGB(255, 0, 149, 255),
-                          Color.fromARGB(255, 32, 43, 200),
-                        ],
-                      ),
-                      borderRadius: BorderRadius.circular(16),
-                      boxShadow: [
-                        BoxShadow(
-                          color: AppColors.primary.withAlpha(60),
-                          blurRadius: 12,
-                          offset: const Offset(0, 4),
-                        ),
-                      ],
-                    ),
-                    child: const Icon(Icons.add, color: Colors.white, size: 28),
-                  ),
-                ),
-              );
-            },
-          ),
           body: LayoutBuilder(
             builder: (context, constraints) {
               final isLargeScreen = constraints.maxWidth > 800;
@@ -105,7 +77,7 @@ class _AgendaScreenState extends State<AgendaScreen> {
                     Expanded(
                       child: SingleChildScrollView(
                         child: Padding(
-                          padding: const EdgeInsets.only(bottom: 80),
+                          padding: const EdgeInsets.only(bottom: 110),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
@@ -122,6 +94,22 @@ class _AgendaScreenState extends State<AgendaScreen> {
                   ],
                 ),
               );
+            },
+          ),
+        ),
+        // Barra de navegación flotante fija en la parte inferior
+        Positioned(
+          bottom: 0,
+          left: 0,
+          right: 0,
+          child: FloatingGlassNavigationBar(
+            selectedIndex: -1,
+            onNavigate: (index) {
+              Navigator.of(context).popUntil((route) => route.isFirst);
+              appShellKey.currentState?.navigateTo(index);
+            },
+            onAddTap: () {
+              GlobalCreateModal.show(context, initialTab: 1);
             },
           ),
         ),

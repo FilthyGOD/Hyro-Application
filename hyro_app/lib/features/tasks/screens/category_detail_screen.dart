@@ -20,6 +20,9 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../friends/widgets/static_mascot_widget.dart';
 import '../../../core/widgets/task_shared_dialog.dart';
 import '../widgets/category_exam_config_dialog.dart';
+import '../../../shared/widgets/floating_glass_navigation_bar.dart';
+import '../../../shared/widgets/global_create_modal.dart';
+import '../../../app.dart';
 /// Pantalla de detalle de una categoría — muestra header con color,
 /// promedio de progreso, y lista de tareas.
 class CategoryDetailScreen extends StatefulWidget {
@@ -45,8 +48,10 @@ class _CategoryDetailScreenState extends State<CategoryDetailScreen> {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      body: Consumer<TaskProvider>(
-        builder: (context, taskProvider, _) {
+      body: Stack(
+        children: [
+          Consumer<TaskProvider>(
+            builder: (context, taskProvider, _) {
           final tasks = taskProvider.tasks
               .where(
                   (t) => t.category == category.name || t.categoryId == category.id)
@@ -411,39 +416,37 @@ class _CategoryDetailScreenState extends State<CategoryDetailScreen> {
                   ),
                 ),
 
-              // Bottom spacer for FAB
+              // Bottom spacer for navigation bar
               const SliverToBoxAdapter(
-                child: SizedBox(height: 100),
+                child: SizedBox(height: 110),
               ),
             ],
           );
         },
       ),
-      floatingActionButton: GestureDetector(
-        onTap: () => _showAddTaskDialog(context, category),
-        child: Container(
-          width: 56,
-          height: 56,
-          decoration: BoxDecoration(
-            gradient: const LinearGradient(
-              colors: [
-                Color.fromARGB(255, 0, 149, 255),
-                Color.fromARGB(255, 32, 43, 200),
-              ],
-            ),
-            borderRadius: BorderRadius.circular(16),
-            boxShadow: [
-              BoxShadow(
-                color: AppColors.primary.withAlpha(60),
-                blurRadius: 12,
-                offset: const Offset(0, 4),
-              ),
-            ],
-          ),
-          child: const Icon(Icons.add, color: Colors.white, size: 28),
+      // Barra de navegación flotante fija en la parte inferior
+      Positioned(
+        bottom: 0,
+        left: 0,
+        right: 0,
+        child: FloatingGlassNavigationBar(
+          selectedIndex: -1,
+          onNavigate: (index) {
+            Navigator.of(context).popUntil((route) => route.isFirst);
+            appShellKey.currentState?.navigateTo(index);
+          },
+          onAddTap: () {
+            GlobalCreateModal.show(
+              context,
+              initialTab: 0,
+              initialCategoryId: category.id,
+            );
+          },
         ),
       ),
-    );
+    ],
+  ),
+);
   }
 
   void _showDeleteCategoryDialog(BuildContext context, CategoryModel category) {

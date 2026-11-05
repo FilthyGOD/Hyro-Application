@@ -29,8 +29,13 @@ import '../../categories/category_provider.dart';
 
 class TaskDetailsDialog extends StatefulWidget {
   final TaskModel task;
+  final int initialTab;
 
-  const TaskDetailsDialog({super.key, required this.task});
+  const TaskDetailsDialog({
+    super.key,
+    required this.task,
+    this.initialTab = 1,
+  });
 
   @override
   State<TaskDetailsDialog> createState() => _TaskDetailsDialogState();
@@ -43,7 +48,7 @@ class _TaskDetailsDialogState extends State<TaskDetailsDialog>
 
   late TaskModel _currentTask;
   bool _isUploadingDocument = false;
-  int _selectedTab = 1; // Comienza en la pestaña Notas
+  late int _selectedTab;
 
   // Estado de Flashcards — respaldado por CardRepository
   final List<TareaCardModel> _flashcards = [];
@@ -63,6 +68,7 @@ class _TaskDetailsDialogState extends State<TaskDetailsDialog>
   @override
   void initState() {
     super.initState();
+    _selectedTab = widget.initialTab;
     _currentTask = widget.task.copyWith();
     _notesController = TextEditingController(text: _currentTask.notes ?? '');
     _newSubtaskController = TextEditingController();
@@ -188,7 +194,11 @@ class _TaskDetailsDialogState extends State<TaskDetailsDialog>
           ),
           title: Row(
             children: [
-              const Icon(Icons.warning_amber_rounded, color: Colors.redAccent, size: 28),
+              const Icon(
+                Icons.warning_amber_rounded,
+                color: Colors.redAccent,
+                size: 28,
+              ),
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
@@ -205,7 +215,10 @@ class _TaskDetailsDialogState extends State<TaskDetailsDialog>
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(ctx),
-              child: const Text('Entendido', style: TextStyle(color: Colors.redAccent)),
+              child: const Text(
+                'Entendido',
+                style: TextStyle(color: Colors.redAccent),
+              ),
             ),
           ],
         );
@@ -392,23 +405,28 @@ class _TaskDetailsDialogState extends State<TaskDetailsDialog>
                         color: AppColors.textPrimary,
                         fontSize: 13,
                       ),
-                      items: tags.map((t) => DropdownMenuItem(
-                        value: t, 
-                        child: Row(
-                          children: [
-                            Container(
-                              width: 10,
-                              height: 10,
-                              decoration: BoxDecoration(
-                                color: _getColorForTag(t),
-                                shape: BoxShape.circle,
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            Text(t),
-                          ],
-                        ),
-                      )).toList(),
+                      items:
+                          tags
+                              .map(
+                                (t) => DropdownMenuItem(
+                                  value: t,
+                                  child: Row(
+                                    children: [
+                                      Container(
+                                        width: 10,
+                                        height: 10,
+                                        decoration: BoxDecoration(
+                                          color: _getColorForTag(t),
+                                          shape: BoxShape.circle,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Text(t),
+                                    ],
+                                  ),
+                                ),
+                              )
+                              .toList(),
                       onChanged: (val) {
                         setDialogState(() {
                           selectedTag = val;
@@ -483,9 +501,12 @@ class _TaskDetailsDialogState extends State<TaskDetailsDialog>
                       if (text.isNotEmpty) {
                         content += text;
                       }
-                      content = content.trim(); // remove trailing newline if only title provided
+                      content =
+                          content
+                              .trim(); // remove trailing newline if only title provided
 
-                      if (selectedTag != null && selectedTag != 'Sin categoría') {
+                      if (selectedTag != null &&
+                          selectedTag != 'Sin categoría') {
                         content = '[{TAG:$selectedTag}]\n$content';
                       }
                       final nota = TareaNotaModel(
@@ -562,7 +583,8 @@ class _TaskDetailsDialogState extends State<TaskDetailsDialog>
       if (titleEndIdx != -1) {
         initialTitle = displayContent.substring(9, titleEndIdx);
         final remaining = displayContent.substring(titleEndIdx + 10);
-        initialText = remaining.startsWith('\n') ? remaining.substring(1) : remaining;
+        initialText =
+            remaining.startsWith('\n') ? remaining.substring(1) : remaining;
       }
     }
 
@@ -617,23 +639,28 @@ class _TaskDetailsDialogState extends State<TaskDetailsDialog>
                         color: AppColors.textPrimary,
                         fontSize: 13,
                       ),
-                      items: tags.map((t) => DropdownMenuItem(
-                        value: t, 
-                        child: Row(
-                          children: [
-                            Container(
-                              width: 10,
-                              height: 10,
-                              decoration: BoxDecoration(
-                                color: _getColorForTag(t),
-                                shape: BoxShape.circle,
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            Text(t),
-                          ],
-                        ),
-                      )).toList(),
+                      items:
+                          tags
+                              .map(
+                                (t) => DropdownMenuItem(
+                                  value: t,
+                                  child: Row(
+                                    children: [
+                                      Container(
+                                        width: 10,
+                                        height: 10,
+                                        decoration: BoxDecoration(
+                                          color: _getColorForTag(t),
+                                          shape: BoxShape.circle,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Text(t),
+                                    ],
+                                  ),
+                                ),
+                              )
+                              .toList(),
                       onChanged: (val) {
                         setDialogState(() {
                           selectedTag = val;
@@ -707,12 +734,12 @@ class _TaskDetailsDialogState extends State<TaskDetailsDialog>
                   onPressed: () {
                     final title = titleController.text.trim();
                     final text = textController.text.trim();
-                    
+
                     if (title.isEmpty && text.isEmpty) {
                       Navigator.pop(ctx);
                       return;
                     }
-                    
+
                     String content = '';
                     if (title.isNotEmpty) {
                       content += '[{TITLE}]$title[{/TITLE}]\n';
@@ -725,7 +752,7 @@ class _TaskDetailsDialogState extends State<TaskDetailsDialog>
                     if (selectedTag != null && selectedTag != 'Sin categoría') {
                       content = '[{TAG:$selectedTag}]\n$content';
                     }
-                    
+
                     if (content != nota.contenido) {
                       final updatedNota = nota.copyWith(contenido: content);
                       _noteRepo.updateNote(updatedNota);
@@ -764,10 +791,16 @@ class _TaskDetailsDialogState extends State<TaskDetailsDialog>
     final categoryId = _currentTask.categoryId;
     final categoryName = _currentTask.category;
     if (categoryId != null || categoryName != null) {
-      final tasksInCategory = context.read<TaskProvider>().tasks.where((t) =>
-        (categoryId != null && t.categoryId == categoryId) ||
-        (categoryName != null && t.category == categoryName)
-      ).toList();
+      final tasksInCategory =
+          context
+              .read<TaskProvider>()
+              .tasks
+              .where(
+                (t) =>
+                    (categoryId != null && t.categoryId == categoryId) ||
+                    (categoryName != null && t.category == categoryName),
+              )
+              .toList();
       int totalCards = 0;
       for (final t in tasksInCategory) {
         totalCards += _cardRepo.getCardsForTask(t.id).length;
@@ -973,15 +1006,19 @@ class _TaskDetailsDialogState extends State<TaskDetailsDialog>
     final categoryProvider = context.watch<CategoryProvider>();
     final category = categoryProvider.categories.firstWhere(
       (c) => c.id == _currentTask.categoryId || c.name == _currentTask.category,
-      orElse: () => CategoryModel(
-        id: '',
-        name: 'Sin categoría',
-        colorValue: _currentTask.priorityColorValue, // fallback to priority color or orange
-      ),
+      orElse:
+          () => CategoryModel(
+            id: '',
+            name: 'Sin categoría',
+            colorValue:
+                _currentTask
+                    .priorityColorValue, // fallback to priority color or orange
+          ),
     );
-    final catColor = _currentTask.category != null
-        ? Color(category.colorValue)
-        : const Color(0xFFF59E0B);
+    final catColor =
+        _currentTask.category != null
+            ? Color(category.colorValue)
+            : const Color(0xFFF59E0B);
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -1016,8 +1053,11 @@ class _TaskDetailsDialogState extends State<TaskDetailsDialog>
                       color: Colors.white.withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(10),
                     ),
-                    child: const Icon(Icons.arrow_back_ios_new_rounded,
-                        color: Colors.white, size: 16),
+                    child: const Icon(
+                      Icons.arrow_back_ios_new_rounded,
+                      color: Colors.white,
+                      size: 16,
+                    ),
                   ),
                 ),
                 const SizedBox(width: 16),
@@ -1050,8 +1090,6 @@ class _TaskDetailsDialogState extends State<TaskDetailsDialog>
       ),
     );
   }
-
-
 
   // ── CONTENIDO DE PESTAÑA ────────────────────────────────────────────────
 
@@ -1322,11 +1360,18 @@ class _TaskDetailsDialogState extends State<TaskDetailsDialog>
                             ],
                           ),
                         )
-                        : ListView.builder(
-                          padding: EdgeInsets.zero,
+                        : GridView.builder(
+                          padding: const EdgeInsets.only(bottom: 80),
+                          gridDelegate:
+                              const SliverGridDelegateWithFixedCrossAxisCount(
+                                crossAxisCount: 2,
+                                crossAxisSpacing: 10,
+                                mainAxisSpacing: 10,
+                                mainAxisExtent: 190,
+                              ),
                           itemCount: _chatNotes.length,
                           itemBuilder:
-                              (context, index) => _buildChatBubble(
+                              (context, index) => _buildNoteGridCard(
                                 _chatNotes[index].contenido,
                                 index,
                               ),
@@ -1365,7 +1410,7 @@ class _TaskDetailsDialogState extends State<TaskDetailsDialog>
     );
   }
 
-  Widget _buildChatBubble(String originalText, int index) {
+  Widget _buildNoteGridCard(String originalText, int index) {
     String displayContent = originalText;
     String? badgeTag;
 
@@ -1379,170 +1424,221 @@ class _TaskDetailsDialogState extends State<TaskDetailsDialog>
 
     String titleText = '';
     String bodyText = displayContent;
-    
+
     if (displayContent.startsWith('[{TITLE}]')) {
       final titleEndIdx = displayContent.indexOf('[{/TITLE}]');
       if (titleEndIdx != -1) {
         titleText = displayContent.substring(9, titleEndIdx);
         final remaining = displayContent.substring(titleEndIdx + 10);
-        bodyText = remaining.startsWith('\n') ? remaining.substring(1) : remaining;
+        bodyText =
+            remaining.startsWith('\n') ? remaining.substring(1) : remaining;
       }
     }
 
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 10),
-      child: Align(
-        alignment: Alignment.centerLeft,
-        child: Container(
-          constraints: BoxConstraints(
-            maxWidth: MediaQuery.of(context).size.width * 0.7,
+    return Container(
+      decoration: BoxDecoration(
+        color: const Color(0xFF131828),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: AppColors.cardBorder.withValues(alpha: 0.8),
+          width: 1.0,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.25),
+            blurRadius: 8,
+            offset: const Offset(0, 3),
           ),
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-          decoration: BoxDecoration(
-            color: AppColors.surfaceLight,
-            borderRadius: const BorderRadius.only(
-              topLeft: Radius.circular(14),
-              topRight: Radius.circular(14),
-              bottomRight: Radius.circular(14),
-              bottomLeft: Radius.circular(4),
-            ),
-            border: Border.all(color: AppColors.cardBorder, width: 0.5),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              if (badgeTag != null) ...[
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Container(
-                      width: 8,
-                      height: 8,
-                      decoration: BoxDecoration(
-                        color: _getColorForTag(badgeTag),
-                        shape: BoxShape.circle,
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(16),
+          onTap: () {
+            showDialog(
+              context: context,
+              builder:
+                  (ctx) => NotePreviewDialog(
+                    notes: _chatNotes,
+                    initialIndex: index,
+                    onEdit: (noteIndex) {
+                      Navigator.pop(ctx);
+                      _showEditNoteDialog(noteIndex);
+                    },
+                    onDelete: (noteIndex) {
+                      Navigator.pop(ctx);
+                      _showDeleteNoteDialog(noteIndex);
+                    },
+                  ),
+            );
+          },
+          child: Padding(
+            padding: const EdgeInsets.all(12),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                // 1. Etiqueta centrada (Puntito + Texto de categoría con su color)
+                if (badgeTag != null && badgeTag.isNotEmpty) ...[
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        width: 7,
+                        height: 7,
+                        decoration: BoxDecoration(
+                          color: _getColorForTag(badgeTag),
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                      const SizedBox(width: 5),
+                      Flexible(
+                        child: Text(
+                          badgeTag.toUpperCase(),
+                          textAlign: TextAlign.center,
+                          style: AppTypography.bodySmall.copyWith(
+                            color: _getColorForTag(badgeTag),
+                            fontSize: 10.5,
+                            fontWeight: FontWeight.w700,
+                            letterSpacing: 0.8,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 5),
+                ] else
+                  const SizedBox(height: 4),
+
+                // 2. Título de la nota centrado
+                if (titleText.isNotEmpty) ...[
+                  Text(
+                    titleText,
+                    textAlign: TextAlign.center,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: AppTypography.labelLarge.copyWith(
+                      color: AppColors.textPrimary,
+                      fontSize: 13.5,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                ],
+
+                // 3. 4 renglones de texto centrados
+                Expanded(
+                  child: Center(
+                    child: Text(
+                      bodyText,
+                      textAlign: TextAlign.center,
+                      maxLines: 4,
+                      overflow: TextOverflow.ellipsis,
+                      style: AppTypography.bodySmall.copyWith(
+                        color: AppColors.textSecondary,
+                        fontSize: 11.5,
+                        height: 1.35,
                       ),
                     ),
-                    const SizedBox(width: 6),
-                    Text(
-                      badgeTag,
-                      style: AppTypography.bodySmall.copyWith(
-                        color: AppColors.textTertiary,
-                        fontSize: 11,
-                        fontWeight: FontWeight.w600,
-                      ),
+                  ),
+                ),
+
+                const SizedBox(height: 6),
+
+                // 4. Botones abajo centrados: Copiar, Editar y Borrar
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    _chatActionIcon(Icons.copy_rounded, () async {
+                      await Clipboard.setData(
+                        ClipboardData(text: displayContent),
+                      );
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Nota copiada'),
+                            duration: Duration(seconds: 2),
+                          ),
+                        );
+                      }
+                    }),
+                    const SizedBox(width: 12),
+                    _chatActionIcon(
+                      Icons.edit_rounded,
+                      () => _showEditNoteDialog(index),
+                    ),
+                    const SizedBox(width: 12),
+                    _chatActionIcon(
+                      Icons.delete_outline_rounded,
+                      () => _showDeleteNoteDialog(index),
                     ),
                   ],
                 ),
-                const SizedBox(height: 8),
               ],
-              if (titleText.isNotEmpty) ...[
-                Text(
-                  titleText,
-                  style: AppTypography.h3.copyWith(
-                    color: AppColors.textPrimary,
-                    fontSize: 16,
-                  ),
-                ),
-                if (bodyText.isNotEmpty) const SizedBox(height: 6),
-              ],
-              if (bodyText.isNotEmpty)
-                Text(
-                  bodyText,
-                  style: AppTypography.bodyMedium.copyWith(
-                    color: AppColors.textPrimary,
-                    height: 1.4,
-                  ),
-                ),
-              const SizedBox(height: 6),
-              Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  // Botón de copiar
-                  _chatActionIcon(Icons.copy_rounded, () async {
-                    await Clipboard.setData(ClipboardData(text: displayContent));
-                    if (mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Nota copiada'),
-                          duration: Duration(seconds: 2),
-                        ),
-                      );
-                    }
-                  }),
-                  const SizedBox(width: 8),
-                  // Botón de editar
-                  _chatActionIcon(
-                    Icons.edit_rounded,
-                    () => _showEditNoteDialog(index),
-                  ),
-                  const SizedBox(width: 8),
-                  // Botón de eliminar
-                  _chatActionIcon(Icons.delete_outline_rounded, () {
-                    showDialog(
-                      context: context,
-                      builder:
-                          (context) => AlertDialog(
-                            backgroundColor: AppColors.surface,
-                            title: Text(
-                              'Eliminar nota',
-                              style: AppTypography.labelLarge,
-                            ),
-                            content: Text(
-                              '¿Estás seguro de que deseas eliminar esta nota?',
-                              style: AppTypography.bodyMedium,
-                            ),
-                            actions: [
-                              TextButton(
-                                onPressed: () => Navigator.pop(context),
-                                child: Text(
-                                  'Cancelar',
-                                  style: AppTypography.bodyMedium.copyWith(
-                                    color: AppColors.textTertiary,
-                                  ),
-                                ),
-                              ),
-                              TextButton(
-                                onPressed: () {
-                                  Navigator.pop(context);
-                                  final nota = _chatNotes[index];
-                                  _noteRepo.deleteNote(nota.id);
-                                  setState(() {
-                                    _chatNotes.removeAt(index);
-                                  });
-                                  _saveTask();
-                                },
-                                child: Text(
-                                  'Eliminar',
-                                  style: AppTypography.labelLarge.copyWith(
-                                    color: Colors.redAccent,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                    );
-                  }),
-                ],
-              ),
-            ],
+            ),
           ),
         ),
       ),
     );
   }
 
+  void _showDeleteNoteDialog(int index) {
+    showDialog(
+      context: context,
+      builder:
+          (context) => AlertDialog(
+            backgroundColor: AppColors.surface,
+            title: Text('Eliminar nota', style: AppTypography.labelLarge),
+            content: Text(
+              '¿Estás seguro de que deseas eliminar esta nota?',
+              style: AppTypography.bodyMedium,
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: Text(
+                  'Cancelar',
+                  style: AppTypography.bodyMedium.copyWith(
+                    color: AppColors.textTertiary,
+                  ),
+                ),
+              ),
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                  final nota = _chatNotes[index];
+                  _noteRepo.deleteNote(nota.id);
+                  setState(() {
+                    _chatNotes.removeAt(index);
+                  });
+                  _saveTask();
+                },
+                child: Text(
+                  'Eliminar',
+                  style: AppTypography.labelLarge.copyWith(
+                    color: Colors.redAccent,
+                  ),
+                ),
+              ),
+            ],
+          ),
+    );
+  }
+
   Widget _chatActionIcon(IconData icon, VoidCallback onTap) {
     return GestureDetector(
+      behavior: HitTestBehavior.opaque,
       onTap: onTap,
       child: Padding(
-        padding: const EdgeInsets.all(2),
+        padding: const EdgeInsets.all(3),
         child: Icon(icon, size: 16, color: AppColors.textTertiary),
       ),
     );
   }
-
-
 
   // ── PESTAÑA TARJETAS ────────────────────────────────────────────────────
 
@@ -2083,6 +2179,355 @@ class _FlashcardPreviewDialogState extends State<FlashcardPreviewDialog> {
               ],
             ),
             const SizedBox(height: 16),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Diálogo modal para visualizar el texto completo de una nota (Estilo Imagen 1).
+/// Permite navegar entre notas con las flechas o deslizando horizontalmente.
+class NotePreviewDialog extends StatefulWidget {
+  final List<TareaNotaModel> notes;
+  final int initialIndex;
+  final void Function(int index)? onEdit;
+  final void Function(int index)? onDelete;
+
+  const NotePreviewDialog({
+    super.key,
+    required this.notes,
+    required this.initialIndex,
+    this.onEdit,
+    this.onDelete,
+  });
+
+  @override
+  State<NotePreviewDialog> createState() => _NotePreviewDialogState();
+}
+
+class _NotePreviewDialogState extends State<NotePreviewDialog> {
+  late int _currentIndex;
+
+  @override
+  void initState() {
+    super.initState();
+    _currentIndex = widget.initialIndex;
+  }
+
+  Color _getColorForTag(String label) {
+    switch (label) {
+      case 'Duda':
+        return Colors.blueAccent;
+      case 'Concepto':
+        return Colors.amberAccent;
+      case 'Viene en el examen':
+        return Colors.redAccent;
+      case 'Resumen':
+        return Colors.greenAccent;
+      case 'Pregunta':
+        return Colors.orangeAccent;
+      case 'Sin categoría':
+      default:
+        return Colors.grey;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (widget.notes.isEmpty) return const SizedBox.shrink();
+    if (_currentIndex >= widget.notes.length) {
+      _currentIndex = widget.notes.length - 1;
+    }
+    if (_currentIndex < 0) {
+      _currentIndex = 0;
+    }
+
+    final note = widget.notes[_currentIndex];
+    String displayContent = note.contenido;
+    String? badgeTag;
+
+    if (displayContent.startsWith('[{TAG:')) {
+      final endIdx = displayContent.indexOf('}]\n');
+      if (endIdx != -1) {
+        badgeTag = displayContent.substring(6, endIdx);
+        displayContent = displayContent.substring(endIdx + 3);
+      }
+    }
+
+    String titleText = '';
+    String bodyText = displayContent;
+
+    if (displayContent.startsWith('[{TITLE}]')) {
+      final titleEndIdx = displayContent.indexOf('[{/TITLE}]');
+      if (titleEndIdx != -1) {
+        titleText = displayContent.substring(9, titleEndIdx);
+        final remaining = displayContent.substring(titleEndIdx + 10);
+        bodyText =
+            remaining.startsWith('\n') ? remaining.substring(1) : remaining;
+      }
+    }
+
+    return Dialog(
+      backgroundColor: Colors.transparent,
+      elevation: 0,
+      insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 420, maxHeight: 520),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Botón cerrar superior derecho (como en la Imagen 1)
+            Align(
+              alignment: Alignment.centerRight,
+              child: IconButton(
+                icon: const Icon(
+                  Icons.close_rounded,
+                  color: Colors.white,
+                  size: 26,
+                ),
+                onPressed: () => Navigator.of(context).pop(),
+              ),
+            ),
+
+            // Card principal con texto completo
+            Expanded(
+              child: GestureDetector(
+                onHorizontalDragEnd: (details) {
+                  if (details.primaryVelocity! < -200 &&
+                      _currentIndex < widget.notes.length - 1) {
+                    setState(() => _currentIndex++);
+                  } else if (details.primaryVelocity! > 200 &&
+                      _currentIndex > 0) {
+                    setState(() => _currentIndex--);
+                  }
+                },
+                child: Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 24,
+                    vertical: 22,
+                  ),
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [Color(0xFF182040), Color(0xFF131829)],
+                    ),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(
+                      color: AppColors.cardBorder.withValues(alpha: 0.8),
+                      width: 1.2,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.5),
+                        blurRadius: 24,
+                        offset: const Offset(0, 8),
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    children: [
+                      // Subtítulo / Etiqueta centrada (Estilo FRENTE en Imagen 1)
+                      if (badgeTag != null && badgeTag.isNotEmpty)
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Container(
+                              width: 8,
+                              height: 8,
+                              decoration: BoxDecoration(
+                                color: _getColorForTag(badgeTag),
+                                shape: BoxShape.circle,
+                              ),
+                            ),
+                            const SizedBox(width: 6),
+                            Text(
+                              badgeTag.toUpperCase(),
+                              style: AppTypography.labelSmall.copyWith(
+                                color: _getColorForTag(badgeTag),
+                                letterSpacing: 2,
+                                fontWeight: FontWeight.w700,
+                                fontSize: 11,
+                              ),
+                            ),
+                          ],
+                        )
+                      else
+                        Text(
+                          'NOTA',
+                          style: AppTypography.labelSmall.copyWith(
+                            color: AppColors.textTertiary,
+                            letterSpacing: 2,
+                            fontWeight: FontWeight.w700,
+                            fontSize: 11,
+                          ),
+                        ),
+
+                      const SizedBox(height: 16),
+
+                      // Título destacado si existe
+                      if (titleText.isNotEmpty) ...[
+                        Text(
+                          titleText,
+                          textAlign: TextAlign.center,
+                          style: AppTypography.h3.copyWith(
+                            color: Colors.white,
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            height: 1.3,
+                          ),
+                        ),
+                        const SizedBox(height: 14),
+                        Divider(
+                          color: Colors.white.withValues(alpha: 0.1),
+                          height: 1,
+                        ),
+                        const SizedBox(height: 14),
+                      ],
+
+                      // Contenido de texto completo con Scroll
+                      Expanded(
+                        child: Center(
+                          child: SingleChildScrollView(
+                            physics: const BouncingScrollPhysics(),
+                            child: Text(
+                              bodyText,
+                              textAlign:
+                                  bodyText.length < 100
+                                      ? TextAlign.center
+                                      : TextAlign.left,
+                              style: AppTypography.bodyMedium.copyWith(
+                                color: Colors.white.withValues(alpha: 0.95),
+                                fontSize: 15,
+                                height: 1.5,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+
+                      const SizedBox(height: 12),
+
+                      // Acciones al pie de la tarjeta (Copiar / Editar / Borrar)
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          IconButton(
+                            icon: const Icon(
+                              Icons.copy_rounded,
+                              color: Colors.white60,
+                              size: 20,
+                            ),
+                            tooltip: 'Copiar nota',
+                            onPressed: () async {
+                              await Clipboard.setData(
+                                ClipboardData(text: displayContent),
+                              );
+                              if (context.mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text('Nota copiada'),
+                                    duration: Duration(seconds: 2),
+                                  ),
+                                );
+                              }
+                            },
+                          ),
+                          if (widget.onEdit != null) ...[
+                            const SizedBox(width: 8),
+                            IconButton(
+                              icon: const Icon(
+                                Icons.edit_rounded,
+                                color: Colors.white60,
+                                size: 20,
+                              ),
+                              tooltip: 'Editar nota',
+                              onPressed: () => widget.onEdit!(_currentIndex),
+                            ),
+                          ],
+                          if (widget.onDelete != null) ...[
+                            const SizedBox(width: 8),
+                            IconButton(
+                              icon: const Icon(
+                                Icons.delete_outline_rounded,
+                                color: Colors.white60,
+                                size: 20,
+                              ),
+                              tooltip: 'Eliminar nota',
+                              onPressed: () => widget.onDelete!(_currentIndex),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 20),
+
+            // Paginador inferior con flechas < 1 / N > (Estilo Imagen 1)
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(
+                  decoration: BoxDecoration(
+                    color: AppColors.surfaceLight,
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(
+                      color: AppColors.cardBorder.withValues(alpha: 0.5),
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      IconButton(
+                        onPressed:
+                            _currentIndex > 0
+                                ? () => setState(() => _currentIndex--)
+                                : null,
+                        icon: Icon(
+                          Icons.chevron_left_rounded,
+                          color:
+                              _currentIndex > 0
+                                  ? const Color(0xFF00E5FF)
+                                  : AppColors.textTertiary,
+                          size: 24,
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 14),
+                        child: Text(
+                          '${_currentIndex + 1} / ${widget.notes.length}',
+                          style: AppTypography.bodyMedium.copyWith(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w700,
+                            fontSize: 14,
+                          ),
+                        ),
+                      ),
+                      IconButton(
+                        onPressed:
+                            _currentIndex < widget.notes.length - 1
+                                ? () => setState(() => _currentIndex++)
+                                : null,
+                        icon: Icon(
+                          Icons.chevron_right_rounded,
+                          color:
+                              _currentIndex < widget.notes.length - 1
+                                  ? const Color(0xFF00E5FF)
+                                  : AppColors.textTertiary,
+                          size: 24,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ],
         ),
       ),

@@ -1,13 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/utils/id_generator.dart';
 import '../../../core/services/notifications_service.dart';
 import '../../../features/categories/category_provider.dart';
 import '../../../features/tasks/tasks_provider.dart';
+import '../../../features/auth/providers/auth_provider.dart';
 import '../../../data/models/category_model.dart';
 import '../../../data/models/task_model.dart';
+import '../../../data/models/tarea_card_model.dart';
+import '../../../data/repositories/card_repository.dart';
+import '../../../data/local/card_local_ds.dart';
+import '../../../data/remote/card_remote_ds.dart';
 import '../../../features/tasks/screens/category_detail_screen.dart';
 import '../../../features/tasks/widgets/task_details_sheet.dart';
 
@@ -16,17 +22,29 @@ import '../../../features/tasks/widgets/task_details_sheet.dart';
 /// con selector tipo píldora arriba y botón de acción ancho abajo (Estilo Imagen 2).
 class GlobalCreateModal extends StatefulWidget {
   final int initialTab;
+  final String? initialCategoryId;
 
-  const GlobalCreateModal({super.key, this.initialTab = 0});
+  const GlobalCreateModal({
+    super.key,
+    this.initialTab = 0,
+    this.initialCategoryId,
+  });
 
-  static Future<void> show(BuildContext context, {int initialTab = 0}) {
+  static Future<void> show(
+    BuildContext context, {
+    int initialTab = 0,
+    String? initialCategoryId,
+  }) {
     return showModalBottomSheet(
       context: context,
       useRootNavigator: true, // Sube por encima de toda la app (barra inferior incluida)
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       barrierColor: Colors.black.withValues(alpha: 0.75),
-      builder: (ctx) => GlobalCreateModal(initialTab: initialTab),
+      builder: (ctx) => GlobalCreateModal(
+        initialTab: initialTab,
+        initialCategoryId: initialCategoryId,
+      ),
     );
   }
 
@@ -51,6 +69,12 @@ class _GlobalCreateModalState extends State<GlobalCreateModal> {
   int? _catSelectedIcon = Icons.school.codePoint;
   bool _catShowAllColors = false;
   bool _catShowAllIcons = false;
+
+  // ── Formulario: Card ──
+  final _cardFrontController = TextEditingController();
+  final _cardBackController = TextEditingController();
+  String? _cardCategoryId;
+  String? _cardTaskId;
 
   // ── Formulario: Recordatorio ──
   final _reminderTitleController = TextEditingController();
@@ -125,6 +149,11 @@ class _GlobalCreateModalState extends State<GlobalCreateModal> {
   void initState() {
     super.initState();
     _currentTab = widget.initialTab;
+    if (widget.initialCategoryId != null) {
+      _taskCategoryId = widget.initialCategoryId;
+      _cardCategoryId = widget.initialCategoryId;
+      _scheduleCategoryId = widget.initialCategoryId;
+    }
     _reminderDate = DateTime.now();
     _reminderTime = const TimeOfDay(hour: 12, minute: 0);
   }
@@ -134,6 +163,8 @@ class _GlobalCreateModalState extends State<GlobalCreateModal> {
     _taskTitleController.dispose();
     _taskNotesController.dispose();
     _catTitleController.dispose();
+    _cardFrontController.dispose();
+    _cardBackController.dispose();
     _reminderTitleController.dispose();
     _scheduleRoomController.dispose();
     super.dispose();
@@ -146,8 +177,10 @@ class _GlobalCreateModalState extends State<GlobalCreateModal> {
       case 1:
         return 'Nueva Categoría';
       case 2:
-        return 'Nuevo Recordatorio';
+        return 'Nueva Card';
       case 3:
+        return 'Nuevo Recordatorio';
+      case 4:
         return 'Nuevo Horario';
       default:
         return 'Crear';
@@ -247,9 +280,11 @@ class _GlobalCreateModalState extends State<GlobalCreateModal> {
                             const SizedBox(width: 4),
                             _buildTabItem(1, 'Categoría', Icons.folder_outlined),
                             const SizedBox(width: 4),
-                            _buildTabItem(2, 'Recordatorio', Icons.notifications_none_rounded),
+                            _buildTabItem(2, 'Card', Icons.flip_rounded),
                             const SizedBox(width: 4),
-                            _buildTabItem(3, 'Horario', Icons.schedule_rounded),
+                            _buildTabItem(3, 'Recordatorio', Icons.notifications_none_rounded),
+                            const SizedBox(width: 4),
+                            _buildTabItem(4, 'Horario', Icons.schedule_rounded),
                           ],
                         ),
                       ),
@@ -330,8 +365,10 @@ class _GlobalCreateModalState extends State<GlobalCreateModal> {
       case 1:
         return _buildCategoryForm();
       case 2:
-        return _buildReminderForm();
+        return _buildCardForm();
       case 3:
+        return _buildReminderForm();
+      case 4:
         return _buildScheduleForm();
       default:
         return const SizedBox.shrink();
@@ -693,7 +730,203 @@ class _GlobalCreateModalState extends State<GlobalCreateModal> {
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
-  // 3. PESTAÑA: RECORDATORIO (Imagen 2)
+  // 3. PESTAÑA: CARD (Flashcard)
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  Widget _buildCardForm() {
+    final categories = context.watch<CategoryProvider>().categories;
+    final allTasks = context.watch<TaskProvider>().tasks;
+    final tasksInCategory = _cardCategoryId != null
+        ? allTasks.where((t) => t.categoryId == _cardCategoryId).toList()
+        : <TaskModel>[];
+
+    return Column(
+      key: const ValueKey('form_card'),
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // 1. Selector de Categoría / Materia
+        _buildFieldLabel('CATEGORÍA / MATERIA'),
+        const SizedBox(height: 6),
+        DropdownButtonFormField<String?>(
+          value: _cardCategoryId,
+          dropdownColor: AppColors.surfaceLight,
+          decoration: _inputDecoration(hint: 'Selecciona una categoría'),
+          items: categories.isEmpty
+              ? [
+                  const DropdownMenuItem<String?>(
+                    value: null,
+                    child: Text('Sin categorías (crea una primero)',
+                        style: TextStyle(color: Colors.white54)),
+                  ),
+                ]
+              : categories.map((c) {
+                  return DropdownMenuItem<String?>(
+                    value: c.id,
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 12,
+                          height: 12,
+                          decoration: BoxDecoration(
+                            color: Color(c.colorValue),
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Text(c.name, style: const TextStyle(color: Colors.white)),
+                      ],
+                    ),
+                  );
+                }).toList(),
+          onChanged: (val) {
+            setState(() {
+              _cardCategoryId = val;
+              _cardTaskId = null; // Reiniciar tarea asociada al cambiar de categoría
+            });
+          },
+        ),
+        const SizedBox(height: 16),
+
+        // 2. Selector de Tarea (solo si ya se eligió una categoría)
+        if (_cardCategoryId != null) ...[
+          _buildFieldLabel('SELECCIONAR TAREA'),
+          const SizedBox(height: 6),
+          if (tasksInCategory.isEmpty)
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+              decoration: BoxDecoration(
+                color: Colors.amber.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.amber.withValues(alpha: 0.3)),
+              ),
+              child: const Row(
+                children: [
+                  Icon(Icons.info_outline, color: Colors.amber, size: 20),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      'Esta categoría no tiene tareas. Crea una tarea en esta categoría para poder asociarle cards.',
+                      style: TextStyle(color: Colors.amber, fontSize: 12.5),
+                    ),
+                  ),
+                ],
+              ),
+            )
+          else
+            DropdownButtonFormField<String?>(
+              value: _cardTaskId,
+              dropdownColor: AppColors.surfaceLight,
+              decoration: _inputDecoration(hint: 'Selecciona la tarea'),
+              items: tasksInCategory.map((t) {
+                return DropdownMenuItem<String?>(
+                  value: t.id,
+                  child: Text(
+                    t.title,
+                    style: const TextStyle(color: Colors.white),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                );
+              }).toList(),
+              onChanged: (val) {
+                setState(() => _cardTaskId = val);
+              },
+            ),
+          const SizedBox(height: 16),
+        ],
+
+        // 3. Campo Frente — Pregunta o concepto (0/60)
+        _buildFieldLabel('FRENTE — PREGUNTA O CONCEPTO'),
+        const SizedBox(height: 6),
+        TextField(
+          controller: _cardFrontController,
+          maxLength: 60,
+          maxLines: 2,
+          decoration: _inputDecoration(
+            hint: 'Frente — Pregunta o concepto',
+          ),
+          style: AppTypography.bodyMedium,
+        ),
+        const SizedBox(height: 12),
+
+        // 4. Campo Reverso — Respuesta o definición (0/200)
+        _buildFieldLabel('REVERSO — RESPUESTA O DEFINICIÓN'),
+        const SizedBox(height: 6),
+        TextField(
+          controller: _cardBackController,
+          maxLength: 200,
+          maxLines: 4,
+          decoration: _inputDecoration(
+            hint: 'Reverso — Respuesta o definición',
+          ),
+          style: AppTypography.bodyMedium,
+        ),
+        const SizedBox(height: 16),
+      ],
+    );
+  }
+
+  Future<void> _saveCard() async {
+    final front = _cardFrontController.text.trim();
+    final back = _cardBackController.text.trim();
+
+    if (_cardCategoryId == null) {
+      _showSnackbar('Por favor selecciona una categoría primero');
+      return;
+    }
+    if (_cardTaskId == null) {
+      _showSnackbar('Por favor selecciona una tarea para asociar la card');
+      return;
+    }
+    if (front.isEmpty) {
+      _showSnackbar('Por favor ingresa la pregunta o concepto (frente)');
+      return;
+    }
+    if (back.isEmpty) {
+      _showSnackbar('Por favor ingresa la respuesta o definición (reverso)');
+      return;
+    }
+
+    final taskProvider = context.read<TaskProvider>();
+    TaskModel? targetTask;
+    try {
+      targetTask = taskProvider.tasks.firstWhere((t) => t.id == _cardTaskId);
+    } catch (_) {}
+
+    if (targetTask == null) {
+      _showSnackbar('No se encontró la tarea seleccionada');
+      return;
+    }
+
+    final card = TareaCardModel(
+      id: generateId(),
+      tareaId: _cardTaskId!,
+      frente: front,
+      reverso: back,
+    );
+
+    final auth = context.read<AuthProvider>();
+    final supabaseClient = Supabase.instance.client;
+    final cardRepo = CardRepository(
+      local: CardLocalDataSource(),
+      remote: CardRemoteDataSource(supabaseClient),
+      isAuthenticated: () => auth.isAuthenticated,
+    );
+
+    await cardRepo.addCard(card);
+
+    final nav = Navigator.of(context);
+    nav.pop();
+    nav.push(
+      MaterialPageRoute(
+        builder: (_) => TaskDetailsDialog(task: targetTask!, initialTab: 2),
+      ),
+    );
+    _showSnackbar('Card creada con éxito');
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // 4. PESTAÑA: RECORDATORIO (Imagen 2)
   // ═══════════════════════════════════════════════════════════════════════════
 
   Widget _buildReminderForm() {
@@ -1150,10 +1383,14 @@ class _GlobalCreateModalState extends State<GlobalCreateModal> {
         onSubmit = _saveCategory;
         break;
       case 2:
+        label = 'Crear Card';
+        onSubmit = _saveCard;
+        break;
+      case 3:
         label = 'Agregar Recordatorio';
         onSubmit = _saveReminder;
         break;
-      case 3:
+      case 4:
         label = 'Guardar Horario';
         onSubmit = _saveSchedule;
         break;
@@ -1161,6 +1398,8 @@ class _GlobalCreateModalState extends State<GlobalCreateModal> {
         label = 'Guardar';
         onSubmit = () {};
     }
+
+    final isCardTab = _currentTab == 2;
 
     return Container(
       width: double.infinity,
@@ -1176,16 +1415,25 @@ class _GlobalCreateModalState extends State<GlobalCreateModal> {
         height: 52,
         child: Container(
           decoration: BoxDecoration(
-            gradient: const LinearGradient(
-              colors: [
-                Color.fromARGB(255, 0, 149, 255),
-                Color.fromARGB(255, 32, 43, 200),
-              ],
-            ),
+            gradient: isCardTab
+                ? const LinearGradient(
+                    colors: [
+                      Color(0xFF00E5CC),
+                      Color(0xFF00B4D8),
+                    ],
+                  )
+                : const LinearGradient(
+                    colors: [
+                      Color.fromARGB(255, 0, 149, 255),
+                      Color.fromARGB(255, 32, 43, 200),
+                    ],
+                  ),
             borderRadius: BorderRadius.circular(16),
             boxShadow: [
               BoxShadow(
-                color: const Color(0xFF0052E0).withValues(alpha: 0.4),
+                color: isCardTab
+                    ? const Color(0xFF00E5CC).withValues(alpha: 0.35)
+                    : const Color(0xFF0052E0).withValues(alpha: 0.4),
                 blurRadius: 14,
                 offset: const Offset(0, 4),
               ),
@@ -1197,14 +1445,22 @@ class _GlobalCreateModalState extends State<GlobalCreateModal> {
               onTap: onSubmit,
               borderRadius: BorderRadius.circular(16),
               child: Center(
-                child: Text(
-                  label,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w700,
-                    fontSize: 16,
-                    letterSpacing: 0.3,
-                  ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (isCardTab) ...[
+                      const Icon(Icons.add, size: 20, color: Color(0xFF0B132B)),
+                      const SizedBox(width: 6),
+                    ],
+                    Text(
+                      label,
+                      style: TextStyle(
+                        color: isCardTab ? const Color(0xFF0B132B) : Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),

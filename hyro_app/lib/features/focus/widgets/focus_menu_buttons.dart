@@ -21,10 +21,11 @@ class FocusMenuButtons extends StatelessWidget {
                 icon: Icons.calendar_month_rounded,
                 label: 'Agenda',
                 onTap: () {
-                  TasksScreen.switchToAgenda();
-                  final appShell = context.findAncestorStateOfType<AppShellState>() ??
-                      appShellKey.currentState;
-                  appShell?.navigateTo(1);
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => const AgendaScreen(),
+                    ),
+                  );
                 },
               ),
             ),

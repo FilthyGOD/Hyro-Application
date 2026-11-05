@@ -245,9 +245,9 @@ class _MainLayoutState extends State<MainLayout> {
                         label: 'Tienda',
                       ),
                       BottomNavigationBarItem(
-                        icon: const Icon(Icons.book_outlined),
-                        activeIcon: _buildActiveIcon(Icons.book_rounded),
-                        label: 'Tareas',
+                        icon: const Icon(Icons.calendar_month_outlined),
+                        activeIcon: _buildActiveIcon(Icons.calendar_month_rounded),
+                        label: 'Calendario',
                       ),
                       BottomNavigationBarItem(
                         icon: const Icon(Icons.timer_outlined),

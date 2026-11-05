@@ -6,6 +6,7 @@ import 'features/focus/providers/focus_provider.dart';
 import 'features/focus/providers/focus_state.dart';
 import 'features/focus/screens/focus_screen.dart';
 import 'features/tasks/screens/tasks_screen.dart';
+import 'features/tasks/screens/calendar_screen.dart';
 import 'features/stats/screens/stats_screen.dart';
 import 'features/shop/screens/shop_screen.dart';
 import 'features/profile/screens/profile_screen.dart';
@@ -260,7 +261,7 @@ class AppShellState extends State<AppShell>
 
   static const _screens = <Widget>[
     ShopScreen(), // 0
-    TasksScreen(), // 1
+    CalendarScreen(), // 1
     FocusScreen(), // 2
     StatsScreen(), // 3
     FriendsScreen(), // 4

@@ -13,280 +13,119 @@ import '../../categories/category_provider.dart';
 import '../widgets/task_details_sheet.dart';
 import '../../missions/missions_provider.dart';
 import '../../../data/models/category_model.dart';
-import '../widgets/quick_note_sheet.dart';
-import '../../stats/widgets/streak_calendar.dart';
+import '../../../core/widgets/animated_background.dart';
 import 'category_detail_screen.dart';
 
-class TasksScreen extends StatefulWidget {
-  const TasksScreen({super.key});
-
-  static _TasksScreenState? activeState;
-
-  static void switchToAgenda() {
-    if (activeState != null && activeState!.mounted) {
-      if (activeState!._tabController.index != 0) {
-        activeState!._tabController.animateTo(0);
-      }
-    }
-  }
+class AgendaScreen extends StatefulWidget {
+  const AgendaScreen({super.key});
 
   @override
-  State<TasksScreen> createState() => _TasksScreenState();
+  State<AgendaScreen> createState() => _AgendaScreenState();
 }
 
-class _TasksScreenState extends State<TasksScreen> with SingleTickerProviderStateMixin {
-  late TabController _tabController;
-  DateTime _displayMonth = DateTime.now();
-  DateTime? _selectedCalendarDate;
+typedef TasksScreen = AgendaScreen;
 
-  @override
-  void initState() {
-    super.initState();
-    TasksScreen.activeState = this;
-    _tabController = TabController(length: 2, vsync: this);
-    _tabController.addListener(() {
-      setState(() {});
-    });
-  }
-
-  @override
-  void dispose() {
-    if (TasksScreen.activeState == this) {
-      TasksScreen.activeState = null;
-    }
-    _tabController.dispose();
-    super.dispose();
-  }
-
+class _AgendaScreenState extends State<AgendaScreen> {
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.transparent,
-      floatingActionButton: Consumer<UiProvider>(
-        builder: (context, ui, _) {
-          return Padding(
-            padding: EdgeInsets.only(bottom: ui.isMusicBarVisible ? 80 : 0),
-            child: GestureDetector(
-              onTap: () {
-                if (_tabController.index == 0) {
-                  _showAddCategoryDialog();
-                } else {
-                  showModalBottomSheet(
-                    context: context,
-                    isScrollControlled: true,
-                    backgroundColor: Colors.transparent,
-                    builder: (context) => const QuickNoteSheet(),
-                  );
-                }
-              },
-              child: Container(
-                width: 56,
-                height: 56,
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [
-                      Color.fromARGB(255, 0, 149, 255),
-                      Color.fromARGB(255, 32, 43, 200),
-                    ],
+    return Stack(
+      children: [
+        const Positioned.fill(child: AnimatedBackground()),
+        Scaffold(
+          backgroundColor: Colors.transparent,
+          floatingActionButton: Consumer<UiProvider>(
+            builder: (context, ui, _) {
+              return Padding(
+                padding: EdgeInsets.only(bottom: ui.isMusicBarVisible ? 80 : 0),
+                child: GestureDetector(
+                  onTap: _showAddCategoryDialog,
+                  child: Container(
+                    width: 56,
+                    height: 56,
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        colors: [
+                          Color.fromARGB(255, 0, 149, 255),
+                          Color.fromARGB(255, 32, 43, 200),
+                        ],
+                      ),
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: [
+                        BoxShadow(
+                          color: AppColors.primary.withAlpha(60),
+                          blurRadius: 12,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: const Icon(Icons.add, color: Colors.white, size: 28),
                   ),
-                  borderRadius: BorderRadius.circular(16),
-                  boxShadow: [
-                    BoxShadow(
-                      color: AppColors.primary.withAlpha(60),
-                      blurRadius: 12,
-                      offset: const Offset(0, 4),
+                ),
+              );
+            },
+          ),
+          body: LayoutBuilder(
+            builder: (context, constraints) {
+              final isLargeScreen = constraints.maxWidth > 800;
+
+              return Padding(
+                padding: isLargeScreen
+                    ? const EdgeInsets.only(
+                        left: 72,
+                        top: 32,
+                        right: 32,
+                        bottom: 0,
+                      )
+                    : EdgeInsets.only(
+                        top: MediaQuery.of(context).padding.top + 24,
+                        bottom: 0,
+                        left: 24,
+                        right: 24,
+                      ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        IconButton(
+                          icon: const Icon(
+                            Icons.arrow_back_ios_new_rounded,
+                            color: Colors.white,
+                            size: 22,
+                          ),
+                          onPressed: () => Navigator.of(context).pop(),
+                          padding: EdgeInsets.zero,
+                          constraints: const BoxConstraints(),
+                        ),
+                        const SizedBox(width: 14),
+                        Text('Agenda', style: AppTypography.h2),
+                      ],
+                    ),
+                    const SizedBox(height: 20),
+                    Expanded(
+                      child: SingleChildScrollView(
+                        child: Padding(
+                          padding: const EdgeInsets.only(bottom: 80),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              _buildTopCards(isLargeScreen: isLargeScreen),
+                              const SizedBox(height: 32),
+                              Text("Tus Categorías", style: AppTypography.h3),
+                              const SizedBox(height: 16),
+                              _buildVerticalCategoryList(),
+                            ],
+                          ),
+                        ),
+                      ),
                     ),
                   ],
                 ),
-                child: const Icon(Icons.add, color: Colors.white, size: 28),
-              ),
-            ),
-          );
-        },
-      ),
-      body: LayoutBuilder(
-        builder: (context, constraints) {
-          final isLargeScreen = constraints.maxWidth > 800;
-
-          return Padding(
-            padding: isLargeScreen
-                ? const EdgeInsets.only(
-                    left: 72,
-                    top: 32,
-                    right: 32,
-                    bottom: 0,
-                  )
-                : EdgeInsets.only(
-                    top: MediaQuery.of(context).padding.top + 24,
-                    bottom: 0,
-                    left: 24,
-                    right: 24,
-                  ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _buildTabBar(),
-                const SizedBox(height: 16),
-                Expanded(
-                  child: TabBarView(
-                    controller: _tabController,
-                    children: [
-                      _buildAgendaTab(isLargeScreen: isLargeScreen),
-                      _buildCalendarioTab(),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          );
-        },
-      ),
-    );
-  }
-
-  Widget _buildTabBar() {
-    return Container(
-      decoration: const BoxDecoration(
-        border: Border(
-          bottom: BorderSide(
-            color: AppColors.cardBorder,
-            width: 2,
+              );
+            },
           ),
         ),
-      ),
-      child: TabBar(
-        controller: _tabController,
-        indicatorColor: AppColors.primary,
-        indicatorWeight: 3,
-        labelColor: Colors.white,
-        unselectedLabelColor: AppColors.textSecondary,
-        labelStyle: AppTypography.bodyLarge.copyWith(fontWeight: FontWeight.bold),
-        unselectedLabelStyle: AppTypography.bodyLarge,
-        tabs: const [
-          Tab(text: 'Agenda'),
-          Tab(text: 'Calendario'),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildAgendaTab({required bool isLargeScreen}) {
-    return SingleChildScrollView(
-      child: Padding(
-        padding: const EdgeInsets.only(bottom: 80),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildTopCards(isLargeScreen: isLargeScreen),
-            const SizedBox(height: 32),
-            Text("Tus Categorías", style: AppTypography.h3),
-            const SizedBox(height: 16),
-            _buildVerticalCategoryList(),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildCalendarioTab() {
-    return SingleChildScrollView(
-      child: Padding(
-        padding: const EdgeInsets.only(bottom: 80),
-        child: Consumer2<StatsProvider, TaskProvider>(
-          builder: (context, statsProvider, taskProvider, child) {
-            final stats = statsProvider.getStatsForMonth(
-              _displayMonth.year,
-              _displayMonth.month,
-            );
-            
-            final Map<int, Color> dayNoteColors = {};
-            for (final t in taskProvider.tasks) {
-              if (t.dueDate != null && 
-                  t.dueDate!.year == _displayMonth.year && 
-                  t.dueDate!.month == _displayMonth.month) {
-                // Usar el color de la nota; si ya hay uno en ese día, mantener el primero
-                dayNoteColors.putIfAbsent(
-                  t.dueDate!.day,
-                  () => Color(t.priorityColorValue),
-                );
-              }
-            }
-
-            final selectedTasks = _selectedCalendarDate != null 
-                ? taskProvider.tasks.where((t) => 
-                    t.dueDate != null && 
-                    t.dueDate!.year == _selectedCalendarDate!.year && 
-                    t.dueDate!.month == _selectedCalendarDate!.month && 
-                    t.dueDate!.day == _selectedCalendarDate!.day).toList()
-                : <TaskModel>[];
-
-            return Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                StreakCalendar(
-                  displayMonth: _displayMonth,
-                  monthStats: stats,
-                  selectedDate: _selectedCalendarDate,
-                  dayNoteColors: dayNoteColors,
-                  onDaySelected: (date) {
-                    setState(() {
-                      if (_selectedCalendarDate == date) {
-                        _selectedCalendarDate = null; // Toggle off
-                      } else {
-                        _selectedCalendarDate = date;
-                      }
-                    });
-                  },
-                  onPreviousMonth: () {
-                    setState(() {
-                      _displayMonth = DateTime(
-                        _displayMonth.year,
-                        _displayMonth.month - 1,
-                        1,
-                      );
-                    });
-                  },
-                  onNextMonth: () {
-                    setState(() {
-                      _displayMonth = DateTime(
-                        _displayMonth.year,
-                        _displayMonth.month + 1,
-                        1,
-                      );
-                    });
-                  },
-                ),
-                if (_selectedCalendarDate != null) ...[
-                  const SizedBox(height: 24),
-                  Text(
-                    'Notas del ${_selectedCalendarDate!.day}',
-                    style: AppTypography.h3,
-                  ),
-                  const SizedBox(height: 16),
-                  if (selectedTasks.isEmpty)
-                    Text(
-                      'No hay notas para este día',
-                      style: AppTypography.bodyMedium.copyWith(color: AppColors.textSecondary),
-                    )
-                  else
-                    ...selectedTasks.map((t) {
-                      final timeStr = TimeOfDay.fromDateTime(t.dueDate!).format(context);
-                      return Padding(
-                        padding: const EdgeInsets.only(bottom: 12),
-                        child: _UpcomingEvent(
-                          month: _getMonthAbbrev(t.dueDate!.month),
-                          day: t.dueDate!.day.toString(),
-                          title: t.title,
-                          time: timeStr,
-                        ),
-                      );
-                    }),
-                ],
-              ],
-            );
-          },
-        ),
-      ),
+      ],
     );
   }
 

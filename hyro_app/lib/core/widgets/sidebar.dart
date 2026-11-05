@@ -25,9 +25,9 @@ class Sidebar extends StatelessWidget {
       targetIndex: 2,
     ),
     _SidebarItemData(
-      icon: Icons.book_outlined,
-      activeIcon: Icons.book_rounded,
-      label: 'Tareas',
+      icon: Icons.calendar_month_outlined,
+      activeIcon: Icons.calendar_month_rounded,
+      label: 'Calendario',
       targetIndex: 1,
     ),
     _SidebarItemData(

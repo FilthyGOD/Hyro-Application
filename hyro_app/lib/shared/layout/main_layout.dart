@@ -247,7 +247,9 @@ class _MainLayoutState extends State<MainLayout> {
                         child: Container(
                           height: 60,
                           decoration: BoxDecoration(
-                            color: const Color(0xFF0C101A).withValues(alpha: 0.85),
+                            color: const Color(
+                              0xFF0C101A,
+                            ).withValues(alpha: 0.85),
                             borderRadius: BorderRadius.circular(34),
                             border: Border.all(
                               color: Colors.white.withValues(alpha: 0.12),
@@ -278,7 +280,7 @@ class _MainLayoutState extends State<MainLayout> {
                                 ),
                               ),
                               // Espacio reservado para el botón central '+'
-                              const SizedBox(width: 64),
+                              const SizedBox(width: 70),
                               Expanded(
                                 child: _buildGlassNavItem(
                                   index: 2,
@@ -300,33 +302,32 @@ class _MainLayoutState extends State<MainLayout> {
                     ),
                   ),
 
-                  // ── Botón Agregar Central (+) Estilo Saliente ──
+                  // ── Botón Agregar Central (+) Estilo Saliente Aplastado ──
                   Center(
                     child: Container(
-                      width: 58,
-                      height: 74,
+                      width: 74,
+                      height: 80,
                       decoration: BoxDecoration(
                         gradient: const LinearGradient(
                           begin: Alignment.topCenter,
                           end: Alignment.bottomCenter,
-                          colors: [
-                            Color(0xFF266EFA),
-                            Color(0xFF0448DB),
-                          ],
+                          colors: [Color(0xFF266EFA), Color(0xFF0448DB)],
                         ),
-                        borderRadius: BorderRadius.circular(18),
+                        borderRadius: BorderRadius.circular(20),
                         boxShadow: [
                           BoxShadow(
-                            color: const Color(0xFF0052E0).withValues(alpha: 0.5),
+                            color: const Color(
+                              0xFF0052E0,
+                            ).withValues(alpha: 0.5),
                             blurRadius: 16,
-                            offset: const Offset(0, 6),
+                            offset: const Offset(0, 4),
                           ),
                         ],
                       ),
                       child: Material(
                         color: Colors.transparent,
                         child: InkWell(
-                          borderRadius: BorderRadius.circular(18),
+                          borderRadius: BorderRadius.circular(20),
                           splashColor: Colors.white.withValues(alpha: 0.2),
                           highlightColor: Colors.white.withValues(alpha: 0.1),
                           onTap: () {
@@ -336,7 +337,7 @@ class _MainLayoutState extends State<MainLayout> {
                             child: Icon(
                               Icons.add_rounded,
                               color: Colors.white,
-                              size: 38,
+                              size: 34,
                             ),
                           ),
                         ),
@@ -372,18 +373,17 @@ class _MainLayoutState extends State<MainLayout> {
             children: [
               Icon(
                 isSelected ? activeIcon : icon,
-                color: isSelected
-                    ? AppColors.primary
-                    : const Color(0xFF8A93A6),
+                color: isSelected ? AppColors.primary : const Color(0xFF8A93A6),
                 size: 26,
-                shadows: isSelected
-                    ? [
-                        Shadow(
-                          color: AppColors.primary.withValues(alpha: 0.6),
-                          blurRadius: 10,
-                        ),
-                      ]
-                    : null,
+                shadows:
+                    isSelected
+                        ? [
+                          Shadow(
+                            color: AppColors.primary.withValues(alpha: 0.6),
+                            blurRadius: 10,
+                          ),
+                        ]
+                        : null,
               ),
               const SizedBox(height: 3),
               AnimatedContainer(
@@ -393,15 +393,16 @@ class _MainLayoutState extends State<MainLayout> {
                 decoration: BoxDecoration(
                   color: isSelected ? AppColors.primary : Colors.transparent,
                   shape: BoxShape.circle,
-                  boxShadow: isSelected
-                      ? [
-                          BoxShadow(
-                            color: AppColors.primary.withValues(alpha: 0.8),
-                            blurRadius: 4,
-                            spreadRadius: 1,
-                          ),
-                        ]
-                      : null,
+                  boxShadow:
+                      isSelected
+                          ? [
+                            BoxShadow(
+                              color: AppColors.primary.withValues(alpha: 0.8),
+                              blurRadius: 4,
+                              spreadRadius: 1,
+                            ),
+                          ]
+                          : null,
                 ),
               ),
             ],

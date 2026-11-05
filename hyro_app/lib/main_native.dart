@@ -60,12 +60,20 @@ Future<void> platformInit(List<String> args) async {
       onSecondWindow: (List<String> nuevosArgs) async {
         debugPrint('🚨 [Hyro Debug] onSecondWindow llamado con ${nuevosArgs.length} args');
         if (nuevosArgs.isNotEmpty) {
-          // El navegador a veces pasa el ejecutable como primer argumento y la URL como segundo.
-          // Buscamos el primer argumento que parezca una URL.
-          final enlace = nuevosArgs.firstWhere(
-            (arg) => arg.startsWith('io.supabase.hyroapp://'),
-            orElse: () => nuevosArgs.first,
-          );
+          for (var i = 0; i < nuevosArgs.length; i++) {
+            debugPrint('🚨 [Hyro Debug] Arg[$i]: ${nuevosArgs[i]}');
+          }
+          // El navegador a veces pasa el ejecutable como primer argumento y la URL como segundo,
+          // o envuelve el enlace en comillas dobles ("...").
+          String? enlace;
+          for (final arg in nuevosArgs) {
+            final cleaned = arg.trim().replaceAll('"', '').replaceAll("'", '');
+            if (cleaned.contains('io.supabase.hyroapp://')) {
+              enlace = cleaned.substring(cleaned.indexOf('io.supabase.hyroapp://'));
+              break;
+            }
+          }
+          enlace ??= nuevosArgs.first.trim().replaceAll('"', '').replaceAll("'", '');
           debugPrint('🚨 [Hyro Debug] ¡Link robado del clon!: $enlace');
           try {
             final uri = Uri.parse(enlace);

@@ -15,6 +15,7 @@ import '../../../core/theme/app_colors.dart';
 import '../widgets/focus_menu_buttons.dart';
 import '../../missions/widgets/daily_missions_card.dart';
 import '../widgets/task_selection_dialog.dart';
+import '../widgets/configure_focus_session_modal.dart';
 import '../../stats/stats_provider.dart';
 import '../../tasks/tasks_provider.dart';
 import '../../settings/settings_provider.dart';
@@ -841,21 +842,26 @@ void _handleStart(BuildContext context, FocusProvider focusProvider) {
   final settings = context.read<SettingsProvider>();
   final isStrictMode = !kIsWeb && Platform.isAndroid && settings.strictMode;
 
-  showDialog<dynamic>(
+  showDialog<FocusSessionConfig>(
     context: context,
-    builder: (ctx) => const TaskSelectionDialog(),
-  ).then((result) {
-    if (result == 'NO_TASK') {
-      focusProvider.start(isStrictMode: isStrictMode);
-    } else if (result != null && result is Map) {
-      final taskId = result['id'] as String;
-      final taskTitle = result['title'] as String;
-      focusProvider.start(
-        taskId: taskId,
-        taskTitle: taskTitle,
-        isStrictMode: isStrictMode,
-      );
-    }
+    barrierColor: Colors.black54,
+    builder: (ctx) => const ConfigureFocusSessionModal(),
+  ).then((config) {
+    if (config == null) return;
+
+    // Actualizar configuración de quiz y tiempos si cambia
+    settings.setFocusQuizEnabled(config.quizEnabled);
+    settings.setPomodoroDuration(config.studyMinutes.toDouble());
+    settings.setShortBreakDuration(config.breakMinutes.toDouble());
+
+    focusProvider.start(
+      taskId: config.taskId,
+      taskTitle: config.taskTitle,
+      isStrictMode: isStrictMode,
+      focusMinutes: config.studyMinutes,
+      breakMinutes: config.breakMinutes,
+      coinsReward: config.coinsReward,
+    );
   });
 }
 

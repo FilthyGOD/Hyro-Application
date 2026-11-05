@@ -18,6 +18,8 @@ class FocusProvider extends ChangeNotifier {
   Timer? _timer;
   DateTime? _targetEndTime;
   int _secondsSinceLastQuiz = 0;
+  int _configuredCoinsReward = 10;
+  int? _configuredBreakMinutes;
   final StatsProvider? statsProvider;
   final SettingsProvider? settingsProvider;
   final ProfileProvider? profileProvider;
@@ -46,13 +48,32 @@ class FocusProvider extends ChangeNotifier {
   }
 
   /// Inicia el temporizador.
-  void start({String? taskId, String? taskTitle, bool isStrictMode = false}) {
+  void start({
+    String? taskId,
+    String? taskTitle,
+    bool isStrictMode = false,
+    int? focusMinutes,
+    int? breakMinutes,
+    int? coinsReward,
+  }) {
     if (_state.status == TimerStatus.running) return;
 
+    if (coinsReward != null) {
+      _configuredCoinsReward = coinsReward;
+    }
+    if (breakMinutes != null) {
+      _configuredBreakMinutes = breakMinutes;
+    }
+
     // Asegurar que remainingSeconds sea válido (si es 0 o negativo, reiniciar a la duración del modo)
-    int secondsToRun = _state.remainingSeconds;
-    if (secondsToRun <= 0) {
-      secondsToRun = _durationForMode(_state.mode) * 60;
+    int secondsToRun;
+    if (focusMinutes != null && _state.mode == TimerMode.pomodoro) {
+      secondsToRun = focusMinutes * 60;
+    } else {
+      secondsToRun = _state.remainingSeconds;
+      if (secondsToRun <= 0) {
+        secondsToRun = _durationForMode(_state.mode) * 60;
+      }
     }
     _targetEndTime = DateTime.now().add(Duration(seconds: secondsToRun));
 
@@ -61,7 +82,9 @@ class FocusProvider extends ChangeNotifier {
         status: TimerStatus.running,
         remainingSeconds: secondsToRun,
         totalSeconds:
-            _state.totalSeconds <= 0 ? secondsToRun : _state.totalSeconds,
+            _state.totalSeconds <= 0 || (focusMinutes != null && _state.mode == TimerMode.pomodoro)
+                ? secondsToRun
+                : _state.totalSeconds,
         activeTaskId: taskId ?? _state.activeTaskId,
         activeTaskTitle: taskTitle ?? _state.activeTaskTitle,
         quizDue: false,
@@ -352,8 +375,8 @@ class FocusProvider extends ChangeNotifier {
       // ── Acciones de gamificación ──
       // Experiencia por pomodoro: 1 min = 1 XP (evita farmear)
       profileProvider?.grantXP(userId, focusMinutes);
-      // Monedas por pomodoro: 10 monedas por completar sesión
-      profileProvider?.modificarMonedas(userId, 10);
+      // Monedas por pomodoro: otorgar monedas según la configuración del temporizador
+      profileProvider?.modificarMonedas(userId, _configuredCoinsReward);
       // Actualiza progreso de la misión
       missionsProvider?.updateProgress('pomodoro_completed', 1);
       missionsProvider?.updateProgress('minutes_studied', focusMinutes);
@@ -368,7 +391,10 @@ class FocusProvider extends ChangeNotifier {
           newSessions % PomodoroConstants.pomodorosBeforeLongBreak == 0
               ? TimerMode.longBreak
               : TimerMode.shortBreak;
-      final nextDuration = _durationForMode(nextMode) * 60;
+      final nextDuration =
+          (_configuredBreakMinutes != null && nextMode == TimerMode.shortBreak)
+              ? _configuredBreakMinutes! * 60
+              : _durationForMode(nextMode) * 60;
 
       _emit(
         TimerState(

@@ -16,7 +16,16 @@ import 'quiz_modes/flashcard_reveal_quiz.dart';
 import 'quiz_modes/drag_drop_quiz.dart';
 import 'quiz_modes/fill_in_blank_quiz.dart';
 
-enum QuizMode { fillInNote, fillInCard, writeCardBack, writeCardFront, multipleChoice, trueFalse, flashcardReveal, dragDrop }
+enum QuizMode {
+  fillInNote,
+  fillInCard,
+  writeCardBack,
+  writeCardFront,
+  multipleChoice,
+  trueFalse,
+  flashcardReveal,
+  dragDrop,
+}
 
 class FocusQuizDialog extends StatefulWidget {
   final List<TareaCardModel> flashcards;
@@ -86,7 +95,12 @@ class _FocusQuizDialogState extends State<FocusQuizDialog> {
     }
   }
 
-  void _onAnswer(bool isCorrect, String question, String userAnswer, String correctAnswer) {
+  void _onAnswer(
+    bool isCorrect,
+    String question,
+    String userAnswer,
+    String correctAnswer,
+  ) {
     if (_revealed) return;
     _isCorrect = isCorrect;
     _resultCorrectAnswer = correctAnswer;
@@ -177,7 +191,10 @@ class _FocusQuizDialogState extends State<FocusQuizDialog> {
                 child: SafeArea(
                   bottom: false,
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 20,
+                      vertical: 15,
+                    ),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
@@ -215,14 +232,18 @@ class _FocusQuizDialogState extends State<FocusQuizDialog> {
                     child: ConstrainedBox(
                       constraints: const BoxConstraints(maxWidth: 580),
                       child: SingleChildScrollView(
-                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 20,
+                          vertical: 20,
+                        ),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
                             // Mascota Hero
                             Consumer<MascotController>(
                               builder: (context, mascot, _) {
-                                if (!mascot.isLoaded) return const SizedBox(height: 110);
+                                if (!mascot.isLoaded)
+                                  return const SizedBox(height: 110);
                                 return SizedBox(
                                   height: 130,
                                   child: Center(
@@ -247,10 +268,7 @@ class _FocusQuizDialogState extends State<FocusQuizDialog> {
                             const SizedBox(height: 24),
 
                             // Botones de resultado o acción
-                            if (_revealed)
-                              _buildResult()
-                            else
-                              _buildActions(),
+                            if (_revealed) _buildResult() else _buildActions(),
                             const SizedBox(height: 24),
                           ],
                         ),
@@ -313,10 +331,7 @@ class _FocusQuizDialogState extends State<FocusQuizDialog> {
         Container(
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(
-              color: color.withValues(alpha: 0.4),
-              width: 1.5,
-            ),
+            border: Border.all(color: color.withValues(alpha: 0.4), width: 1.5),
           ),
           child: Material(
             color: Colors.transparent,
@@ -324,7 +339,10 @@ class _FocusQuizDialogState extends State<FocusQuizDialog> {
               onTap: _skip,
               borderRadius: BorderRadius.circular(12),
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 28,
+                  vertical: 12,
+                ),
                 child: Text(
                   'Saltar',
                   style: AppTypography.labelLarge.copyWith(
@@ -345,7 +363,10 @@ class _FocusQuizDialogState extends State<FocusQuizDialog> {
       duration: const Duration(milliseconds: 400),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: _isCorrect ? AppColors.breakGreen.withAlpha(76) : const Color(0xFFEF4444).withAlpha(76),
+        color:
+            _isCorrect
+                ? AppColors.breakGreen.withAlpha(76)
+                : const Color(0xFFEF4444).withAlpha(76),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
           color: _isCorrect ? AppColors.breakGreen : const Color(0xFFEF4444),
@@ -363,7 +384,8 @@ class _FocusQuizDialogState extends State<FocusQuizDialog> {
           Text(
             _isCorrect ? '¡Correcto!' : 'Incorrecto',
             style: AppTypography.h3.copyWith(
-              color: _isCorrect ? AppColors.breakGreen : const Color(0xFFEF4444),
+              color:
+                  _isCorrect ? AppColors.breakGreen : const Color(0xFFEF4444),
             ),
           ),
           if (!_isCorrect) ...[
@@ -371,7 +393,9 @@ class _FocusQuizDialogState extends State<FocusQuizDialog> {
             Text('Respuesta esperada:', style: AppTypography.labelSmall),
             Text(
               _resultCorrectAnswer,
-              style: AppTypography.bodyLarge.copyWith(fontWeight: FontWeight.bold),
+              style: AppTypography.bodyLarge.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
               textAlign: TextAlign.center,
             ),
           ],

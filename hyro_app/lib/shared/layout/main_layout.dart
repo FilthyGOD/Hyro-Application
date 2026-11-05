@@ -15,6 +15,7 @@ import 'package:provider/provider.dart';
 import '../../core/providers/ui_provider.dart';
 import '../../features/focus/providers/focus_provider.dart';
 import '../../features/focus/providers/focus_state.dart';
+import '../widgets/global_create_modal.dart';
 
 /// Scaffold del diseño principal con barra lateral responsiva + contenido + barra de radio.
 class MainLayout extends StatefulWidget {
@@ -329,7 +330,7 @@ class _MainLayoutState extends State<MainLayout> {
                           splashColor: Colors.white.withValues(alpha: 0.2),
                           highlightColor: Colors.white.withValues(alpha: 0.1),
                           onTap: () {
-                            // Botón de agregar sin funcionalidad aún
+                            GlobalCreateModal.show(context);
                           },
                           child: const Center(
                             child: Icon(

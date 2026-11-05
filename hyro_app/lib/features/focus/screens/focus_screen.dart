@@ -825,7 +825,7 @@ class _MobileLayout extends StatelessWidget {
                     child: const DailyMissionsCard(),
                   ),
                 ],
-                const SizedBox(height: 80),
+                const SizedBox(height: 110),
               ],
             ),
           ),

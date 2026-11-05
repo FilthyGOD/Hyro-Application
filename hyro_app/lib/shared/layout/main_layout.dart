@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:window_manager/window_manager.dart';
 import 'dart:io';
+import 'dart:ui';
 import '../../core/theme/app_colors.dart';
 import '../../core/utils/responsive.dart';
 import '../../core/widgets/sidebar.dart';
@@ -192,8 +193,9 @@ class _MainLayoutState extends State<MainLayout> {
           const Positioned.fill(child: AnimatedBackground()),
           // Región de contenido principal
           Positioned.fill(child: widget.child),
+          // Barra de Spotify
           Positioned(
-            bottom: 16,
+            bottom: hideNavBars ? 16 : 96,
             left: 0,
             right: 0,
             child: Consumer<UiProvider>(
@@ -207,81 +209,204 @@ class _MainLayoutState extends State<MainLayout> {
               },
             ),
           ),
+          // Barra de navegación flotante fija en la parte inferior
+          if (!hideNavBars)
+            Positioned(
+              bottom: 0,
+              left: 0,
+              right: 0,
+              child: _buildFloatingGlassBar(context),
+            ),
         ],
       ),
-      bottomNavigationBar:
-          hideNavBars
-              ? null
-              : Container(
-                decoration: BoxDecoration(
-                  border: Border(
-                    top: BorderSide(
-                      color: const Color.fromARGB(
-                        255,
-                        30,
-                        38,
-                        64,
-                      ).withValues(alpha: 1),
-                      width: 3.0,
-                    ),
-                  ),
-                ),
-                child: Theme(
-                  data: Theme.of(context).copyWith(
-                    splashColor: Colors.transparent,
-                    highlightColor: Colors.transparent,
-                  ),
-                  child: BottomNavigationBar(
-                    backgroundColor: AppColors.surface,
-                    type: BottomNavigationBarType.fixed,
-                    currentIndex:
-                    widget.selectedIndex < 4 ? widget.selectedIndex : 3,
-                    selectedItemColor: AppColors.primary,
-                    unselectedItemColor: AppColors.textSecondary,
-                    showSelectedLabels: false,
-                    showUnselectedLabels: false,
-                    onTap: (index) {
-                      widget.onNavigate(index);
-                    },
-                    items: [
-                      BottomNavigationBarItem(
-                        icon: const Icon(Icons.storefront_outlined),
-                        activeIcon: _buildActiveIcon(Icons.storefront),
-                        label: 'Tienda',
-                      ),
-                      BottomNavigationBarItem(
-                        icon: const Icon(Icons.calendar_month_outlined),
-                        activeIcon: _buildActiveIcon(
-                          Icons.calendar_month_rounded,
-                        ),
-                        label: 'Calendario',
-                      ),
-                      BottomNavigationBarItem(
-                        icon: const Icon(Icons.timer_outlined),
-                        activeIcon: _buildActiveIcon(Icons.timer),
-                        label: 'Enfoque',
-                      ),
-                      BottomNavigationBarItem(
-                        icon: const Icon(Icons.person_outline),
-                        activeIcon: _buildActiveIcon(Icons.person),
-                        label: 'Perfil',
-                      ),
-                    ],
-                  ),
-                ),
-              ),
     );
   }
 
-  Widget _buildActiveIcon(IconData icon) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-      decoration: BoxDecoration(
-        color: AppColors.primary.withValues(alpha: 0.15),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.primary, width: 1.5),
+  Widget _buildFloatingGlassBar(BuildContext context) {
+    return SafeArea(
+      top: false,
+      child: Padding(
+        padding: const EdgeInsets.only(left: 20, right: 20, bottom: 12),
+        child: Align(
+          alignment: Alignment.bottomCenter,
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 420),
+            child: SizedBox(
+              height: 76,
+              child: Stack(
+                alignment: Alignment.center,
+                clipBehavior: Clip.none,
+                children: [
+                  // ── Cápsula Glassmórfica ──
+                  Center(
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(34),
+                      child: BackdropFilter(
+                        filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+                        child: Container(
+                          height: 60,
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF0C101A).withValues(alpha: 0.85),
+                            borderRadius: BorderRadius.circular(34),
+                            border: Border.all(
+                              color: Colors.white.withValues(alpha: 0.12),
+                              width: 1.2,
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.5),
+                                blurRadius: 24,
+                                offset: const Offset(0, 8),
+                              ),
+                            ],
+                          ),
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: _buildGlassNavItem(
+                                  index: 0,
+                                  icon: Icons.storefront_outlined,
+                                  activeIcon: Icons.storefront,
+                                ),
+                              ),
+                              Expanded(
+                                child: _buildGlassNavItem(
+                                  index: 1,
+                                  icon: Icons.calendar_month_outlined,
+                                  activeIcon: Icons.calendar_month_rounded,
+                                ),
+                              ),
+                              // Espacio reservado para el botón central '+'
+                              const SizedBox(width: 64),
+                              Expanded(
+                                child: _buildGlassNavItem(
+                                  index: 2,
+                                  icon: Icons.timer_outlined,
+                                  activeIcon: Icons.timer,
+                                ),
+                              ),
+                              Expanded(
+                                child: _buildGlassNavItem(
+                                  index: 3,
+                                  icon: Icons.person_outline_rounded,
+                                  activeIcon: Icons.person_rounded,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+
+                  // ── Botón Agregar Central (+) Estilo Saliente ──
+                  Center(
+                    child: Container(
+                      width: 58,
+                      height: 74,
+                      decoration: BoxDecoration(
+                        gradient: const LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          colors: [
+                            Color(0xFF266EFA),
+                            Color(0xFF0448DB),
+                          ],
+                        ),
+                        borderRadius: BorderRadius.circular(18),
+                        boxShadow: [
+                          BoxShadow(
+                            color: const Color(0xFF0052E0).withValues(alpha: 0.5),
+                            blurRadius: 16,
+                            offset: const Offset(0, 6),
+                          ),
+                        ],
+                      ),
+                      child: Material(
+                        color: Colors.transparent,
+                        child: InkWell(
+                          borderRadius: BorderRadius.circular(18),
+                          splashColor: Colors.white.withValues(alpha: 0.2),
+                          highlightColor: Colors.white.withValues(alpha: 0.1),
+                          onTap: () {
+                            // Botón de agregar sin funcionalidad aún
+                          },
+                          child: const Center(
+                            child: Icon(
+                              Icons.add_rounded,
+                              color: Colors.white,
+                              size: 38,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
       ),
-      child: Icon(icon),
+    );
+  }
+
+  Widget _buildGlassNavItem({
+    required int index,
+    required IconData icon,
+    required IconData activeIcon,
+  }) {
+    final isSelected = widget.selectedIndex == index;
+
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: () => widget.onNavigate(index),
+        borderRadius: BorderRadius.circular(30),
+        splashColor: AppColors.primary.withValues(alpha: 0.15),
+        highlightColor: Colors.transparent,
+        child: Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                isSelected ? activeIcon : icon,
+                color: isSelected
+                    ? AppColors.primary
+                    : const Color(0xFF8A93A6),
+                size: 26,
+                shadows: isSelected
+                    ? [
+                        Shadow(
+                          color: AppColors.primary.withValues(alpha: 0.6),
+                          blurRadius: 10,
+                        ),
+                      ]
+                    : null,
+              ),
+              const SizedBox(height: 3),
+              AnimatedContainer(
+                duration: const Duration(milliseconds: 200),
+                width: isSelected ? 4 : 0,
+                height: isSelected ? 4 : 0,
+                decoration: BoxDecoration(
+                  color: isSelected ? AppColors.primary : Colors.transparent,
+                  shape: BoxShape.circle,
+                  boxShadow: isSelected
+                      ? [
+                          BoxShadow(
+                            color: AppColors.primary.withValues(alpha: 0.8),
+                            blurRadius: 4,
+                            spreadRadius: 1,
+                          ),
+                        ]
+                      : null,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 

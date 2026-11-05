@@ -210,7 +210,8 @@ class _ShopScreenState extends State<ShopScreen>
     final currentCategory = _CosmeticCategory.values[_currentTabIndex];
     final selectedId = _selectedItem[currentCategory] ?? -1;
 
-    return Padding(
+    return SingleChildScrollView(
+      physics: const BouncingScrollPhysics(),
       padding: EdgeInsets.only(
         top: isDesktop ? 32 : (MediaQuery.of(context).padding.top + 8),
       ),
@@ -246,28 +247,32 @@ class _ShopScreenState extends State<ShopScreen>
           const SizedBox(height: 8),
 
           // ── Mascot Preview ──
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(vertical: 8),
-              child: Consumer<MascotController>(
-                builder: (context, mascot, _) {
-                  if (!mascot.isLoaded) {
-                    return const Center(
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 8),
+            child: Consumer<MascotController>(
+              builder: (context, mascot, _) {
+                if (!mascot.isLoaded) {
+                  return const SizedBox(
+                    height: 200,
+                    child: Center(
                       child: CircularProgressIndicator(
                         color: AppColors.primary,
                         strokeWidth: 2,
                       ),
-                    );
-                  }
-                  return AspectRatio(
+                    ),
+                  );
+                }
+                return SizedBox(
+                  height: isDesktop ? 260 : 220,
+                  child: AspectRatio(
                     aspectRatio: 1,
                     child: RiveWidget(
                       controller: mascot.controller!,
                       fit: Fit.contain,
                     ),
-                  );
-                },
-              ),
+                  ),
+                );
+              },
             ),
           ),
           const SizedBox(height: 8),
@@ -306,7 +311,7 @@ class _ShopScreenState extends State<ShopScreen>
               top: 24,
               left: 16,
               right: 16,
-              bottom: isDesktop ? 24 : 90,
+              bottom: isDesktop ? 24 : 130,
             ),
             decoration: const BoxDecoration(
               color: Color(0xFF0F1522), // Fondo oscuro profundo

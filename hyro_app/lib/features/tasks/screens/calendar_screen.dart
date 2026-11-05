@@ -49,7 +49,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
       floatingActionButton: Consumer<UiProvider>(
         builder: (context, ui, _) {
           return Padding(
-            padding: EdgeInsets.only(bottom: ui.isMusicBarVisible ? 80 : 0),
+            padding: EdgeInsets.only(bottom: ui.isMusicBarVisible ? 160 : 88),
             child: GestureDetector(
               onTap: () {
                 showModalBottomSheet(
@@ -110,7 +110,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
                 Expanded(
                   child: SingleChildScrollView(
                     child: Padding(
-                      padding: const EdgeInsets.only(bottom: 80),
+                      padding: const EdgeInsets.only(bottom: 120),
                       child: Consumer2<StatsProvider, TaskProvider>(
                         builder: (context, statsProvider, taskProvider, child) {
                           final stats = statsProvider.getStatsForMonth(

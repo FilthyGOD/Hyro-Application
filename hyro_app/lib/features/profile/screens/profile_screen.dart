@@ -58,7 +58,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           isMobile
               ? EdgeInsets.only(
                 top: MediaQuery.of(context).padding.top + 72,
-                bottom: 32,
+                bottom: 120,
                 left: 24,
                 right: 24,
               )

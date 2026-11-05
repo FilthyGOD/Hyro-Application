@@ -17,6 +17,7 @@ import '../../features/focus/providers/focus_provider.dart';
 import '../../features/focus/providers/focus_state.dart';
 import '../widgets/global_create_modal.dart';
 import '../widgets/floating_glass_navigation_bar.dart';
+import '../widgets/floating_add_button.dart';
 
 /// Scaffold del diseño principal con barra lateral responsiva + contenido + barra de radio.
 class MainLayout extends StatefulWidget {
@@ -176,6 +177,15 @@ class _MainLayoutState extends State<MainLayout> {
                         collapsed: isTablet,
                       ),
                     ),
+                    // Botón flotante de agregar en la esquina inferior derecha (solo en PC)
+                    if (!hideNavBars)
+                      Positioned(
+                        bottom: 24,
+                        right: 24,
+                        child: FloatingAddButton(
+                          onTap: () => GlobalCreateModal.show(context),
+                        ),
+                      ),
                   ],
                 );
               },

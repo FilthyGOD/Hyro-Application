@@ -20,6 +20,8 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../friends/widgets/static_mascot_widget.dart';
 import '../../../core/widgets/task_shared_dialog.dart';
 import '../widgets/category_exam_config_dialog.dart';
+import '../../../core/utils/responsive.dart';
+import '../../../shared/widgets/floating_add_button.dart';
 import '../../../shared/widgets/floating_glass_navigation_bar.dart';
 import '../../../shared/widgets/global_create_modal.dart';
 import '../../../app.dart';
@@ -424,26 +426,42 @@ class _CategoryDetailScreenState extends State<CategoryDetailScreen> {
           );
         },
       ),
-      // Barra de navegación flotante fija en la parte inferior
-      Positioned(
-        bottom: 0,
-        left: 0,
-        right: 0,
-        child: FloatingGlassNavigationBar(
-          selectedIndex: -1,
-          onNavigate: (index) {
-            Navigator.of(context).popUntil((route) => route.isFirst);
-            appShellKey.currentState?.navigateTo(index);
-          },
-          onAddTap: () {
-            GlobalCreateModal.show(
-              context,
-              initialTab: 0,
-              initialCategoryId: category.id,
-            );
-          },
+      // En móvil: Barra de navegación flotante. En PC: Solo botón de agregar en la esquina inferior derecha.
+      if (Responsive.isMobile(context))
+        Positioned(
+          bottom: 0,
+          left: 0,
+          right: 0,
+          child: FloatingGlassNavigationBar(
+            selectedIndex: -1,
+            onNavigate: (index) {
+              Navigator.of(context).popUntil((route) => route.isFirst);
+              appShellKey.currentState?.navigateTo(index);
+            },
+            onAddTap: () {
+              GlobalCreateModal.show(
+                context,
+                initialTab: 0,
+                initialCategoryId: category.id,
+              );
+            },
+          ),
+        )
+      else
+        Positioned(
+          bottom: 24,
+          right: 24,
+          child: FloatingAddButton(
+            tooltip: 'Nueva Tarea',
+            onTap: () {
+              GlobalCreateModal.show(
+                context,
+                initialTab: 0,
+                initialCategoryId: category.id,
+              );
+            },
+          ),
         ),
-      ),
     ],
   ),
 );

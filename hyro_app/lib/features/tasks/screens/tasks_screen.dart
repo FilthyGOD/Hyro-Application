@@ -15,6 +15,8 @@ import '../../missions/missions_provider.dart';
 import '../../../data/models/category_model.dart';
 import '../../../core/widgets/animated_background.dart';
 import 'category_detail_screen.dart';
+import '../../../core/utils/responsive.dart';
+import '../../../shared/widgets/floating_add_button.dart';
 import '../../../shared/widgets/floating_glass_navigation_bar.dart';
 import '../../../shared/widgets/global_create_modal.dart';
 import '../../../app.dart';
@@ -97,22 +99,34 @@ class _AgendaScreenState extends State<AgendaScreen> {
             },
           ),
         ),
-        // Barra de navegación flotante fija en la parte inferior
-        Positioned(
-          bottom: 0,
-          left: 0,
-          right: 0,
-          child: FloatingGlassNavigationBar(
-            selectedIndex: -1,
-            onNavigate: (index) {
-              Navigator.of(context).popUntil((route) => route.isFirst);
-              appShellKey.currentState?.navigateTo(index);
-            },
-            onAddTap: () {
-              GlobalCreateModal.show(context, initialTab: 1);
-            },
+        // En móvil: Barra de navegación flotante. En PC: Solo botón de agregar en la esquina inferior derecha.
+        if (Responsive.isMobile(context))
+          Positioned(
+            bottom: 0,
+            left: 0,
+            right: 0,
+            child: FloatingGlassNavigationBar(
+              selectedIndex: -1,
+              onNavigate: (index) {
+                Navigator.of(context).popUntil((route) => route.isFirst);
+                appShellKey.currentState?.navigateTo(index);
+              },
+              onAddTap: () {
+                GlobalCreateModal.show(context, initialTab: 1);
+              },
+            ),
+          )
+        else
+          Positioned(
+            bottom: 24,
+            right: 24,
+            child: FloatingAddButton(
+              tooltip: 'Nueva Categoría',
+              onTap: () {
+                GlobalCreateModal.show(context, initialTab: 1);
+              },
+            ),
           ),
-        ),
       ],
     );
   }

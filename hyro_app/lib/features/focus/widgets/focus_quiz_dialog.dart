@@ -65,9 +65,12 @@ class _FocusQuizDialogState extends State<FocusQuizDialog> {
       available.add(QuizMode.multipleChoice);
     }
 
-    // Verdadero/Falso necesita tarjetas
-    if (hasCards) {
+    // Verdadero/Falso (Tarjetas de estudio y Notas)
+    if (hasCards || hasNotes) {
       available.add(QuizMode.trueFalse);
+    }
+
+    if (hasCards) {
       available.add(QuizMode.flashcardReveal);
     }
 
@@ -245,7 +248,9 @@ class _FocusQuizDialogState extends State<FocusQuizDialog> {
       case QuizMode.trueFalse:
         return TrueFalseQuiz(
           flashcards: widget.flashcards,
+          notas: widget.notas,
           onAnswer: _onAnswer,
+          subjectColor: widget.subjectColor,
         );
       case QuizMode.flashcardReveal:
         return FlashcardRevealQuiz(

@@ -425,7 +425,14 @@ class _GlobalCreateModalState extends State<GlobalCreateModal> {
               );
             }),
           ],
-          onChanged: (val) => setState(() => _taskCategoryId = val),
+          onChanged: (val) {
+            setState(() {
+              _taskCategoryId = val;
+              _cardCategoryId = val;
+              _scheduleCategoryId = val;
+              _cardTaskId = null;
+            });
+          },
         ),
         const SizedBox(height: 16),
 
@@ -736,9 +743,19 @@ class _GlobalCreateModalState extends State<GlobalCreateModal> {
   Widget _buildCardForm() {
     final categories = context.watch<CategoryProvider>().categories;
     final allTasks = context.watch<TaskProvider>().tasks;
+    final CategoryModel? selectedCat = _cardCategoryId != null
+        ? categories.where((c) => c.id == _cardCategoryId).firstOrNull
+        : null;
     final tasksInCategory = _cardCategoryId != null
-        ? allTasks.where((t) => t.categoryId == _cardCategoryId).toList()
+        ? allTasks.where((t) =>
+            t.categoryId == _cardCategoryId ||
+            (selectedCat != null && t.category == selectedCat.name)
+          ).toList()
         : <TaskModel>[];
+
+    final validCardTaskId = (_cardTaskId != null && tasksInCategory.any((t) => t.id == _cardTaskId))
+        ? _cardTaskId
+        : (tasksInCategory.isNotEmpty ? tasksInCategory.first.id : null);
 
     return Column(
       key: const ValueKey('form_card'),
@@ -781,6 +798,8 @@ class _GlobalCreateModalState extends State<GlobalCreateModal> {
           onChanged: (val) {
             setState(() {
               _cardCategoryId = val;
+              _taskCategoryId = val;
+              _scheduleCategoryId = val;
               _cardTaskId = null; // Reiniciar tarea asociada al cambiar de categoría
             });
           },
@@ -814,7 +833,7 @@ class _GlobalCreateModalState extends State<GlobalCreateModal> {
             )
           else
             DropdownButtonFormField<String?>(
-              value: _cardTaskId,
+              value: validCardTaskId,
               dropdownColor: AppColors.surfaceLight,
               decoration: _inputDecoration(hint: 'Selecciona la tarea'),
               items: tasksInCategory.map((t) {
@@ -870,11 +889,26 @@ class _GlobalCreateModalState extends State<GlobalCreateModal> {
     final front = _cardFrontController.text.trim();
     final back = _cardBackController.text.trim();
 
+    final categories = context.read<CategoryProvider>().categories;
+    final allTasks = context.read<TaskProvider>().tasks;
+    final CategoryModel? selectedCat = _cardCategoryId != null
+        ? categories.where((c) => c.id == _cardCategoryId).firstOrNull
+        : null;
+    final tasksInCategory = _cardCategoryId != null
+        ? allTasks.where((t) =>
+            t.categoryId == _cardCategoryId ||
+            (selectedCat != null && t.category == selectedCat.name)
+          ).toList()
+        : <TaskModel>[];
+
+    final targetTaskId = _cardTaskId ??
+        (tasksInCategory.isNotEmpty ? tasksInCategory.first.id : null);
+
     if (_cardCategoryId == null) {
       _showSnackbar('Por favor selecciona una categoría primero');
       return;
     }
-    if (_cardTaskId == null) {
+    if (targetTaskId == null) {
       _showSnackbar('Por favor selecciona una tarea para asociar la card');
       return;
     }
@@ -887,10 +921,9 @@ class _GlobalCreateModalState extends State<GlobalCreateModal> {
       return;
     }
 
-    final taskProvider = context.read<TaskProvider>();
     TaskModel? targetTask;
     try {
-      targetTask = taskProvider.tasks.firstWhere((t) => t.id == _cardTaskId);
+      targetTask = allTasks.firstWhere((t) => t.id == targetTaskId);
     } catch (_) {}
 
     if (targetTask == null) {
@@ -900,7 +933,7 @@ class _GlobalCreateModalState extends State<GlobalCreateModal> {
 
     final card = TareaCardModel(
       id: generateId(),
-      tareaId: _cardTaskId!,
+      tareaId: targetTaskId,
       frente: front,
       reverso: back,
     );
@@ -1166,7 +1199,14 @@ class _GlobalCreateModalState extends State<GlobalCreateModal> {
                     ),
                   );
                 }).toList(),
-          onChanged: (val) => setState(() => _scheduleCategoryId = val),
+          onChanged: (val) {
+            setState(() {
+              _scheduleCategoryId = val;
+              _taskCategoryId = val;
+              _cardCategoryId = val;
+              _cardTaskId = null;
+            });
+          },
         ),
         const SizedBox(height: 16),
 

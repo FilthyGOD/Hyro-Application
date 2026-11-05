@@ -266,7 +266,7 @@ class _DesktopLayout extends StatelessWidget {
   Widget build(BuildContext context) {
     final focusProvider = context.read<FocusProvider>();
     final settings = context.watch<SettingsProvider>();
-    final isActiveLayout = state.isRunning || (state.isPaused && state.isManualPause);
+    final isActiveLayout = state.isRunning || state.isPaused;
 
     final isCentered = isActiveLayout || settings.hideFocusCards;
 
@@ -681,8 +681,8 @@ class _MobileLayout extends StatelessWidget {
     final focusProvider = context.read<FocusProvider>();
     final settings = context.watch<SettingsProvider>();
 
-    // Cuando el temporizador está en marcha o en pausa manual, usa un diseño Centrado en lugar de desplazamiento
-    if (state.isRunning || (state.isPaused && state.isManualPause)) {
+    // Cuando el temporizador está en marcha o en pausa, usa un diseño Centrado en lugar de desplazamiento
+    if (state.isRunning || state.isPaused) {
       return Center(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -722,7 +722,7 @@ class _MobileLayout extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 16),
-              if (state.isRunning && state.quizTotalCount > 0)
+              if ((state.isRunning || state.isPaused) && state.quizTotalCount > 0)
                 Padding(
                   padding: const EdgeInsets.only(bottom: 8),
                   child: Text(

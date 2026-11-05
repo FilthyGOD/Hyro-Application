@@ -405,40 +405,67 @@ class _DesktopLayout extends StatelessWidget {
                                     alignment: WrapAlignment.center,
                                     children: [
                                       // Racha chip
-                                      Padding(
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: 12,
-                                          vertical: 6,
-                                        ),
-                                        child: Row(
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            if (profile.rachaActual > 0)
-                                              SvgPicture.asset(
-                                                'assets/icons/LlamaRacha.svg',
-                                                width: 18,
-                                                height: 18,
-                                              )
-                                            else
-                                              Opacity(
-                                                opacity: 0.35,
-                                                child: SvgPicture.asset(
+                                      GestureDetector(
+                                        behavior: HitTestBehavior.opaque,
+                                        onTap: () {
+                                          final mascot =
+                                              context.read<MascotController>();
+                                          final focusState =
+                                              context.read<FocusProvider>().state;
+                                          mascot.triggerRachaTemporal(
+                                            profile.rachaActual,
+                                            duration:
+                                                const Duration(seconds: 10),
+                                            onFinished: () {
+                                              if (focusState.isRunning) {
+                                                if (focusState.mode ==
+                                                    TimerMode.pomodoro) {
+                                                  mascot.triggerEstudiando();
+                                                } else {
+                                                  mascot.triggerHueva();
+                                                }
+                                              } else {
+                                                mascot.triggerVolver();
+                                              }
+                                            },
+                                          );
+                                        },
+                                        child: Padding(
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 12,
+                                            vertical: 6,
+                                          ),
+                                          child: Row(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              if (profile.rachaActual > 0)
+                                                SvgPicture.asset(
                                                   'assets/icons/LlamaRacha.svg',
                                                   width: 18,
                                                   height: 18,
-                                                ),
-                                              ),
-                                            const SizedBox(width: 6),
-                                            Text(
-                                              '${profile.rachaActual}',
-                                              style: AppTypography.labelLarge
-                                                  .copyWith(
-                                                    fontSize: 14,
-                                                    fontWeight: FontWeight.w700,
-                                                    color: Colors.white,
+                                                )
+                                              else
+                                                Opacity(
+                                                  opacity: 0.35,
+                                                  child: SvgPicture.asset(
+                                                    'assets/icons/LlamaRacha.svg',
+                                                    width: 18,
+                                                    height: 18,
                                                   ),
-                                            ),
-                                          ],
+                                                ),
+                                              const SizedBox(width: 6),
+                                              Text(
+                                                '${profile.rachaActual}',
+                                                style: AppTypography.labelLarge
+                                                    .copyWith(
+                                                      fontSize: 14,
+                                                      fontWeight:
+                                                          FontWeight.w700,
+                                                      color: Colors.white,
+                                                    ),
+                                              ),
+                                            ],
+                                          ),
                                         ),
                                       ),
                                       // Monedas chip

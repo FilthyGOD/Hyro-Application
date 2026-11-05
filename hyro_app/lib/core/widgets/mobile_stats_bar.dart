@@ -5,6 +5,9 @@ import '../../features/profile/providers/profile_provider.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_typography.dart';
 import '../../features/shop/screens/premium_shop_screen.dart';
+import '../../features/mascot/mascot_controller.dart';
+import '../../features/focus/providers/focus_provider.dart';
+import '../../features/focus/providers/focus_state.dart';
 
 /// Barra superior estilo AppBar para móvil que muestra la racha y monedas del usuario.
 /// Se usa en las pantallas de Enfoque, Tareas y Perfil.
@@ -49,8 +52,22 @@ class MobileStatsBar extends StatelessWidget {
           // ── Racha (Fire) ──
           _StatChip(
             onTap: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(builder: (_) => const PremiumShopScreen()),
+              final mascot = context.read<MascotController>();
+              final focusState = context.read<FocusProvider>().state;
+              mascot.triggerRachaTemporal(
+                profile.rachaActual,
+                duration: const Duration(seconds: 10),
+                onFinished: () {
+                  if (focusState.isRunning) {
+                    if (focusState.mode == TimerMode.pomodoro) {
+                      mascot.triggerEstudiando();
+                    } else {
+                      mascot.triggerHueva();
+                    }
+                  } else {
+                    mascot.triggerVolver();
+                  }
+                },
               );
             },
             icon:

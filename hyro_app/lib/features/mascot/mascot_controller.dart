@@ -1,4 +1,4 @@
-﻿import 'dart:async';
+import 'dart:async';
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
@@ -199,6 +199,8 @@ class MascotController extends ChangeNotifier {
   }
 
   void triggerEstudiando() {
+    _temporaryStreakTimer?.cancel();
+    _temporaryStreakTimer = null;
     _isStudying = true;
     _cancelIdleLoop();
     // Restablecer contadores antes de estudiar
@@ -222,6 +224,8 @@ class MascotController extends ChangeNotifier {
   }
 
   Future<void> triggerHueva() async {
+    _temporaryStreakTimer?.cancel();
+    _temporaryStreakTimer = null;
     _isStudying = true;
     _cancelIdleLoop();
     await Future.delayed(const Duration(milliseconds: 50));
@@ -229,6 +233,8 @@ class MascotController extends ChangeNotifier {
   }
 
   Future<void> triggerVolver() async {
+    _temporaryStreakTimer?.cancel();
+    _temporaryStreakTimer = null;
     await Future.delayed(const Duration(milliseconds: 50));
     _isStudying = false;
     _unidades?.value = 0;
@@ -273,6 +279,30 @@ class MascotController extends ChangeNotifier {
 
     _triggerRacha?.fire();
     debugPrint('🔥 [MascotController] Animación de Racha disparada!');
+  }
+
+  Timer? _temporaryStreakTimer;
+
+  /// Dispara la animación de racha temporalmente por [duration] (por defecto 10s)
+  /// y luego regresa a la animación normal.
+  Future<void> triggerRachaTemporal(
+    int streak, {
+    Duration duration = const Duration(seconds: 10),
+    VoidCallback? onFinished,
+  }) async {
+    _temporaryStreakTimer?.cancel();
+    _temporaryStreakTimer = null;
+
+    await triggerRacha(streak);
+
+    _temporaryStreakTimer = Timer(duration, () {
+      _temporaryStreakTimer = null;
+      if (onFinished != null) {
+        onFinished();
+      } else {
+        triggerVolver();
+      }
+    });
   }
 
   // CORRECCIÓN CLAVE: Igual que en triggerRacha
@@ -406,6 +436,7 @@ class MascotController extends ChangeNotifier {
 
   @override
   void dispose() {
+    _temporaryStreakTimer?.cancel();
     _cancelIdleLoop();
     _authSubscription?.cancel();
     _triggerSaludo?.dispose();

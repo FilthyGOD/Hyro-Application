@@ -164,15 +164,17 @@ class _FocusScreenState extends State<FocusScreen> {
             }
           } catch (_) {}
 
-          showDialog(
-            context: context,
-            barrierDismissible: false,
-            builder:
-                (_) => FocusQuizDialog(
-                  flashcards: cards,
-                  notas: notes,
-                  subjectColor: subjectColor,
-                ),
+          Navigator.of(context).push(
+            PageRouteBuilder(
+              pageBuilder: (context, animation, secondaryAnimation) => FocusQuizDialog(
+                flashcards: cards,
+                notas: notes,
+                subjectColor: subjectColor,
+              ),
+              transitionsBuilder: (context, animation, secondaryAnimation, child) {
+                return FadeTransition(opacity: animation, child: child);
+              },
+            ),
           ).then((_) {
             mascot.resumeEstudio();
             // solo reanuda si actualmente está pausado

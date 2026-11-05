@@ -3,10 +3,10 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
+import '../../../core/widgets/animated_background.dart';
 import '../../../data/models/tarea_card_model.dart';
 import '../../../data/models/tarea_nota_model.dart';
 import '../providers/focus_provider.dart';
-import '../../../core/widgets/glass_card.dart';
 import '../../mascot/mascot_controller.dart';
 import '../models/quiz_result_item.dart';
 import 'package:rive/rive.dart' hide Animation;
@@ -122,6 +122,13 @@ class _FocusQuizDialogState extends State<FocusQuizDialog> {
 
     context.read<FocusProvider>().recordQuizResult(isCorrect, item);
 
+    final mascot = context.read<MascotController>();
+    if (isCorrect) {
+      mascot.triggerFestejo();
+    } else {
+      mascot.triggerPensando();
+    }
+
     Future.delayed(const Duration(seconds: 4), () {
       if (mounted) {
         Navigator.pop(context);
@@ -138,101 +145,123 @@ class _FocusQuizDialogState extends State<FocusQuizDialog> {
   @override
   Widget build(BuildContext context) {
     final color = widget.subjectColor;
-    // Colores derivados para el degradado
     final gradientLight = Color.lerp(color, Colors.white, 0.15)!;
     final gradientDark = Color.lerp(color, Colors.black, 0.25)!;
 
-    return Dialog(
-      backgroundColor: Colors.transparent,
-      insetPadding: const EdgeInsets.symmetric(horizontal: 16),
-      child: GlassCard(
-        width: 420,
-        padding: EdgeInsets.zero, // Sin padding para que la barra toque los bordes
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
+    return Scaffold(
+      backgroundColor: AppColors.background,
+      body: Stack(
+        children: [
+          // Fondo ambiental animado
+          const Positioned.fill(child: AnimatedBackground()),
+
+          Column(
             children: [
-              // ── Barra superior con degradado del color de la materia ──
+              // ── Barra Superior con degradado del color de la materia (diseño original) ──
               Container(
                 width: double.infinity,
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     colors: [gradientDark, color, gradientLight],
                     begin: Alignment.centerLeft,
                     end: Alignment.centerRight,
                   ),
-                  borderRadius: const BorderRadius.vertical(
-                    top: Radius.circular(16),
+                  boxShadow: [
+                    BoxShadow(
+                      color: color.withValues(alpha: 0.35),
+                      blurRadius: 14,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: SafeArea(
+                  bottom: false,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.psychology_alt_rounded,
+                          color: Colors.white.withValues(alpha: 0.95),
+                          size: 24,
+                        ),
+                        const SizedBox(width: 10),
+                        Text(
+                          'Verificación de Enfoque',
+                          style: AppTypography.h3.copyWith(
+                            color: Colors.white,
+                            fontSize: 18,
+                            fontWeight: FontWeight.w700,
+                            shadows: [
+                              Shadow(
+                                color: Colors.black.withValues(alpha: 0.35),
+                                blurRadius: 4,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      Icons.psychology_alt_rounded,
-                      color: Colors.white.withValues(alpha: 0.95),
-                      size: 22,
-                    ),
-                    const SizedBox(width: 10),
-                    Text(
-                      'Verificación de Enfoque',
-                      style: AppTypography.h3.copyWith(
-                        color: Colors.white,
-                        fontSize: 17,
-                        fontWeight: FontWeight.w700,
-                        shadows: [
-                          Shadow(
-                            color: Colors.black.withValues(alpha: 0.3),
-                            blurRadius: 4,
-                          ),
-                        ],
+              ),
+
+              // ── Contenido Principal Scrollable y Centrado ──
+              Expanded(
+                child: SafeArea(
+                  top: false,
+                  child: Center(
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 580),
+                      child: SingleChildScrollView(
+                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            // Mascota Hero
+                            Consumer<MascotController>(
+                              builder: (context, mascot, _) {
+                                if (!mascot.isLoaded) return const SizedBox(height: 110);
+                                return SizedBox(
+                                  height: 130,
+                                  child: Center(
+                                    child: Transform.scale(
+                                      scale: 1.45,
+                                      child: Transform.translate(
+                                        offset: const Offset(0, 8),
+                                        child: RiveWidget(
+                                          controller: mascot.controller!,
+                                          fit: Fit.contain,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                );
+                              },
+                            ),
+                            const SizedBox(height: 20),
+
+                            // Contenido del cuestionario
+                            _buildQuizContent(),
+                            const SizedBox(height: 24),
+
+                            // Botones de resultado o acción
+                            if (_revealed)
+                              _buildResult()
+                            else
+                              _buildActions(),
+                            const SizedBox(height: 24),
+                          ],
+                        ),
                       ),
                     ),
-                  ],
-                ),
-              ),
-              // ── Contenido con padding ──
-              Padding(
-                padding: const EdgeInsets.fromLTRB(24, 12, 24, 24),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    // Mascota
-                    Consumer<MascotController>(
-                      builder: (context, mascot, _) {
-                        if (!mascot.isLoaded) return const SizedBox();
-                        return SizedBox(
-                          height: 120,
-                          child: Center(
-                            child: Transform.scale(
-                              scale: 1.4,
-                              child: Transform.translate(
-                                offset: const Offset(0, 8),
-                                child: RiveWidget(controller: mascot.controller!, fit: Fit.contain),
-                              ),
-                            ),
-                          ),
-                        );
-                      },
-                    ),
-                    const SizedBox(height: 24),
-                    // Contenido del cuestionario
-                    _buildQuizContent(),
-                    const SizedBox(height: 20),
-                    // Botones de resultado o acción
-                    if (_revealed)
-                      _buildResult()
-                    else
-                      _buildActions(),
-                  ],
+                  ),
                 ),
               ),
             ],
           ),
-        ),
+        ],
       ),
     );
   }

@@ -13,6 +13,8 @@ class TimerState {
   final int totalFocusMinutes;
   final String? activeTaskId;
   final String? activeTaskTitle;
+  final String? activeCategoryId;
+  final String? activeCategoryName;
   final bool quizDue;
   final int quizCorrectCount;
   final int quizTotalCount;
@@ -32,6 +34,8 @@ class TimerState {
     this.totalFocusMinutes = 0,
     this.activeTaskId,
     this.activeTaskTitle,
+    this.activeCategoryId,
+    this.activeCategoryName,
     this.quizDue = false,
     this.quizCorrectCount = 0,
     this.quizTotalCount = 0,
@@ -60,6 +64,10 @@ class TimerState {
     int? totalFocusMinutes,
     String? activeTaskId,
     String? activeTaskTitle,
+    String? activeCategoryId,
+    String? activeCategoryName,
+    bool clearActiveTask = false,
+    bool clearActiveCategory = false,
     bool? quizDue,
     int? quizCorrectCount,
     int? quizTotalCount,
@@ -78,8 +86,12 @@ class TimerState {
       totalSeconds: totalSeconds ?? this.totalSeconds,
       completedSessions: completedSessions ?? this.completedSessions,
       totalFocusMinutes: totalFocusMinutes ?? this.totalFocusMinutes,
-      activeTaskId: activeTaskId ?? this.activeTaskId,
-      activeTaskTitle: activeTaskTitle ?? this.activeTaskTitle,
+      activeTaskId: clearActiveTask ? null : (activeTaskId ?? this.activeTaskId),
+      activeTaskTitle: (clearActiveTask && clearActiveCategory)
+          ? null
+          : (activeTaskTitle ?? this.activeTaskTitle),
+      activeCategoryId: clearActiveCategory ? null : (activeCategoryId ?? this.activeCategoryId),
+      activeCategoryName: clearActiveCategory ? null : (activeCategoryName ?? this.activeCategoryName),
       quizDue: quizDue ?? this.quizDue,
       quizCorrectCount: quizCorrectCount ?? this.quizCorrectCount,
       quizTotalCount: quizTotalCount ?? this.quizTotalCount,

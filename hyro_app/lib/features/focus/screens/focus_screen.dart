@@ -22,6 +22,10 @@ import '../../settings/settings_provider.dart';
 import '../../categories/category_provider.dart';
 import '../../../core/providers/ui_provider.dart';
 import '../../profile/providers/profile_provider.dart';
+import 'package:hive/hive.dart';
+import '../../../data/models/task_model.dart';
+import '../../../data/models/tarea_card_model.dart';
+import '../../../data/models/tarea_nota_model.dart';
 import '../../mascot/mascot_controller.dart';
 import '../widgets/focus_quiz_dialog.dart';
 import '../widgets/pause_clock.dart';
@@ -134,17 +138,18 @@ class _FocusScreenState extends State<FocusScreen> {
       if (state.quizDue && state.isRunning) {
         final cardLocal = CardLocalDataSource();
         final noteLocal = NoteLocalDataSource();
-        final cards = cardLocal.getCardsForTask(state.activeTaskId!);
-        final notes = noteLocal.getNotesForTask(state.activeTaskId!);
+        final List<TareaCardModel> cards = [];
+        final List<TareaNotaModel> notes = [];
+        Color subjectColor = AppColors.primary;
 
-        if (cards.isNotEmpty || notes.isNotEmpty) {
-          context.read<FocusProvider>().pause(manual: false);
-          mascot.triggerPensando();
+        final tasksProvider = context.read<TaskProvider>();
+        final categoryProvider = context.read<CategoryProvider>();
 
-          // Obtener el color de la materia activa
-          Color subjectColor = AppColors.primary;
+        if (state.activeTaskId != null) {
+          cards.addAll(cardLocal.getCardsForTask(state.activeTaskId!));
+          notes.addAll(noteLocal.getNotesForTask(state.activeTaskId!));
+
           try {
-            final tasksProvider = context.read<TaskProvider>();
             final task = tasksProvider.tasks.firstWhere(
               (t) => t.id == state.activeTaskId,
             );
@@ -163,6 +168,55 @@ class _FocusScreenState extends State<FocusScreen> {
               subjectColor = Color(task.priorityColorValue);
             }
           } catch (_) {}
+        } else if (state.activeCategoryId != null) {
+          // Extraer información de TODA la materia (todas las tareas de esta categoría)
+          List<TaskModel> catTasks = tasksProvider.tasks.where(
+            (t) =>
+                t.categoryId == state.activeCategoryId ||
+                (state.activeCategoryName != null &&
+                    t.category == state.activeCategoryName),
+          ).toList();
+
+          if (catTasks.isEmpty && Hive.isBoxOpen('tasksBox')) {
+            final box = Hive.box<TaskModel>('tasksBox');
+            catTasks = box.values.where(
+              (t) =>
+                  t.categoryId == state.activeCategoryId ||
+                  (state.activeCategoryName != null &&
+                      t.category == state.activeCategoryName),
+            ).toList();
+          }
+
+          final Set<String> seenCardIds = {};
+          final Set<String> seenNoteIds = {};
+
+          for (final task in catTasks) {
+            for (final card in cardLocal.getCardsForTask(task.id)) {
+              if (seenCardIds.add(card.id)) {
+                cards.add(card);
+              }
+            }
+            for (final note in noteLocal.getNotesForTask(task.id)) {
+              if (seenNoteIds.add(note.id)) {
+                notes.add(note);
+              }
+            }
+          }
+
+          try {
+            final cat = categoryProvider.categories.firstWhere(
+              (c) =>
+                  c.id == state.activeCategoryId ||
+                  (state.activeCategoryName != null &&
+                      c.name == state.activeCategoryName),
+            );
+            subjectColor = Color(cat.colorValue);
+          } catch (_) {}
+        }
+
+        if (cards.isNotEmpty || notes.isNotEmpty) {
+          context.read<FocusProvider>().pause(manual: false);
+          mascot.triggerPensando();
 
           Navigator.of(context).push(
             PageRouteBuilder(
@@ -321,7 +375,9 @@ class _DesktopLayout extends StatelessWidget {
                                     if (isActiveLayout &&
                                         state.activeTaskTitle != null) ...[
                                       _ActiveTaskBadge(
-                                        taskId: state.activeTaskId ?? '',
+                                        taskId: state.activeTaskId,
+                                        categoryId: state.activeCategoryId,
+                                        categoryName: state.activeCategoryName,
                                         title: (state.isPaused && state.isManualPause)
                                             ? 'Pausa'
                                             : (state.mode == TimerMode.shortBreak || state.mode == TimerMode.longBreak)
@@ -694,7 +750,9 @@ class _MobileLayout extends StatelessWidget {
             children: [
               if (state.activeTaskTitle != null) ...[
                 _ActiveTaskBadge(
-                  taskId: state.activeTaskId ?? '',
+                  taskId: state.activeTaskId,
+                  categoryId: state.activeCategoryId,
+                  categoryName: state.activeCategoryName,
                   title: (state.isPaused && state.isManualPause)
                       ? 'Pausa'
                       : (state.mode == TimerMode.shortBreak || state.mode == TimerMode.longBreak)
@@ -856,9 +914,22 @@ void _handleStart(BuildContext context, FocusProvider focusProvider) {
     settings.setPomodoroDuration(config.studyMinutes.toDouble());
     settings.setShortBreakDuration(config.breakMinutes.toDouble());
 
+    final String? assignedTitle;
+    if (config.taskId != null) {
+      assignedTitle = config.taskTitle;
+    } else if (config.categoryId != null) {
+      assignedTitle = config.categoryName != null
+          ? '${config.categoryName} - Toda la materia'
+          : (config.taskTitle ?? 'Toda la materia');
+    } else {
+      assignedTitle = config.taskTitle;
+    }
+
     focusProvider.start(
       taskId: config.taskId,
-      taskTitle: config.taskTitle,
+      taskTitle: assignedTitle,
+      categoryId: config.categoryId,
+      categoryName: config.categoryName,
       isStrictMode: isStrictMode,
       focusMinutes: config.studyMinutes,
       breakMinutes: config.breakMinutes,
@@ -868,28 +939,49 @@ void _handleStart(BuildContext context, FocusProvider focusProvider) {
 }
 
 class _ActiveTaskBadge extends StatelessWidget {
-  final String taskId;
+  final String? taskId;
+  final String? categoryId;
+  final String? categoryName;
   final String title;
 
-  const _ActiveTaskBadge({required this.taskId, required this.title});
+  const _ActiveTaskBadge({
+    this.taskId,
+    this.categoryId,
+    this.categoryName,
+    required this.title,
+  });
 
   @override
   Widget build(BuildContext context) {
     Color color = AppColors.primary;
     try {
-      final tasksProvider = context.watch<TaskProvider>();
-      final task = tasksProvider.tasks.firstWhere((t) => t.id == taskId);
-      // Usar el color de la categoría/materia si existe
-      if (task.categoryId != null) {
-        try {
-          final categories = context.read<CategoryProvider>().categories;
-          final cat = categories.firstWhere((c) => c.id == task.categoryId);
-          color = Color(cat.colorValue);
-        } catch (_) {
+      final categoryProvider = context.watch<CategoryProvider>();
+      if (taskId != null && taskId!.isNotEmpty) {
+        final tasksProvider = context.watch<TaskProvider>();
+        final task = tasksProvider.tasks.firstWhere((t) => t.id == taskId);
+        // Usar el color de la categoría/materia si existe
+        if (task.categoryId != null) {
+          try {
+            final cat = categoryProvider.categories.firstWhere((c) => c.id == task.categoryId);
+            color = Color(cat.colorValue);
+          } catch (_) {
+            color = Color(task.priorityColorValue);
+          }
+        } else {
           color = Color(task.priorityColorValue);
         }
-      } else {
-        color = Color(task.priorityColorValue);
+      } else if (categoryId != null && categoryId!.isNotEmpty) {
+        try {
+          final cat = categoryProvider.categories.firstWhere(
+            (c) => c.id == categoryId || (categoryName != null && c.name == categoryName),
+          );
+          color = Color(cat.colorValue);
+        } catch (_) {}
+      } else if (categoryName != null && categoryName!.isNotEmpty) {
+        try {
+          final cat = categoryProvider.categories.firstWhere((c) => c.name == categoryName);
+          color = Color(cat.colorValue);
+        } catch (_) {}
       }
     } catch (_) {}
 

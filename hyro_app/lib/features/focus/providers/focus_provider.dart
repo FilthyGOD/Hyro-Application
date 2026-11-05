@@ -51,10 +51,13 @@ class FocusProvider extends ChangeNotifier {
   void start({
     String? taskId,
     String? taskTitle,
+    String? categoryId,
+    String? categoryName,
     bool isStrictMode = false,
     int? focusMinutes,
     int? breakMinutes,
     int? coinsReward,
+    bool clearMaterial = false,
   }) {
     if (_state.status == TimerStatus.running) return;
 
@@ -77,6 +80,14 @@ class FocusProvider extends ChangeNotifier {
     }
     _targetEndTime = DateTime.now().add(Duration(seconds: secondsToRun));
 
+    final bool newMaterialProvided = taskId != null || categoryId != null || clearMaterial;
+    final String? finalTaskId = newMaterialProvided ? taskId : _state.activeTaskId;
+    final String? finalCategoryId = newMaterialProvided ? categoryId : _state.activeCategoryId;
+    final String? finalCategoryName = newMaterialProvided ? categoryName : _state.activeCategoryName;
+    final String? finalTaskTitle = newMaterialProvided
+        ? (taskTitle ?? (categoryId != null ? (categoryName != null ? '$categoryName - Toda la materia' : 'Toda la materia') : null))
+        : _state.activeTaskTitle;
+
     _emit(
       _state.copyWith(
         status: TimerStatus.running,
@@ -85,8 +96,11 @@ class FocusProvider extends ChangeNotifier {
             _state.totalSeconds <= 0 || (focusMinutes != null && _state.mode == TimerMode.pomodoro)
                 ? secondsToRun
                 : _state.totalSeconds,
-        activeTaskId: taskId ?? _state.activeTaskId,
-        activeTaskTitle: taskTitle ?? _state.activeTaskTitle,
+        activeTaskId: finalTaskId,
+        clearActiveTask: newMaterialProvided && finalTaskId == null,
+        activeCategoryId: finalCategoryId,
+        clearActiveCategory: newMaterialProvided && finalCategoryId == null,
+        activeTaskTitle: finalTaskTitle,
         quizDue: false,
         isStrictModeActive: isStrictMode || _state.isStrictModeActive,
         clearViolationApp: true,
@@ -232,6 +246,8 @@ class FocusProvider extends ChangeNotifier {
         totalSeconds: totalSec,
         activeTaskId: _state.activeTaskId,
         activeTaskTitle: _state.activeTaskTitle,
+        activeCategoryId: _state.activeCategoryId,
+        activeCategoryName: _state.activeCategoryName,
         remainingPauseSeconds: 120,
         isPauseExceeded: false,
       ),
@@ -253,6 +269,8 @@ class FocusProvider extends ChangeNotifier {
         totalFocusMinutes: _state.totalFocusMinutes,
         activeTaskId: _state.activeTaskId,
         activeTaskTitle: _state.activeTaskTitle,
+        activeCategoryId: _state.activeCategoryId,
+        activeCategoryName: _state.activeCategoryName,
         remainingPauseSeconds: 120,
         isPauseExceeded: false,
       ),
@@ -302,9 +320,11 @@ class FocusProvider extends ChangeNotifier {
           ((settingsProvider?.focusQuizIntervalMinutes ?? 5) * 60).toInt();
       bool triggerQuiz = false;
 
+      final hasActiveMaterial = _state.activeTaskId != null || _state.activeCategoryId != null;
+
       if (quizEnabled &&
           _state.mode == TimerMode.pomodoro &&
-          _state.activeTaskId != null &&
+          hasActiveMaterial &&
           !_state.quizDue &&
           _secondsSinceLastQuiz >= quizInterval) {
         triggerQuiz = true;

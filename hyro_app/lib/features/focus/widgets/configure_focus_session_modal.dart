@@ -163,7 +163,7 @@ class _ConfigureFocusSessionModalState extends State<ConfigureFocusSessionModal>
         breakMinutes: _breakMinutes,
         coinsReward: _coinsReward,
         taskId: _selectedTaskId,
-        taskTitle: _selectedTaskTitle,
+        taskTitle: _selectedTaskTitle ?? (_selectedCategoryId != null ? 'Toda la materia' : null),
         categoryId: _selectedCategoryId,
         categoryName: _selectedCategoryName,
         quizEnabled: _quizEnabled,
@@ -1026,35 +1026,111 @@ class _StudyMaterialSelectorDialogState
           const SizedBox(height: 12),
 
           // Opción: Toda la materia (sin tarea específica)
-          ListTile(
-            tileColor: AppColors.surfaceLight,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(14),
-              side: const BorderSide(color: AppColors.cardBorder),
-            ),
-            leading: Icon(
-              Icons.all_inclusive_rounded,
-              color: Color(category.colorValue),
-              size: 22,
-            ),
-            title: Text(
-              'Toda la materia',
-              style: AppTypography.bodyMedium.copyWith(
-                color: AppColors.textPrimary,
-                fontWeight: FontWeight.bold,
+          () {
+            final taskIds = tasks.map((t) => t.id).toSet();
+            final totalCategoryCards = cardsBox != null
+                ? cardsBox.values.where((c) => taskIds.contains(c.tareaId)).length
+                : 0;
+            final isAllSelected = widget.currentCategoryId == category.id &&
+                (widget.currentTaskId == null || widget.currentTaskId!.isEmpty);
+            final catColor = Color(category.colorValue);
+
+            return Material(
+              color: Colors.transparent,
+              child: InkWell(
+                onTap: () {
+                  widget.onMaterialSelected(
+                    category.id,
+                    category.name,
+                    null,
+                    'Toda la materia',
+                  );
+                  Navigator.pop(context);
+                },
+                borderRadius: BorderRadius.circular(14),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 10,
+                  ),
+                  decoration: BoxDecoration(
+                    color: isAllSelected
+                        ? catColor.withValues(alpha: 0.12)
+                        : AppColors.surfaceLight,
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(
+                      color: isAllSelected
+                          ? catColor
+                          : AppColors.cardBorder,
+                      width: isAllSelected ? 1.5 : 1.0,
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(
+                        isAllSelected
+                            ? Icons.radio_button_checked
+                            : Icons.radio_button_unchecked,
+                        color: isAllSelected
+                            ? catColor
+                            : AppColors.textTertiary,
+                        size: 22,
+                      ),
+                      const SizedBox(width: 8),
+                      Icon(
+                        Icons.all_inclusive_rounded,
+                        color: catColor,
+                        size: 20,
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Toda la materia',
+                              style: AppTypography.bodyMedium.copyWith(
+                                color: AppColors.textPrimary,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            Text(
+                              'Estudiar sin tarea específica',
+                              style: AppTypography.bodySmall.copyWith(
+                                color: AppColors.textSecondary,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      if (totalCategoryCards > 0)
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            color: catColor.withValues(alpha: 0.15),
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(
+                              color: catColor.withValues(alpha: 0.4),
+                            ),
+                          ),
+                          child: Text(
+                            '$totalCategoryCards cards',
+                            style: AppTypography.bodySmall.copyWith(
+                              color: catColor,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 10,
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
               ),
-            ),
-            subtitle: Text(
-              'Estudiar sin tarea específica',
-              style: AppTypography.bodySmall.copyWith(
-                color: AppColors.textSecondary,
-              ),
-            ),
-            onTap: () {
-              widget.onMaterialSelected(category.id, category.name, null, null);
-              Navigator.pop(context);
-            },
-          ),
+            );
+          }(),
           const SizedBox(height: 8),
 
           Text(

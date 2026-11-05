@@ -20,6 +20,16 @@ import 'category_detail_screen.dart';
 class TasksScreen extends StatefulWidget {
   const TasksScreen({super.key});
 
+  static _TasksScreenState? activeState;
+
+  static void switchToAgenda() {
+    if (activeState != null && activeState!.mounted) {
+      if (activeState!._tabController.index != 0) {
+        activeState!._tabController.animateTo(0);
+      }
+    }
+  }
+
   @override
   State<TasksScreen> createState() => _TasksScreenState();
 }
@@ -32,6 +42,7 @@ class _TasksScreenState extends State<TasksScreen> with SingleTickerProviderStat
   @override
   void initState() {
     super.initState();
+    TasksScreen.activeState = this;
     _tabController = TabController(length: 2, vsync: this);
     _tabController.addListener(() {
       setState(() {});
@@ -40,6 +51,9 @@ class _TasksScreenState extends State<TasksScreen> with SingleTickerProviderStat
 
   @override
   void dispose() {
+    if (TasksScreen.activeState == this) {
+      TasksScreen.activeState = null;
+    }
     _tabController.dispose();
     super.dispose();
   }

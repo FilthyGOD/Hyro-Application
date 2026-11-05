@@ -12,7 +12,8 @@ import '../widgets/timer_controls.dart';
 import '../widgets/mode_selector.dart';
 import '../widgets/completed_session_view.dart';
 import '../../../core/theme/app_colors.dart';
-import '../widgets/mini_task_list.dart';
+import '../widgets/focus_menu_buttons.dart';
+import '../../missions/widgets/daily_missions_card.dart';
 import '../widgets/task_selection_dialog.dart';
 import '../../stats/stats_provider.dart';
 import '../../tasks/tasks_provider.dart';
@@ -566,7 +567,9 @@ class _DesktopLayout extends StatelessWidget {
                               },
                             ),
                             const SizedBox(height: 24),
-                            const MiniTaskList(),
+                            const FocusMenuButtons(),
+                            const SizedBox(height: 24),
+                            const DailyMissionsCard(),
                             const SizedBox(height: 32),
                           ],
                         ),
@@ -777,14 +780,23 @@ class _MobileLayout extends StatelessWidget {
                   onStop: focusProvider.stop,
                 ),
                 const SizedBox(height: 24),
-                if (!state.isRunning && !state.isPaused)
+                if (!state.isRunning && !state.isPaused) ...[
                   ModeSelector(
                     currentMode: state.mode,
                     onStart: () => _handleStart(context, focusProvider),
                   ),
+                  const SizedBox(height: 24),
+                  ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 480),
+                    child: const FocusMenuButtons(),
+                  ),
+                ],
                 if (!state.isRunning && !settings.hideFocusCards) ...[
-                  const SizedBox(height: 40),
-                  const MiniTaskList(),
+                  const SizedBox(height: 28),
+                  ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 480),
+                    child: const DailyMissionsCard(),
+                  ),
                 ],
                 const SizedBox(height: 80),
               ],

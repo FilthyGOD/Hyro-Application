@@ -8,7 +8,8 @@ import '../../../data/models/subtask_model.dart';
 import '../tasks_provider.dart';
 
 class QuickNoteSheet extends StatefulWidget {
-  const QuickNoteSheet({super.key});
+  final DateTime? initialDate;
+  const QuickNoteSheet({super.key, this.initialDate});
 
   @override
   State<QuickNoteSheet> createState() => _QuickNoteSheetState();
@@ -20,6 +21,12 @@ class _QuickNoteSheetState extends State<QuickNoteSheet> {
   
   DateTime? _selectedDate;
   int _selectedColor = 0xFF0095FF; // Default blue
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedDate = widget.initialDate ?? DateTime.now();
+  }
 
   // Simple list to hold subtask titles as they are being drafted
   final List<TextEditingController> _subtaskControllers = [];

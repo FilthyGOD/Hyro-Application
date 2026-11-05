@@ -62,12 +62,17 @@ class _MainLayoutState extends State<MainLayout> {
   Widget build(BuildContext context) {
     final isMobile = Responsive.isMobile(context);
     final isTablet = Responsive.isTablet(context);
-    
+
     final focusState = context.watch<FocusProvider>().state;
     final isTimerRunning = focusState.isRunning;
-    final isPomodoroFinished = focusState.isFinished && 
-        (focusState.mode == TimerMode.shortBreak || focusState.mode == TimerMode.longBreak);
-    final hideNavBars = isTimerRunning || isPomodoroFinished || (focusState.isPaused && focusState.isManualPause);
+    final isPomodoroFinished =
+        focusState.isFinished &&
+        (focusState.mode == TimerMode.shortBreak ||
+            focusState.mode == TimerMode.longBreak);
+    final hideNavBars =
+        isTimerRunning ||
+        isPomodoroFinished ||
+        (focusState.isPaused && focusState.isManualPause);
 
     if (isMobile) {
       return _buildMobileLayout(hideNavBars);
@@ -230,7 +235,7 @@ class _MainLayoutState extends State<MainLayout> {
                     backgroundColor: AppColors.surface,
                     type: BottomNavigationBarType.fixed,
                     currentIndex:
-                        widget.selectedIndex < 6 ? widget.selectedIndex : 5,
+                    widget.selectedIndex < 4 ? widget.selectedIndex : 3,
                     selectedItemColor: AppColors.primary,
                     unselectedItemColor: AppColors.textSecondary,
                     showSelectedLabels: false,
@@ -246,23 +251,15 @@ class _MainLayoutState extends State<MainLayout> {
                       ),
                       BottomNavigationBarItem(
                         icon: const Icon(Icons.calendar_month_outlined),
-                        activeIcon: _buildActiveIcon(Icons.calendar_month_rounded),
+                        activeIcon: _buildActiveIcon(
+                          Icons.calendar_month_rounded,
+                        ),
                         label: 'Calendario',
                       ),
                       BottomNavigationBarItem(
                         icon: const Icon(Icons.timer_outlined),
                         activeIcon: _buildActiveIcon(Icons.timer),
                         label: 'Enfoque',
-                      ),
-                      BottomNavigationBarItem(
-                        icon: const Icon(Icons.emoji_events_outlined),
-                        activeIcon: _buildActiveIcon(Icons.emoji_events),
-                        label: 'Desafíos',
-                      ),
-                      BottomNavigationBarItem(
-                        icon: const Icon(Icons.people_outline_rounded),
-                        activeIcon: _buildActiveIcon(Icons.people_rounded),
-                        label: 'Amigos',
                       ),
                       BottomNavigationBarItem(
                         icon: const Icon(Icons.person_outline),

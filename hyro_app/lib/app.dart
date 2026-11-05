@@ -7,10 +7,8 @@ import 'features/focus/providers/focus_state.dart';
 import 'features/focus/screens/focus_screen.dart';
 import 'features/tasks/screens/tasks_screen.dart';
 import 'features/tasks/screens/calendar_screen.dart';
-import 'features/stats/screens/stats_screen.dart';
 import 'features/shop/screens/shop_screen.dart';
 import 'features/profile/screens/profile_screen.dart';
-import 'features/friends/screens/friends_screen.dart';
 import 'features/tasks/tasks_provider.dart';
 import 'features/stats/stats_provider.dart';
 import 'features/mascot/mascot_controller.dart';
@@ -263,9 +261,7 @@ class AppShellState extends State<AppShell>
     ShopScreen(), // 0
     CalendarScreen(), // 1
     FocusScreen(), // 2
-    StatsScreen(), // 3
-    FriendsScreen(), // 4
-    ProfileScreen(), // 5
+    ProfileScreen(), // 3
   ];
 
   @override
@@ -391,8 +387,8 @@ class AppShellState extends State<AppShell>
 
     final mascot = context.read<MascotController>();
 
-    // Saliendo de Focus, Shop, o Stats → reinicia la mascota a inactivo
-    if (previousIndex == 2 || previousIndex == 0 || previousIndex == 3) {
+    // Saliendo de Focus o Shop → reinicia la mascota a inactivo
+    if (previousIndex == 2 || previousIndex == 0) {
       mascot.triggerVolver();
     }
 
@@ -407,12 +403,6 @@ class AppShellState extends State<AppShell>
           mascot.triggerHueva();
         }
       }
-    }
-
-    // Llegando a Stats → dispara la animación de racha
-    if (index == 3) {
-      final streak = context.read<StatsProvider>().currentStreak;
-      mascot.triggerRacha(streak);
     }
   }
 
@@ -441,9 +431,7 @@ class AppShellState extends State<AppShell>
                     });
 
                     final mascot = context.read<MascotController>();
-                    if (previousIndex == 2 ||
-                        previousIndex == 0 ||
-                        previousIndex == 3) {
+                    if (previousIndex == 2 || previousIndex == 0) {
                       mascot.triggerVolver();
                     }
                     if (index == 2) {
@@ -457,11 +445,6 @@ class AppShellState extends State<AppShell>
                         }
                       }
                     }
-                    if (index == 3) {
-                      final streak =
-                          context.read<StatsProvider>().currentStreak;
-                      mascot.triggerRacha(streak);
-                    }
                   }
                 },
                 children: _screens,
@@ -469,7 +452,7 @@ class AppShellState extends State<AppShell>
             ],
           ),
         ),
-        // Capa superpuesta de la mascota flotante — visible solo en Focus (2), Tareas (3) y Amigos (4), y no durante la vista de sesión completada
+        // Capa superpuesta de la mascota flotante — visible solo en Focus (2) y Calendario (1), y no durante la vista de sesión completada
         Builder(
           builder: (context) {
             final timerState = context.watch<FocusProvider>().state;
@@ -481,8 +464,7 @@ class AppShellState extends State<AppShell>
             final isQuizActive = timerState.quizDue;
             final isVisible =
                 (_selectedIndex == 2 ||
-                    _selectedIndex == 1 ||
-                    _selectedIndex == 4) &&
+                    _selectedIndex == 1) &&
                 !isPomodoroFinished &&
                 !isQuizActive;
             return FloatingMascot(visible: isVisible);

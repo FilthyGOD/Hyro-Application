@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import '../../../app.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../tasks/screens/tasks_screen.dart';
+import '../../friends/screens/friends_screen.dart';
 
 /// Botones de navegación rápida para la pantalla de Enfoque / Menú principal:
 /// Agenda, Amigos y Horario.
@@ -22,9 +22,7 @@ class FocusMenuButtons extends StatelessWidget {
                 label: 'Agenda',
                 onTap: () {
                   Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (_) => const AgendaScreen(),
-                    ),
+                    MaterialPageRoute(builder: (_) => const AgendaScreen()),
                   );
                 },
               ),
@@ -35,9 +33,9 @@ class FocusMenuButtons extends StatelessWidget {
                 icon: Icons.people_alt_rounded,
                 label: 'Amigos',
                 onTap: () {
-                  final appShell = context.findAncestorStateOfType<AppShellState>() ??
-                      appShellKey.currentState;
-                  appShell?.navigateTo(4);
+                  Navigator.of(context).push(
+                    MaterialPageRoute(builder: (_) => const FriendsScreen()),
+                  );
                 },
               ),
             ),
@@ -85,10 +83,7 @@ class _MenuActionButton extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColors.surfaceLight,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: AppColors.cardBorder,
-          width: 1.2,
-        ),
+        border: Border.all(color: AppColors.cardBorder, width: 1.2),
       ),
       child: Material(
         color: Colors.transparent,
@@ -103,11 +98,7 @@ class _MenuActionButton extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.center,
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(
-                  icon,
-                  color: AppColors.primary,
-                  size: 20,
-                ),
+                Icon(icon, color: AppColors.primary, size: 20),
                 const SizedBox(width: 8),
                 Text(
                   label,
@@ -125,4 +116,3 @@ class _MenuActionButton extends StatelessWidget {
     );
   }
 }
-

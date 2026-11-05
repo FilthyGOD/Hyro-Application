@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:provider/provider.dart';
 import '../../../core/widgets/insufficient_coins_dialog.dart';
+import '../../../core/widgets/animated_background.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../auth/providers/auth_provider.dart';
@@ -63,12 +64,15 @@ class _FriendsScreenState extends State<FriendsScreen> {
     final auth = context.watch<AuthProvider>();
     final isGuest = auth.isGuest;
 
-    if (isGuest) {
-      return _buildGuestState();
-    }
-
-    return SafeArea(
-      child: RefreshIndicator(
+    return Stack(
+      children: [
+        const Positioned.fill(child: AnimatedBackground()),
+        Scaffold(
+          backgroundColor: Colors.transparent,
+          body: isGuest
+              ? _buildGuestState()
+              : SafeArea(
+                  child: RefreshIndicator(
         onRefresh: () async => _refreshData(),
         color: AppColors.primary,
         backgroundColor: AppColors.surface,
@@ -228,6 +232,9 @@ class _FriendsScreenState extends State<FriendsScreen> {
           ),
         ),
       ),
+    ),
+        ),
+      ],
     );
   }
 
@@ -237,7 +244,25 @@ class _FriendsScreenState extends State<FriendsScreen> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text('Amigos', style: AppTypography.h1),
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (Navigator.of(context).canPop()) ...[
+              IconButton(
+                icon: const Icon(
+                  Icons.arrow_back_ios_new_rounded,
+                  color: Colors.white,
+                  size: 22,
+                ),
+                onPressed: () => Navigator.of(context).pop(),
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(),
+              ),
+              const SizedBox(width: 14),
+            ],
+            Text('Amigos', style: AppTypography.h1),
+          ],
+        ),
         _buildAddFriendButton(context),
       ],
     );
@@ -1196,35 +1221,52 @@ class _FriendsScreenState extends State<FriendsScreen> {
 
   Widget _buildGuestState() {
     return SafeArea(
-      child: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(32),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              SvgPicture.asset(
-                'assets/images/JairitoHD_SinInternet.svg',
-                width: 140,
-                height: 140,
-                fit: BoxFit.contain,
-              ),
-              const SizedBox(height: 24),
-              Text(
-                'Inicia sesión para conectar\ncon tus amigos',
-                style: AppTypography.h2.copyWith(fontSize: 20),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 12),
-              Text(
-                'El sistema de amigos y ranking semanal\nrequiere una cuenta activa.',
-                style: AppTypography.bodySmall.copyWith(
-                  color: AppColors.textSecondary,
+      child: Stack(
+        children: [
+          if (Navigator.of(context).canPop())
+            Positioned(
+              top: 16,
+              left: 16,
+              child: IconButton(
+                icon: const Icon(
+                  Icons.arrow_back_ios_new_rounded,
+                  color: Colors.white,
+                  size: 22,
                 ),
-                textAlign: TextAlign.center,
+                onPressed: () => Navigator.of(context).pop(),
               ),
-            ],
+            ),
+          Center(
+            child: Padding(
+              padding: const EdgeInsets.all(32),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  SvgPicture.asset(
+                    'assets/images/JairitoHD_SinInternet.svg',
+                    width: 140,
+                    height: 140,
+                    fit: BoxFit.contain,
+                  ),
+                  const SizedBox(height: 24),
+                  Text(
+                    'Inicia sesión para conectar\ncon tus amigos',
+                    style: AppTypography.h2.copyWith(fontSize: 20),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    'El sistema de amigos y ranking semanal\nrequiere una cuenta activa.',
+                    style: AppTypography.bodySmall.copyWith(
+                      color: AppColors.textSecondary,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ],
+              ),
+            ),
           ),
-        ),
+        ],
       ),
     );
   }

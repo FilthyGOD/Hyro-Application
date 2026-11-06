@@ -25,12 +25,19 @@ import '../../../shared/widgets/floating_add_button.dart';
 import '../../../shared/widgets/floating_glass_navigation_bar.dart';
 import '../../../shared/widgets/global_create_modal.dart';
 import '../../../app.dart';
+import '../../focus/providers/focus_provider.dart';
+
 /// Pantalla de detalle de una categoría — muestra header con color,
 /// promedio de progreso, y lista de tareas.
 class CategoryDetailScreen extends StatefulWidget {
   final CategoryModel category;
+  final bool isFromFocus;
 
-  const CategoryDetailScreen({super.key, required this.category});
+  const CategoryDetailScreen({
+    super.key,
+    required this.category,
+    this.isFromFocus = false,
+  });
 
   @override
   State<CategoryDetailScreen> createState() => _CategoryDetailScreenState();
@@ -426,9 +433,31 @@ class _CategoryDetailScreenState extends State<CategoryDetailScreen> {
           );
         },
       ),
-      // En móvil: Barra de navegación flotante. En PC: Solo botón de agregar en la esquina inferior derecha.
-      if (Responsive.isMobile(context))
-        Positioned(
+      // En sesión de enfoque (o en PC): Solo botón de agregar en la esquina inferior derecha.
+      // En móvil fuera de enfoque: Barra de navegación flotante.
+      () {
+        final focusState = context.watch<FocusProvider>().state;
+        final isFocusActive = widget.isFromFocus || focusState.isRunning || focusState.isPaused;
+
+        if (isFocusActive || !Responsive.isMobile(context)) {
+          return Positioned(
+            bottom: 24,
+            right: 24,
+            child: FloatingAddButton(
+              tooltip: 'Nueva Tarea',
+              onTap: () {
+                GlobalCreateModal.show(
+                  context,
+                  initialTab: 0,
+                  initialCategoryId: category.id,
+                  allowedTabs: const [0],
+                );
+              },
+            ),
+          );
+        }
+
+        return Positioned(
           bottom: 0,
           left: 0,
           right: 0,
@@ -443,25 +472,12 @@ class _CategoryDetailScreenState extends State<CategoryDetailScreen> {
                 context,
                 initialTab: 0,
                 initialCategoryId: category.id,
+                allowedTabs: const [0],
               );
             },
           ),
-        )
-      else
-        Positioned(
-          bottom: 24,
-          right: 24,
-          child: FloatingAddButton(
-            tooltip: 'Nueva Tarea',
-            onTap: () {
-              GlobalCreateModal.show(
-                context,
-                initialTab: 0,
-                initialCategoryId: category.id,
-              );
-            },
-          ),
-        ),
+        );
+      }(),
     ],
   ),
 );

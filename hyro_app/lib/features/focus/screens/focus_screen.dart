@@ -24,8 +24,12 @@ import '../../../core/providers/ui_provider.dart';
 import '../../profile/providers/profile_provider.dart';
 import 'package:hive/hive.dart';
 import '../../../data/models/task_model.dart';
+import '../../../data/models/category_model.dart';
 import '../../../data/models/tarea_card_model.dart';
 import '../../../data/models/tarea_nota_model.dart';
+import '../../tasks/widgets/task_details_sheet.dart';
+import '../../tasks/screens/category_detail_screen.dart';
+import '../../tasks/screens/tasks_screen.dart';
 import '../../mascot/mascot_controller.dart';
 import '../widgets/focus_quiz_dialog.dart';
 import '../widgets/pause_clock.dart';
@@ -91,7 +95,10 @@ class _FocusScreenState extends State<FocusScreen> {
                     SizedBox(width: 8),
                     Text(
                       'Tiempo Excedido',
-                      style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ],
                 ),
@@ -104,7 +111,10 @@ class _FocusScreenState extends State<FocusScreen> {
                     onPressed: () {
                       Navigator.of(context).pop();
                     },
-                    child: const Text('Entendido', style: TextStyle(color: Colors.redAccent)),
+                    child: const Text(
+                      'Entendido',
+                      style: TextStyle(color: Colors.redAccent),
+                    ),
                   ),
                 ],
               ),
@@ -170,21 +180,27 @@ class _FocusScreenState extends State<FocusScreen> {
           } catch (_) {}
         } else if (state.activeCategoryId != null) {
           // Extraer información de TODA la materia (todas las tareas de esta categoría)
-          List<TaskModel> catTasks = tasksProvider.tasks.where(
-            (t) =>
-                t.categoryId == state.activeCategoryId ||
-                (state.activeCategoryName != null &&
-                    t.category == state.activeCategoryName),
-          ).toList();
+          List<TaskModel> catTasks =
+              tasksProvider.tasks
+                  .where(
+                    (t) =>
+                        t.categoryId == state.activeCategoryId ||
+                        (state.activeCategoryName != null &&
+                            t.category == state.activeCategoryName),
+                  )
+                  .toList();
 
           if (catTasks.isEmpty && Hive.isBoxOpen('tasksBox')) {
             final box = Hive.box<TaskModel>('tasksBox');
-            catTasks = box.values.where(
-              (t) =>
-                  t.categoryId == state.activeCategoryId ||
-                  (state.activeCategoryName != null &&
-                      t.category == state.activeCategoryName),
-            ).toList();
+            catTasks =
+                box.values
+                    .where(
+                      (t) =>
+                          t.categoryId == state.activeCategoryId ||
+                          (state.activeCategoryName != null &&
+                              t.category == state.activeCategoryName),
+                    )
+                    .toList();
           }
 
           final Set<String> seenCardIds = {};
@@ -218,25 +234,34 @@ class _FocusScreenState extends State<FocusScreen> {
           context.read<FocusProvider>().pause(manual: false);
           mascot.triggerPensando();
 
-          Navigator.of(context).push(
-            PageRouteBuilder(
-              pageBuilder: (context, animation, secondaryAnimation) => FocusQuizDialog(
-                flashcards: cards,
-                notas: notes,
-                subjectColor: subjectColor,
-              ),
-              transitionsBuilder: (context, animation, secondaryAnimation, child) {
-                return FadeTransition(opacity: animation, child: child);
-              },
-            ),
-          ).then((_) {
-            mascot.resumeEstudio();
-            // solo reanuda si actualmente está pausado
-            if (!mounted) return;
-            if (context.read<FocusProvider>().state.isPaused) {
-              context.read<FocusProvider>().resume();
-            }
-          });
+          Navigator.of(context)
+              .push(
+                PageRouteBuilder(
+                  pageBuilder:
+                      (context, animation, secondaryAnimation) =>
+                          FocusQuizDialog(
+                            flashcards: cards,
+                            notas: notes,
+                            subjectColor: subjectColor,
+                          ),
+                  transitionsBuilder: (
+                    context,
+                    animation,
+                    secondaryAnimation,
+                    child,
+                  ) {
+                    return FadeTransition(opacity: animation, child: child);
+                  },
+                ),
+              )
+              .then((_) {
+                mascot.resumeEstudio();
+                // solo reanuda si actualmente está pausado
+                if (!mounted) return;
+                if (context.read<FocusProvider>().state.isPaused) {
+                  context.read<FocusProvider>().resume();
+                }
+              });
         } else {
           context.read<FocusProvider>().acknowledgeQuiz();
         }
@@ -378,9 +403,14 @@ class _DesktopLayout extends StatelessWidget {
                                         taskId: state.activeTaskId,
                                         categoryId: state.activeCategoryId,
                                         categoryName: state.activeCategoryName,
-                                        title: (state.isPaused && state.isManualPause)
-                                            ? 'Pausa'
-                                            : (state.mode == TimerMode.shortBreak || state.mode == TimerMode.longBreak)
+                                        title:
+                                            (state.isPaused &&
+                                                    state.isManualPause)
+                                                ? 'Pausa'
+                                                : (state.mode ==
+                                                        TimerMode.shortBreak ||
+                                                    state.mode ==
+                                                        TimerMode.longBreak)
                                                 ? 'Descanso'
                                                 : state.activeTaskTitle!,
                                       ),
@@ -388,14 +418,22 @@ class _DesktopLayout extends StatelessWidget {
                                     ],
                                     // El contenido (Temporizador, Controles, Desplazamiento)
                                     CircularTimer(
-                                      remainingSeconds: (state.isPaused && state.isManualPause)
-                                          ? state.remainingPauseSeconds
-                                          : state.remainingSeconds,
-                                      progress: (state.isPaused && state.isManualPause)
-                                          ? ((120 - state.remainingPauseSeconds) / 120)
-                                          : state.progress,
+                                      remainingSeconds:
+                                          (state.isPaused &&
+                                                  state.isManualPause)
+                                              ? state.remainingPauseSeconds
+                                              : state.remainingSeconds,
+                                      progress:
+                                          (state.isPaused &&
+                                                  state.isManualPause)
+                                              ? ((120 -
+                                                      state
+                                                          .remainingPauseSeconds) /
+                                                  120)
+                                              : state.progress,
                                       size: timerSize,
-                                      isIdle: !state.isRunning && !state.isPaused,
+                                      isIdle:
+                                          !state.isRunning && !state.isPaused,
                                     ),
                                     const SizedBox(height: 16),
                                     if (isActiveLayout &&
@@ -425,6 +463,11 @@ class _DesktopLayout extends StatelessWidget {
                                       onResume: focusProvider.resume,
                                       onReset: focusProvider.reset,
                                       onStop: focusProvider.stop,
+                                      onOpenAgenda:
+                                          () => _openActiveAgenda(
+                                            context,
+                                            focusProvider,
+                                          ),
                                     ),
                                     const SizedBox(height: 24),
                                     if (!state.isRunning && !state.isPaused)
@@ -470,11 +513,14 @@ class _DesktopLayout extends StatelessWidget {
                                           final mascot =
                                               context.read<MascotController>();
                                           final focusState =
-                                              context.read<FocusProvider>().state;
+                                              context
+                                                  .read<FocusProvider>()
+                                                  .state;
                                           mascot.triggerRachaTemporal(
                                             profile.rachaActual,
-                                            duration:
-                                                const Duration(seconds: 10),
+                                            duration: const Duration(
+                                              seconds: 10,
+                                            ),
                                             onFinished: () {
                                               if (focusState.isRunning) {
                                                 if (focusState.mode ==
@@ -654,7 +700,7 @@ class _DesktopLayout extends StatelessWidget {
                             ),
                             const SizedBox(height: 24),
                             const FocusMenuButtons(),
-                            const SizedBox(height: 24),
+                            const SizedBox(height: 50),
                             const DailyMissionsCard(),
                             const SizedBox(height: 32),
                           ],
@@ -753,9 +799,11 @@ class _MobileLayout extends StatelessWidget {
                   taskId: state.activeTaskId,
                   categoryId: state.activeCategoryId,
                   categoryName: state.activeCategoryName,
-                  title: (state.isPaused && state.isManualPause)
-                      ? 'Pausa'
-                      : (state.mode == TimerMode.shortBreak || state.mode == TimerMode.longBreak)
+                  title:
+                      (state.isPaused && state.isManualPause)
+                          ? 'Pausa'
+                          : (state.mode == TimerMode.shortBreak ||
+                              state.mode == TimerMode.longBreak)
                           ? 'Descanso'
                           : state.activeTaskTitle!,
                 ),
@@ -769,12 +817,14 @@ class _MobileLayout extends StatelessWidget {
                         (availableWidth * 0.75).clamp(160.0, 260.0) *
                         settings.timerSizeMultiplier;
                     return CircularTimer(
-                      remainingSeconds: (state.isPaused && state.isManualPause)
-                          ? state.remainingPauseSeconds
-                          : state.remainingSeconds,
-                      progress: (state.isPaused && state.isManualPause)
-                          ? ((120 - state.remainingPauseSeconds) / 120)
-                          : state.progress,
+                      remainingSeconds:
+                          (state.isPaused && state.isManualPause)
+                              ? state.remainingPauseSeconds
+                              : state.remainingSeconds,
+                      progress:
+                          (state.isPaused && state.isManualPause)
+                              ? ((120 - state.remainingPauseSeconds) / 120)
+                              : state.progress,
                       size: size,
                       isIdle: !state.isRunning && !state.isPaused,
                     );
@@ -782,7 +832,8 @@ class _MobileLayout extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 16),
-              if ((state.isRunning || state.isPaused) && state.quizTotalCount > 0)
+              if ((state.isRunning || state.isPaused) &&
+                  state.quizTotalCount > 0)
                 Padding(
                   padding: const EdgeInsets.only(bottom: 8),
                   child: Text(
@@ -802,6 +853,7 @@ class _MobileLayout extends StatelessWidget {
                 onResume: focusProvider.resume,
                 onReset: focusProvider.reset,
                 onStop: focusProvider.stop,
+                onOpenAgenda: () => _openActiveAgenda(context, focusProvider),
               ),
               const SizedBox(height: 24),
               if (!state.isRunning && !state.isPaused)
@@ -873,14 +925,14 @@ class _MobileLayout extends StatelessWidget {
                     currentMode: state.mode,
                     onStart: () => _handleStart(context, focusProvider),
                   ),
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 38),
                   ConstrainedBox(
                     constraints: const BoxConstraints(maxWidth: 480),
                     child: const FocusMenuButtons(),
                   ),
                 ],
                 if (!state.isRunning && !settings.hideFocusCards) ...[
-                  const SizedBox(height: 28),
+                  const SizedBox(height: 42),
                   ConstrainedBox(
                     constraints: const BoxConstraints(maxWidth: 480),
                     child: const DailyMissionsCard(),
@@ -918,9 +970,10 @@ void _handleStart(BuildContext context, FocusProvider focusProvider) {
     if (config.taskId != null) {
       assignedTitle = config.taskTitle;
     } else if (config.categoryId != null) {
-      assignedTitle = config.categoryName != null
-          ? '${config.categoryName} - Toda la materia'
-          : (config.taskTitle ?? 'Toda la materia');
+      assignedTitle =
+          config.categoryName != null
+              ? '${config.categoryName} - Toda la materia'
+              : (config.taskTitle ?? 'Toda la materia');
     } else {
       assignedTitle = config.taskTitle;
     }
@@ -936,6 +989,78 @@ void _handleStart(BuildContext context, FocusProvider focusProvider) {
       coinsReward: config.coinsReward,
     );
   });
+}
+
+void _openActiveAgenda(BuildContext context, FocusProvider focusProvider) {
+  final state = focusProvider.state;
+
+  // 1. Si se escogió una tarea específica, abrirla directamente
+  if (state.activeTaskId != null && state.activeTaskId!.isNotEmpty) {
+    TaskModel? task;
+    try {
+      task = context.read<TaskProvider>().tasks.firstWhere(
+        (t) => t.id == state.activeTaskId,
+      );
+    } catch (_) {
+      if (Hive.isBoxOpen('tasksBox')) {
+        task = Hive.box<TaskModel>('tasksBox').get(state.activeTaskId);
+      }
+    }
+
+    if (task != null) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (_) => TaskDetailsDialog(task: task!)),
+      );
+      return;
+    }
+  }
+
+  // 2. Si se escogió toda la materia / categoría, abrir la vista de esa materia
+  if (state.activeCategoryId != null && state.activeCategoryId!.isNotEmpty) {
+    CategoryModel? category;
+    try {
+      category = context.read<CategoryProvider>().categories.firstWhere(
+        (c) =>
+            c.id == state.activeCategoryId ||
+            (state.activeCategoryName != null &&
+                c.name == state.activeCategoryName),
+      );
+    } catch (_) {
+      if (Hive.isBoxOpen('categoriesBox')) {
+        category = Hive.box<CategoryModel>('categoriesBox').values.firstWhere(
+          (c) =>
+              c.id == state.activeCategoryId ||
+              (state.activeCategoryName != null &&
+                  c.name == state.activeCategoryName),
+          orElse:
+              () => CategoryModel(
+                id: state.activeCategoryId!,
+                name: state.activeCategoryName ?? 'Materia',
+                colorValue: 0xFF00F2FF,
+              ),
+        );
+      }
+    }
+
+    if (category != null) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder:
+              (_) =>
+                  CategoryDetailScreen(category: category!, isFromFocus: true),
+        ),
+      );
+      return;
+    }
+  }
+
+  // 3. Fallback: Abrir la agenda general si no hay materia ni tarea seleccionada
+  Navigator.push(
+    context,
+    MaterialPageRoute(builder: (_) => const TasksScreen()),
+  );
 }
 
 class _ActiveTaskBadge extends StatelessWidget {
@@ -962,7 +1087,9 @@ class _ActiveTaskBadge extends StatelessWidget {
         // Usar el color de la categoría/materia si existe
         if (task.categoryId != null) {
           try {
-            final cat = categoryProvider.categories.firstWhere((c) => c.id == task.categoryId);
+            final cat = categoryProvider.categories.firstWhere(
+              (c) => c.id == task.categoryId,
+            );
             color = Color(cat.colorValue);
           } catch (_) {
             color = Color(task.priorityColorValue);
@@ -973,13 +1100,17 @@ class _ActiveTaskBadge extends StatelessWidget {
       } else if (categoryId != null && categoryId!.isNotEmpty) {
         try {
           final cat = categoryProvider.categories.firstWhere(
-            (c) => c.id == categoryId || (categoryName != null && c.name == categoryName),
+            (c) =>
+                c.id == categoryId ||
+                (categoryName != null && c.name == categoryName),
           );
           color = Color(cat.colorValue);
         } catch (_) {}
       } else if (categoryName != null && categoryName!.isNotEmpty) {
         try {
-          final cat = categoryProvider.categories.firstWhere((c) => c.name == categoryName);
+          final cat = categoryProvider.categories.firstWhere(
+            (c) => c.name == categoryName,
+          );
           color = Color(cat.colorValue);
         } catch (_) {}
       }

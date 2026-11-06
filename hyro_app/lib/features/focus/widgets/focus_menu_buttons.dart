@@ -18,7 +18,7 @@ class FocusMenuButtons extends StatelessWidget {
           children: [
             Expanded(
               child: _MenuActionButton(
-                icon: Icons.calendar_month_rounded,
+                icon: Icons.book_rounded,
                 label: 'Agenda',
                 onTap: () {
                   Navigator.of(context).push(

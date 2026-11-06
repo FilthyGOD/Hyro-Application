@@ -20,6 +20,7 @@ import '../../../shared/widgets/floating_add_button.dart';
 import '../../../shared/widgets/floating_glass_navigation_bar.dart';
 import '../../../shared/widgets/global_create_modal.dart';
 import '../../../app.dart';
+import '../../focus/providers/focus_provider.dart';
 
 class AgendaScreen extends StatefulWidget {
   const AgendaScreen({super.key});
@@ -99,9 +100,26 @@ class _AgendaScreenState extends State<AgendaScreen> {
             },
           ),
         ),
-        // En móvil: Barra de navegación flotante. En PC: Solo botón de agregar en la esquina inferior derecha.
-        if (Responsive.isMobile(context))
-          Positioned(
+        // En sesión de enfoque (o en PC): Solo botón de agregar en la esquina inferior derecha.
+        // En móvil fuera de enfoque: Barra de navegación flotante.
+        () {
+          final focusState = context.watch<FocusProvider>().state;
+          final isFocusActive = focusState.isRunning || focusState.isPaused;
+
+          if (isFocusActive || !Responsive.isMobile(context)) {
+            return Positioned(
+              bottom: 24,
+              right: 24,
+              child: FloatingAddButton(
+                tooltip: 'Nueva Categoría',
+                onTap: () {
+                  GlobalCreateModal.show(context, initialTab: 1);
+                },
+              ),
+            );
+          }
+
+          return Positioned(
             bottom: 0,
             left: 0,
             right: 0,
@@ -115,18 +133,8 @@ class _AgendaScreenState extends State<AgendaScreen> {
                 GlobalCreateModal.show(context, initialTab: 1);
               },
             ),
-          )
-        else
-          Positioned(
-            bottom: 24,
-            right: 24,
-            child: FloatingAddButton(
-              tooltip: 'Nueva Categoría',
-              onTap: () {
-                GlobalCreateModal.show(context, initialTab: 1);
-              },
-            ),
-          ),
+          );
+        }(),
       ],
     );
   }

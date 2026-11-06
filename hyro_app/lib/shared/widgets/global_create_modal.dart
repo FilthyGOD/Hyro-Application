@@ -23,17 +23,20 @@ import '../../../features/tasks/widgets/task_details_sheet.dart';
 class GlobalCreateModal extends StatefulWidget {
   final int initialTab;
   final String? initialCategoryId;
+  final List<int>? allowedTabs;
 
   const GlobalCreateModal({
     super.key,
     this.initialTab = 0,
     this.initialCategoryId,
+    this.allowedTabs,
   });
 
   static Future<void> show(
     BuildContext context, {
     int initialTab = 0,
     String? initialCategoryId,
+    List<int>? allowedTabs,
   }) {
     return showModalBottomSheet(
       context: context,
@@ -44,6 +47,7 @@ class GlobalCreateModal extends StatefulWidget {
       builder: (ctx) => GlobalCreateModal(
         initialTab: initialTab,
         initialCategoryId: initialCategoryId,
+        allowedTabs: allowedTabs,
       ),
     );
   }
@@ -148,7 +152,15 @@ class _GlobalCreateModalState extends State<GlobalCreateModal> {
   @override
   void initState() {
     super.initState();
-    _currentTab = widget.initialTab;
+    if (widget.allowedTabs != null && widget.allowedTabs!.isNotEmpty) {
+      if (widget.allowedTabs!.contains(widget.initialTab)) {
+        _currentTab = widget.initialTab;
+      } else {
+        _currentTab = widget.allowedTabs!.first;
+      }
+    } else {
+      _currentTab = widget.initialTab;
+    }
     if (widget.initialCategoryId != null) {
       _taskCategoryId = widget.initialCategoryId;
       _cardCategoryId = widget.initialCategoryId;
@@ -259,37 +271,55 @@ class _GlobalCreateModalState extends State<GlobalCreateModal> {
                 ),
 
                 // ── Barra de Selección tipo Píldora (Imagen 2 & 5) ──
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-                  child: Center(
-                    child: SingleChildScrollView(
-                      scrollDirection: Axis.horizontal,
-                      physics: const BouncingScrollPhysics(),
-                      child: Container(
-                        height: 44,
-                        padding: const EdgeInsets.all(4),
-                        decoration: BoxDecoration(
-                          color: AppColors.surfaceLight,
-                          borderRadius: BorderRadius.circular(24),
-                          border: Border.all(color: AppColors.cardBorder),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            _buildTabItem(0, 'Tarea', Icons.check_circle_outline_rounded),
-                            const SizedBox(width: 4),
-                            _buildTabItem(1, 'Categoría', Icons.folder_outlined),
-                            const SizedBox(width: 4),
-                            _buildTabItem(2, 'Card', Icons.flip_rounded),
-                            const SizedBox(width: 4),
-                            _buildTabItem(3, 'Recordatorio', Icons.notifications_none_rounded),
-                            const SizedBox(width: 4),
-                            _buildTabItem(4, 'Horario', Icons.schedule_rounded),
-                          ],
+                Builder(
+                  builder: (context) {
+                    final allTabs = [
+                      (0, 'Tarea', Icons.check_circle_outline_rounded),
+                      (1, 'Categoría', Icons.folder_outlined),
+                      (2, 'Card', Icons.flip_rounded),
+                      (3, 'Recordatorio', Icons.notifications_none_rounded),
+                      (4, 'Horario', Icons.schedule_rounded),
+                    ];
+                    final visibleTabs = widget.allowedTabs != null
+                        ? allTabs.where((t) => widget.allowedTabs!.contains(t.$1)).toList()
+                        : allTabs;
+
+                    if (visibleTabs.length <= 1) {
+                      return const SizedBox(height: 6);
+                    }
+
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                      child: Center(
+                        child: SingleChildScrollView(
+                          scrollDirection: Axis.horizontal,
+                          physics: const BouncingScrollPhysics(),
+                          child: Container(
+                            height: 44,
+                            padding: const EdgeInsets.all(4),
+                            decoration: BoxDecoration(
+                              color: AppColors.surfaceLight,
+                              borderRadius: BorderRadius.circular(24),
+                              border: Border.all(color: AppColors.cardBorder),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                for (int i = 0; i < visibleTabs.length; i++) ...[
+                                  if (i > 0) const SizedBox(width: 4),
+                                  _buildTabItem(
+                                    visibleTabs[i].$1,
+                                    visibleTabs[i].$2,
+                                    visibleTabs[i].$3,
+                                  ),
+                                ],
+                              ],
+                            ),
+                          ),
                         ),
                       ),
-                    ),
-                  ),
+                    );
+                  },
                 ),
 
                 const SizedBox(height: 12),
@@ -381,6 +411,13 @@ class _GlobalCreateModalState extends State<GlobalCreateModal> {
 
   Widget _buildTaskForm() {
     final categories = context.watch<CategoryProvider>().categories;
+    final String? effectiveTaskCatId = (
+      _taskCategoryId != null && categories.any((c) => c.id == _taskCategoryId)
+    ) ? _taskCategoryId : (
+      _taskCategoryId != null && categories.any((c) => c.name.toLowerCase() == _taskCategoryId!.toLowerCase())
+        ? categories.firstWhere((c) => c.name.toLowerCase() == _taskCategoryId!.toLowerCase()).id
+        : null
+    );
 
     return Column(
       key: const ValueKey('form_task'),
@@ -400,7 +437,7 @@ class _GlobalCreateModalState extends State<GlobalCreateModal> {
         _buildFieldLabel('MATERIA / CATEGORÍA'),
         const SizedBox(height: 6),
         DropdownButtonFormField<String?>(
-          value: _taskCategoryId,
+          value: effectiveTaskCatId,
           dropdownColor: AppColors.surfaceLight,
           decoration: _inputDecoration(hint: 'Selecciona una materia'),
           items: [

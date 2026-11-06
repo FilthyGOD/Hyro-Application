@@ -10,6 +10,7 @@ class TimerControls extends StatelessWidget {
   final VoidCallback onResume;
   final VoidCallback onReset;
   final VoidCallback onStop;
+  final VoidCallback? onOpenAgenda;
   final double buttonSizeMultiplier;
 
   const TimerControls({
@@ -21,6 +22,7 @@ class TimerControls extends StatelessWidget {
     required this.onResume,
     required this.onReset,
     required this.onStop,
+    this.onOpenAgenda,
     this.buttonSizeMultiplier = 1.0,
   });
 
@@ -55,35 +57,145 @@ class TimerControls extends StatelessWidget {
        return const SizedBox.shrink();
     }
 
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        // Detener
-        _ControlButton(
-          icon: Icons.stop_rounded,
-          label: 'Detener',
-          onTap: () {
-             _confirmAction(context, 'Detener', '¿Deseas detener y salir de la sesión actual?', onStop);
-          },
-          isSecondary: true,
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            // Detener
+            _ControlButton(
+              icon: Icons.stop_rounded,
+              label: 'Detener',
+              onTap: () {
+                 _confirmAction(context, 'Detener', '¿Deseas detener y salir de la sesión actual?', onStop);
+              },
+              isSecondary: true,
+            ),
+            SizedBox(width: 16 * buttonSizeMultiplier),
+            // Pausar / Reanudar
+            if (isRunning)
+              _ControlButton(
+                icon: Icons.pause_rounded,
+                label: 'Pausar',
+                onTap: onPause,
+                isSecondary: false,
+              )
+            else if (isPaused)
+              _ControlButton(
+                icon: Icons.play_arrow_rounded,
+                label: 'Reanudar',
+                onTap: onResume,
+                isSecondary: false,
+              ),
+          ],
         ),
-        SizedBox(width: 16 * buttonSizeMultiplier),
-        // Pausar / Reanudar
-        if (isRunning)
-          _ControlButton(
-            icon: Icons.pause_rounded,
-            label: 'Pausar',
-            onTap: onPause,
-            isSecondary: false,
-          )
-        else if (isPaused)
-          _ControlButton(
-            icon: Icons.play_arrow_rounded,
-            label: 'Reanudar',
-            onTap: onResume,
-            isSecondary: false,
+        if (onOpenAgenda != null) ...[
+          SizedBox(height: 14 * buttonSizeMultiplier),
+          _CircularAgendaButton(
+            onTap: onOpenAgenda!,
+            sizeMultiplier: buttonSizeMultiplier,
           ),
+        ],
       ],
+    );
+  }
+}
+
+class _CircularAgendaButton extends StatefulWidget {
+  final VoidCallback onTap;
+  final double sizeMultiplier;
+
+  const _CircularAgendaButton({
+    required this.onTap,
+    this.sizeMultiplier = 1.0,
+  });
+
+  @override
+  State<_CircularAgendaButton> createState() => _CircularAgendaButtonState();
+}
+
+class _CircularAgendaButtonState extends State<_CircularAgendaButton>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _scaleAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 100),
+    );
+    _scaleAnimation = Tween<double>(
+      begin: 1.0,
+      end: 0.92,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final size = 48.0 * widget.sizeMultiplier;
+
+    return Tooltip(
+      message: 'Ver notas y agenda de estudio',
+      child: MouseRegion(
+        cursor: SystemMouseCursors.click,
+        child: GestureDetector(
+          onTapDown: (_) => _controller.forward(),
+          onTapUp: (_) {
+            _controller.reverse();
+            widget.onTap();
+          },
+          onTapCancel: () => _controller.reverse(),
+          child: AnimatedBuilder(
+            animation: _scaleAnimation,
+            builder: (context, child) {
+              return Transform.scale(scale: _scaleAnimation.value, child: child);
+            },
+            child: Container(
+              width: size,
+              height: size,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: const LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    Color.fromARGB(255, 0, 149, 255),
+                    Color.fromARGB(255, 32, 43, 200),
+                  ],
+                ),
+                border: Border.all(
+                  color: Colors.white.withValues(alpha: 0.25),
+                  width: 1.2,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFF0095FF).withValues(alpha: 0.45),
+                    blurRadius: 14,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: Center(
+                child: Icon(
+                  Icons.book_rounded,
+                  color: Colors.white,
+                  size: 22 * widget.sizeMultiplier,
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

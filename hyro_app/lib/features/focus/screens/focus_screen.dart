@@ -1116,7 +1116,11 @@ class _ActiveTaskBadge extends StatelessWidget {
       }
     } catch (_) {}
 
+    final screenWidth = MediaQuery.of(context).size.width;
+    final maxWidth = screenWidth - 48 > 450.0 ? 450.0 : (screenWidth - 48);
+
     return Container(
+      constraints: BoxConstraints(maxWidth: maxWidth),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.15),
@@ -1124,6 +1128,8 @@ class _ActiveTaskBadge extends StatelessWidget {
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           Container(
             width: 8,
@@ -1137,11 +1143,16 @@ class _ActiveTaskBadge extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 8),
-          Text(
-            title,
-            style: AppTypography.bodySmall.copyWith(
-              color: Colors.white.withValues(alpha: 0.9),
-              fontWeight: FontWeight.w600,
+          Flexible(
+            child: Text(
+              title,
+              textAlign: TextAlign.center,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: AppTypography.bodySmall.copyWith(
+                color: Colors.white.withValues(alpha: 0.9),
+                fontWeight: FontWeight.w600,
+              ),
             ),
           ),
         ],

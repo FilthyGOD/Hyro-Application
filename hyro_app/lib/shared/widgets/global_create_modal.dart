@@ -405,6 +405,37 @@ class _GlobalCreateModalState extends State<GlobalCreateModal> {
     }
   }
 
+  String _truncate(String text, [int maxLength = 30]) {
+    if (text.length <= maxLength) return text;
+    return '${text.substring(0, maxLength)}...';
+  }
+
+  DropdownMenuItem<String?> _buildCategoryDropdownItem(CategoryModel c) {
+    final displayName = _truncate(c.name, 30);
+    return DropdownMenuItem<String?>(
+      value: c.id,
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 12,
+            height: 12,
+            decoration: BoxDecoration(color: Color(c.colorValue), shape: BoxShape.circle),
+          ),
+          const SizedBox(width: 8),
+          Flexible(
+            child: Text(
+              displayName,
+              style: const TextStyle(color: Colors.white),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   // ═══════════════════════════════════════════════════════════════════════════
   // 1. PESTAÑA: TAREA (Imagen 2)
   // ═══════════════════════════════════════════════════════════════════════════
@@ -438,29 +469,20 @@ class _GlobalCreateModalState extends State<GlobalCreateModal> {
         const SizedBox(height: 6),
         DropdownButtonFormField<String?>(
           value: effectiveTaskCatId,
+          isExpanded: true,
           dropdownColor: AppColors.surfaceLight,
           decoration: _inputDecoration(hint: 'Selecciona una materia'),
           items: [
             const DropdownMenuItem<String?>(
               value: null,
-              child: Text('Sin Categoría', style: TextStyle(color: Colors.white70)),
+              child: Text(
+                'Sin Categoría',
+                style: TextStyle(color: Colors.white70),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
             ),
-            ...categories.map((c) {
-              return DropdownMenuItem<String?>(
-                value: c.id,
-                child: Row(
-                  children: [
-                    Container(
-                      width: 12,
-                      height: 12,
-                      decoration: BoxDecoration(color: Color(c.colorValue), shape: BoxShape.circle),
-                    ),
-                    const SizedBox(width: 8),
-                    Text(c.name, style: const TextStyle(color: Colors.white)),
-                  ],
-                ),
-              );
-            }),
+            ...categories.map(_buildCategoryDropdownItem),
           ],
           onChanged: (val) {
             setState(() {
@@ -478,6 +500,7 @@ class _GlobalCreateModalState extends State<GlobalCreateModal> {
         const SizedBox(height: 6),
         DropdownButtonFormField<String>(
           value: _taskPriority,
+          isExpanded: true,
           dropdownColor: AppColors.surfaceLight,
           decoration: _inputDecoration(),
           items: const [
@@ -803,35 +826,22 @@ class _GlobalCreateModalState extends State<GlobalCreateModal> {
         const SizedBox(height: 6),
         DropdownButtonFormField<String?>(
           value: _cardCategoryId,
+          isExpanded: true,
           dropdownColor: AppColors.surfaceLight,
           decoration: _inputDecoration(hint: 'Selecciona una categoría'),
           items: categories.isEmpty
               ? [
                   const DropdownMenuItem<String?>(
                     value: null,
-                    child: Text('Sin categorías (crea una primero)',
-                        style: TextStyle(color: Colors.white54)),
+                    child: Text(
+                      'Sin categorías (crea una primero)',
+                      style: TextStyle(color: Colors.white54),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ),
                 ]
-              : categories.map((c) {
-                  return DropdownMenuItem<String?>(
-                    value: c.id,
-                    child: Row(
-                      children: [
-                        Container(
-                          width: 12,
-                          height: 12,
-                          decoration: BoxDecoration(
-                            color: Color(c.colorValue),
-                            shape: BoxShape.circle,
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        Text(c.name, style: const TextStyle(color: Colors.white)),
-                      ],
-                    ),
-                  );
-                }).toList(),
+              : categories.map(_buildCategoryDropdownItem).toList(),
           onChanged: (val) {
             setState(() {
               _cardCategoryId = val;
@@ -871,13 +881,15 @@ class _GlobalCreateModalState extends State<GlobalCreateModal> {
           else
             DropdownButtonFormField<String?>(
               value: validCardTaskId,
+              isExpanded: true,
               dropdownColor: AppColors.surfaceLight,
               decoration: _inputDecoration(hint: 'Selecciona la tarea'),
               items: tasksInCategory.map((t) {
+                final title = _truncate(t.title, 30);
                 return DropdownMenuItem<String?>(
                   value: t.id,
                   child: Text(
-                    t.title,
+                    title,
                     style: const TextStyle(color: Colors.white),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -1054,6 +1066,7 @@ class _GlobalCreateModalState extends State<GlobalCreateModal> {
         const SizedBox(height: 6),
         DropdownButtonFormField<String>(
           value: _reminderPriority,
+          isExpanded: true,
           dropdownColor: AppColors.surfaceLight,
           decoration: _inputDecoration(),
           items: const [
@@ -1211,31 +1224,22 @@ class _GlobalCreateModalState extends State<GlobalCreateModal> {
         const SizedBox(height: 6),
         DropdownButtonFormField<String?>(
           value: _scheduleCategoryId,
+          isExpanded: true,
           dropdownColor: AppColors.surfaceLight,
           decoration: _inputDecoration(hint: 'Selecciona una materia'),
           items: categories.isEmpty
               ? [
                   const DropdownMenuItem<String?>(
                     value: null,
-                    child: Text('Sin materias (crea una primero)', style: TextStyle(color: Colors.white54)),
+                    child: Text(
+                      'Sin materias (crea una primero)',
+                      style: TextStyle(color: Colors.white54),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ),
                 ]
-              : categories.map((c) {
-                  return DropdownMenuItem<String?>(
-                    value: c.id,
-                    child: Row(
-                      children: [
-                        Container(
-                          width: 12,
-                          height: 12,
-                          decoration: BoxDecoration(color: Color(c.colorValue), shape: BoxShape.circle),
-                        ),
-                        const SizedBox(width: 8),
-                        Text(c.name, style: const TextStyle(color: Colors.white)),
-                      ],
-                    ),
-                  );
-                }).toList(),
+              : categories.map(_buildCategoryDropdownItem).toList(),
           onChanged: (val) {
             setState(() {
               _scheduleCategoryId = val;

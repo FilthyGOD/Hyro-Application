@@ -6,6 +6,7 @@ import 'package:hyro/core/theme/app_typography.dart';
 import 'package:hyro/features/onboarding/screens/onboarding_screen.dart';
 import 'package:hyro/features/auth/providers/auth_provider.dart';
 import 'login_screen.dart';
+import '../../tutorial/services/tutorial_service.dart';
 
 class WelcomeScreen extends StatelessWidget {
   const WelcomeScreen({super.key});
@@ -82,7 +83,9 @@ class WelcomeScreen extends StatelessWidget {
                   onPressed: () {
                     Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (_) => const OnboardingScreen()),
+                      MaterialPageRoute(
+                        builder: (_) => const OnboardingScreen(),
+                      ),
                     );
                   },
                   style: ElevatedButton.styleFrom(
@@ -158,6 +161,26 @@ class WelcomeScreen extends StatelessWidget {
                       fontSize: 13,
                       letterSpacing: 0.5,
                     ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 6),
+              TextButton.icon(
+                onPressed: () {
+                  TutorialService.instance.showTutorial(context);
+                },
+                icon: const Icon(
+                  Icons.help_outline_rounded,
+                  color: AppColors.primary,
+                  size: 16,
+                ),
+                label: const Text(
+                  '¿CÓMO FUNCIONA? VER GUÍA RÁPIDA',
+                  style: TextStyle(
+                    color: AppColors.primary,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 12,
+                    letterSpacing: 0.5,
                   ),
                 ),
               ),

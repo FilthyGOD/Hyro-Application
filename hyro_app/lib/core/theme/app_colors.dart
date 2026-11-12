@@ -18,11 +18,13 @@ class AppColors {
 
   // ── Colores originales del temporizador ──
   static const Color timerColor = Color(0xFF3B82F6);
+  static const Color timerBlue = timerColor;
   static const Color timerColorDark = Color(0xFF2563EB);
   static const Color timerGlow = Color(0x403B82F6);
 
   // ── Acento Secundario (Violeta Vibrante e indicador Pomodoro) ──
   static const Color pomodoroRed = Color(0xFF6A25F4); // Vibrant Violet
+  static const Color accentViolet = pomodoroRed;
   static const Color pomodoroRedLight = Color(0xFFA855F7); // Soft Neon Purple
 
   // ── Colores de Éxito / Descanso ──
@@ -53,18 +55,11 @@ class AppColors {
   static const LinearGradient cardGradient = LinearGradient(
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
-    colors: [
-      Color(0xFF182040),
-      Color(0xFF131829),
-    ],
+    colors: [Color(0xFF182040), Color(0xFF131829)],
   );
 
   // ── Sombras ──
   static List<BoxShadow> glowShadow(Color color, {double blur = 20}) => [
-        BoxShadow(
-          color: color.withAlpha(60),
-          blurRadius: blur,
-          spreadRadius: 0,
-        ),
-      ];
+    BoxShadow(color: color.withAlpha(60), blurRadius: blur, spreadRadius: 0),
+  ];
 }

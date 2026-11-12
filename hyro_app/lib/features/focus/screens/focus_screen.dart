@@ -37,6 +37,9 @@ import '../../../data/local/card_local_ds.dart';
 import '../../shop/screens/premium_shop_screen.dart';
 import '../../../data/local/note_local_ds.dart';
 import '../widgets/strict_mode_violation_card.dart';
+import '../../tutorial/services/tutorial_service.dart';
+import '../../tutorial/services/interactive_tutorial_controller.dart';
+import '../../tutorial/widgets/tutorial_welcome_banner.dart';
 
 /// La pantalla principal de Enfoque con el temporizador Pomodoro y widgets laterales.
 class FocusScreen extends StatefulWidget {
@@ -56,6 +59,11 @@ class _FocusScreenState extends State<FocusScreen> {
     _focusProvider = context.read<FocusProvider>();
     _previousState = _focusProvider.state;
     _focusProvider.addListener(_onFocusStateChanged);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        InteractiveTutorialController.instance.checkAutoLaunch(context);
+      }
+    });
   }
 
   @override
@@ -700,7 +708,9 @@ class _DesktopLayout extends StatelessWidget {
                             ),
                             const SizedBox(height: 24),
                             const FocusMenuButtons(),
-                            const SizedBox(height: 50),
+                            const SizedBox(height: 32),
+                            const TutorialWelcomeBanner(),
+                            const SizedBox(height: 24),
                             const DailyMissionsCard(),
                             const SizedBox(height: 32),
                           ],
@@ -716,17 +726,35 @@ class _DesktopLayout extends StatelessWidget {
         Positioned(
           top: 32,
           right: 32,
-          child: Tooltip(
-            message: 'Keep on top',
-            child: IconButton(
-              icon: const Icon(
-                Icons.picture_in_picture_alt,
-                color: Colors.white70,
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Tooltip(
+                message: 'Guía y Tutorial de Hyro',
+                child: IconButton(
+                  icon: const Icon(
+                    Icons.help_outline_rounded,
+                    color: Colors.white70,
+                  ),
+                  onPressed: () {
+                    InteractiveTutorialController.instance.startTutorial(context);
+                  },
+                ),
               ),
-              onPressed: () {
-                context.read<UiProvider>().setMiniMode(true);
-              },
-            ),
+              const SizedBox(width: 4),
+              Tooltip(
+                message: 'Keep on top',
+                child: IconButton(
+                  icon: const Icon(
+                    Icons.picture_in_picture_alt,
+                    color: Colors.white70,
+                  ),
+                  onPressed: () {
+                    context.read<UiProvider>().setMiniMode(true);
+                  },
+                ),
+              ),
+            ],
           ),
         ),
       ],
@@ -932,7 +960,12 @@ class _MobileLayout extends StatelessWidget {
                   ),
                 ],
                 if (!state.isRunning && !settings.hideFocusCards) ...[
-                  const SizedBox(height: 42),
+                  const SizedBox(height: 24),
+                  ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 480),
+                    child: const TutorialWelcomeBanner(),
+                  ),
+                  const SizedBox(height: 24),
                   ConstrainedBox(
                     constraints: const BoxConstraints(maxWidth: 480),
                     child: const DailyMissionsCard(),
@@ -944,7 +977,26 @@ class _MobileLayout extends StatelessWidget {
           ),
         ),
         // Barra superior con racha y monedas
-        const Positioned(top: 0, left: 0, right: 0, child: MobileStatsBar()),
+        Positioned(
+          top: 0,
+          left: 0,
+          right: 0,
+          child: MobileStatsBar(
+            trailing: IconButton(
+              icon: const Icon(
+                Icons.help_outline_rounded,
+                color: Colors.white70,
+                size: 22,
+              ),
+              tooltip: 'Tutorial de Hyro',
+              padding: EdgeInsets.zero,
+              constraints: const BoxConstraints(),
+              onPressed: () {
+                InteractiveTutorialController.instance.startTutorial(context);
+              },
+            ),
+          ),
+        ),
       ],
     );
   }

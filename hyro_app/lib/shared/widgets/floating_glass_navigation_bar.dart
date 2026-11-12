@@ -2,6 +2,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import '../../core/theme/app_colors.dart';
 import 'global_create_modal.dart';
+import '../../features/tutorial/services/interactive_tutorial_controller.dart';
 
 /// Barra de navegación flotante tipo cápsula glassmórfica con botón central '+' saliente.
 /// Utilizada en MainLayout, AgendaScreen y CategoryDetailScreen para mantener una experiencia unificada.
@@ -82,10 +83,13 @@ class FloatingGlassNavigationBar extends StatelessWidget {
                                 ),
                               ),
                               Expanded(
-                                child: _buildGlassNavItem(
-                                  index: 3,
-                                  icon: Icons.person_outline_rounded,
-                                  activeIcon: Icons.person_rounded,
+                                child: Container(
+                                  key: InteractiveTutorialController.instance.profileNavKey,
+                                  child: _buildGlassNavItem(
+                                    index: 3,
+                                    icon: Icons.person_outline_rounded,
+                                    activeIcon: Icons.person_rounded,
+                                  ),
                                 ),
                               ),
                             ],
@@ -98,6 +102,7 @@ class FloatingGlassNavigationBar extends StatelessWidget {
                   // ── Botón Agregar Central (+) Estilo Saliente Aplastado ──
                   Center(
                     child: Container(
+                      key: InteractiveTutorialController.instance.globalAddButtonKey,
                       width: 74,
                       height: 80,
                       decoration: BoxDecoration(

@@ -3,6 +3,7 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../tasks/screens/tasks_screen.dart';
 import '../../friends/screens/friends_screen.dart';
+import '../../tutorial/services/interactive_tutorial_controller.dart';
 
 /// Botones de navegación rápida para la pantalla de Enfoque / Menú principal:
 /// Agenda, Amigos y Horario.
@@ -18,6 +19,7 @@ class FocusMenuButtons extends StatelessWidget {
           children: [
             Expanded(
               child: _MenuActionButton(
+                key: InteractiveTutorialController.instance.agendaButtonKey,
                 icon: Icons.book_rounded,
                 label: 'Agenda',
                 onTap: () {
@@ -30,6 +32,7 @@ class FocusMenuButtons extends StatelessWidget {
             const SizedBox(width: 12),
             Expanded(
               child: _MenuActionButton(
+                key: InteractiveTutorialController.instance.friendsButtonKey,
                 icon: Icons.people_alt_rounded,
                 label: 'Amigos',
                 onTap: () {
@@ -69,6 +72,7 @@ class _MenuActionButton extends StatelessWidget {
   final bool isFullWidth;
 
   const _MenuActionButton({
+    super.key,
     required this.icon,
     required this.label,
     required this.onTap,

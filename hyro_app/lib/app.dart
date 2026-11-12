@@ -28,6 +28,8 @@ import 'features/auth/screens/username_setup_screen.dart';
 import 'shared/layout/main_layout.dart';
 import 'core/widgets/floating_mascot.dart';
 import 'features/focus/screens/mini_focus_screen.dart';
+import 'features/tutorial/services/interactive_tutorial_controller.dart';
+import 'features/tutorial/widgets/interactive_tutorial_overlay.dart';
 import 'core/services/notifications_service.dart';
 import 'package:window_manager/window_manager.dart';
 import 'package:tray_manager/tray_manager.dart';
@@ -87,7 +89,9 @@ class HyroApp extends StatelessWidget {
               return const WelcomeScreen();
             }
             // Usuario de Google que aun no ha configurado su nombre_usuario
-            if (auth.isAuthenticated && !auth.isGuest && auth.needsGoogleUsernameSetup) {
+            if (auth.isAuthenticated &&
+                !auth.isGuest &&
+                auth.needsGoogleUsernameSetup) {
               return UsernameSetupScreen(
                 onComplete: () => auth.completeGoogleUsernameSetup(),
               );
@@ -394,6 +398,11 @@ class AppShellState extends State<AppShell>
 
     // Llegando a Focus → reanuda la animación si el temporizador está corriendo
     if (index == 2) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          InteractiveTutorialController.instance.checkAutoLaunch(context);
+        }
+      });
       // También dispara volver para asegurar que salimos de cualquier otro estado de animación
       mascot.triggerVolver();
       if (timerState.isRunning) {
@@ -412,65 +421,66 @@ class AppShellState extends State<AppShell>
       return const MiniFocusScreen();
     }
 
-    return Stack(
-      children: [
-        MainLayout(
-          selectedIndex: _selectedIndex,
-          onNavigate: navigateTo,
-          child: Stack(
-            children: [
-              PageView(
-                controller: _pageController,
-                physics: const NeverScrollableScrollPhysics(),
-                onPageChanged: (index) {
-                  final previousIndex = _selectedIndex;
-                  if (index != _selectedIndex) {
-                    setState(() {
-                      _previousIndex = previousIndex;
-                      _selectedIndex = index;
-                    });
+    return InteractiveTutorialOverlay(
+      child: Stack(
+        children: [
+          MainLayout(
+            selectedIndex: _selectedIndex,
+            onNavigate: navigateTo,
+            child: Stack(
+              children: [
+                PageView(
+                  controller: _pageController,
+                  physics: const NeverScrollableScrollPhysics(),
+                  onPageChanged: (index) {
+                    final previousIndex = _selectedIndex;
+                    if (index != _selectedIndex) {
+                      setState(() {
+                        _previousIndex = previousIndex;
+                        _selectedIndex = index;
+                      });
 
-                    final mascot = context.read<MascotController>();
-                    if (previousIndex == 2 || previousIndex == 0) {
-                      mascot.triggerVolver();
-                    }
-                    if (index == 2) {
-                      mascot.triggerVolver();
-                      final timerState = context.read<FocusProvider>().state;
-                      if (timerState.isRunning) {
-                        if (timerState.mode == TimerMode.pomodoro) {
-                          mascot.triggerEstudiando();
-                        } else {
-                          mascot.triggerHueva();
+                      final mascot = context.read<MascotController>();
+                      if (previousIndex == 2 || previousIndex == 0) {
+                        mascot.triggerVolver();
+                      }
+                      if (index == 2) {
+                        mascot.triggerVolver();
+                        final timerState = context.read<FocusProvider>().state;
+                        if (timerState.isRunning) {
+                          if (timerState.mode == TimerMode.pomodoro) {
+                            mascot.triggerEstudiando();
+                          } else {
+                            mascot.triggerHueva();
+                          }
                         }
                       }
                     }
-                  }
-                },
-                children: _screens,
-              ),
-            ],
+                  },
+                  children: _screens,
+                ),
+              ],
+            ),
           ),
-        ),
-        // Capa superpuesta de la mascota flotante — visible solo en Focus (2) y Calendario (1), y no durante la vista de sesión completada
-        Builder(
-          builder: (context) {
-            final timerState = context.watch<FocusProvider>().state;
-            final isPomodoroFinished =
-                timerState.isFinished &&
-                (timerState.mode == TimerMode.shortBreak ||
-                    timerState.mode == TimerMode.longBreak);
+          // Capa superpuesta de la mascota flotante — visible solo en Focus (2) y Calendario (1), y no durante la vista de sesión completada
+          Builder(
+            builder: (context) {
+              final timerState = context.watch<FocusProvider>().state;
+              final isPomodoroFinished =
+                  timerState.isFinished &&
+                  (timerState.mode == TimerMode.shortBreak ||
+                      timerState.mode == TimerMode.longBreak);
 
-            final isQuizActive = timerState.quizDue;
-            final isVisible =
-                (_selectedIndex == 2 ||
-                    _selectedIndex == 1) &&
-                !isPomodoroFinished &&
-                !isQuizActive;
-            return FloatingMascot(visible: isVisible);
-          },
-        ),
-      ],
+              final isQuizActive = timerState.quizDue;
+              final isVisible =
+                  (_selectedIndex == 2 || _selectedIndex == 1) &&
+                  !isPomodoroFinished &&
+                  !isQuizActive;
+              return FloatingMascot(visible: isVisible);
+            },
+          ),
+        ],
+      ),
     );
   }
 }

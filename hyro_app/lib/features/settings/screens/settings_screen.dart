@@ -15,6 +15,9 @@ import 'dart:io';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import '../../../core/services/strict_mode_service.dart';
 import '../../../core/services/spotify/spotify_auth_service.dart';
+import 'package:flutter_svg/flutter_svg.dart';
+import '../../tutorial/services/tutorial_service.dart';
+import '../../tutorial/services/interactive_tutorial_controller.dart';
 
 /// Settings screen for Pomodoro durations, notifications, and theme.
 class SettingsScreen extends StatefulWidget {
@@ -162,9 +165,10 @@ class _SettingsScreenState extends State<SettingsScreen>
                     disabled: settings.strictMode,
                     onChanged: (v) => settings.setAutoPauseTimer(v),
                   ),
-                  if (!kIsWeb && (Platform.isWindows ||
-                      Platform.isMacOS ||
-                      Platform.isLinux)) ...[
+                  if (!kIsWeb &&
+                      (Platform.isWindows ||
+                          Platform.isMacOS ||
+                          Platform.isLinux)) ...[
                     const Divider(height: 24),
                     _ToggleSetting(
                       label: 'Minimizar a la Bandeja',
@@ -274,11 +278,12 @@ class _SettingsScreenState extends State<SettingsScreen>
                     onChanged: (v) async {
                       settings.setNotificationsEnabled(v);
                       if (v) {
-                        final pendingTasks = context
-                            .read<TaskProvider>()
-                            .tasks
-                            .where((t) => !t.isCompleted)
-                            .length;
+                        final pendingTasks =
+                            context
+                                .read<TaskProvider>()
+                                .tasks
+                                .where((t) => !t.isCompleted)
+                                .length;
                         final stats = context.read<StatsProvider>();
                         await NotificationsService.instance
                             .scheduleDailyNotifications(
@@ -316,11 +321,13 @@ class _SettingsScreenState extends State<SettingsScreen>
                                 timePickerTheme: TimePickerThemeData(
                                   backgroundColor: AppColors.surface,
                                   dialBackgroundColor: AppColors.background,
-                                  hourMinuteColor:
-                                      AppColors.primary.withAlpha(40),
+                                  hourMinuteColor: AppColors.primary.withAlpha(
+                                    40,
+                                  ),
                                   hourMinuteTextColor: Colors.white,
-                                  dayPeriodColor:
-                                      AppColors.primary.withAlpha(40),
+                                  dayPeriodColor: AppColors.primary.withAlpha(
+                                    40,
+                                  ),
                                   dayPeriodTextColor: Colors.white,
                                 ),
                               ),
@@ -330,11 +337,12 @@ class _SettingsScreenState extends State<SettingsScreen>
                         );
                         if (picked != null && context.mounted) {
                           settings.setNotificationTime(picked);
-                          final pendingTasks = context
-                              .read<TaskProvider>()
-                              .tasks
-                              .where((t) => !t.isCompleted)
-                              .length;
+                          final pendingTasks =
+                              context
+                                  .read<TaskProvider>()
+                                  .tasks
+                                  .where((t) => !t.isCompleted)
+                                  .length;
                           final stats = context.read<StatsProvider>();
                           await NotificationsService.instance
                               .scheduleDailyNotifications(
@@ -365,9 +373,7 @@ class _SettingsScreenState extends State<SettingsScreen>
                         decoration: BoxDecoration(
                           color: AppColors.surface.withAlpha(120),
                           borderRadius: BorderRadius.circular(12),
-                          border: Border.all(
-                            color: Colors.white.withAlpha(20),
-                          ),
+                          border: Border.all(color: Colors.white.withAlpha(20)),
                         ),
                         child: Row(
                           children: [
@@ -553,7 +559,9 @@ class _SettingsScreenState extends State<SettingsScreen>
                           width: double.infinity,
                           child: ElevatedButton.icon(
                             icon: const Icon(Icons.verified_rounded),
-                            label: const Text('🎉 Racha Asegurada (Sesión Hoy)'),
+                            label: const Text(
+                              '🎉 Racha Asegurada (Sesión Hoy)',
+                            ),
                             onPressed: () {
                               NotificationsService.instance
                                   .testSessionDoneMotivation(
@@ -643,11 +651,15 @@ class _SettingsScreenState extends State<SettingsScreen>
                             onPressed: () {
                               showDialog(
                                 context: context,
-                                builder: (_) => CompletedSessionView(
-                                  streak: context.read<StatsProvider>().currentStreak,
-                                  initialShowStreakScreen: false,
-                                  isDebugMode: true,
-                                ),
+                                builder:
+                                    (_) => CompletedSessionView(
+                                      streak:
+                                          context
+                                              .read<StatsProvider>()
+                                              .currentStreak,
+                                      initialShowStreakScreen: false,
+                                      isDebugMode: true,
+                                    ),
                               );
                             },
                             style: ElevatedButton.styleFrom(
@@ -667,17 +679,19 @@ class _SettingsScreenState extends State<SettingsScreen>
                           width: double.infinity,
                           child: ElevatedButton.icon(
                             icon: const Icon(Icons.local_fire_department),
-                            label: const Text(
-                              '🔥 Pantalla de Racha (Debug)',
-                            ),
+                            label: const Text('🔥 Pantalla de Racha (Debug)'),
                             onPressed: () {
                               showDialog(
                                 context: context,
-                                builder: (_) => CompletedSessionView(
-                                  streak: context.read<StatsProvider>().currentStreak,
-                                  initialShowStreakScreen: true,
-                                  isDebugMode: true,
-                                ),
+                                builder:
+                                    (_) => CompletedSessionView(
+                                      streak:
+                                          context
+                                              .read<StatsProvider>()
+                                              .currentStreak,
+                                      initialShowStreakScreen: true,
+                                      isDebugMode: true,
+                                    ),
                               );
                             },
                             style: ElevatedButton.styleFrom(
@@ -721,6 +735,45 @@ class _SettingsScreenState extends State<SettingsScreen>
                             style: ElevatedButton.styleFrom(
                               backgroundColor: Colors.teal.withAlpha(50),
                               foregroundColor: Colors.tealAccent,
+                              alignment: Alignment.centerLeft,
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 12,
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        // ── Reset Tutorial (Debug) ──
+                        SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton.icon(
+                            icon: const Icon(Icons.restart_alt_rounded),
+                            label: const Text(
+                              '🔄 Reiniciar Tutorial (Iniciar al volver al inicio)',
+                            ),
+                            onPressed: () async {
+                              await InteractiveTutorialController.instance.resetTutorial(
+                                autoLaunch: true,
+                              );
+                              await TutorialService.instance.resetTutorial(
+                                autoLaunch: true,
+                              );
+                              if (context.mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text(
+                                      '✅ Tutorial reiniciado. Al volver a la pantalla de inicio se iniciará automáticamente guiándote paso a paso.',
+                                    ),
+                                    duration: Duration(seconds: 3),
+                                    behavior: SnackBarBehavior.floating,
+                                  ),
+                                );
+                              }
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppColors.primary.withAlpha(50),
+                              foregroundColor: AppColors.primary,
                               alignment: Alignment.centerLeft,
                               padding: const EdgeInsets.symmetric(
                                 horizontal: 16,
@@ -784,6 +837,87 @@ class _SettingsScreenState extends State<SettingsScreen>
                         onChanged: (v) => ui.setMusicBarVisibility(v),
                       );
                     },
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+            // ── Guía y Tutorial ──
+            GlassCard(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      const Icon(
+                        Icons.school_rounded,
+                        color: AppColors.primary,
+                        size: 22,
+                      ),
+                      const SizedBox(width: 10),
+                      Text('Guía y Tutorial', style: AppTypography.h3),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Repasa cómo usar la técnica Pomodoro, crear categorías y tareas, activar el modo estricto, usar la agenda y ganar duelos.',
+                    style: AppTypography.bodySmall,
+                  ),
+                  const SizedBox(height: 16),
+                  InkWell(
+                    onTap: () {
+                      Navigator.pop(context);
+                      InteractiveTutorialController.instance.startTutorial(context);
+                    },
+                    borderRadius: BorderRadius.circular(12),
+                    child: Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: AppColors.primary.withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: AppColors.primary.withValues(alpha: 0.35),
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          SvgPicture.asset(
+                            'assets/images/JairitoHD_Saludo.svg',
+                            width: 38,
+                            height: 38,
+                          ),
+                          const SizedBox(width: 14),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Ver Tutorial Interactivo',
+                                  style: AppTypography.labelLarge.copyWith(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  'Guía paso a paso ilustrada con Jairito',
+                                  style: AppTypography.bodySmall.copyWith(
+                                    color: Colors.white70,
+                                    fontSize: 11,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const Icon(
+                            Icons.arrow_forward_ios_rounded,
+                            color: AppColors.primary,
+                            size: 16,
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
                 ],
               ),

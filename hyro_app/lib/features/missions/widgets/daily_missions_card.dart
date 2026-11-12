@@ -7,6 +7,7 @@ import '../../../core/widgets/glass_card.dart';
 import '../../auth/providers/auth_provider.dart';
 import '../missions_provider.dart';
 import '../models/daily_mission.dart';
+import '../../tutorial/services/interactive_tutorial_controller.dart';
 
 /// Tarjeta y lista de Misiones Diarias con recompensas de XP y Monedas.
 class DailyMissionsCard extends StatelessWidget {
@@ -22,56 +23,59 @@ class DailyMissionsCard extends StatelessWidget {
       });
     }
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Row(
-          children: [
-            const Icon(
-              Icons.assignment_rounded,
-              color: AppColors.primary,
-              size: 22,
-            ),
-            const SizedBox(width: 8),
-            Text(
-              'Misiones Diarias',
-              style: AppTypography.h3.copyWith(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
+    return Container(
+      key: InteractiveTutorialController.instance.missionsCardKey,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Row(
+            children: [
+              const Icon(
+                Icons.assignment_rounded,
+                color: AppColors.primary,
+                size: 22,
               ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 12),
-        if (missionsProvider.isLoading)
-          const Padding(
-            padding: EdgeInsets.all(24),
-            child: Center(
-              child: CircularProgressIndicator(color: AppColors.primary),
-            ),
-          )
-        else if (missionsProvider.missions.isEmpty)
-          GlassCard(
-            padding: const EdgeInsets.all(20),
-            child: Center(
-              child: Text(
-                'Las misiones se generarán automáticamente.',
-                style: AppTypography.bodyMedium.copyWith(
-                  color: AppColors.textSecondary,
+              const SizedBox(width: 8),
+              Text(
+                'Misiones Diarias',
+                style: AppTypography.h3.copyWith(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
                 ),
-                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          if (missionsProvider.isLoading)
+            const Padding(
+              padding: EdgeInsets.all(24),
+              child: Center(
+                child: CircularProgressIndicator(color: AppColors.primary),
+              ),
+            )
+          else if (missionsProvider.missions.isEmpty)
+            GlassCard(
+              padding: const EdgeInsets.all(20),
+              child: Center(
+                child: Text(
+                  'Las misiones se generarán automáticamente.',
+                  style: AppTypography.bodyMedium.copyWith(
+                    color: AppColors.textSecondary,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+            )
+          else
+            ...missionsProvider.missions.map(
+              (mission) => Padding(
+                padding: const EdgeInsets.only(bottom: 10),
+                child: _MissionItemCard(mission: mission),
               ),
             ),
-          )
-        else
-          ...missionsProvider.missions.map(
-            (mission) => Padding(
-              padding: const EdgeInsets.only(bottom: 10),
-              child: _MissionItemCard(mission: mission),
-            ),
-          ),
-      ],
+        ],
+      ),
     );
   }
 }
@@ -275,4 +279,3 @@ class _MissionItemCard extends StatelessWidget {
     );
   }
 }
-

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../providers/focus_state.dart';
+import '../../tutorial/services/interactive_tutorial_controller.dart';
 
 /// Chips para cambiar entre Pomodoro, Descanso Corto, Descanso Largo.
 class ModeSelector extends StatelessWidget {
@@ -22,6 +23,7 @@ class ModeSelector extends StatelessWidget {
       runSpacing: 10,
       children: [
         _ModeChip(
+          key: InteractiveTutorialController.instance.startButtonKey,
           label: 'Iniciar',
           onTap: onStart,
         ),
@@ -35,6 +37,7 @@ class _ModeChip extends StatefulWidget {
   final VoidCallback onTap;
 
   const _ModeChip({
+    super.key,
     required this.label,
     required this.onTap,
   });

@@ -15,6 +15,8 @@ import '../../../core/widgets/mobile_stats_bar.dart';
 import '../../../core/widgets/achievement_summary.dart';
 import '../../../core/widgets/recent_milestones.dart';
 import '../widgets/username_change_dialog.dart';
+import '../../tutorial/services/tutorial_service.dart';
+import '../../tutorial/services/interactive_tutorial_controller.dart';
 
 /// Profile screen showing user info, level/XP, coins, and daily missions.
 class ProfileScreen extends StatefulWidget {
@@ -25,7 +27,6 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
-
   /// Abre el dialogo de cambio de nombre de usuario.
   Future<void> _openUsernameDialog(BuildContext context) async {
     final profile = context.read<ProfileProvider>();
@@ -40,7 +41,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
           content: Text('Nombre actualizado a: $result'),
           backgroundColor: AppColors.primary.withAlpha(200),
           behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
         ),
       );
     }
@@ -70,14 +73,35 @@ class _ProfileScreenState extends State<ProfileScreen> {
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
                 IconButton(
+                  tooltip: 'Guía y Tutorial',
+                  icon: const Icon(
+                    Icons.help_outline_rounded,
+                    color: Colors.white70,
+                  ),
+                  onPressed: () {
+                    InteractiveTutorialController.instance.startTutorial(context);
+                  },
+                ),
+                IconButton(
+                  tooltip: 'Ajustes',
                   icon: const Icon(
                     Icons.settings_outlined,
                     color: Colors.white70,
                   ),
                   onPressed: () {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(builder: (_) => const SettingsScreen()),
-                    );
+                    Navigator.of(context)
+                        .push(
+                          MaterialPageRoute(
+                            builder: (_) => const SettingsScreen(),
+                          ),
+                        )
+                        .then((_) {
+                          if (context.mounted) {
+                            TutorialService.instance.autoLaunchIfNeeded(
+                              context,
+                            );
+                          }
+                        });
                   },
                 ),
               ],
@@ -144,7 +168,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     decoration: BoxDecoration(
                       color: AppColors.primary.withAlpha(15),
                       borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: AppColors.primary.withAlpha(40)),
+                      border: Border.all(
+                        color: AppColors.primary.withAlpha(40),
+                      ),
                     ),
                     child: Text(
                       profile.displayTag!,
@@ -184,8 +210,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
               padding: const EdgeInsets.only(bottom: 4),
               child: TextButton.icon(
                 onPressed: () => _openUsernameDialog(context),
-                icon: const Icon(Icons.add_circle_outline,
-                    color: AppColors.primary, size: 14),
+                icon: const Icon(
+                  Icons.add_circle_outline,
+                  color: AppColors.primary,
+                  size: 14,
+                ),
                 label: Text(
                   'Configurar nombre',
                   style: AppTypography.bodySmall.copyWith(
@@ -194,7 +223,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ),
                 ),
                 style: TextButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 2,
+                  ),
                   minimumSize: Size.zero,
                   tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                 ),
@@ -370,29 +402,69 @@ class _ProfileScreenState extends State<ProfileScreen> {
           Positioned(
             top: topPadding + 8,
             right: 20,
-            child: Container(
-              decoration: BoxDecoration(
-                color: AppColors.surfaceLight.withValues(alpha: 0.6),
-                shape: BoxShape.circle,
-                border: Border.all(
-                  color: AppColors.cardBorder.withValues(alpha: 0.4),
-                  width: 1,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  decoration: BoxDecoration(
+                    color: AppColors.surfaceLight.withValues(alpha: 0.6),
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: AppColors.cardBorder.withValues(alpha: 0.4),
+                      width: 1,
+                    ),
+                  ),
+                  child: IconButton(
+                    tooltip: 'Tutorial de Hyro',
+                    icon: const Icon(
+                      Icons.help_outline_rounded,
+                      color: Colors.white70,
+                      size: 20,
+                    ),
+                    padding: const EdgeInsets.all(8),
+                    constraints: const BoxConstraints(),
+                    onPressed: () {
+                      InteractiveTutorialController.instance.startTutorial(context);
+                    },
+                  ),
                 ),
-              ),
-              child: IconButton(
-                icon: const Icon(
-                  Icons.settings_outlined,
-                  color: Colors.white70,
-                  size: 20,
+                const SizedBox(width: 8),
+                Container(
+                  decoration: BoxDecoration(
+                    color: AppColors.surfaceLight.withValues(alpha: 0.6),
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: AppColors.cardBorder.withValues(alpha: 0.4),
+                      width: 1,
+                    ),
+                  ),
+                  child: IconButton(
+                    tooltip: 'Ajustes',
+                    icon: const Icon(
+                      Icons.settings_outlined,
+                      color: Colors.white70,
+                      size: 20,
+                    ),
+                    padding: const EdgeInsets.all(8),
+                    constraints: const BoxConstraints(),
+                    onPressed: () {
+                      Navigator.of(context)
+                          .push(
+                            MaterialPageRoute(
+                              builder: (_) => const SettingsScreen(),
+                            ),
+                          )
+                          .then((_) {
+                            if (context.mounted) {
+                              TutorialService.instance.autoLaunchIfNeeded(
+                                context,
+                              );
+                            }
+                          });
+                    },
+                  ),
                 ),
-                padding: const EdgeInsets.all(8),
-                constraints: const BoxConstraints(),
-                onPressed: () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute(builder: (_) => const SettingsScreen()),
-                  );
-                },
-              ),
+              ],
             ),
           ),
         ],

@@ -164,26 +164,6 @@ class WelcomeScreen extends StatelessWidget {
                   ),
                 ),
               ),
-              const SizedBox(height: 6),
-              TextButton.icon(
-                onPressed: () {
-                  TutorialService.instance.showTutorial(context);
-                },
-                icon: const Icon(
-                  Icons.help_outline_rounded,
-                  color: AppColors.primary,
-                  size: 16,
-                ),
-                label: const Text(
-                  '¿CÓMO FUNCIONA? VER GUÍA RÁPIDA',
-                  style: TextStyle(
-                    color: AppColors.primary,
-                    fontWeight: FontWeight.w600,
-                    fontSize: 12,
-                    letterSpacing: 0.5,
-                  ),
-                ),
-              ),
             ],
           ),
         ),
